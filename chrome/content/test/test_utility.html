@@ -1,0 +1,250 @@
+<html>
+<head>
+	<script type="text/javascript" src="library/MochiKit.js"></script>
+	<script type="text/javascript" src="library/SimpleTest.js"></script>
+	<link rel="stylesheet" type="text/css" href="library/test.css">
+</head>
+<body>
+<form id="form">
+	<input type="text" name="text" id="text" value="TEMP">
+	<input type="hidden" name="hidden" id="hidden" value="TEMP">
+	<select name="select" id="select">
+		<option value="1">A</option>
+		<option value="2">B</option>
+		<option value="3">C</option>
+	</select>
+	<input type="checkbox" name="checkbox" id="checkbox" value="on"/>
+</form>
+<pre id="test">
+</pre>
+<script type="text/javascript" src="../library/00_MochiKit.js"></script>
+<script type="text/javascript" src="../library/00_Components.js"></script>
+<script type="text/javascript" src="../library/01_utility.js"></script>
+<script type="text/javascript">
+try {
+	// chrome://tombloo/content/test/test_utility.html
+	
+	var secret = 'bfdda251193b021c';
+	var param = {
+		cb         : 1206801061330,
+		photo_id   : 2371304094,
+		method     : 'flickr.favorites.add',
+		src        : 'js',
+		api_key    : '042ecfb4f851e1e60b7fdf78ec0d54ef',
+		auth_hash  : '7d1a0d02d70b7ee955346cd60bb8af6f',
+		auth_token : '',
+	};
+	// alert((secret + keys(param).sort().map(function(key){return key + param[key]}).join('')).md5());
+	
+	is('abcdefg'.extract(/bc(de)/), 'de');
+	is('abcdefg'.extract(/(bc(de))/, 2), 'de');
+	is('abcdefg'.extract(/bc(de)(fg)/, 2), 'fg');
+	
+	// autoReload();
+	CONNECT_TEST = false;
+	
+	if(CONNECT_TEST){
+		SimpleTest.waitForExplicitFinish();
+		
+		var ds = [];
+		ds.push(sendByChannel('http://www.google.com/').addCallback(function(res){
+			is(res.status, 200);
+			ok(res.responseText);
+		}));
+		ds.push(sendByChannel('http://www.google.co.jp/translate_t', {
+			queryString : {
+				langpair : 'en|ja',
+			},
+			sendContent : {
+				hl : 'ja',
+				ie : 'UTF8',
+				text : 'apple',
+				langpair : 'en|ja',
+			},
+		}).addCallback(function(res){
+			is(res.status, 200);
+			ok(res.responseText.match('アップル'), '翻訳されたか');
+		}));
+		
+		gatherResults(ds).addBoth(function(){
+			SimpleTest.finish()
+		});
+	}
+	
+	is('hello world'.md5(), '5eb63bbbe01eeed093cb22bb8f5acdc3');
+	
+	// createQueryInterface / createMock
+	var mock = {QueryInterface : createQueryInterface([IScriptError])};
+	is(mock.QueryInterface(IScriptError), mock);
+	try{
+		mock.QueryInterface(ILocalFile);
+	} catch (e){
+		is(e, Components.results.NS_NOINTERFACE);
+	}
+	
+	// Firebug無効時はエラーコンソールに出力
+	log('LOG TEST');
+	warn('WARN TEST');
+	try{
+		''.no();
+	} catch(e){
+		error(e);
+	}
+	
+	// queryString
+	is(queryString({a:5}), 'a=5');
+	is(queryString({a:5}, true), '?a=5');
+	is(queryString('a=5'), 'a=5');
+	is(queryString({a:void(0)}), '');
+	
+	is(getPref('test_string'), 'あいうえお');
+	
+	ok(isEmpty(clearObject({a:1, b:''})));
+	
+	// フォーム
+	populateForm($('form'), {
+		text : 'TEXT',
+		hidden : 'hidden',
+		select : '2',
+		checkbox : 'on',
+	});
+	is($('text').value, 'TEXT');
+	is($('hidden').value, 'hidden');
+	is($('select').value, '2');
+	is($('checkbox').checked, true);
+	
+	var f = formContents();
+	is(f.text, 'TEXT');
+	is(f.hidden, 'hidden');
+	is(f.select, '2');
+	is(f.checkbox, 'on');
+	
+	
+	is(' A '.trim(), 'A');
+	is('\n \t A\nB\n \n'.trim(), 'A\nB');
+	
+	// SimpleEnumerator Iterator
+	var dir = getProfileDir();
+	ok(dir.exists());
+	ok(list(dir.directoryEntries).length > 3);
+	
+	
+	// XML Iterator
+	var xml = <a><b/><b/><b/></a>;
+	is(list(xml.b).length, 3);
+	is(typeof(list(xml.b)[2]), 'xml');
+	
+	
+	// Object Iterator
+	ok(arrayEqual(
+		list({a:1, b:2}),
+		[['a', 1], ['b', 2]]));
+	
+	
+	// Array.prototype.split
+	ok(arrayEqual(
+		[0,1,2,3,4].split(2), 
+		[[0, 1], [2, 3], [4]]));
+	
+	// deferredForEach
+	var flag = false;
+	deferredForEach([], function(){
+		ok(false);
+	}).
+	addCallback(function(){
+		flag=true;
+	});
+	ok(flag);
+	
+	var flag = false;
+	deferredForEach([1], function(item, index){
+		is(item, 1);
+		is(index, 0);
+	}).
+	addCallback(function(){
+		flag=true;
+	});
+	ok(flag);
+	
+	var arr = [];
+	deferredForEach(range(10), function(item){arr.push(item)}).
+	addErrback(function(){
+		ok(false, 'ループ終端でStopIterationが発生しないこと');
+	});
+	is(arr.length, 10);
+	is(arr[9], 9);
+	
+	var result;
+	deferredForEach(range(10), function(item, index){
+		result = item;
+		if(result == 3)
+			throw StopIteration;
+	});
+	is(result, 3, '途中キャンセル');
+	
+	var result;
+	deferredForEach(range(10), function(item, index){
+		throw 'ERROR';
+	}).
+	addErrback(function(e){
+		result = e.message;
+	});
+	is(result, 'ERROR', 'エラー等をキャッチできるか')
+	
+	// DeferredHash
+	var l = new DeferredHash({
+		s : succeed('SUCCEED'),
+		f : fail('FAIL'),
+	}).addCallback(function (res) {
+		is(res.s[0], true);
+		is(res.s[1], 'SUCCEED');
+		
+		is(res.f[0], false);
+		is(res.f[1].message, 'FAIL');
+	});
+	
+	// 正規表現 / エラーメッセージのフィルタ
+	function block  (error, re){ok(error.match(re))};
+	function through(error, re){ok(! error.match(re))};
+	var re;
+	
+	re = /F:/;
+	block  ('F:TOO' , re);
+	block  ('F:AUTH', re);
+	
+	re = /F:(?!AUTH)/;
+	through('F:AUTH', re);
+	block  ('F:TOO',  re);
+	
+	re = /F:(?!AUTH|TOO)/;
+	through('F:TOO',  re);
+	through('F:AUTH', re);
+	block  ('F:You',  re);
+	
+	re = /(F:(?!AUTH|TOO)|T:)/;
+	through('F:TOO',  re);
+	block  ('T:Post', re);
+	block  ('T:You',  re);
+	
+	re = '(F:(?!AUTH|TOO)|T:(Post))';
+	through('F:TOO',  re);
+	block  ('T:Post', re);
+	through('T:You',  re);
+	
+} catch (err) {
+	var s = 'test suite failure!\n';
+	var o = {};
+	var k = null;
+	for (k in err) {
+		// ensure unique keys?!
+		if (!o[k]) {
+			s +=  k + ': ' + err[k] + '\n';
+			o[k] = err[k];
+		}
+	}
+	ok ( false, s );
+}
+</script>
+
+</body>
+</html>

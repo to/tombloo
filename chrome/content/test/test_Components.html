@@ -1,0 +1,159 @@
+<html>
+<head>
+	<script type="text/javascript" src="library/MochiKit.js"></script>
+	<script type="text/javascript" src="library/SimpleTest.js"></script>
+	<link rel="stylesheet" type="text/css" href="library/test.css">
+</head>
+<body>
+
+<pre id="test">
+</pre>
+<script type="text/javascript" src="../library/00_Components.js"></script>
+<script type="text/javascript">
+try {
+	// chrome://tombloo/content/test/test_Components.html
+	
+	/* convertFromUnplaceableHTML / 文字化けテスト(日本Googleへ接続)
+	SimpleTest.waitForExplicitFinish();
+	doXHR('http://www.google.co.jp/', {
+		mimeType : 'text/plain; charset=x-user-defined',
+	}).addCallback(function(res){
+		ok(convertFromUnplaceableHTML(res.responseText).match(/検索/));
+	}).addBoth(function(){
+		SimpleTest.finish()
+	});
+	*/
+	
+	// createConstructor
+	var str = 'ABCD';
+	is(new InputStream(new StringInputStream(str)).read(str.length), 'ABCD');
+	
+	// getService
+	is(typeof(Components.classes['not_found']), 'undefined');
+	ok(getService() === null);
+	ok(getService('hohoho') === null);
+	ok(getService('/consoleservice;1', null) === null);
+	ok(getService('/consoleservice;1', Ci.nsIConsoleService).logStringMessage);
+	
+	
+	// getInterfaces
+	var uri = createURI('http://google.com');
+	var ifcs = getInterfaces(uri);
+	is(ifcs.length, 6);
+	is(ifcs[0], Ci.nsIStandardURL);
+	
+	
+	// broad
+	var uri = createURI('http://google.com');
+	var channel = broad(IOService.newChannelFromURI(uri));
+	ok(channel.setRequestHeader != null) // nsIHttpChannel;
+	ok(channel.setUploadStream != null)  // nsIUploadChannel;
+	
+	var uri = createURI('http://google.com');
+	var channel = broad(IOService.newChannelFromURI(uri), [Ci.nsIHttpChannel]);
+	ok(channel.setRequestHeader != null) // nsIHttpChannel;
+	ok(channel.setUploadStream == null)  // nsIUploadChannel;
+	
+	// getService
+	ok(getService('/consoleservice;1', Ci.nsIConsoleService));
+	ok(getService('not_found', null) === null);
+	
+	// createURI
+	is(createURI('C:\\').spec, 'file:///C:/');
+	is(createURI(new LocalFile('C:\\')).spec, 'file:///C:/');
+	is(createURI('file:///C:/').spec, 'file:///C:/');
+	is(createURI('http://google.com').spec, 'http://google.com/', 'URIになると最後にスラッシュが付加される');
+	
+	// notify
+	notify('TITLE', 'MESSAGE', notify.ICON_DOWNLOAD);
+	
+	
+	// preference
+	is(getPrefType('foobar'), 'undefined');
+	
+	var key = 'extensions.tombloo.test_bool';
+	setPrefValue(key, true);
+	ok(getPrefValue(key));
+	is(typeof(getPrefValue(key)), 'boolean');
+	
+	var key = 'extensions.tombloo.test_number';
+	setPrefValue(key, 300);
+	is(getPrefValue(key), 300);
+	is(typeof(getPrefValue(key)), 'number');
+	
+	var key = 'extensions.tombloo.test_string';
+	setPrefValue(key, 'あいうえお');
+	is(getPrefValue(key), 'あいうえお');
+	is(typeof(getPrefValue(key)), 'string');
+	
+	// 
+	// ok(  findCacheFile('http://f4.wretch.yimg.com/moblog/4/1939118735.jpg'), 'キャッシュファイルが(無い場合もあり)');
+	// log(findCacheFile('http://pics8.blog.yam.com/6/userfile/i/ivanaki0929/album/146b685908d2dc.jpg'));
+	ok(! findCacheFile('http://google.com/notFound.jpg'));
+	
+	
+	function unescapeHTML(html){
+		const UnescapeHTML = Components.classes['@mozilla.org/feed-unescapehtml;1']
+			.getService(Components.interfaces.nsIScriptableUnescapeHTML);
+		
+		var doc = document.implementation.createDocument('', '', null);
+		var root = doc.appendChild(doc.createElement('root'));
+		
+		var fragment = UnescapeHTML.parseFragment(html, false, null, doc.documentElement);
+		doc.documentElement.appendChild(fragment);
+		
+		if(!root.childNodes.length)
+			return '';
+		return serializeToString(root).match(/^<root>(.*)<\/root>$/)[1];
+	}
+	
+	function serializeToString(xml){
+		return (new XMLSerializer()).serializeToString(xml);
+	}
+	
+	
+	is(unescapeHTML(
+		'<body><style>body{color:red}</style></body>'), 
+		'');
+	is(unescapeHTML(
+		'TEXT<title>HELLO BLOG</tile><link rel="stylesheet" type="text/css" href="style.css">'), 
+		'TEXT');
+	is(unescapeHTML(
+		'<a href="javascript:alert(4)">yahoo</a>'), 
+		'<A>yahoo</A>');
+	is(unescapeHTML(
+		'<pre>CODE<pre/>'), 
+		'<PRE>CODE<PRE/></PRE>',
+		'誤ったpreタグ');
+	is(unescapeHTML(
+		'<a href="javascrip&#116;:alert(3)">YAHOO</a>'), 
+		'<A>YAHOO</A>',
+		'数値実体参照を使ったスクリプトの埋め込み');
+	is(unescapeHTML(
+		'<a href="javascrip&#116:alert(3)">YAHOO</a>'), 
+		'<A>YAHOO</A>',
+		'数値実体参照を使ったスクリプトの埋め込み(末尾セミコロンの省略)');
+	is(unescapeHTML(
+		'<input<script src="alert(3)"<\/script>'), 
+		'<INPUT/>');
+	is(unescapeHTML(
+		'<form action="foo.cgi"><input type="submit"></form>'), 
+		'<FORM action="foo.cgi"><INPUT type="submit"/></FORM>');
+	
+} catch (err) {
+	var s = 'test suite failure!\n';
+	var o = {};
+	var k = null;
+	for (k in err) {
+		// ensure unique keys?!
+		if (!o[k]) {
+			s +=  k + ': ' + err[k] + '\n';
+			o[k] = err[k];
+		}
+	}
+	ok ( false, s );
+}
+</script>
+
+</body>
+</html>

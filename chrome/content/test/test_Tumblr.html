@@ -1,0 +1,263 @@
+<html>
+<head>
+	<script type="text/javascript" src="library/MochiKit.js"></script>
+	<script type="text/javascript" src="library/SimpleTest.js"></script>
+	<link rel="stylesheet" type="text/css" href="library/test.css">
+</head>
+<body>
+
+<pre id="test">
+</pre>
+<script type="text/javascript" src="../library/00_Components.js"></script>
+<script type="text/javascript" src="../library/01_utility.js"></script>
+<script type="text/javascript" src="../library/10_Progress.js"></script>
+<script type="text/javascript" src="../library/10_Database.js"></script>
+<script type="text/javascript" src="../library/20_Tumblr.js"></script>
+<script type="text/javascript" src="../library/20_Tombloo.js"></script>
+<script type="text/javascript">
+try {
+	SimpleTest.waitForExplicitFinish();
+	
+	// chrome://tombloo/content/test/test_Tumblr.html
+	
+	is(Tumblr.normalizeHost('to.tumblr.com'), 'to.tumblr.com');
+	is(Tumblr.normalizeHost('to'), 'to.tumblr.com');
+	
+	var reqs = Tumblr.splitRequests(130);
+	is(reqs.length, 3);
+	is(reqs[0][0], 0);
+	is(reqs[0][1], 50);
+	is(reqs[1][0], 50);
+	is(reqs[1][1], 50);
+	is(reqs[2][0], 100);
+	is(reqs[2][1], 30);
+	
+	var reqs = Tumblr.splitRequests(35);
+	is(reqs.length, 1);
+	is(reqs[0][0], 0);
+	is(reqs[0][1], 35);
+	
+	var fields = {
+		'post[type]' : 'photo', 
+		'post[two]'  : '' + (<data><![CDATA[
+<p><a href="http://too.tumblr.com/post/25307827">too</a>:</p>
+
+<blockquote><p><a href="http://too.tumblr.com/post/24601328">too</a>:</p>
+
+<blockquote>TEST</blockquote>
+
+<p></p></blockquote>
+
+<p></p>
+		]]></data>),
+	}
+	is(Tumblr.trimReblogInfo(fields)['post[two]'], 'TEST');
+	
+	var fields = {
+		'post[type]' : 'link', 
+		'post[three]'  : '' + (<data><![CDATA[
+	<p><a href="http://too.tumblr.com/post/25310565">too</a>:</p>
+
+<blockquote><img src="http://mozshot.nemui.org/shot?http://cxx.tumblr.com/post/24916599" /></blockquote>
+
+<p></p>
+		]]></data>),
+	}
+	is(Tumblr.trimReblogInfo(fields)['post[three]'], '<img src="http://mozshot.nemui.org/shot?http://cxx.tumblr.com/post/24916599" />');
+	
+	var fields = {
+		'post[type]' : 'quote', 
+		'post[two]'  : '<a href="http://www.tumblr.com/dashboard">Tumblr</a> (via <a href="http://too.tumblr.com/">too</a>)',
+	}
+	is(Tumblr.trimReblogInfo(fields)['post[two]'], '<a href="http://www.tumblr.com/dashboard">Tumblr</a>');
+	
+	
+	var d = succeed();
+	var url = 'http://www.tumblr.com/dashboard/iframe?src=http%3A%2F%2Fto.tumblr.com%2Fpost%2F31464116&pid=31464116';
+	var url = 'http://www.tumblr.com/dashboard/iframe?pid=31464116';
+	var url = 'http://www.tumblr.com/dashboard/iframe?pid=31573890&rk=Vm1AnAen';
+	// var url = 'http://www.tumblr.com/dashboard/iframe?pid=31573890';
+	var url = 'http://www.tumblr.com/dashboard/iframe?pid=31573890&rk=6TQ3UnhD';
+	var post = 'http://pootee.tumblr.com/post/31573890'
+	/*
+	doXHR(url).addBoth(function(res){
+		console.log(res.responseText);
+	});
+	sendByChannel(url).addCallback(function(res){
+		console.log(res.responseText);
+	});
+	Tumblr.reblog(31464116).addBoth(function(res){
+		alert(res);
+	});
+	Tumblr.getReblogToken(post).addBoth(function(res){
+		console.log(res);
+	});
+	console.log(Tumblr.getReblogToken(url));
+	Tumblr.reblog(url).addBoth(function(res){
+		console.log(res);
+	});
+	Tumblr.reblog(url).addBoth(function(res){
+		console.log(res);
+	});
+	*/
+	
+	
+	
+	
+	// getReblogToken
+	var t = Tumblr.getReblogToken('http://www.tumblr.com/dashboard/iframe?src=http%3A%2F%2Fpootee.tumblr.com%2Fpost%2F31573890&amp;pid=31573890&amp;rk=Vm1AnAen');
+	is(t.token, 'Vm1AnAen');
+	is(t.id, '31573890');
+	
+	var t = Tumblr.getReblogToken('http://www.tumblr.com/reblog/31573890/Vm1AnAen?redirect_to=%2Fdashboard');
+	is(t.token, 'Vm1AnAen');
+	is(t.id, '31573890');
+	
+	var t = Tumblr.getReblogToken('http://www.tumblr.com/reblog/31573890/Vm1AnAen');
+	is(t.token, 'Vm1AnAen');
+	is(t.id, '31573890');
+	
+	/* 
+	// remove
+	d.addCallback(bind('remove', Tumblr), 18344636);
+	
+	// 現在Tumblr不調のため通らない可能性あり
+	d.addCallback(bind('getInfo', Tumblr), 'to', 'photo');
+	d.addCallback(function(info){
+		is(info.type, 'photo');
+		is(info.start, 0);
+		is(info.name, 'to');
+		is(info.title, 'to');
+		is(info.timezone, 'Asia/Tokyo');
+		ok(info.total > 1000);
+		alert(info.total);
+	});
+	
+	d.addCallback(bind('getInfo', Tumblr), 'to');
+	d.addCallback(function(info){
+		is(info.type, '');
+		is(info.name, 'to');
+		is(info.title, 'to');
+		is(info.timezone, 'Asia/Tokyo');
+		ok(info.total > 15000);
+	});
+	
+	// 2ページ取得
+	d.addCallback(bind('read', Tumblr), 'to', 'photo', 70);
+	d.addCallback(function(res){
+		is(res.length, 70);
+		is(res[0].type, 'photo');
+		is(res[0].user, 'to');
+		ok(res[0].date);
+		ok(res[0].imageId);
+	});
+	
+	// 1ページ取得
+	d.addCallback(bind('read', Tumblr), 'to', 'photo', 25);
+	d.addCallback(function(res){
+		is(res.length, 25);
+	});
+	
+	// 途中終了 / ポストNo / ウェイト
+	d.addCallback(bind('read', Tumblr), 'to', 'photo', 70, function(post, postNum){
+		if(postNum>=5)
+			throw StopProcess;
+		ok(post.date);
+		log(post.date);
+		
+		return wait(0.2)
+	});
+	d.addCallback(function(res){
+		is(res.length, 5);
+	});
+	
+	// getLoggedInUser
+	var info = {};
+	d.addCallback(bind('getLoggedInUser', Tumblr));
+	d.addCallback(function(user){
+		is(user, 'too', 'ユーザー名の確認');
+		info.name = user;
+	});
+	d.addErrback(function(e){
+		is(e.message, 'Not loggedin.', '未ログイン');
+	});
+	
+	
+	// getInfo
+	d.addCallback(function(){
+		return Tumblr.getInfo(info.name);
+	});
+	d.addCallback(function(i){
+		is(i.type, '');
+		is(i.name, 'too');
+		is(i.title, 'too');
+		is(i.timezone, 'Asia/Tokyo');
+		
+		info = i;
+	});
+	
+	// reblog
+	d.addCallback(bind('reblog', Tumblr), 18865379);
+	d.addCallback(function(){
+		return Tumblr.getInfo(info.name);
+	});
+	d.addCallback(function(i){
+		is(i.total, info.total+1, 'reblogが成功し件数が増えているか');
+		
+		info = i;
+	});
+	
+	Tumblr.Photo.post({
+		title : 'SQLite home page',
+		url : 'http://www.sqlite.org/',
+		body : '<a href="http://www.sqlite.org/">SQLite home page</a>',
+		source : 'http://www.sqlite.org/sqlite.gif',
+	});
+	Tumblr.Quote.post({
+		body : 'Database',
+		source : '<a href="http://www.sqlite.org/">SQLite home page</a>',
+	});
+	Tumblr.Link.post({
+		title : 'SQLite home page',
+		source : 'http://www.sqlite.org/',
+		body : 'あいうえお',
+	});
+	Tumblr.Video.post({
+		source : 'http://jp.youtube.com/watch?v=4wZGsYzegi4',
+		body : '<a href="http://jp.youtube.com/watch?v=4wZGsYzegi4">YouTube - あいうえお</a>',
+	});
+	Tumblr.Regular.post({
+		title : 'TITLE',
+		body : 'あいうえお',
+	});
+	Tumblr.Conversation.post({
+		title : 'TITLE',
+		body : 'Z:1\nX:2',
+	});
+	*/
+	
+	d.addErrback(function(e){
+		log(e)
+		ok(false);
+	});
+	d.addBoth(function(){
+		SimpleTest.finish()
+	});
+	
+} catch (err) {
+	var s = 'test suite failure!\n';
+	var o = {};
+	var k = null;
+	for (k in err) {
+		// ensure unique keys?!
+		if (!o[k]) {
+			s +=  k + ': ' + err[k] + '\n';
+			o[k] = err[k];
+		}
+	}
+	ok ( false, s );
+}
+</script>
+
+</body>
+</html>

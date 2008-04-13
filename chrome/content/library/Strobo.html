@@ -1,0 +1,305 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="../library/00_Components.js"></script>
+<script type="text/javascript" src="../library/00_MochiKit.js"></script>
+<script type="text/javascript" src="../library/01_utility.js"></script>
+<script type="text/javascript" src="../library/10_Database.js"></script>
+<script type="text/javascript" src="../library/20_Tombloo.js"></script>
+<script type="text/javascript" src="../library/20_Tumblr.js"></script>
+<script type="text/javascript" src="../library/30_Tombloo.Service.js"></script>
+<script type="text/javascript" src="../library/40_ui.js"></script>
+<style>
+body{
+	background-color : #000;
+	margin : 0;
+	padding : 0;
+	overflow : hidden;
+}
+body *{
+	-moz-user-select: none;
+}
+
+#control{
+	position : fixed;
+	background-color : #333;
+	left : 0;
+	right : 0;
+	padding : 1em 1.5em;
+	font-size : 80%;
+}
+#control *{
+	vertical-align : middle;
+	font-weight : bold;
+}
+#control.hidden{
+	height : 15px;
+	padding : 0;
+}
+#control.hidden *{
+	display : none !important;
+}
+#control form{
+	display : inline;
+}
+#control label{
+	color : white;
+}
+#control input, 
+#control select {
+	margin-right : 2em;
+}
+
+#pagebar{
+	cursor : pointer;
+	vertical-align : middle;
+	float : right;
+	border-collapse : collapse;
+	background-color : white;
+	color : white;
+}
+#pagebar td{
+	padding : 0 0.3em;
+	text-align : center;
+}
+#pagebar td.current{
+	cursor : default;
+	color : #fff;
+	background-color : #333;
+}
+
+#pagebar td.pagination{
+	color : #333;
+	border : solid #333;
+	border-width : 0 0.2em;
+}
+#pagebar td:hover{
+	color : white;
+	background-color : #333;
+}
+
+
+#strobo{
+	padding-top : 60px;
+	text-align : center;
+}
+
+#strobo #photo{
+	display : none;
+}
+
+
+#strobo #interval{
+	display : block;
+	
+	position:absolute;
+	top : 0pt;
+	left : 50%;
+	height : 15px;
+	margin-left : -250px;
+	margin-top : 30px;
+	width : 500px;
+}
+
+#strobo #meter{
+	background-color : white;
+	
+	position : relative;
+	height : 15px;
+}
+
+#magnify{
+	position : absolute;
+	display : none;
+	top : 0;
+	left : 0;
+	border : 10px solid black;
+	z-index : 100;
+}
+
+</style>
+</head>
+<body>
+	<div id="control" class="hidden">
+		<form method="get">
+			<label>USER
+				<select name="user">
+					<option value=""></option>
+				</select>
+			</label>
+			<label>RANDOM
+				<input name="random" type="checkbox" />
+			</label>
+			<input type="hidden" name="offset" value="0" />
+		</form>
+	</div>
+	<div id="strobo">
+		<img id="photo" />
+		<span id="interval"><span id="meter" ></span></span>
+	</div>
+</body>
+<script type="text/javascript">
+	const PER = 1000;
+	
+	
+	// ---- [Application] ------------------------------------------------
+	function StroboPanel(elmPhoto, elmMeter, params){
+		if(!params.user && !params.query)
+			return;
+		
+		this.loaded = [];
+		this.elmMeter = elmMeter;
+		this.elmPhoto = elmPhoto;
+		this.nextPhoto = bind('nextPhoto', this);
+		this.start = bind('start', this);
+		
+		if(params.user){
+			this.photos = Tombloo.Photo.findByUser({
+				user : params.user, 
+				limit : (params.limit || PER), 
+				offset : (params.offset || 0), 
+				order : (params.random? 'random()' : 'date DESC')});
+		} else {
+			this.photos = Tombloo.Photo.find(params.query, params.args);
+		}
+		this.photos = this.photos.filter(function(photo){
+			var file = photo.getFile(500);
+			return file && file.exists() && file.fileSizeOfLink > 300;
+		});
+		
+		this.nextPhoto();
+		this.show();
+	}
+	
+	StroboPanel.prototype = {
+		photos : null,
+		pointer : 0,
+		elmPhoto : null,
+		interval : 1000,
+		
+		show : function(){
+			connect(document, 'onkeydown', this, 'onKeyDown');
+			this.elmPhoto.style.display = 'inline';
+		},
+		onKeyDown : function(evt){
+			switch(evt.keyString()){
+			case 'ARROW_RIGHT':
+				evt.stop();
+				if(this.isPlaying())
+					return this.changeInterval(false);
+				
+				this.nextPhoto();
+				return;
+				
+			case 'ARROW_LEFT':
+				evt.stop();
+				if(this.isPlaying())
+					return this.changeInterval(true);
+				
+				this.previousPhoto();
+				return;
+				
+			case 'ARROW_UP':
+			case 'ENTER':
+				evt.stop();
+				if(this.isPlaying()){
+					this.stop();
+					return;
+				}
+				
+				addTab(this.photos[this.pointer].url);
+				return;
+				
+			case 'ARROW_DOWN':
+				evt.stop();
+				this.toggle();
+				return;
+				
+			case 'ESC':
+				evt.stop();
+				this.hide();
+				return;
+			}
+		},
+		start : function(){
+			this.nextPhoto();
+			this.intervalId = setTimeout(this.start, this.interval);
+		},
+		stop : function(){
+			clearTimeout(this.intervalId);
+			this.intervalId = null;
+		},
+		toggle : function(){
+			this.isPlaying() ? this.stop() : this.start();
+		},
+		isPlaying : function(){
+			return this.intervalId;
+		},
+		nextPhoto : function(){
+			if(this.wait())
+				return;
+			
+			if(this.pointer==this.photos.length-1)
+				this.pointer=-1;
+			this.changePhoto(this.photos[++this.pointer]);
+		},
+		previousPhoto : function(){
+			if(this.wait())
+				return;
+			
+			if(this.pointer==0)
+				this.pointer=this.photos.length;
+			this.changePhoto(this.photos[--this.pointer]);
+		},
+		changePhoto : function(photo){
+			this.elmPhoto.src = createURI(photo.getFile(500)).spec;
+		},
+		changeInterval : function(up){
+			if(up){
+				this.interval = Math.min(this.interval * 1.03, 3000);
+			} else {
+				this.interval = Math.max(this.interval / 1.03, 50);
+			}
+			this.elmMeter.style.width = 100 * (1-((this.interval-50)/2950)) + '%';
+			
+			appear(this.elmMeter, {
+				duration : 0, 
+				queue : {
+					position: 'break', 
+					scope : 'interval'}});
+			fade(this.elmMeter, {
+				delay : 0.5,
+				duration : 0.5, 
+				queue : {
+					position: 'break', 
+					scope : 'interval'}})
+		},
+		wait : function(){
+			if(!this.isPlaying())
+				return false;
+			
+			var caller = arguments.callee.caller; 
+			var now = (new Date()).getTime();
+			if(caller.lastCall && (caller.lastCall+this.interval)>now)
+				return true;
+			
+			caller.lastCall = now;
+			return false;
+		},
+	}
+	
+	
+	// ---- [Main] ------------------------------------------------------
+	var params = parseQueryString(location.search);
+	
+	var control = SlidePanel($('control'));
+	if(params.query){
+		control.hide();
+	} else if(!params.user){
+		control.show();
+	}
+	QueryForm($x('id("control")//form'), params);
+	
+	new StroboPanel($('photo'), $('meter'), params);
+</script>
+</html>

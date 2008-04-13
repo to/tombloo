@@ -1,0 +1,111 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css" ?>
+<?xml-stylesheet href="data:text/css,
+textbox[readonly=true] {
+	-moz-appearance : none;
+	-moz-user-focus : ignore !important;
+	-moz-border-bottom-colors : transparent;
+	-moz-border-left-colors : transparent;
+	-moz-border-right-colors : transparent;
+	-moz-border-top-colors : transparent;
+}
+groupbox {
+	padding : 1em;
+}
+" type="text/css"?>
+<prefwindow 
+	style="width : 45em;" 
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+	title="Tombloo Options" >
+	
+		<prefpane>
+		<preferences>
+			<preference 
+				id="trimReblogInfo" 
+				name="extensions.tombloo.trimReblogInfo" 
+				type="bool"/>
+			<preference 
+				id="amazonAffiliateId" 
+				name="extensions.tombloo.amazonAffiliateId" 
+				type="string"/>
+			<preference 
+				id="thumbnailTemplate" 
+				name="extensions.tombloo.thumbnailTemplate" 
+				type="string"/>
+			<preference 
+				id="posterFilter" 
+				name="extensions.tombloo.posterFilter" 
+				type="string"/>
+			<preference 
+				id="ignoreError" 
+				name="extensions.tombloo.ignoreError" 
+				type="string"/>
+			<preference 
+				id="accesskey.share" 
+				name="extensions.tombloo.accesskey.share" 
+				type="string"/>
+		</preferences>
+		
+		<groupbox>
+			<caption label="Entry Contents Settings"/>
+			<grid>
+				<columns>
+					<column pack="end" align="end" orient="horizontal"/>
+					<column flex="1"/>
+				</columns>
+				<rows>
+					<row align="center">
+						<label value="Amazon Affiliate ID"/>
+						<textbox preference="amazonAffiliateId" />
+					</row>
+					<row align="center">
+						<label value="Link thumbnail template"/>
+						<textbox preference="thumbnailTemplate" />
+					</row>
+					<row align="center">
+						<spacer />
+						<textbox readonly="true" value="e.g. &lt;img src=&quot;http://mozshot.nemui.org/shot?{url}&quot; /&gt;" />
+					</row>
+					<row align="center">
+						<label value="Trim reblog info"/>
+						<checkbox preference="trimReblogInfo" />
+					</row>
+				</rows>
+			</grid>
+		</groupbox>
+		<spacer style="height:2em;"/>
+		<groupbox>
+			<caption label="Post Settings"/>
+			<grid>
+				<columns>
+					<column pack="end" align="end" orient="horizontal"/>
+					<column flex="1"/>
+				</columns>
+				<rows>
+					<row align="center">
+						<label value="Access Key"/>
+						<hbox>
+							<textbox preference="accesskey.share" maxlength="1" style="width:2em;" />
+						</hbox>
+					</row>
+					<row align="center">
+						<label value="Posters(RegExp)"/>
+						<textbox preference="posterFilter" />
+					</row>
+					<row align="center">
+						<spacer />
+						<textbox readonly="true" value="e.g. (tumblr: (quote|link)|ffffound)" />
+					</row>
+					<row align="center">
+						<label value="Ignore Errors(RegExp)"/>
+						<textbox preference="ignoreError" />
+					</row>
+					<row align="center">
+						<spacer />
+						<textbox readonly="true" value="e.g. ffffound: (?!auth)" />
+					</row>
+				</rows>
+			</grid>
+		</groupbox>
+	</prefpane>
+</prefwindow>

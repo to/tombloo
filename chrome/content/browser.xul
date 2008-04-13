@@ -1,0 +1,158 @@
+<?xml version="1.0"?>
+<overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+	<popup id="contentAreaContextMenu">
+		<menuitem insertbefore="context-bookmarklink" 
+			label="Share" id="tombloo-menu-share" accesskey="J"/>
+		<menu insertbefore="context-bookmarklink"
+			 label="Select Post Type">
+			<menupopup id="tombloo-menu-select"/>
+		</menu>
+		<menuseparator insertbefore="context-bookmarklink" />
+	</popup>
+	<menupopup id="menu_ToolsPopup">
+		<menu label="Tombloo" insertbefore="sanitizeSeparator">
+			<menupopup id="tombloo-menu-main"/>
+		</menu>
+	</menupopup>
+	<script type="text/javascript; version=1.7"><![CDATA[
+	
+	window.addEventListener('load', function(){
+		window.removeEventListener('load', arguments.callee, false);
+		
+		const PrefBranch = 
+			Components.Constructor('@mozilla.org/preferences;1', 'nsIPrefBranch');
+		const TomblooServiceClass = Cc['@brasil.to/tombloo-service;1'];
+		
+		var env = TomblooServiceClass.getService().wrappedJSObject;
+		function getEnvironment(){
+			if(!PrefBranch().getBoolPref('extensions.tombloo.debug'))
+				return env;
+			
+			return TomblooServiceClass.createInstance().wrappedJSObject;
+		}
+		
+		var gm = Components.classes['@greasemonkey.mozdev.org/greasemonkey-service;1'];
+		if(gm){
+			gm = gm.getService().wrappedJSObject;
+			
+			var GM_Tombloo = function(){};
+			GM_Tombloo.Tombloo = {};
+			GM_Tombloo.Tombloo.Service = update({}, env.Tombloo.Service, 
+				'check share posters extracters'.split(' '));
+			GM_Tombloo.Tumblr = update({}, env.Tumblr, 
+				'post remove getInfo read reblog openTab getLoggedInUser'.split(' '));
+			GM_Tombloo.FFFFOUND = update({}, env.FFFFOUND, 
+				'post remove iLoveThis'.split(' '));
+			GM_Tombloo.Flickr = update({}, env.Flickr, 
+				'getSizes getInfo addFavorite removeFavorite'.split(' '));
+			env.addBefore(gm, 'evalInSandbox', function(code, codebase, sandbox){
+				sandbox.GM_Tombloo = GM_Tombloo;
+			});
+		}
+		
+		var context;
+		var menuContext = document.getElementById('contentAreaContextMenu');
+		var menuShare = document.getElementById('tombloo-menu-share');
+		var menuSelect = document.getElementById('tombloo-menu-select');
+		
+		menuShare.setAttribute('accesskey', env.getPref('accesskey.share'));
+		
+		menuContext.addEventListener('popupshowing', function(event){
+			if(event.eventPhase != Event.AT_TARGET || (context && context.target == gContextMenu.target))
+				return;
+			
+			var doc = gContextMenu.target.ownerDocument;
+			var win = doc.defaultView.wrappedJSObject;
+			var mouse = {
+				x : event.pageX,
+				y : event.pageY,
+			};
+			
+			try{
+				win.location.host;
+				
+				menuShare.removeAttribute('disabled');
+				menuSelect.parentNode.removeAttribute('disabled');
+			}catch(e){
+				menuShare.setAttribute('disabled', true);
+				menuSelect.parentNode.setAttribute('disabled', true);
+				
+				return;
+			}
+			
+			context = update(update({
+				document  : doc,
+				window    : doc.defaultView,
+				title     : ''+doc.title || 'no title',
+				selection : ''+win.getSelection(),
+				event     : event,
+				mouse     : mouse,
+				menu      : gContextMenu,
+			}, gContextMenu), win.location);
+			
+			var exts = getEnvironment().Tombloo.Service.check(context);
+			menuShare.label = 'Share - ' + exts[0].name;
+			menuShare.extracter = exts[0].name;
+			
+			if(exts.length<=1){
+				menuSelect.parentNode.setAttribute('disabled', true);
+			} else {
+				menuSelect.parentNode.removeAttribute('disabled');
+				
+				for(var i=0 ; i<exts.length ; i++){
+					var item = menuSelect.appendChild(document.createElement('menuitem'));
+					item.setAttribute('label', exts[i].name);
+					item.extracter = exts[i].name;
+				}
+			}
+		}, true);
+		
+		menuContext.addEventListener('popuphidden', function(event){
+			if(event.eventPhase != Event.AT_TARGET)
+				return;
+			
+			context = null;
+			
+			env.clearChildren(menuSelect);
+		}, true);
+		
+		menuContext.addEventListener('command', function(event){
+			if(!event.target.extracter)
+				return;
+			
+			context.event = event;
+			
+			var service = getEnvironment().Tombloo.Service;
+			service.share(context, service.extracters[event.target.extracter]);
+		}, true);
+		
+		
+		var menuAction = document.getElementById('tombloo-menu-main');
+		menuAction.addEventListener('popupshowing', function(event){
+			env.clearChildren(menuAction);
+			
+			for(var name in getEnvironment().Tombloo.Service.actions)
+				menuAction.appendChild(document.createElement('menuitem')).setAttribute('label', name);
+		}, false);
+		
+		menuAction.addEventListener('command', function(event){
+			getEnvironment().Tombloo.Service.actions[event.originalTarget.label]();
+		}, true);
+		
+		// ----[Utility]--------------------------------------------
+		function update(target, src, keys){
+			if(keys){
+				keys.forEach(function(key){
+					target[key] = src[key];
+				});
+			} else {
+				for(var key in src)
+					target[key] = src[key];
+			}
+			
+			return target;
+		}
+	}, false);
+	
+	]]></script>
+</overlay>

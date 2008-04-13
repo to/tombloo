@@ -1,0 +1,72 @@
+<html>
+<head>
+	<script type="text/javascript" src="library/MochiKit.js"></script>
+	<script type="text/javascript" src="library/SimpleTest.js"></script>
+	<link rel="stylesheet" type="text/css" href="library/test.css">
+</head>
+<body>
+
+<pre id="test">
+</pre>
+<script type="text/javascript" src="../library/00_Components.js"></script>
+<script type="text/javascript" src="../library/01_utility.js"></script>
+<script type="text/javascript" src="../library/10_Progress.js"></script>
+<script type="text/javascript" src="../library/10_Database.js"></script>
+<script type="text/javascript" src="../library/20_Tombloo.js"></script>
+<script type="text/javascript" src="../library/20_Tumblr.js"></script>
+<script type="text/javascript" src="../library/30_Tombloo.Service.js"></script>
+
+<script type="text/javascript">
+try {
+	// chrome://tombloo/content/test/test_Tombloo.Service.html
+	
+	const Photo = Tombloo.Service.Photo;
+	
+	Photo.getByFileExists('pootee', 500, false).addCallback(function(photos){
+		log(photos.length);
+	});
+	
+	/*
+	console.time(1);
+	Photo.getByFileExists('to', 500, true).addCallback(function(photos){
+		console.timeEnd(1);
+		ok(photos.length > 13000);
+	});
+	
+	var p = new Progress('Update Photo');
+	var d = succeed();
+	d.addCallback(
+		Tombloo.Service.Photo.update, 
+		'youpy.tumblr.com', 
+		p.addChild(new Progress('updating...'), 30));
+	d.addCallback(
+		Tombloo.Service.Photo.download, 
+		'youpy.tumblr.com', 
+		500,
+		p.addChild(new Progress('downloading...')));
+	d.addBoth(function(){
+		p.complete();
+		alert('FINISH');
+	});
+	openProgressDialog(p);
+	 */
+	// Tombloo.Service.Photo.download('to.tumblr.com', 500, p);
+	// Tombloo.Service.Photo.download('youpy.tumblr.com', 500, p);
+	
+} catch (err) {
+	var s = 'test suite failure!\n';
+	var o = {};
+	var k = null;
+	for (k in err) {
+		// ensure unique keys?!
+		if (!o[k]) {
+			s +=  k + ': ' + err[k] + '\n';
+			o[k] = err[k];
+		}
+	}
+	ok ( false, s );
+}
+</script>
+
+</body>
+</html>

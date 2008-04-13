@@ -1,0 +1,325 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="../library/00_Components.js"></script>
+<script type="text/javascript" src="../library/00_MochiKit.js"></script>
+<script type="text/javascript" src="../library/01_utility.js"></script>
+<script type="text/javascript" src="../library/10_Database.js"></script>
+<script type="text/javascript" src="../library/20_Tombloo.js"></script>
+<script type="text/javascript" src="../library/20_Tumblr.js"></script>
+<script type="text/javascript" src="../library/30_Tombloo.Service.js"></script>
+<script type="text/javascript" src="../library/40_ui.js"></script>
+<style>
+body{
+	background-color : #000;
+	margin : 0;
+	padding : 0;
+	overflow-x : hidden;
+	overflow-y : scroll;
+}
+body *{
+	-moz-user-select: none;
+}
+
+#control{
+	position : fixed;
+	background-color : #333;
+	left : 0;
+	right : 0;
+	padding : 1em 1.5em;
+	font-size : 80%;
+}
+#control *{
+	vertical-align : middle;
+	font-weight : bold;
+}
+#control.hidden{
+	height : 15px;
+	padding : 0;
+}
+#control.hidden *{
+	display : none !important;
+}
+#control form{
+	display : inline;
+}
+#control label{
+	color : white;
+}
+#control input, 
+#control select {
+	margin-right : 2em;
+}
+
+#pagebar{
+	cursor : pointer;
+	vertical-align : middle;
+	float : right;
+	border-collapse : collapse;
+	background-color : white;
+	color : white;
+}
+#pagebar td{
+	padding : 0 0.3em;
+	text-align : center;
+}
+#pagebar td.current{
+	cursor : default;
+	color : #fff;
+	background-color : #333;
+}
+
+#pagebar td.pagination{
+	color : #333;
+	border : solid #333;
+	border-width : 0 0.2em;
+}
+#pagebar td:hover{
+	color : white;
+	background-color : #333;
+}
+
+
+#mosaic{
+	color : white;
+	padding : 25px 0;
+}
+#mosaic img{
+	vertical-align : top;
+	width : 3em;
+	border : 0.5em solid black;
+}
+
+#magnify{
+	position : absolute;
+	display : none;
+	top : 0;
+	left : 0;
+	border : 10px solid black;
+	z-index : 100;
+}
+
+</style>
+</head>
+<body>
+	<div id="control" class="hidden">
+		<form method="get">
+			<label>USER
+				<select name="user">
+					<option value=""></option>
+				</select>
+			</label>
+			<label>RANDOM
+				<input name="random" type="checkbox" />
+			</label>
+			<input type="hidden" name="offset" value="0" />
+		</form>
+	</div>
+	<div id="mosaic">
+	</div>
+	<img id="magnify"/>
+</body>
+<script type="text/javascript">
+	const PER = 1000;
+	
+	
+	// ---- [Main] ------------------------------------------------------
+	var params = parseQueryString(location.search);
+	
+	MosaicPanel($('mosaic'), params);
+	
+	var control = SlidePanel($('control'));
+	if(params.query){
+		control.hide();
+	} else if(!params.user){
+		control.show();
+	}
+	QueryForm($x('id("control")//form'), params);
+	
+	
+	// ---- [Application] ------------------------------------------------
+	function MosaicPanel(elmMosaic, params){
+		if(!params.user && !params.query)
+			return;
+		
+		var photos;
+		if(params.user){
+			photos = Tombloo.Photo.findByUser({
+				user : params.user, 
+				limit : (params.limit || PER), 
+				offset : (params.offset || 0), 
+				order : (params.random? 'random()' : 'date DESC')});
+		} else {
+			// .split(',')
+			photos = Tombloo.Photo.find(params.query, params.args);
+		}
+		
+		deferredForEach(photos.split(25), function(photos){
+			photos.forEach(function(photo){
+				var file = photo.getFile(75);
+				
+				if(!file.exists())
+					return;
+				
+				var img = new Image();
+				img.src = createURI(file).spec;
+				img.photo = photo;
+				img.onload = function(){
+					elmMosaic.appendChild(img);
+				}
+			})
+			
+			return wait(0);
+		});
+		
+		var magnifyPanel = MagnifyPanel(elmMosaic);
+		var style = elmMosaic.style;
+		
+		// サムネイル単位のスクロール
+		var thmbs = elmMosaic.getElementsByTagName('img');
+		function scroll(next){
+			var op = next? operator.gt : operator.lt;
+			var len = thmbs.length;
+			var top = thmbs[0].offsetTop;
+			var borderWidth = parseInt(getStyle(thmbs[0], 'borderTopWidth'));
+			var margin = top - borderWidth;
+			for(
+				var columns=0; 
+				columns<len && top == thmbs[columns].offsetTop ;
+				columns++);
+			
+			var border = document.body.scrollTop + margin;
+			for(var i=len ; i>=0 ; i-=columns){
+				var elm = thmbs[next ? len-i : i-1];
+				if(op(elm.offsetTop, border))
+					break;
+			}
+			document.body.scrollTop = elm.offsetTop - margin;
+		}
+		
+		// ズーム
+		elmMosaic.style.fontSize='60%';
+		function Zoomer(target, base){
+			var margin = target.offsetTop - document.body.scrollTop;
+			style.cursor='e-resize';
+			
+			return {
+				terminate : function(){
+					style.cursor='';
+				},
+				zoom : function(current){
+					// 拡大縮小
+					var direction = current.x>base.x? 1 : -1;
+					var fontSize = 
+						parseInt(style.fontSize) + 
+						Math.floor(Math.hypot(current.x - base.x, current.y - base.y) / 5) * direction;
+					fontSize = Math.min(Math.max(fontSize, 20), 200);
+					style.fontSize = fontSize + '%';
+					
+					// スクロール位置を戻す
+					document.body.scrollTop = target.offsetTop - margin;
+					
+					base = current;
+				},
+			}
+		}
+		
+		// イベント処理
+		var pushing = 0;
+		var zoomer;
+		elmMosaic.style.cursor='-moz-magnify-in';
+		connect(elmMosaic, 'onmousewheel', function(e){
+			e.stop();
+			scroll(e.wheelDelta() > 0);
+		});
+		connect(elmMosaic, 'ondblclick', function(e){
+			addTab(e.target().photo.url);
+		});
+		connect(elmMosaic, 'onmousedown', function(e){
+			var button = 1<<e.event().button;
+			pushing = pushing | button;
+			
+			if(button == 1){
+				magnifyPanel.show(e);
+				e.stop();
+			} else if(button == 4){
+				zoomer = Zoomer(e.target(), e.mouse().client);
+			}
+		});
+		connect(document, 'onmouseup', function(e){
+			var button = 1<<e.event().button;
+			pushing -= pushing & button;
+			
+			if(button == 1){
+				magnifyPanel.hide();
+			} else if(button == 4){
+				zoomer.terminate();
+				e.stop();
+			}
+		});
+		connect(elmMosaic, 'onmousemove', function(e){
+			if(pushing == 1){
+				magnifyPanel.show(e);
+			} else if(pushing == 4){
+				zoomer.zoom(e.mouse().client);
+			}
+		});
+	}
+	
+	function MagnifyPanel(elmParent){
+		var elmMagnify = getElement('magnify');
+		var elmPhoto;
+		var border = parseInt(getStyle(elmMagnify, 'borderTopWidth')) * 2;
+		var style = elmMagnify.style;
+		var body = document.body;
+		
+		var panel = {
+			get visible(){
+				return style.display = 'block';
+			},
+			show : function(e){
+				var target = e.target();
+				if(!target.photo)
+					return;
+				
+				// [FIXME] 判定
+				elmMagnify.src = createURI(target.photo.getFile(500)).spec;
+				style.display = 'block';
+				elmParent.style.cursor='-moz-zoom-in';
+				
+				var mouse = e.mouse();
+				var vp = getViewportPosition();
+				var vd = getViewportDimensions();
+				var mp = mouse.page;
+				
+				var zh = elmMagnify.height;
+				
+				// マウスが画面右半分にあるか?
+				if(vd.w/2 < mp.x){
+					style.left = 'auto';
+					style.right = vd.w - mp.x + border;
+				} else {
+					style.left = mp.x + border;
+					style.right = '';
+				}
+				
+				style.top = mp.y - zh - border < vp.y ? vp.y : mp.y - zh - border;
+			},
+			hide : function(){
+				style.display = 'none';
+				elmParent.style.cursor='';
+			},
+			limitSize : function(){
+				style.maxHeight = (body.clientHeight - border) + 'px';
+			}
+		}
+		panel.limitSize();
+		
+		// イベント処理
+		connect(window,     'onresize',    panel, 'limitSize');
+		connect(elmMagnify, 'onmouseover', panel, 'hide');
+		
+		return panel;
+	}
+</script>
+</html>

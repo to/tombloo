@@ -1,0 +1,45 @@
+body{
+	padding : 2em 5em;
+	font-size : 200%;
+	font-family : 'Arial Black', Arial, sans-serif;
+}
+
+a{
+	text-decoration : none;
+	color : grey;
+	border-bottom : 3px solid;
+}
+
+.test_ok {
+	color : green;
+	display : none;
+}
+
+.test_not_ok {
+	color: red;
+	display: block;
+	white-space : pre;
+	font-size : 13px;
+}
+
+.test_ok, .test_not_ok {
+}
+
+.all_pass,
+.some_fail {
+	padding : 1em;
+	margin : 1em 0;
+	color : white;
+}
+
+.all_pass {
+	background-color : lime;
+}
+
+.some_fail {
+	background-color : red;
+}
+
+.tests_report {
+	width : 20em;
+}

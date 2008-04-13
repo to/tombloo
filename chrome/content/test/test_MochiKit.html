@@ -1,0 +1,67 @@
+<html>
+<head>
+	<script type="text/javascript" src="library/MochiKit.js"></script>
+	<script type="text/javascript" src="library/SimpleTest.js"></script>
+	<link rel="stylesheet" type="text/css" href="library/test.css">
+</head>
+<body>
+
+<pre id="test">
+</pre>
+<script type="text/javascript">
+try {
+	// chrome://tombloo/content/test/test_MochiKit.html
+	
+	var callback = function(a, b){
+		alert(a);
+		alert(b);
+	}
+	
+	var d = new Deferred(function(){
+		alert('CANCELED');
+	})
+	
+	d.addCallback(function(value){
+		alert('A' + value);
+		
+		var d = new Deferred(function(){
+			alert('CANCELED - A');
+		});
+		setTimeout(function(){
+			d.callback(2);
+		}, 2000);
+		return d;
+	});
+	d.addCallback(function(value){
+		alert('B' + value);
+		
+		var d = new Deferred();
+		d.canceller = function(){
+			alert('CANCELED - B');
+		};
+		setTimeout(function(){
+			// d.cancel();
+			d.callback(3);
+		}, 2000);
+		return d;
+	});
+	d.addCallback(callback, 100);
+	d.callback(1);
+	
+} catch (err) {
+	var s = 'test suite failure!\n';
+	var o = {};
+	var k = null;
+	for (k in err) {
+		// ensure unique keys?!
+		if (!o[k]) {
+			s +=  k + ': ' + err[k] + '\n';
+			o[k] = err[k];
+		}
+	}
+	ok ( false, s );
+}
+</script>
+
+</body>
+</html>

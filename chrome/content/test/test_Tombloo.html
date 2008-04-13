@@ -1,0 +1,175 @@
+<html>
+<head>
+	<script type="text/javascript" src="library/MochiKit.js"></script>
+	<script type="text/javascript" src="library/SimpleTest.js"></script>
+	<link rel="stylesheet" type="text/css" href="library/test.css">
+</head>
+<body>
+
+<pre id="test">
+<script type="text/javascript" src="../library/00_Components.js"></script>
+<script type="text/javascript" src="../library/01_utility.js"></script>
+<script type="text/javascript" src="../library/10_Progress.js"></script>
+<script type="text/javascript" src="../library/10_Database.js"></script>
+<script type="text/javascript" src="../library/20_Tombloo.js"></script>
+<script type="text/javascript">
+try {
+	// chrome://tombloo/content/test/test_Tombloo.html
+	
+	// Instance Methods
+	// var tombloo = new Tombloo();
+	
+	var Photo = Tombloo.Photo;
+	var info = Photo.getImageInfo('1358142_500.jpg');
+	is(info.id, 1358142);
+	is(info.revision, null);
+	is(info.size, 500);
+	is(info.extension, 'jpg');
+	
+	var info = Photo.getImageInfo('1767102_r1_500.jpg');
+	is(info.id, 1767102);
+	is(info.revision, 'r1');
+	is(info.size, 500);
+	is(info.extension, 'jpg');
+	
+	var info = Photo.getImageInfo('http://data.tumblr.com/3821653_100.jpg');
+	is(info.id, 3821653);
+	is(info.revision, null);
+	is(info.size, 100);
+	
+	var info = Photo.getImageInfo('0ddGiMjzE1f0l8cm8jhW75xR_250.jpg');
+	is(info.id, '0ddGiMjzE1f0l8cm8jhW75xR');
+	is(info.revision, null);
+	is(info.size, 250);
+	
+	// データベーステスト
+	var file = getContentDir();
+	file.append('test');
+	file.append('tombloo_test.sqlite');
+	
+	Tombloo.db = new Database(file);
+	
+	ok(Tombloo.db.execute);
+	ok(Tombloo.root.exists());
+	
+	ok(Photo.db, 'エンティティのdbも初期化されているか');
+	
+	Tombloo.Photo.deleteAll();
+	Tombloo.Video.deleteAll();
+	Tombloo.Regular.deleteAll();
+	Tombloo.Quote.deleteAll();
+	Tombloo.Link.deleteAll();
+	Tombloo.Conversation.deleteAll();
+	
+	is(Tombloo.Photo.countByUser('to'), 0);
+	is(Tombloo.Video.countByUser('to'), 0);
+	is(Tombloo.Regular.countByUser('to'), 0);
+	is(Tombloo.Quote.countByUser('to'), 0);
+	is(Tombloo.Link.countByUser('to'), 0);
+	is(Tombloo.Conversation.countByUser('to'), 0);
+	
+	var photo = new Photo({
+		id : 1, 
+		user : 'to',
+		date : new Date(2007, 6, 20),
+		body : 'ABCDEFG',
+		imageId : 1764123,
+		revision : 'r1',
+		
+		url : 'http://', // 不要プロパティ
+	});
+	photo.save();
+	is(Photo.countByUser('to'), 1, '保存され行が増えるか');
+	
+	ok(photo.checkFile(500), '[環境依存]ファイルが存在するか');
+	is(photo.getFile(500).exists(), true, '[環境依存]ファイルが存在するか');
+	
+	// 時間がかかるためスキップ
+	// ok(Photo.getFiles(500).length > 100 , '[環境依存]画像ファイルを取得できるか');
+	
+	var photos = Photo.findByUser('to');
+	is(photos.length, 1, '検索にヒットするか');
+	is(photos[0].id, 1);
+	is(photos[0].date.getDate(), 20, '日付型で取得できるか');
+	is(photos[0].user, 'to');
+	
+	photo.body = 'あいうえお';
+	photo.save();
+	
+	var photos = Photo.findByUser('to');
+	is(photos[0].body, 'あいうえお', '日本語が保存されるか');
+	
+	// 項目を全部埋めないで保存
+	var photo = new Photo({
+		id : 2, 
+		user : '02',
+		imageId : 'ABCDEFG', // 数値フィールドに文字書き込み
+	});
+	photo.save();
+	
+	// ユーザー一覧の取得
+	is(Photo.findUsers().length, 2);
+	is(Photo.findUsers()[0], '02');
+	is(Photo.findUsers()[1], 'to');
+	
+	// 更新
+	var photo = Photo.findByUser('02')[0];
+	is(photo.id, 2);
+	is(photo.imageId, 'ABCDEFG', '数値フィードから文字を取得できるか');
+	is(photo.temporary, false);
+	photo.revision = 'r1';
+	photo.save(); // update
+	
+	var photo = Photo.findByUser('02')[0];
+	is(photo.id, 2);
+	is(photo.revision, 'r1', 'updateされているか');
+	
+	// 削除
+	photo.remove();
+	is(Tombloo.Photo.countByUser('02'), 0);
+	
+	photo.save(); // insert
+	is(Tombloo.Photo.countByUser('02'), 1);
+	
+	ok(!photo.checkFile(500), 'ファイルが存在しないこと');
+	
+	// VIEWのテスト
+	is(Tombloo.Post.countByUser('02'), 1, 'VIEWのカウント、Photoタイプのみ');
+	
+	Tombloo.Video.insert({id : 2, user : '02'});
+	is(Tombloo.Post.countByUser('02'), 2);
+	
+	Tombloo.Regular.insert({id : 2, user : '02'});
+	is(Tombloo.Post.countByUser('02'), 3);
+	
+	Tombloo.Quote.insert({id : 2, user : '02'});
+	is(Tombloo.Post.countByUser('02'), 4);
+	
+	Tombloo.Link.insert({id : 2, user : '02'});
+	is(Tombloo.Post.countByUser('02'), 5);
+	
+	Tombloo.Conversation.insert({id : 2, user : '02'});
+	is(Tombloo.Post.countByUser('02'), 6);
+	
+	Tombloo.Post.findByUser('02').forEach(function(row){
+		row.date = new Date(2000, 1, 1);
+		row.save();
+	})
+	is(Tombloo.Post.countByUser('02'), 6, '追加されずに更新されているか');
+	
+	Tombloo.Post.findByUser('02').forEach(function(row){
+		is(row.date.getDate(), 1, '更新されているか');
+	})
+	
+} catch (err) {
+	var s = [];
+	s.push('TEST SUITE FAILURE!');
+	for(var prop in err)
+		s.push(prop + ':  ' + err[prop]);
+	ok(false, s.join('\n'));
+}
+</script>
+</pre>
+
+</body>
+</html>

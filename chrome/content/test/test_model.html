@@ -1,0 +1,132 @@
+<html>
+<head>
+	<script type="text/javascript" src="library/MochiKit.js"></script>
+	<script type="text/javascript" src="library/SimpleTest.js"></script>
+	<link rel="stylesheet" type="text/css" href="library/test.css">
+</head>
+<body>
+<pre id="test">
+</pre>
+<script type="text/javascript" src="../library/00_Components.js"></script>
+<script type="text/javascript" src="../library/01_utility.js"></script>
+<script type="text/javascript" src="../library/20_model.js"></script>
+<script type="text/javascript">
+try {
+	// chrome://tombloo/content/test/test_model.html
+	
+	// var ids = [2054131467];
+	
+	SimpleTest.waitForExplicitFinish();
+	
+	var d = succeed();
+	/*
+	d.addCallback(bind('addFavorite', Flickr), 2371304094);
+	d.addCallback(function(){
+		ok(true, 'Flickr Favorite 追加');
+	});
+	d.addCallback(bind('removeFavorite', Flickr), 2371304094);
+	d.addCallback(function(){
+		ok(true, 'Flickr Favorite 削除');
+	});
+	
+	
+	d.addCallback(bind('getInfo', Flickr), 2052869076);
+	d.addCallback(function(info){
+		is(info.title._content, 'Mya');
+		is(info.owner.username, 'Ben Pearce');
+		is(info.id,             '2052869076');
+		is(info.owner.nsid,     '14227047@N05');
+		is(info.originalsecret, 'a02938d5af');
+		is(info.secret,         'd7852e1a0b');
+		is(info.server,         '2106');
+		
+		is(info.urls.url[0].type,     'photopage');
+		is(info.urls.url[0]._content, 'http://www.flickr.com/photos/benpearce/2052869076/');
+	});
+	
+	
+	d.addCallback(bind('getSizes', Flickr), 2052869076);
+	d.addCallback(function(sizes){
+		is(sizes.length, 5);
+		is(sizes[0].height, 75);
+		is(sizes[0].width, 75);
+		is(sizes[0].label,  'Square');
+		is(sizes[0].source, 'http://farm3.static.flickr.com/2106/2052869076_d7852e1a0b_s.jpg');
+		is(sizes[0].url,    'http://www.flickr.com/photo_zoom.gne?id=2052869076&size=sq');
+	});
+	d.addCallback(bind('getSizes', Flickr), 2150907410);
+	d.addErrback(function(e){
+		is(e.message, 'Photo not found');
+	});
+	
+	
+	
+	
+	
+	d.addCallback(bind('getToken', FFFFOUND));
+	d.addCallback(function(token){
+		ok(token);
+	});
+	
+	d.addCallback(bind('post', FFFFOUND), {
+		url     : 'http://www.hatena.ne.jp/images/top/navi_icon.gif',
+		referer : 'http://www.hatena.ne.jp/',
+		title   : 'はてな',
+	}).addCallbacks(partial(ok, false), function(e){
+		log(e);
+		is(e.message, 'The image you choose is too small.', 'ポスト失敗: 画像小さい')
+	});
+	d.addCallback(bind('post', FFFFOUND), {
+		url     : 'http://www.hatena.ne.jp/',
+		referer : 'http://www.hatena.ne.jp/',
+		title   : 'はてな',
+	}).addCallbacks(partial(ok, false), function(e){
+		is(e.message, 'UNSUPPORTED_TYPE', 'ポスト失敗: サポート外のタイプ')
+	});
+
+	d.addCallback(bind('post', FFFFOUND), {
+		url     : 'http://www.sqlite.org/sqlite.gif',
+		referer : 'http://www.sqlite.org/',
+		title   : 'SQLite home page',
+	});
+	
+	d.addCallback(bind('remove', FFFFOUND), 159182);
+	
+	d.addCallback(bind('iLoveThis', FFFFOUND), 159322);
+	d.addCallback(bind('iLoveThis', FFFFOUND), 159322).addCallbacks(
+		partial(ok, false), 
+		function(e){
+			is(e.message, 'EXISTS', 'ポスト失敗: 重複')
+		});
+	
+	d.addCallback(bind('getItem', Amazon), '4894712288');
+	d.addCallback(function(item){
+		ok(item.title.match('リファクタリング'))
+		is(item.creators.join(), 'マーチン ファウラー,Martin Fowler,児玉 公信,平澤 章,友野 晶夫,梅沢 真史')
+		is(item.largestImage.size, 'large')
+		is(item.largestImage.width, 367)
+		is(item.largestImage.height, 475)
+		is(item.largestImage.url, 'http://ecx.images-amazon.com/images/I/51885S48YPL.jpg')
+	});
+	*/
+	
+	
+	d.addErrback(function(e){
+		log(e)
+		ok(false);
+	});
+	d.addBoth(function(){
+		SimpleTest.finish()
+	});
+	
+} catch (err) {
+	var s = [];
+	s.push('TEST SUITE FAILURE!');
+	for(var prop in err)
+		s.push(prop + ':  ' + err[prop]);
+	ok(false, s.join('\n'));
+}
+</script>
+
+</body>
+</html>

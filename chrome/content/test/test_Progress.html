@@ -1,0 +1,165 @@
+<html>
+<head>
+	<script type="text/javascript" src="library/MochiKit.js"></script>
+	<script type="text/javascript" src="library/SimpleTest.js"></script>
+	<link rel="stylesheet" type="text/css" href="library/test.css">
+</head>
+<body>
+
+<pre id="test">
+</pre>
+<script type="text/javascript" src="../library/00_Components.js"></script>
+<script type="text/javascript" src="../library/01_utility.js"></script>
+<script type="text/javascript" src="../library/10_Progress.js"></script>
+<script type="text/javascript">
+try {
+	// chrome://tombloo/content/test/test_Progress.html
+	
+	
+	// 基本テスト - 空
+	var p = new Progress();
+	is(p.name, '');
+	is(p.max, 100);
+	is(p.value, 0);
+	is(p.percentage, 0);
+	is(p.canceled, false);
+	
+	p.value = 10;
+	is(p.value, 10);
+	
+	p.max = 10;
+	is(p.max, 10);
+	
+	p.cancel();
+	is(p.canceled, true);
+	
+	
+	// 基本テスト - 通常
+	var p = new Progress('P', 50, 14);
+	is(p.name, 'P');
+	is(p.max, 50);
+	p.value++;
+	is(p.value, 15);
+	is(p.percentage, 30);
+	is(p.completed, false);
+	
+	p.complete();
+	is(p.value, 50);
+	is(p.percentage, 100);
+	is(p.completed, true, '完了するか');
+	
+	p.value=100;
+	is(p.value, 50, '最大値を超えないこと');
+
+	p.value=25;;
+	is(p.completed, false, '値の変更で完了でなくなるか');
+	
+	p.max = 0;
+	is(p.value, 0, '最大値の変更で値も変わるか');
+	is(p.completed, true, '完了になるか');
+	is(p.percentage, 100, 'maxが0のときは100%とする');
+	
+	var p = new Progress('P', 0, 0);
+	var called = 0;
+	p.addProgressListener(function(target, trigger){
+		called++;
+	});
+	p.complete();
+	is(called, 1, '最大値が0のタスクが完了すること');
+	p.complete();
+	is(called, 1, '複数回完了しないこと');
+	
+	// 入れ子テスト - 1
+	var p = new Progress('P');
+	var c1 = new Progress('C1', 50, 0);
+	var c2 = new Progress('C2', 40, 0);
+	
+	p.addChild(c1);
+	p.addChild(c2, 300);
+	
+	is(p.value, 0);
+	
+	c1.addProgressListener(function(prog){
+		is(prog.value, 50, 'プログレスリスナー');
+	});
+	c1.complete();
+	is(c1.value, 50);
+	is(c1.percentage, 100, '完了したプログレスのパーセンテージ');
+	
+	is(p.percentage, 25);
+	
+	p.addProgressListener(function(prog){
+		is(prog.percentage, 62, 'プログレスリスナー - 親');
+	});
+	c2.value = 20;
+	is(c2.value, 20);
+	is(c2.percentage, 50);
+	
+	is(p.percentage, 62); // 25 + 37
+	
+	// 
+	var p = new Progress('P');
+	var called = false;
+	p.addProgressListener(function(prog){
+		ok(!called, '完了が2度呼ばれないこと');
+		called = true;
+	});
+	p.complete();
+	p.complete();
+	
+	var p = new Progress('P');
+	p.addProgressListener(function(prog){
+		ok(false, 'キャンセル後は完了がばれないこと');
+	});
+	p.cancel();
+	p.complete();
+	
+	// 入れ子テスト - キャンセル
+	var p = new Progress('P');
+	var c1 = new Progress('C1', 50, 0);
+	var c2 = new Progress('C2', 40, 0);
+	
+	p.addChild(c1);
+	p.addChild(c2);
+	
+	is(p.canceled, false);
+	is(c1.canceled, false);
+	is(c2.canceled, false);
+	
+	c1.addCancelListener(function(prog){
+		ok(c1.canceled, 'キャンセルリスナー');
+	});
+	p.addCancelListener(function(prog){
+		ok(true, 'キャンセルリスナー - parent');
+	});
+	c1.cancel();
+	is(p.canceled, true);
+	is(c1.canceled, true);
+	is(c2.canceled, true);
+	
+	var p = openProgressDialog(new Progress('Task'));
+	setTimeout(function(){
+		if(p.canceled || p.completed)
+			return;
+		
+		p.value+=50;
+		setTimeout(arguments.callee, 2000);
+	}, 2000);
+	
+} catch (err) {
+	var s = 'test suite failure!\n';
+	var o = {};
+	var k = null;
+	for (k in err) {
+		// ensure unique keys?!
+		if (!o[k]) {
+			s +=  k + ': ' + err[k] + '\n';
+			o[k] = err[k];
+		}
+	}
+	ok ( false, s );
+}
+</script>
+
+</body>
+</html>

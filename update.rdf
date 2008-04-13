@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
+         xmlns:NC="http://home.netscape.com/NC-rdf#"
+         xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <RDF:Seq RDF:about="rdf:#$HQbb51">
+    <RDF:li RDF:resource="rdf:#$IQbb51"/>
+  </RDF:Seq>
+  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAKx3Hwu7kbUQDjHT6ShTst3SU2bwIZlh8ftbE3mXxKr59qbm0tWJGlZhrtvltQxJyJaXPqYlIMRoOXflf4wk+40a/UxKBSst4RK4oOAP75Pv1WCyQAYVJQrt3JUFOGAqcRbBXqGJOXLsDo46SvWj8fAEOUGsdYsClDM2Rbb7iRqb">
+    <em:updates RDF:resource="rdf:#$HQbb51"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$LQbb51"
+                   em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+                   em:minVersion="2.0"
+                   em:maxVersion="3.0.*"
+                   em:updateLink="http://www.asahi-net.or.jp/~xe4r-kmt/extension/tombloo/tombloo.xpi"
+                   em:updateHash="sha512:8582f71e726ecadbb5696e551f783e381f8f8a1f8aa0bf8b2c3488cd2aceb32f28f7a610a4f99beb27907b7e6d6753d7e5652b90e247f8bc86c224b8590ac0ee" />
+  <RDF:Description RDF:about="rdf:#$IQbb51"
+                   em:version="0.1.6">
+    <em:targetApplication RDF:resource="rdf:#$LQbb51"/>
+  </RDF:Description>
+</RDF:RDF>

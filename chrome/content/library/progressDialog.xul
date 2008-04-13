@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	id="main" 
+	buttons="cancel" 
+	buttonlabelcancel="Cancel" 
+	ondialogcancel="return onCancel()" >
+	<script type="text/javascript" src="chrome://tombloo/content/library/00_Components.js"></script>
+	<script><![CDATA[
+	var p = window.arguments[0];
+	p.addProgressListener(onProsessChange);
+	window.addEventListener('load', function(){
+		onProsessChange(p, p);
+	}, false);
+	
+	function onProsessChange(target, trigger){
+		if(target.ended){
+			notify(p.name, 'finished', notify.ICON_INFO);
+			window.close();
+			return;
+		}
+		
+		document.title = target.percentage + '% - ' + p.name;
+		
+		var elmProgress = document.getElementById('progress');
+		if(elmProgress)
+			elmProgress.value = target.percentage;
+		
+		var elmStatus = document.getElementById('status');
+		elmStatus.value = trigger;
+	}
+	function onCancel(){
+		p.cancel();
+	}
+	]]></script>
+	<label id="status"/>
+	<progressmeter id="progress" />
+</dialog>

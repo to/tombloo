@@ -1,0 +1,110 @@
+<html>
+<head>
+	<script type="text/javascript" src="library/MochiKit.js"></script>
+	<script type="text/javascript" src="library/SimpleTest.js"></script>
+	<link rel="stylesheet" type="text/css" href="library/test.css" />
+</head>
+<body>
+
+<pre id="test">
+</pre>
+<script type="text/javascript" src="../library/00_Components.js"></script>
+<script type="text/javascript" src="../library/01_utility.js"></script>
+<script type="text/javascript" src="../library/10_Progress.js"></script>
+<script type="text/javascript" src="../library/10_Database.js"></script>
+<script type="text/javascript" src="../library/20_Tombloo.js"></script>
+<script type="text/javascript" src="../library/20_Tumblr.js"></script>
+<script type="text/javascript" src="../library/30_Tombloo.Service.js"></script>
+
+<script type="text/javascript">
+try {
+	// chrome://tombloo/content/test/test_Database.html
+	
+	var def = {
+		name : 'video',
+		fields : {
+			id      : 'INTEGER PRIMARY KEY',
+			host    : 'TEXT',
+		}
+	}
+	
+	
+	is(Entity.createInsertSQL(def), 
+		'INSERT INTO video ( id, host ) VALUES ( :id, :host )');
+	is(Entity.createUpdateSQL(def),
+		'UPDATE video SET host=:host WHERE id = :id');
+	is(Entity.createInitializeSQL(def),
+		'CREATE TABLE IF NOT EXISTS video ( id INTEGER PRIMARY KEY, host TEXT )');
+	
+	var def = {
+		name : 'video',
+		fields : {
+			id      : 'INTEGER PRIMARY KEY',
+			host    : 'TEXT',
+			date    : 'TIMESTAMP',
+			capTion : 'TEXT',
+			source  : 'TEXT',
+			player  : 'TEXT',
+		}
+	}
+	
+	var file = getContentDir();
+	file.append('test');
+	file.append('tombloo_test.sqlite');
+	
+	var db = new Database(file);
+	
+	var Video = Entity(def);
+	Video.db = db;
+	Video.initialize();
+	Video.deinitialize();
+	Video.initialize();
+	
+	Video.deleteAll();
+	is(Video.findAll().length, 0);
+	
+	var video = new Video({
+		id : 1,
+		host : 'HOST_1',
+		date : new Date(2007, 6, 20),
+		capTion : 'CAPTION',
+	});
+	video.save();
+	is(Video.findAll().length, 1);
+	
+	var video = new Video({
+		id : 2,
+		host : 'HOST_2',
+		date : new Date(2007, 1, 1),
+		capTion : 'CAPTION',
+	});
+	video.save();
+	is(Video.findAll().length, 2);
+	
+	is(Video.findByHost('HOST_1').length, 1);
+	is(Video.findByHost('HOST_1').length, 1);
+	is(Video.findByHostAndCapTion(['HOST_1', 'CAPTION']).length, 1);
+	
+	is(Video.findByCapTion({
+		capTion:'CAPTION', 
+		limit:1, 
+		offset:1,
+		order:'id DESC'})[0].host, 'HOST_1');
+	
+	is(Video.countByHost('HOST_1'), 1);
+	is(Video.countByHost({host:'HOST_1'}), 1);
+	
+	var videos = Video.findByHost('HOST_1');
+	is(videos[0].date.getDate(), 20);
+	
+} catch (err) {
+	var s = [];
+	s.push('TEST SUITE FAILURE!');
+	for(var prop in err)
+		s.push(prop + ':  ' + err[prop]);
+	ok(false, s.join('\n'));
+}
+</script>
+
+</body>
+</html>

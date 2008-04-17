@@ -13,10 +13,13 @@ groupbox {
 	padding : 1em;
 }
 " type="text/css"?>
+
+<!DOCTYPE prefwindow SYSTEM "chrome://tombloo/locale/tombloo.dtd" >
+
 <prefwindow 
 	style="width : 45em;" 
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-	title="Tombloo Options" >
+	title="&tombloo.prefs.TomblooOptions;" >
 	
 		<prefpane>
 		<preferences>
@@ -47,7 +50,7 @@ groupbox {
 		</preferences>
 		
 		<groupbox>
-			<caption label="Entry Contents Settings"/>
+			<caption label="&tombloo.prefs.EntryContentsSettings;"/>
 			<grid>
 				<columns>
 					<column pack="end" align="end" orient="horizontal"/>
@@ -55,19 +58,19 @@ groupbox {
 				</columns>
 				<rows>
 					<row align="center">
-						<label value="Amazon Affiliate ID"/>
+						<label value="&tombloo.prefs.AmazonAffiliateID;"/>
 						<textbox preference="amazonAffiliateId" />
 					</row>
 					<row align="center">
-						<label value="Link thumbnail template"/>
+						<label value="&tombloo.prefs.LinkThumbnailTemplate;"/>
 						<textbox preference="thumbnailTemplate" />
 					</row>
 					<row align="center">
 						<spacer />
-						<textbox readonly="true" value="e.g. &lt;img src=&quot;http://mozshot.nemui.org/shot?{url}&quot; /&gt;" />
+						<textbox readonly="true" value="&tombloo.prefs.LinkThumbnailTemplate_eg;" />
 					</row>
 					<row align="center">
-						<label value="Trim reblog info"/>
+						<label value="&tombloo.prefs.TrimReblogInfo;"/>
 						<checkbox preference="trimReblogInfo" />
 					</row>
 				</rows>
@@ -75,7 +78,7 @@ groupbox {
 		</groupbox>
 		<spacer style="height:2em;"/>
 		<groupbox>
-			<caption label="Post Settings"/>
+			<caption label="&tombloo.prefs.PostSettings;"/>
 			<grid>
 				<columns>
 					<column pack="end" align="end" orient="horizontal"/>
@@ -83,26 +86,26 @@ groupbox {
 				</columns>
 				<rows>
 					<row align="center">
-						<label value="Access Key"/>
+						<label value="&tombloo.prefs.AccessKey;"/>
 						<hbox>
 							<textbox preference="accesskey.share" maxlength="1" style="width:2em;" />
 						</hbox>
 					</row>
 					<row align="center">
-						<label value="Posters(RegExp)"/>
+						<label value="&tombloo.prefs.Posters_RegExp;"/>
 						<textbox preference="posterFilter" />
 					</row>
 					<row align="center">
 						<spacer />
-						<textbox readonly="true" value="e.g. (tumblr: (quote|link)|ffffound)" />
+						<textbox readonly="true" value="&tombloo.prefs.Posters_RegExp_eg;" />
 					</row>
 					<row align="center">
-						<label value="Ignore Errors(RegExp)"/>
+						<label value="&tombloo.prefs.IgnoreErrors_RegExp;"/>
 						<textbox preference="ignoreError" />
 					</row>
 					<row align="center">
 						<spacer />
-						<textbox readonly="true" value="e.g. ffffound: (?!auth)" />
+						<textbox readonly="true" value="&tombloo.prefs.IgnoreErrors_RegExp_eg;" />
 					</row>
 				</rows>
 			</grid>

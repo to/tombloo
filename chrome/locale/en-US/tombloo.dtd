@@ -1,0 +1,12 @@
+<!ENTITY tombloo.prefs.TomblooOptions "Tombloo Options">
+<!ENTITY tombloo.prefs.EntryContentsSettings "Entry Contents Settings">
+<!ENTITY tombloo.prefs.AmazonAffiliateID "Amazon Affiliate ID">
+<!ENTITY tombloo.prefs.LinkThumbnailTemplate "Link thumbnail template">
+<!ENTITY tombloo.prefs.LinkThumbnailTemplate_eg "e.g. &lt;img src=&quot;http://mozshot.nemui.org/shot?{url}&quot; /&gt;">
+<!ENTITY tombloo.prefs.TrimReblogInfo "Trim reblog info">
+<!ENTITY tombloo.prefs.PostSettings "Post Settings">
+<!ENTITY tombloo.prefs.AccessKey "Access Key">
+<!ENTITY tombloo.prefs.Posters_RegExp "Posters(RegExp)">
+<!ENTITY tombloo.prefs.Posters_RegExp_eg "e.g. (tumblr: (quote|link)|ffffound)">
+<!ENTITY tombloo.prefs.IgnoreErrors_RegExp "Ignore Errors(RegExp)">
+<!ENTITY tombloo.prefs.IgnoreErrors_RegExp_eg "e.g. ffffound: (?!auth)">

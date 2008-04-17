@@ -1,2 +1,5 @@
 content  tombloo  chrome/content/
 overlay  chrome://browser/content/browser.xul  chrome://tombloo/content/browser.xul
+
+locale   tombloo  en-US  chrome/locale/en-US/
+locale   tombloo  ja-JP  chrome/locale/ja-JP/

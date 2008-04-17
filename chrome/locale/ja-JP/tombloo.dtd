@@ -1,0 +1,12 @@
+<!ENTITY tombloo.prefs.TomblooOptions "Tomblooの設定">
+<!ENTITY tombloo.prefs.EntryContentsSettings "エントリコンテンツの設定">
+<!ENTITY tombloo.prefs.AmazonAffiliateID "アマゾンアフィリエイトID">
+<!ENTITY tombloo.prefs.LinkThumbnailTemplate "サムネイルテンプレートのリンク">
+<!ENTITY tombloo.prefs.LinkThumbnailTemplate_eg "例: &lt;img src=&quot;http://mozshot.nemui.org/shot?{url}&quot; /&gt;">
+<!ENTITY tombloo.prefs.TrimReblogInfo "reblog情報を取り去る">
+<!ENTITY tombloo.prefs.PostSettings "ポストの設定">
+<!ENTITY tombloo.prefs.AccessKey "アクセスキー">
+<!ENTITY tombloo.prefs.Posters_RegExp "ポスト先(正規表現)">
+<!ENTITY tombloo.prefs.Posters_RegExp_eg "例: (tumblr: (quote|link)|ffffound)">
+<!ENTITY tombloo.prefs.IgnoreErrors_RegExp "無視するエラー(正規表現)">
+<!ENTITY tombloo.prefs.IgnoreErrors_RegExp_eg "例: ffffound: (?!auth)">

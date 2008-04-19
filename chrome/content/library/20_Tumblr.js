@@ -198,8 +198,10 @@ var Tumblr = {
 	},
 	
 	openTab : function(params){
-		if(params.type == 'reblog')
-			return addTab(Tumblr.TUMBLR_URL+'reblog/'+params.id +'?redirect_to='+encodeURIComponent(params.href));
+		if(params.type == 'reblog') {
+			var token = Tumblr.getReblogToken(params.href);
+			return addTab(Tumblr.TUMBLR_URL+'reblog/'+token.id + '/' + token.token +'?redirect_to='+encodeURIComponent(params.href));
+		}
 		
 		var form = Tumblr[capitalize(params.type)].convertToForm(params);
 		return addTab(Tumblr.TUMBLR_URL+'new/' + params.type).addCallback(function(win){

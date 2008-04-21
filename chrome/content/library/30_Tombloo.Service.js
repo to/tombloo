@@ -635,6 +635,7 @@ Tombloo.Service = {
 					type   : 'photo',
 					source : source,
 					body   : ctx.title.link(ctx.href),
+					clickThrough : ((ctx.link) ? ctx.link.href: null)
 				}
 			},
 		},

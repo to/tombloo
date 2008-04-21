@@ -285,7 +285,7 @@ Tumblr.Photo = {
 			u             : m.href,
 			photo_src     : m.source,
 			'post[two]'   : m.body,
-			'post[three]' : m.href,
+			'post[three]' : m.clickThrough || m.href,
 		};
 		form[typeof(m.source)=='string' ? 'photo_src' : 'image'] = m.source;
 		return form;

@@ -213,3 +213,23 @@ var Flickr = {
 		});
 	},
 }
+
+var WeHeartIt = {
+	URL : 'http://weheartit.com/',
+	
+	post : function(ps){
+		return doXHR(WeHeartIt.URL + 'add.php', {
+			method : 'GET',
+			referrer : ps.clickThrough,
+			queryString : {
+				title : ps.title,
+				via : ps.clickThrough,
+				img : ps.source,
+			},
+		}).addCallback(function(res){
+			if(!res.responseText.match('logout'))
+				throw 'AUTH_FAILD';
+		});
+	},
+}
+

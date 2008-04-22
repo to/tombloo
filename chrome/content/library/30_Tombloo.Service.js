@@ -112,6 +112,12 @@ Tombloo.Service = {
 			
 			return Flickr.addFavorite(ctx.href.replace(/\/$/, '').split('/').pop())
 		},
+		WeHeartIt : function(ctx, params){
+			if(ctx.event.ctrlKey || params.type != 'photo')
+				return succeed();
+			
+			return WeHeartIt.post(params);
+		},
 	},
 	
 	extracters : {

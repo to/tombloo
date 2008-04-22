@@ -116,7 +116,12 @@ Tombloo.Service = {
 			if(ctx.event.ctrlKey || params.type != 'photo')
 				return succeed();
 			
-			return WeHeartIt.post(params);
+			if(ctx.href.match('^http://weheartit.com/')){
+				var id = params.source.split('/').pop();
+				return WeHeartIt.iHeartIt(id);
+			} else {
+				return WeHeartIt.post(params);
+			}
 		},
 	},
 	

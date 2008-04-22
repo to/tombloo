@@ -231,5 +231,19 @@ var WeHeartIt = {
 				throw 'AUTH_FAILD';
 		});
 	},
+
+	iHeartIt : function(id){
+		return doXHR(WeHeartIt.URL + 'inc_heartedby.php', {
+			method : 'GET',
+			referrer : ps.clickThrough,
+			queryString : {
+				do : 'heart',
+				entry : id,
+			},
+		}).addCallback(function(res){
+			if(!res.responseText.match('logout'))
+				throw 'AUTH_FAILD';
+		});
+	},
 }
 

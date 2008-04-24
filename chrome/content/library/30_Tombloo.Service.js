@@ -498,7 +498,7 @@ Tombloo.Service = {
 			},
 		},
 		
-		'Photo - qoob.tv' : {
+		'Photo - QOOB' : {
 			check : function(ctx){
 				return ctx.href.match('en.qoob.tv/pict/clip_view.asp');
 			},
@@ -514,7 +514,7 @@ Tombloo.Service = {
 			},
 		},
 		
-		'Photo - blogspot' : {
+		'Photo - Blogger' : {
 			check : function(ctx){
 				return ctx.onLink && 
 					(''+ctx.link).match(/(png|gif|jpe?g)$/i) &&
@@ -688,7 +688,7 @@ Tombloo.Service = {
 			},
 		},
 		
-		'Video - MySpace' : {
+		'Video - MySpaceTV' : {
 			check : function(ctx){
 				return ctx.hostname.match(/vids\.myspace\.com/);
 			},
@@ -704,7 +704,7 @@ Tombloo.Service = {
 			},
 		},
 		
-		'Video - dailymotion' : {
+		'Video - Dailymotion' : {
 			check : function(ctx){
 				return ctx.hostname.match('dailymotion.com');
 			},

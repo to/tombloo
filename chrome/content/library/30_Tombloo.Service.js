@@ -279,6 +279,20 @@ Tombloo.Service = {
 			},
 		},
 		
+		'Quote - inyo.jp' : {
+			check : function(ctx){
+				return ctx.href.match('//inyo.jp/quote/[a-f0-9]+');
+			},
+			extract : function(ctx){
+			        var quote = $x('//blockquote[@class="text"]/p').textContent;
+				return {
+					type   : 'quote',
+					body   : (ctx.selection? ctx.selection : quote),
+					source : $x('//span[@class="title"]/text()').link(ctx.href),
+				}
+			},
+		},
+		
 		'Amazon' : {
 			check : function(ctx){
 			},
@@ -774,6 +788,20 @@ Tombloo.Service = {
 					body   : ctx.selection.trim(),
 					source : ctx.title.link(ctx.href),
 				}
+			},
+		},
+		
+		'ReBlog - Tumblr link' : {
+			check : function(ctx){
+			  return ctx.link && ctx.link.href.match(/^http:\/\/[^.]+.tumblr\.com\/post\/\d+/);
+			},
+			extract : function(ctx){
+			  return doXHR(ctx.link.href).addCallback(function(res){
+			    return {
+			      type   : 'reblog',
+			      source : $x('//iframe[starts-with(@src, "http://www.tumblr.com/dashboard/iframe")]/@src', convertToHTMLDocument(res.responseText)),
+			    }
+			  });
 			},
 		},
 		

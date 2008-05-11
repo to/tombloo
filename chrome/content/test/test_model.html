@@ -20,6 +20,21 @@ try {
 	
 	var d = succeed();
 	/*
+	d.addCallback(bind('getToken', HatenaBookmark));
+	d.addCallback(function(token){
+		ok(token, 'HatenaBookmark: トークン取得');
+	});
+	
+	d.addCallback(bind('post', HatenaBookmark), {
+		source  : 'http://twitter.com/',
+		body    : '今何してるかを共有するサービス',
+	});
+	d.addCallback(function(){
+		ok(true, 'HatenaBookmark: 追加');
+	});
+	*/
+	
+	/*
 	d.addCallback(bind('addFavorite', Flickr), 2371304094);
 	d.addCallback(function(){
 		ok(true, 'Flickr Favorite 追加');

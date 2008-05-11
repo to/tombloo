@@ -89,39 +89,51 @@ Tombloo.Service = {
 	},
 	
 	posters : {
-		Tumblr : function(ctx, params){
+		Tumblr : function(ctx, ps){
 			if(ctx.event.ctrlKey)
-				return Tumblr.openTab(params);
+				return Tumblr.openTab(ps);
 			
-			return Tumblr.post(params);
+			switch(ps.type){
+			case 'link':
+				ps.body = Tombloo.Service.getThumbnail(ps.href);
+				break;
+			}
+			
+			return Tumblr.post(ps);
 		},
-		FFFFOUND : function(ctx, params){
-			if(ctx.event.ctrlKey || params.type != 'photo')
+		FFFFOUND : function(ctx, ps){
+			if(ctx.event.ctrlKey || ps.type != 'photo')
 				return succeed();
 			
 			if(ctx.href.match('^http://ffffound.com/')){
-				var id = params.source.split('/').pop().replace(/[_\.].*/, '');
+				var id = ps.source.split('/').pop().replace(/[_\.].*/, '');
 				return FFFFOUND.iLoveThis(id)
 			} else {
-				return FFFFOUND.post(params);
+				return FFFFOUND.post(ps);
 			}
 		},
-		Flickr : function(ctx, params){
-			if(ctx.event.ctrlKey || params.type != 'photo' || !ctx.href.match('^http://www.flickr.com/photos/'))
+		Flickr : function(ctx, ps){
+			if(ctx.event.ctrlKey || ps.type != 'photo' || !ctx.href.match('^http://www.flickr.com/photos/'))
 				return succeed();
 			
 			return Flickr.addFavorite(ctx.href.replace(/\/$/, '').split('/').pop())
 		},
-		WeHeartIt : function(ctx, params){
-			if(ctx.event.ctrlKey || params.type != 'photo')
+		WeHeartIt : function(ctx, ps){
+			if(ctx.event.ctrlKey || ps.type != 'photo')
 				return succeed();
 			
 			if(ctx.href.match('^http://weheartit.com/')){
-				var id = params.source.split('/').pop();
+				var id = ps.source.split('/').pop();
 				return WeHeartIt.iHeartIt(id);
 			} else {
-				return WeHeartIt.post(params);
+				return WeHeartIt.post(ps);
 			}
+		},
+		HatenaBookmark : function(ctx, ps){
+			if(ctx.event.ctrlKey || ps.type != 'link')
+				return succeed();
+			
+			return HatenaBookmark.post(ps);
 		},
 	},
 	
@@ -810,7 +822,6 @@ Tombloo.Service = {
 					type   : 'link',
 					title  : ctx.title,
 					source : ctx.href,
-					body   : Tombloo.Service.getThumbnail(ctx.href),
 				}
 			},
 		},

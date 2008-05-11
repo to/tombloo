@@ -231,7 +231,7 @@ var WeHeartIt = {
 				throw 'AUTH_FAILD';
 		});
 	},
-
+	
 	iHeartIt : function(id){
 		return doXHR(WeHeartIt.URL + 'inc_heartedby.php', {
 			method : 'GET',
@@ -247,3 +247,30 @@ var WeHeartIt = {
 	},
 }
 
+var HatenaBookmark = {
+	POST_URL : 'http://b.hatena.ne.jp/add',
+	
+	getToken : function(){
+		return doXHR(HatenaBookmark.POST_URL).addCallback(function(res){
+			if(res.responseText.match(/Hatena\.rkm\s*=\s*['"](.+?)['"]/) )
+				return RegExp.$1;
+			
+			throw 'AUTH_FAILD';
+		});
+	},
+	post : function(ps){
+		return HatenaBookmark.getToken().addCallback(function(token){
+			var content = {
+				mode    : 'enter',
+				rkm     : token,
+				url     : ps.source,
+				comment : ps.body,
+			};
+			if(ps.title)
+				content.title = ps.title;
+			return doXHR(HatenaBookmark.POST_URL, {
+				sendContent : content,
+			});
+		});
+	},
+}

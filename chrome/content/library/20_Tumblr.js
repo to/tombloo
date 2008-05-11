@@ -156,7 +156,7 @@ var Tumblr = {
 			// reblog as quote
 			return doXHR(url + '/quote');
 		}).addCallback(function(res){
-			var fields = formContents(convertToHTMLDocument(res.responseText));
+			var fields = formContents(res.responseText);
 			Tumblr.trimReblogInfo(fields);
 			fields.redirect_to = Tumblr.TUMBLR_URL+'dashboard';
 			delete fields.preview_post;

@@ -341,3 +341,24 @@ var Twitter = {
 		});
 	},
 }
+
+var Delicious = {
+	post : function(ps){
+		return doXHR('http://del.icio.us/post/', {
+			queryString :	{
+				url   : ps.source,
+				title : ps.title,
+			},
+		}).addCallback(function(res){
+			var doc = convertToHTMLDocument(res.responseText);
+			return doXHR('http://del.icio.us/'+doc.getElementById('delForm').action, {
+				sendContent : update(formContents(doc), {
+					jump    : 'no',
+					notes   : ps.body,
+					tags    : ps.tags? ps.tags.join(' ') : '',
+					private : ps.private? 'on' : '',
+				}),
+			});
+		});
+	},
+}

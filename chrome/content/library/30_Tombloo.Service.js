@@ -284,10 +284,9 @@ Tombloo.Service = {
 				return ctx.href.match('//inyo.jp/quote/[a-f0-9]+');
 			},
 			extract : function(ctx){
-			        var quote = $x('//blockquote[@class="text"]/p').textContent;
 				return {
 					type   : 'quote',
-					body   : (ctx.selection? ctx.selection : quote),
+					body   : ctx.selection || $x('//blockquote[@class="text"]/p').textContent,
 					source : $x('//span[@class="title"]/text()').link(ctx.href),
 				}
 			},
@@ -401,7 +400,7 @@ Tombloo.Service = {
 			},
 			extract : function(ctx){
 				ctx.href = this.getLink(ctx);
-				return  Tombloo.Service.extracters.ReBlog.extract(ctx);
+				return Tombloo.Service.extracters.ReBlog.extract(ctx);
 			},
 			getLink : function(ctx){
 				var target = ctx.target;
@@ -420,6 +419,17 @@ Tombloo.Service = {
 			extract : function(ctx){
 				ctx.href = ctx.target.photo.url;
 				return  Tombloo.Service.extracters.ReBlog.extract(ctx);
+			},
+		},
+		
+		'ReBlog - Tumblr link' : {
+			check : function(ctx){
+				return ctx.link && ctx.link.href.match(/^http:\/\/[^.]+.tumblr\.com\/post\/\d+/);
+			},
+			extract : function(ctx){
+				ctx.href = ctx.link.href;
+				
+				return Tombloo.Service.extracters.ReBlog.extract(ctx);
 			},
 		},
 		
@@ -754,7 +764,7 @@ Tombloo.Service = {
 				return ctx.hostname.match('youtube.com');
 			},
 			extract : function(ctx){
-				var info = $x('id("channelVidsTop")//div[@class="wsHeading"]/a');
+				var info = $x('id("watch-channel-stats")/a');
 				
 				return {
 					type   : 'video',
@@ -788,20 +798,6 @@ Tombloo.Service = {
 					body   : ctx.selection.trim(),
 					source : ctx.title.link(ctx.href),
 				}
-			},
-		},
-		
-		'ReBlog - Tumblr link' : {
-			check : function(ctx){
-			  return ctx.link && ctx.link.href.match(/^http:\/\/[^.]+.tumblr\.com\/post\/\d+/);
-			},
-			extract : function(ctx){
-			  return doXHR(ctx.link.href).addCallback(function(res){
-			    return {
-			      type   : 'reblog',
-			      source : $x('//iframe[starts-with(@src, "http://www.tumblr.com/dashboard/iframe")]/@src', convertToHTMLDocument(res.responseText)),
-			    }
-			  });
 			},
 		},
 		

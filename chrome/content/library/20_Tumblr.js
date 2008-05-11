@@ -126,19 +126,25 @@ var Tumblr = {
 		return fields;
 	},
 	
+	// http://to.tumblr.com/post/34424030
+	// http://www.tumblr.com/reblog/34424030/z514XaLi?redirect_to=%2Fdashboard
+	// http://www.tumblr.com/dashboard/iframe?src=http%3A%2F%2Fto.tumblr.com%2Fpost%2F34424030&amp;pid=34424030&amp;rk=z514XaLi
 	getReblogToken : function (url){
 		url = unescapeHTML(url);
-		if(url.match(/&pid=(.*)&rk=(.*)/) || url.match('/reblog/(.*?)/([^\\?]*)'))
-			return {
+		if(url.match(/&pid=(.*)&rk=(.*)/) || url.match('/reblog/(.*?)/([^\\?]*)')){
+			return succeed({
 				id    : RegExp.$1,
 				token : RegExp.$2,
-			}
+			});
+		}
+		
+		return doXHR(url).addCallback(function(res){
+			return Tumblr.getReblogToken(res.responseText.match('iframe src="(.*?)"')[1]);
+		});
 	},
 	
 	reblog : function(url){
-		return maybeDeferred(Tumblr.getReblogToken(url) || doXHR(url).addCallback(function(res){
-			return Tumblr.getReblogToken(res.responseText.match('iframe src="(.*?)"')[1]);
-		})).addCallback(function(token){
+		return Tumblr.getReblogToken(url).addCallback(function(token){
 			url = Tumblr.TUMBLR_URL+'reblog/'+token.id+'/'+token.token;
 			return doXHR(url);
 		}).addCallback(function(res){

@@ -19,7 +19,20 @@ try {
 	SimpleTest.waitForExplicitFinish();
 	
 	var d = succeed();
+	
+	
 	/*
+	// GoogleWebHistory
+	is(GoogleWebHistory.getCh('http://google.com'), '6-1226505498');
+	d.addCallback(bind('post', GoogleWebHistory), 'http://google.com/');
+	d.addCallback(function(){
+		ok(true, 'GoogleWebHistory: 追加');
+	});
+	*/
+	
+	
+	/*
+	// HatenaBookmark
 	d.addCallback(bind('getToken', HatenaBookmark));
 	d.addCallback(function(token){
 		ok(token, 'HatenaBookmark: トークン取得');
@@ -34,7 +47,9 @@ try {
 	});
 	*/
 	
+	
 	/*
+	// Flickr
 	d.addCallback(bind('addFavorite', Flickr), 2371304094);
 	d.addCallback(function(){
 		ok(true, 'Flickr Favorite 追加');
@@ -73,11 +88,11 @@ try {
 	d.addErrback(function(e){
 		is(e.message, 'Photo not found');
 	});
+	*/
 	
 	
-	
-	
-	
+	/*
+	// FFFFOUND
 	d.addCallback(bind('getToken', FFFFOUND));
 	d.addCallback(function(token){
 		ok(token);

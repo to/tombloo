@@ -274,3 +274,38 @@ var HatenaBookmark = {
 		});
 	},
 }
+
+// copied from http://userscripts.org/scripts/show/19741
+var GoogleWebHistory = {
+	getCh : function(url){
+		function r(x,y){
+			return Math.floor((x/y-Math.floor(x/y))*y+.1);
+		}
+		function m(c){
+			var i,j,s=[13,8,13,12,16,5,3,10,15];
+			for(i=0;i<9;i+=1){
+				j=c[r(i+2,3)];
+				c[r(i,3)]=(c[r(i,3)]-c[r(i+1,3)]-j)^(r(i,3)==1?j<<s[i]:j>>>s[i]);
+			}
+		}
+		
+		url='info:'+url;
+		
+		var c = [0x9E3779B9,0x9E3779B9,0xE6359A60],i,j,k=0,l,f=Math.floor;
+		for(l=url.length ; l>=12 ; l-=12){
+			for(i=0 ; i<16 ; i+=1){
+				j=k+i;c[f(i/4)]+=url.charCodeAt(j)<<(r(j,4)*8);
+			}
+			m(c);
+			k+=12;
+		}
+		c[2]+=url.length;
+		for(i=l;i>0;i--)
+			c[f((i-1)/4)]+=url.charCodeAt(k+i-1)<<(r(i-1,4)+(i>8?1:0))*8;
+		m(c);
+		return'6'+c[2];
+	},
+	post : function(url){
+		return doXHR('http://www.google.com/search?client=navclient-auto&ch=' + GoogleWebHistory.getCh(url) + '&features=Rank&q=info:' + escape(url));
+	},
+}

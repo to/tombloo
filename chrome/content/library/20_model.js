@@ -10,7 +10,6 @@ var FFFFOUND = {
 	post : function(ps){
 		return this.getToken().addCallback(function(token){
 			return doXHR(FFFFOUND.URL + 'add_asset', {
-				method : 'GET',
 				referrer : ps.href,
 				queryString : {
 					token   : token,
@@ -31,7 +30,6 @@ var FFFFOUND = {
 	remove : function(id){
 		// 200 {"success":false}
 		return doXHR(FFFFOUND.URL + 'gateway/in/api/remove_asset', {
-			method : 'POST',
 			referrer : FFFFOUND.URL,
 			sendContent : {
 				collection_id : id,
@@ -41,7 +39,6 @@ var FFFFOUND = {
 	
 	iLoveThis : function(id){
 		return doXHR(FFFFOUND.URL + 'gateway/in/api/add_asset', {
-			method : 'POST',
 			referrer : FFFFOUND.URL,
 			sendContent : {
 				collection_id : 'i'+id,
@@ -133,13 +130,13 @@ var Amazon = {
 }
 
 var Flickr = {
-	callMethod : function(params){
+	callMethod : function(ps){
 		return doXHR('http://flickr.com/services/rest/', {
 			queryString : update({
 				api_key        : 'ecf21e55123e4b31afa8dd344def5cc5',
 				nojsoncallback : 1,
 				format         : 'json',
-			}, params),
+			}, ps),
 		}).addCallback(function(res){
 			eval('var json=' + res.responseText);
 			if(json.stat!='ok')
@@ -147,20 +144,20 @@ var Flickr = {
 			return json;
 		});
 	},
-	callAuthMethod : function(params){
-		return this.getToken(params.photo_id).addCallback(function(page){
-			params = update(update({
+	callAuthMethod : function(ps){
+		return this.getToken(ps.photo_id).addCallback(function(page){
+			ps = update(update({
 				nojsoncallback : 1,
 				format         : 'json',
 				src            : 'js',
 				cb             : new Date().getTime(),
-			}, page.token), params);
-			params.api_sig = (page.secret + keys(params).sort().map(function(key){
-				return key + params[key]
+			}, page.token), ps);
+			ps.api_sig = (page.secret + keys(ps).sort().map(function(key){
+				return key + ps[key]
 			}).join('')).md5();
 			
 			return doXHR('http://flickr.com/services/rest/', {
-				sendContent : params,
+				sendContent : ps,
 			});
 		}).addCallback(function(res){
 			eval('var json=' + res.responseText);
@@ -219,7 +216,6 @@ var WeHeartIt = {
 	
 	post : function(ps){
 		return doXHR(WeHeartIt.URL + 'add.php', {
-			method : 'GET',
 			referrer : ps.clickThrough,
 			queryString : {
 				title : ps.title,
@@ -234,7 +230,6 @@ var WeHeartIt = {
 	
 	iHeartIt : function(id){
 		return doXHR(WeHeartIt.URL + 'inc_heartedby.php', {
-			method : 'GET',
 			referrer : ps.clickThrough,
 			queryString : {
 				do : 'heart',
@@ -252,7 +247,7 @@ var HatenaBookmark = {
 	
 	getToken : function(){
 		return doXHR(HatenaBookmark.POST_URL).addCallback(function(res){
-			if(res.responseText.match(/Hatena\.rkm\s*=\s*['"](.+?)['"]/) )
+			if(res.responseText.match(/Hatena\.rkm\s*=\s*['"](.+?)['"]/))
 				return RegExp.$1;
 			
 			throw 'AUTH_FAILD';
@@ -307,5 +302,42 @@ var GoogleWebHistory = {
 	},
 	post : function(url){
 		return doXHR('http://www.google.com/search?client=navclient-auto&ch=' + GoogleWebHistory.getCh(url) + '&features=Rank&q=info:' + escape(url));
+	},
+}
+
+var Twitter = {
+	getToken : function(){
+		return doXHR('http://twitter.com/account/settings').addCallback(function(res){
+			var html = res.responseText;
+			return {
+				authenticity_token : html.extract(/authenticity_token.+value="(.+?)"/),
+				siv                : html.extract(/logout\?siv=(.+?)"/),
+			}
+		});
+	},
+	post : function(status){
+		return Twitter.getToken().addCallback(function(ps){
+			ps.status = status;
+			return doXHR('http://twitter.com/status/update', {
+				sendContent : ps,
+			});
+		});
+	},
+	remove : function(id){
+		return Twitter.getToken().addCallback(function(ps){
+			ps._method = 'delete';
+			return doXHR('http://twitter.com/status/destroy/' + id, {
+				referrer : 'http://twitter.com/home',
+				sendContent : ps,
+			});
+		});
+	},
+	addFavorite : function(id){
+		return Twitter.getToken().addCallback(function(ps){
+			return doXHR('http://twitter.com/favourings/create/' + id, {
+				referrer : 'http://twitter.com/home',
+				sendContent : ps,
+			});
+		});
 	},
 }

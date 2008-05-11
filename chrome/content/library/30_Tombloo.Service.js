@@ -470,9 +470,9 @@ Tombloo.Service = {
 			},
 		},
 		
-		'Photo - Google.ca' : {
+		'Photo - Google' : {
 			check : function(ctx){
-				return (ctx.onLink && ctx.link.href.match('http://lh..google.ca/.*(png|gif|jpe?g)$'));
+				return (ctx.onLink && ctx.link.href.match('http://lh..(google.ca|ggpht.com)/.*(png|gif|jpe?g)$'));
 			},
 			extract : function(ctx){
 				return doXHR(ctx.link.href).addCallback(function(res){

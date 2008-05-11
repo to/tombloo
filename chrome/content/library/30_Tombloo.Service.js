@@ -733,7 +733,7 @@ Tombloo.Service = {
 				return ctx.hostname.match('dailymotion.com');
 			},
 			extract : function(ctx){
-				var tag = $x('//div[@class="video_player_embed"]/input/@value');
+				var tag = $x('id("video_player_embed_code_text")/text()');
 				if(!tag) return;
 				
 				// タイトル文字化け回避のためctx.titleから取得

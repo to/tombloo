@@ -130,16 +130,18 @@ var Tumblr = {
 	// http://www.tumblr.com/reblog/34424030/z514XaLi?redirect_to=%2Fdashboard
 	// http://www.tumblr.com/dashboard/iframe?src=http%3A%2F%2Fto.tumblr.com%2Fpost%2F34424030&amp;pid=34424030&amp;rk=z514XaLi
 	getReblogToken : function (url){
-		url = unescapeHTML(url);
-		if(url.match(/&pid=(.*)&rk=(.*)/) || url.match('/reblog/(.*?)/([^\\?]*)')){
-			return succeed({
-				id    : RegExp.$1,
-				token : RegExp.$2,
-			});
+		function getToken(url){
+			url = unescapeHTML(url);
+			if(url.match(/&pid=(.*)&rk=(.*)/) || url.match('/reblog/(.*?)/([^\\?]*)')){
+				return succeed({
+					id    : RegExp.$1,
+					token : RegExp.$2,
+				});
+			}
 		}
 		
-		return doXHR(url).addCallback(function(res){
-			return Tumblr.getReblogToken(res.responseText.match('iframe src="(.*?)"')[1]);
+		return getToken(url) ||  doXHR(url).addCallback(function(res){
+			return getToken(res.responseText.match('iframe src="(.*?)"')[1]);
 		});
 	},
 	
@@ -205,8 +207,9 @@ var Tumblr = {
 	
 	openTab : function(params){
 		if(params.type == 'reblog') {
-			var token = Tumblr.getReblogToken(params.href);
-			return addTab(Tumblr.TUMBLR_URL+'reblog/'+token.id + '/' + token.token +'?redirect_to='+encodeURIComponent(params.href));
+			return Tumblr.getReblogToken(params.href).addCallback(function(token){
+				return addTab(Tumblr.TUMBLR_URL+'reblog/'+token.id + '/' + token.token +'?redirect_to='+encodeURIComponent(params.href));
+			});
 		}
 		
 		var form = Tumblr[capitalize(params.type)].convertToForm(params);

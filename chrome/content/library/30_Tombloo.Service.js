@@ -565,6 +565,20 @@ Tombloo.Service = {
 			},
 		},
 		
+		'Photo - Shorpy' : {
+			check : function(ctx){
+				return ctx.onImage && 
+					ctx.target.src.match('www.shorpy.com/.*.preview\.jpg');
+			},
+			extract : function(ctx){
+				return {
+					type   : 'photo',
+					source : ctx.target.src.replace('\.preview\.jpg', '.jpg'), 
+					body   : ctx.title.link(ctx.href),
+				}
+			},
+		},
+		
 		'Photo - FFFFOUND!' : {
 			check : function(ctx){
 				return ctx.href.match('http://ffffound.com/image/') && 

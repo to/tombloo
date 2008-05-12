@@ -305,6 +305,29 @@ var GoogleWebHistory = {
 	},
 }
 
+var GoogleBookmarks = {
+	post : function(ps){
+		return doXHR('http://www.google.com/bookmarks/mark', {
+			queryString :	{
+				op : 'add',
+			},
+		}).addCallback(function(res){
+			var doc = convertToHTMLDocument(res.responseText);
+			var fs = formContents(doc);
+			return doXHR('http://www.google.com'+$x('//form[@name="add_bkmk_form"]/@action', doc), {
+				sendContent  : {
+					title      : ps.title,
+					bkmk       : ps.source,
+					annotation : ps.body,
+					labels     : ps.tags? ps.tags.join(' ') : '',
+					btnA       : fs.btnA,
+					sig        : fs.sig,
+				},
+			});
+		});
+	},
+}
+
 var Twitter = {
 	getToken : function(){
 		return doXHR('http://twitter.com/account/settings').addCallback(function(res){
@@ -315,12 +338,12 @@ var Twitter = {
 			}
 		});
 	},
-	post : function(status){
-		return Twitter.getToken().addCallback(function(ps){
-			ps.status = status;
-			return doXHR('http://twitter.com/status/update', {
-				sendContent : ps,
-			});
+	post : function(ps){
+		return Twitter.getToken().addCallback(function(token){
+			token.status = [ps.title, ps.source, ps.body].filter(operator.truth).join(' ');
+			return doXHR('http://twitter.com/status/update', update({
+				sendContent : token,
+			}));
 		});
 	},
 	remove : function(id){

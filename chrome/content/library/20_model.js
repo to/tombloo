@@ -385,3 +385,35 @@ var Delicious = {
 		});
 	},
 }
+
+var HatenaStar = {
+	getToken : function(){
+		return doXHR('http://s.hatena.ne.jp/entries.json').addCallback(function(res){
+			return res.responseText.extract(/"rks":"(.*?)"/);
+		})
+	},
+	post : function(ps){
+		return HatenaStar.getToken().addCallback(function(token){
+			return doXHR('http://s.hatena.ne.jp/star.add.json', {
+				queryString :	{
+					rks      : token,
+					title    : ps.title,
+					quote    : ps.body,
+					location : ps.href,
+					uri      : ps.source,
+				},
+			});
+		});
+	},
+	remove : function(ps){
+		return HatenaStar.getToken().addCallback(function(token){
+			return doXHR('http://s.hatena.ne.jp/star.delete.json', {
+				queryString :	{
+					rks   : token,
+					uri   : ps.source,
+					quote : ps.body,
+				},
+			});
+		});
+	},
+}

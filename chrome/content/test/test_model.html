@@ -26,7 +26,6 @@ try {
 	
 	/*
 	// YahooBookmarks
-	YahooBookmarks.getToken();
 	YahooBookmarks.post({
 		href    : 'http://www.goo.ne.jp/',
 		source  : 'http://dictionary.goo.ne.jp/',
@@ -65,18 +64,6 @@ try {
 	
 	
 	/*
-	// Delicious
-	Delicious.post({
-		source  : 'http://www.goo.ne.jp/',
-		title   : 'goo',
-		body    : 'ポータルサイト',
-		tags    : ['search', 'portal'],
-		private : true,
-	});
-	*/
-	
-	
-	/*
 	// Twitter
 	Twitter.addFavorite(808614559);
 	Twitter.remove(808692324);
@@ -86,6 +73,18 @@ try {
 		body    : 'ポータルサイト',
 	});
 	Twitter.getToken();
+	*/
+	
+	
+	/*
+	// Delicious
+	Delicious.post({
+		source  : 'http://www.goo.ne.jp/',
+		title   : 'goo',
+		body    : 'ポータルサイト',
+		tags    : ['search', 'portal'],
+		private : true,
+	});
 	*/
 	
 	
@@ -105,7 +104,6 @@ try {
 	d.addCallback(function(token){
 		ok(token, 'HatenaBookmark: トークン取得');
 	});
-	
 	d.addCallback(bind('post', HatenaBookmark), {
 		source  : 'http://twitter.com/',
 		body    : '今何してるかを共有するサービス',

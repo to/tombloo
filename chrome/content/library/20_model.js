@@ -313,6 +313,9 @@ var GoogleBookmarks = {
 			},
 		}).addCallback(function(res){
 			var doc = convertToHTMLDocument(res.responseText);
+			if(doc.getElementById('gaia_loginform'))
+				throw 'AUTH_FAILD';
+			
 			var fs = formContents(doc);
 			return doXHR('http://www.google.com'+$x('//form[@name="add_bkmk_form"]/@action', doc), {
 				sendContent  : {
@@ -332,6 +335,9 @@ var Twitter = {
 	getToken : function(){
 		return doXHR('http://twitter.com/account/settings').addCallback(function(res){
 			var html = res.responseText;
+			if(html.indexOf('signin')!=-1)
+				throw 'AUTH_FAILD';
+			
 			return {
 				authenticity_token : html.extract(/authenticity_token.+value="(.+?)"/),
 				siv                : html.extract(/logout\?siv=(.+?)"/),
@@ -374,6 +380,9 @@ var Delicious = {
 			},
 		}).addCallback(function(res){
 			var doc = convertToHTMLDocument(res.responseText);
+			if(!doc.getElementById('delForm'))
+				throw 'AUTH_FAILD';
+			
 			return doXHR('http://del.icio.us/'+$x('id("delForm")/@action', doc), {
 				sendContent : update(formContents(doc), {
 					jump    : 'no',
@@ -389,7 +398,9 @@ var Delicious = {
 var HatenaStar = {
 	getToken : function(){
 		return doXHR('http://s.hatena.ne.jp/entries.json').addCallback(function(res){
-			return res.responseText.extract(/"rks":"(.*?)"/);
+			if(!res.responseText.match(/"rks":"(.*?)"/))
+				throw 'AUTH_FAILD'
+			return RegExp.$1;
 		})
 	},
 	post : function(ps){
@@ -421,6 +432,9 @@ var HatenaStar = {
 var YahooBookmarks = {
 	post : function(ps){
 		return doXHR('http://bookmarks.yahoo.co.jp/action/post').addCallback(function(res){
+			if(res.responseText.indexOf('login_form')!=-1)
+				throw 'AUTH_FAILD';
+			
 			return formContents($x('(id("addbookmark")//form)[1]', convertToHTMLDocument(res.responseText)));
 		}).addCallback(function(fs){
 			return doXHR('http://bookmarks.yahoo.co.jp/action/post/done', {

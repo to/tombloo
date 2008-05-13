@@ -365,7 +365,7 @@ function sendByChannel(url, opts){
 		},
 		onStopRequest: function (req, ctx, status) {
 			var text = this.data.join('');
-			var charset = opts.charset || channel.contentCharset;
+			var charset = opts.charset || req.contentCharset;
 			try{
 				text = charset? convertToUnicode(text, charset) : text;
 			} catch(err){

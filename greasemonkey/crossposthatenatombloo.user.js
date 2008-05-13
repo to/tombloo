@@ -51,10 +51,14 @@ $x('id("edit_form")')[0].addEventListener('submit', function(e){
 	};
 	
 	imgs.forEach(function(img, i){
-		if(img.className)
-			GM_Tombloo[img.title].post(ps);
+		var service = img.title;
+		if(img.className){
+			GM_Tombloo[service].post(ps).addErrback(function(e){
+				alert(service + ': ' + e.message);
+			});
+		}
 		
-		pref[img.title] = !!img.className;
+		pref[service] = !!img.className;
 	});
 	save('pref', pref);
 }, false);

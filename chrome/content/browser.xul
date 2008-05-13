@@ -35,16 +35,11 @@
 		if(gm){
 			gm = gm.getService().wrappedJSObject;
 			
-			var GM_Tombloo = function(){};
+			var GM_Tombloo = update(function(){}, env, 
+				'Tumblr GoogleWebHistory GoogleBookmarks WeHeartIt Twitter Delicious Flickr HatenaStar HatenaBookmark'.split(' '));
 			GM_Tombloo.Tombloo = {};
 			GM_Tombloo.Tombloo.Service = update({}, env.Tombloo.Service, 
 				'check share posters extracters'.split(' '));
-			GM_Tombloo.Tumblr = update({}, env.Tumblr, 
-				'post remove getInfo read reblog openTab getLoggedInUser'.split(' '));
-			GM_Tombloo.FFFFOUND = update({}, env.FFFFOUND, 
-				'post remove iLoveThis'.split(' '));
-			GM_Tombloo.Flickr = update({}, env.Flickr, 
-				'getSizes getInfo addFavorite removeFavorite'.split(' '));
 			env.addBefore(gm, 'evalInSandbox', function(code, codebase, sandbox){
 				sandbox.GM_Tombloo = GM_Tombloo;
 			});

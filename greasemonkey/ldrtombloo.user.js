@@ -49,12 +49,13 @@ function share(event){
 	
 	// FFFFOUND / Flickr / iza newsphoto
 	if([
-		'^http://ffffound\\.com/', 
-		'flickr\\.com/photos/', 
+		'flickr.com/', 
+		'http://ffffound.com/', 
 		'http://www.bighappyfunhouse.com/',
 		'http://f.hatena.ne.jp/',
-		'http://pipes.yahoo.com/pipes/pipe.info\\?_id=1eb46a2f1f83c340eee10cd49c144625'].some(function(re){
-			return feed.channel.link.match(re);
+		'http://lpcoverlover.com/',
+		'1eb46a2f1f83c340eee10cd49c144625'].some(function(pattern){
+			return feed.channel.link.indexOf(pattern) != -1;
 		})){
 		
 		ctx.onImage = true;

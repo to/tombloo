@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name           Cross Post Hatena / Tombloo
+// @name           Cross Post Hatena + Tombloo
 // @namespace      http://userscripts.org/users/7010
 // @include        http://b.hatena.ne.jp/add?mode=confirm*
 // ==/UserScript==
@@ -17,11 +17,11 @@ GM_addStyle(<><![CDATA[
 $x('//div[@class="info"]/table/tbody')[0].appendChild(dom(<tr id="xpost">
 	<td class="label" >ポスト先</td>
 	<td>
-		<img name="Delicious" src="data:image/gif,GIF89a%10%00%10%00%91%00%00%00%00%00%FF%FF%FF%DD%DD%DD%00%00%FF!%F9%04%00%00%00%00%00%2C%00%00%00%00%10%00%10%00%00%02*%8Co%A3%AB%88%CC%DC%81K%26%3Al%C0%D9r%FDy%18%40%96%A4%80%A6%A8i%AA*%5B%BA)%7C%CA%02%0D%D87%AD%E3%3Do%2B%00%00%3B" />
-		<img name="GoogleBookmarks" src="data:image/gif,GIF89a%10%00%10%00%A2%00%00%00%00%8A%FF%FF%FF%002%AC%002%FA2j%FA2%AC2%AC%AC%FA%FA2%00!%F9%04%00%00%00%00%00%2C%00%00%00%00%10%00%10%00%00%03E8%B5%DC%3E!%CA9%0F%94%86%88!%88%91%96D%5C%92%00Da%40%10%14%15%1AB%EBB%B0%5CA%9D%0DB%9A%8E%F21_j%F0%99h%88%81%E1%A9%05%F8%A4%02%A6b%E9g%04l%06XV%92%E4%DB%3A%BE%8CC%02%00%3B" />
-		<img name="Tumblr" src="data:image/gif,GIF89a%10%00%10%00%91%00%00%13%14%17Y%5C_-08%F0%F0%F0!%F9%04%00%00%00%00%00%2C%00%00%00%00%10%00%10%00%00%02%40%94%8F%08%20%E1%0F!%0B)%AD0M%7C7%8B%01%86%A0%00%60M%03%02c0%60%26%C5.c%E9z%8B%3A%90%F7%7B%C8%F9%5D%F2%E8f%3B%9BO%D79%DDD%C8%17%10%D2%9C%00%A7E%DAfC%CD%02%0B%00%3B" />
-		<img name="Twitter" src="data:image/gif,GIF89a%10%00%10%00%91%03%00%AF%FF%FF%00%FF%FF%FF%FF%FF%FF%FF%FF!%F9%04%01%00%00%03%00%2C%00%00%00%00%10%00%10%00%00%02%40%DC%84h%CB%07%FFDc%08%AAi%04%8C%20%01%AAm%DBe%3C%01p%A6A%20-B%8A%C6%EB%97%A1%EB%8D%B7%C7%3B'%9A%EE%B8u%7C%0D%84%D0G%0A%0AEE%9C%F3%04z%0A%8B%1A)%B0%14%12%B5%0A%00%3B" />
-	</td>
+		<img title="GoogleBookmarks" src="data:image/gif,GIF89a%10%00%10%00%A2%00%00%00%00%8A%FF%FF%FF%002%AC%002%FA2j%FA2%AC2%AC%AC%FA%FA2%00!%F9%04%00%00%00%00%00%2C%00%00%00%00%10%00%10%00%00%03E8%B5%DC%3E!%CA9%0F%94%86%88!%88%91%96D%5C%92%00Da%40%10%14%15%1AB%EBB%B0%5CA%9D%0DB%9A%8E%F21_j%F0%99h%88%81%E1%A9%05%F8%A4%02%A6b%E9g%04l%06XV%92%E4%DB%3A%BE%8CC%02%00%3B" />
+		<img title="YahooBookmarks" src="data:image/gif,GIF89a%10%00%10%00%A2%07%00%C2%D4%DD%FF%F6%F5%FF%BA%AD%FF%87%7B%8D%B2%CDa%94%B6%E7TN%FF%FF%FF!%F9%04%01%00%00%07%00%2C%00%00%00%00%10%00%10%00%00%03Px'%DC%FAP%84I%05%7C%92Mmo%93%C1w-%20%15v%D0%60%0C%A6%3A%00%F0c%CC%E6lP%80%22%D0%03%3BK%B0%40%EE%A0%B2%D9%26%B0%98%CEXB%0E!%85%02%C1D%88%8E%A2%05%13v%04%88%06%08%D3%E8%13R%C5F%09%A3G%17%3BN%BB%13%00%3B" />
+		<img title="Delicious" src="data:image/gif,GIF89a%10%00%10%00%91%00%00%00%00%00%FF%FF%FF%DD%DD%DD%00%00%FF!%F9%04%00%00%00%00%00%2C%00%00%00%00%10%00%10%00%00%02*%8Co%A3%AB%88%CC%DC%81K%26%3Al%C0%D9r%FDy%18%40%96%A4%80%A6%A8i%AA*%5B%BA)%7C%CA%02%0D%D87%AD%E3%3Do%2B%00%00%3B" />
+		<img title="Tumblr" src="data:image/gif,GIF89a%10%00%10%00%91%00%00%13%14%17Y%5C_-08%F0%F0%F0!%F9%04%00%00%00%00%00%2C%00%00%00%00%10%00%10%00%00%02%40%94%8F%08%20%E1%0F!%0B)%AD0M%7C7%8B%01%86%A0%00%60M%03%02c0%60%26%C5.c%E9z%8B%3A%90%F7%7B%C8%F9%5D%F2%E8f%3B%9BO%D79%DDD%C8%17%10%D2%9C%00%A7E%DAfC%CD%02%0B%00%3B" />
+		<img title="Twitter" src="data:image/gif,GIF89a%10%00%10%00%91%03%00%AF%FF%FF%00%FF%FF%FF%FF%FF%FF%FF%FF!%F9%04%01%00%00%03%00%2C%00%00%00%00%10%00%10%00%00%02%40%DC%84h%CB%07%FFDc%08%AAi%04%8C%20%01%AAm%DBe%3C%01p%A6A%20-B%8A%C6%EB%97%A1%EB%8D%B7%C7%3B'%9A%EE%B8u%7C%0D%84%D0G%0A%0AEE%9C%F3%04z%0A%8B%1A)%B0%14%12%B5%0A%00%3B" />	</td>
 </tr>));
 
 
@@ -36,7 +36,7 @@ imgs.forEach(function(i){
 var pref = load('pref');
 for(var p in pref){
 	if(pref[p])
-		$x('id("xpost")//img[@name="'+p+'"]')[0].className = 'XPOST_enable';
+		$x('id("xpost")//img[@title="'+p+'"]')[0].className = 'XPOST_enable';
 }
 
 
@@ -52,9 +52,9 @@ $x('id("edit_form")')[0].addEventListener('submit', function(e){
 	
 	imgs.forEach(function(img, i){
 		if(img.className)
-			GM_Tombloo[img.name].post(ps);
+			GM_Tombloo[img.title].post(ps);
 		
-		pref[img.name] = !!img.className;
+		pref[img.title] = !!img.className;
 	});
 	save('pref', pref);
 }, false);

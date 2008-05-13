@@ -417,3 +417,25 @@ var HatenaStar = {
 		});
 	},
 }
+
+var YahooBookmarks = {
+	getToken : function(){
+		return doXHR('http://bookmarks.yahoo.co.jp/action/post').addCallback(function(res){
+			return $x('//input[@name="crumbs"]/@value', convertToHTMLDocument(res.responseText));
+		})
+	},
+	post : function(ps){
+		return YahooBookmarks.getToken().addCallback(function(token){
+			return doXHR('http://bookmarks.yahoo.co.jp/action/post/done', {
+				sendContent  : {
+					title      : ps.title,
+					url        : ps.source,
+					desc       : ps.body,
+					tags       : ps.tags? ps.tags.join(' ') : '',
+					crumbs     : token,
+					visibility : ps.private? 0 : 1,
+				},
+			});
+		});
+	},
+}

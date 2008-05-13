@@ -319,7 +319,7 @@ var GoogleBookmarks = {
 					title      : ps.title,
 					bkmk       : ps.source,
 					annotation : ps.body,
-					labels     : ps.tags? ps.tags.join(' ') : '',
+					labels     : ps.tags? ps.tags.join(',') : '',
 					btnA       : fs.btnA,
 					sig        : fs.sig,
 				},
@@ -374,7 +374,7 @@ var Delicious = {
 			},
 		}).addCallback(function(res){
 			var doc = convertToHTMLDocument(res.responseText);
-			return doXHR('http://del.icio.us/'+doc.getElementById('delForm').action, {
+			return doXHR('http://del.icio.us/'+$x('id("delForm")/@action', doc), {
 				sendContent : update(formContents(doc), {
 					jump    : 'no',
 					notes   : ps.body,

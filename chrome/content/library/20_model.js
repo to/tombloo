@@ -259,7 +259,7 @@ var HatenaBookmark = {
 				mode    : 'enter',
 				rkm     : token,
 				url     : ps.source,
-				comment : ps.body,
+				comment : (ps.tags? '[' + ps.tags.join('][') + ']' : '') + ps.body,
 			};
 			if(ps.title)
 				content.title = ps.title;

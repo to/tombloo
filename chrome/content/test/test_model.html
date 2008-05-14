@@ -105,8 +105,9 @@ try {
 		ok(token, 'HatenaBookmark: トークン取得');
 	});
 	d.addCallback(bind('post', HatenaBookmark), {
-		source  : 'http://twitter.com/',
-		body    : '今何してるかを共有するサービス',
+		source  : 'http://dictionary.goo.ne.jp/',
+		body    : '今日のニュース',
+		tags    : ['search', 'portal'],
 	});
 	d.addCallback(function(){
 		ok(true, 'HatenaBookmark: 追加');

@@ -383,12 +383,13 @@ var Delicious = {
 			if(!doc.getElementById('delForm'))
 				throw 'AUTH_FAILD';
 			
-			return doXHR('http://del.icio.us/'+$x('id("delForm")/@action', doc), {
+			return doXHR('http://del.icio.us'+$x('id("delForm")/@action', doc), {
 				sendContent : update(formContents(doc), {
-					jump    : 'no',
-					notes   : ps.body,
-					tags    : ps.tags? ps.tags.join(' ') : '',
-					private : ps.private? 'on' : '',
+					description : ps.title,
+					jump        : 'no',
+					notes       : ps.body,
+					tags        : ps.tags? ps.tags.join(' ') : '',
+					private     : ps.private? 'on' : '',
 				}),
 			});
 		});

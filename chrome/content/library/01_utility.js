@@ -526,29 +526,31 @@ function DeferredHash(ds){
 function log(msg){
 	if(!getPref('debug')) return;
 	
-	firebug('log', msg) || 
+	firebug('log', arguments) || 
 		ConsoleService.logStringMessage(''+msg);
 }
 
 function error(err){
-	firebug('error', err) || 
+	firebug('error', arguments) || 
 		Components.utils.reportError(err);
 }
 
 function warn(msg){
-	firebug('warn', msg) || 
+	firebug('warn', arguments) || 
 		ConsoleService.logMessage(new ScriptError(msg, null, null, null, null, IScriptError.warningFlag, null));
 }
 
-function firebug(){
+function firebug(method, args){
 	var win = getMostRecentWindow();
-	if(!win.FirebugContext)
-		return;
-	
-	var method = Array.shift(arguments);
+	if(win.FirebugConsole && win.FirebugContext) {
 	var console = new win.FirebugConsole(win.FirebugContext, win.content);
-	console[method].apply(console, arguments);
-	
+		console[method].apply(console, args);
+	} else if ( win.Firebug && win.Firebug.Console ) {
+		// Firebug 1.2~
+		win.Firebug.Console.logFormatted.call(win.Firebug.Console, Array.slice(args), win.FirebugContext, method);
+	} else {
+		return false;
+	}
 	return true;
 }
 

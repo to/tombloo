@@ -135,6 +135,17 @@ Tombloo.Service = {
 			
 			return HatenaBookmark.post(ps);
 		},
+		ForU : function(ctx, params){
+			if(ctx.event.ctrlKey || params.type != 'photo')
+				return succeed();
+			
+			if(ctx.href.match('^http://4u.straightline.jp/')){
+				var id = params.source.split('/').pop();
+				return ForU.iLoveHer(id);
+			} else {
+				return ForU.post(params);
+			}
+		},
 	},
 	
 	extracters : {

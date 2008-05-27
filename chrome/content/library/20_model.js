@@ -396,6 +396,42 @@ var Delicious = {
 	},
 }
 
+var ForU = {
+	URL : 'http://4u.straightline.jp/',
+	
+	post : function(ps){
+		return doXHR(ForU.URL + 'power/manage/register', {
+			method : 'GET',
+			referrer : ps.clickThrough,
+			queryString : {
+				src : ps.source,
+				site_url : ps.clickThrough,
+				site_title : ps.title,
+				alt : ps.title,
+				bookmarklet : 1,
+			},
+		}).addCallback(function(res){
+			if(!res.responseText.match('logout'))
+				throw 'AUTH_FAILD';
+		});
+	},
+
+	iLoveHer : function(id){
+		// not implemented
+		/*
+		return doXHR(ForU.URL + 'power/manage/register', {
+			method : 'GET',
+			referrer : ps.clickThrough,
+			queryString : {
+			},
+		}).addCallback(function(res){
+			if(!res.responseText.match('logout'))
+				throw 'AUTH_FAILD';
+		});
+		*/
+	},
+}
+
 var HatenaStar = {
 	getToken : function(){
 		return doXHR('http://s.hatena.ne.jp/entries.json').addCallback(function(res){

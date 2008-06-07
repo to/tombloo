@@ -150,7 +150,7 @@ Tombloo.Service = {
 	
 	extracters : {
 		'Photo - Flickr' : {
-			RE : new RegExp('^http://.+?.static.flickr.com/\\d+?/(\\d+?)_.*'),
+			RE : new RegExp('^http://(?:.+?.)?static.flickr.com/\\d+?/(\\d+?)_.*'),
 			getImageId : function(img){
 				if(img.src.match('spaceball.gif'))
 					img = img.previousSibling;

@@ -100,6 +100,11 @@ try {
 	
 	/*
 	// HatenaBookmark
+	d.addCallback(bind('getUserTags', HatenaBookmark));;
+	d.addCallback(function(tags){
+		ok(tags.length > 5);
+	});
+	
 	d.addCallback(bind('getToken', HatenaBookmark));
 	d.addCallback(function(token){
 		ok(token, 'HatenaBookmark: トークン取得');
@@ -215,7 +220,6 @@ try {
 	d.addBoth(function(){
 		SimpleTest.finish()
 	});
-	
 } catch (err) {
 	var s = [];
 	s.push('TEST SUITE FAILURE!');

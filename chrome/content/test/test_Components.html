@@ -28,6 +28,7 @@ try {
 	var str = 'ABCD';
 	is(new InputStream(new StringInputStream(str)).read(str.length), 'ABCD');
 	
+	
 	// getService
 	is(typeof(Components.classes['not_found']), 'undefined');
 	ok(getService() === null);
@@ -66,6 +67,9 @@ try {
 	
 	// notify
 	notify('TITLE', 'MESSAGE', notify.ICON_DOWNLOAD);
+	
+	// getCookieString
+	ok(getCookieString('http://google.com/').length > 10);
 	
 	
 	// preference

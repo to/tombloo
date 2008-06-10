@@ -37,6 +37,7 @@ const MIMEService      = getService('/uriloader/external-helper-app-service;1', 
 const PromptService    = getService('/embedcomp/prompt-service;1', Ci.nsIPromptService);
 const CacheService     = getService('/network/cache-service;1', Ci.nsICacheService);
 const	AppShellService  = getService('/appshell/appShellService;1', Ci.nsIAppShellService);
+const	CookieService    = getService('/cookieService;1', Ci.nsICookieService);
 
 
 const PrefBranch = 
@@ -381,4 +382,8 @@ function md5(str, charset){
 	return crypto.finish(false).split('').map(function(char){
 		return char.charCodeAt().toHexString();
 	}).join('');
+}
+
+function getCookieString(uri){
+	return CookieService.getCookieString(createURI(uri), null);
 }

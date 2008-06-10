@@ -85,7 +85,16 @@ try {
 		tags    : ['search', 'portal'],
 		private : true,
 	});
+	
+	d.addCallback(bind('getUserTags', Delicious));;
+	d.addCallback(function(tags){
+		var ps = keys(tags);
+		ok(ps.length);
+		ok(ps[0]);
+		ok(tags[ps[0]], 'Delicious: タグの利用回数を取得できているか');
+	});
 	*/
+	ok(Delicious.getCurrentUser().length > 1);
 	
 	
 	/*
@@ -102,13 +111,17 @@ try {
 	// HatenaBookmark
 	d.addCallback(bind('getUserTags', HatenaBookmark));;
 	d.addCallback(function(tags){
-		ok(tags.length > 5);
+		var ps = keys(tags);
+		ok(ps.length);
+		ok(ps[0]);
+		is(tags[ps[0]], -1, 'HatenaBookmark: タグの利用回数を取得できているか');
 	});
 	
 	d.addCallback(bind('getToken', HatenaBookmark));
 	d.addCallback(function(token){
 		ok(token, 'HatenaBookmark: トークン取得');
 	});
+	
 	d.addCallback(bind('post', HatenaBookmark), {
 		source  : 'http://dictionary.goo.ne.jp/',
 		body    : '今日のニュース',

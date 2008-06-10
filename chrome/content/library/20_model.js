@@ -245,10 +245,13 @@ var WeHeartIt = {
 var HatenaBookmark = {
 	POST_URL : 'http://b.hatena.ne.jp/add',
 	
-	getUserTags : function(url){
-		return doXHR(url || (HatenaBookmark.POST_URL+'?mode=confirm')).addCallback(function(res){
+	getUserTags : function(){
+		return doXHR(HatenaBookmark.POST_URL+'?mode=confirm').addCallback(function(res){
 			if(res.responseText.match(/var tags ?=(.*);/))
-				return Components.utils.evalInSandbox(RegExp.$1, Components.utils.Sandbox(''));
+				return reduce(function(memo, tag){
+					memo[tag] = -1;
+					return memo;
+				}, Components.utils.evalInSandbox(RegExp.$1, Components.utils.Sandbox('')), {});
 			
 			throw 'AUTH_FAILD';
 		});
@@ -384,6 +387,19 @@ var Twitter = {
 }
 
 var Delicious = {
+	getUserTags : function(user){
+		return doXHR('http://feeds.delicious.com/feeds/json/tags/' + (user || Delicious.getCurrentUser())).addCallback(function(res){
+			return Components.utils.evalInSandbox(res.responseText, Components.utils.Sandbox(''));
+			
+			throw 'AUTH_FAILD';
+		});
+	},
+	getCurrentUser : function(){
+		if(decodeURIComponent(getCookieString('http://del.icio.us/post/')).match(/user=(.*?) /))
+			return RegExp.$1;
+		
+		throw 'AUTH_FAILD';
+	},
 	post : function(ps){
 		return doXHR('http://del.icio.us/post/', {
 			queryString :	{

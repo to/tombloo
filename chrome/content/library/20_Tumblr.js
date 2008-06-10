@@ -238,7 +238,7 @@ var Tumblr = {
 		});
 	},
 	
-	getLoggedInUser : function(){
+	getCurrentUser : function(){
 		return doXHR(this.TUMBLR_URL+'settings').addCallback(function(res){
 			switch(res.channel.URI.asciiSpec.replace(/\?.*/,'')){
 			case Tumblr.TUMBLR_URL+'login':

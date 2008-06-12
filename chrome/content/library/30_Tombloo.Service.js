@@ -57,9 +57,84 @@ Tombloo.Service = {
 					var ds = {};
 					var filter = new RegExp(getPref('posterFilter'), 'i');
 					var posters = Tombloo.Service.posters;
-					for(var name in posters){
-						if((name + ': ' + params.type).match(filter))
-							ds[name] = posters[name](ctx, params);
+
+
+					if ( ctx.event.shiftKey ) {
+						// fx3 has browser object in ctx. fx2 does not.
+						var tabbrowser = ctx.browser || ctx.menu.ownerDocument.defaultView.getBrowser();
+						var browser = tabbrowser.selectedBrowser;
+						var box = tabbrowser.getNotificationBox( browser );
+
+						var buttons = [];
+						for(var name in posters) {
+							if ( 1 ) {
+								// if a poster is called on non-support object,
+								// (ex. flickr poster called on non-flickr image)
+								// it returns already fired deferred object.
+								//if ( poster.fired != -1 ) {
+								//	continue;
+								//}
+								var d = new Deferred().addCallback( let(name=name) function () {
+									return posters[name](ctx, params);
+								} );
+								// FIXME: no way to determine the poster
+								// actually posts a post or just mark it as favorite.
+								var buttonLabelPrefix = "post to ";
+								if ( name.match( /^flickr$/i ) ) {
+									buttonLabelPrefix = 'fav on ';
+								}
+
+								var label = buttonLabelPrefix + name;
+							 	var notificationTarget = {
+							 		label: label,
+							 		callback: let(d = d, label=label) function () {
+										log(box);
+										var postedToAll = flattenArray(
+											box.getElementsByTagName('button')
+										).map( function (b) {
+											if ( b.label == label ) {
+												b.disabled = true;
+											}
+											return b.disabled;
+										} ).every( function (b) { return b } );
+										d.callback();
+										if ( postedToAll ) {
+											box.removeNotification(widget);
+										}
+							 			return true;
+							 		}
+							 	};
+
+								buttons.push( notificationTarget );
+								ds[name] = d.addErrback(errback);
+							}
+						}
+
+
+						var notificationName = "tombloo-notification-posters";
+
+						// old one can be present.
+						var n = box.getNotificationWithValue( notificationName );
+						if ( n ) {
+							box.removeNotification( n );
+						}
+
+						var widget =  box.appendNotification(
+									"Push buttons you want to post.", notificationName,
+									null /*noimage*/,
+									box.PRIORITY_WARNING_MEDIUM,
+									buttons );
+						widget.persistence = 0;
+						ctx.window.addEventListener( 'unload', function () {
+							box.removeNotification(widget);
+						}, false);
+
+						return new DeferredHash(ds);
+					} else {
+						for(var name in posters){
+							if((name + ': ' + params.type).match(filter))
+								ds[name] = posters[name](ctx, params);
+						}
 					}
 					
 					return new DeferredHash(ds);

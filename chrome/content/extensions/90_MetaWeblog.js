@@ -173,12 +173,13 @@ HTTP.Request.prototype.set_params = {
 			//content_type = null;
 			post_data_stream = this.set_multipart_params();
 		} else {
-			content_type = 'application/x-www-form-urlencoded';
+			content_type |= 'application/x-www-form-urlencoded';
 			var query = HTTP.Request.query(this.params);
 			post_data_stream = this.create_string_input_stream();
 			post_data_stream.setData(query, query.length);
 			//post_data_stream = sis;
 		}
+
 		this.setup_channel();
 		this.request_channel.QueryInterface(Components.interfaces.nsIUploadChannel);
 		this.request_channel.setUploadStream(post_data_stream, content_type, -1);
@@ -225,7 +226,7 @@ HTTP.Request.Util = {
 		file.initWithPath(filename);
 		return file;
 	},
-	defferedAsyncRequest: function(method, uri, opts, params) {
+	deferredAsyncRequest: function(method, uri, opts, params) {
 		var d = new MochiKit.Async.Deferred(  );
 
 		opts = opts || {};
@@ -350,7 +351,7 @@ var MetaWeblogAPI = function () {
 		var xmlheader = '<?xml version="1.0" encoding="UTF-8"?>\n';
 		var body = xmlheader + methodCall.toString();
 
-		return HTTP.Request.Util.defferedAsyncRequest(
+		return HTTP.Request.Util.deferredAsyncRequest(
 			"post", this.endpint, {contentType: "text/xml"}, body
 		);
 	};
@@ -360,14 +361,14 @@ var MetaWeblogAPI = function () {
 			'newPost',
 			param( {
 				description: body,
-				dateCreated: new Date(),
+				dateCreated: (new Date()).toString(),
 				title: title,
 				categories: categories
 			} ) +
 			param(1)
 		);
 	};
-	me.prototype.deferredNewMediaObject = function (uri, name) {
+	me.prototype.deferredNewMediaObject = function (uri, name, path) {
 		var self = this;
 		return me.deferredGetBase64EncodedContent(uri).addCallback( function (args) {
 			var channel = args[0];
@@ -385,6 +386,8 @@ var MetaWeblogAPI = function () {
 					filename = Date.now() + "." + contentType.split(/\//).pop();
 				}
 			}
+			filename = path ? path.match(/\/$/) ? path + filename : path + '/' + filename : filename;
+
 			return self.newMediaObject(filename, b64, contentType).addCallback( function (args) {
 				var body = args[0].response_body;
 				var xml = new XML( body.replace(/^.+?>/, '') );
@@ -412,32 +415,57 @@ var MetaWeblogAPI = function () {
 }.call(this);
 
 var MetaWeblog = {
-	prefKey: 'posters.MetaWeblog.endpoint',
+	prefix: 'tombloo:metaWeblog:',
+	prefKeyEndPoint: 'posters.MetaWeblog.endpoint',
+	prefKeyMediaPath: 'posters.MetaWeblog.mediapath',
 	endpoint: null,
 	post: function (params) {
-		this.endpoint = getPref(this.prefKey);
-		if ( !this.endpoint  ) {
-			var fullkey = ("extensions.tombloo." + this.prefKey).quote();
+		this.endpoint = getPref(this.prefKeyEndPoint);
+		if ( !this.endpoint ) {
+			var fullkey = ("extensions.tombloo." + this.prefKeyEndPoint).quote();
 			throw "Set API endpoint in " + fullkey + " at about:config to use MetaWeblog poster.";
 		}
 
 		var lm = Components.classes["@mozilla.org/login-manager;1"]
 						.getService(Components.interfaces.nsILoginManager);
 		
+		var mediapath = getPref(this.prefKeyMediaPath);
 		var endpointUri = createURI(this.endpoint);
 		var hostname = endpointUri.prePath;
 		var formSubmitURL = endpointUri.prePath;
-		var httprealm = null;
-		var logins = lm.findLogins({}, hostname, formSubmitURL, httprealm);
+		var logins = lm.findLogins({}, this.prefix + hostname, this.prefix + formSubmitURL, null);
 		var loginInfo = logins.shift();
 		if ( ! loginInfo ) {
-			throw "No login infomation found. Please make Firefox remeber your login information at " + this.endpointUri.replace(/\bxmlrpc\b/, 'wp-login');
+			var ps = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService);
+			var [user, pass] = [{ value : null }, { value : null }];
+			var ret = ps.promptUsernameAndPassword(
+				window, formSubmitURL, "tombloo metaWeblog poster", user, pass, null, {});
+			if(ret){
+				var nsLoginInfo = new Components.Constructor(
+					"@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
+				loginInfo = new nsLoginInfo(
+					this.prefix + hostname, this.prefix + formSubmitURL, null, user.value, pass.value, '', '');
+				lm.addLogin(loginInfo);
+			}
+			if ( ! loginInfo ) {
+				throw "No login infomation found. Please make Firefox remeber your login information at " + this.endpointUri.replace(/\bxmlrpc\b/, 'wp-login');
+			}
 		}
 
 		var mw = new MetaWeblogAPI(loginInfo.username, loginInfo.password, this.endpoint);
-		var c = MetaWeblog[capitalize(params.type)].convertToForm(params);
-		return mw.deferredNewMediaObject(params.source).addCallback( function (permalink) {
-				return mw.newPost(c.title, c.body, ["reblog", params.type]);
+		return mw.deferredNewMediaObject(params.source, '', mediapath).addCallback( function (permalink) {
+				params.source = permalink;
+				var c = MetaWeblog[capitalize(params.type)].convertToForm(params);
+				return mw.newPost(c.title, c.body, ["reblog", params.type]).addCallback( function (args) {
+					ConsoleService.logStringMessage(args[0].params);
+					var body = args[0].response_body;
+					ConsoleService.logStringMessage(body);
+					var xml = new XML( body.replace(/^.+?>/, '') );
+					if ( xml.fault.length() )
+						throw( [xml..int, xml..string].join(" ") );
+					ConsoleService.logStringMessage(xml);
+					return xml;
+				} );
 			} );
 	}
 }

@@ -248,6 +248,11 @@ HTTP.Request.Util = {
 var MetaWeblogAPI = function () {
 	Components.utils.import("resource://gre/modules/ISO8601DateUtils.jsm");
 
+	var ucnv = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
+		.createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+	ucnv.charset = 'UTF-8';
+
+
 	var me = function (username, password, endpint) {
 		this.username = username;
 		this.password = password;
@@ -362,7 +367,7 @@ var MetaWeblogAPI = function () {
 			param( {
 				description: body,
 				dateCreated: (new Date()).toString(),
-				title: title,
+				title: ucnv.ConvertFromUnicode(title),
 				categories: categories
 			} ) +
 			param(1)
@@ -414,11 +419,13 @@ var MetaWeblogAPI = function () {
 	return me;
 }.call(this);
 
+
 var MetaWeblog = {
 	prefix: 'tombloo:metaWeblog:',
 	prefKeyEndPoint: 'posters.MetaWeblog.endpoint',
 	prefKeyMediaPath: 'posters.MetaWeblog.mediapath',
 	endpoint: null,
+	interactiveWindow: null,
 	post: function (params) {
 		this.endpoint = getPref(this.prefKeyEndPoint);
 		if ( !this.endpoint ) {
@@ -438,8 +445,11 @@ var MetaWeblog = {
 		if ( ! loginInfo ) {
 			var ps = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService);
 			var [user, pass] = [{ value : null }, { value : null }];
+			// calling promptUsernameAndPassword with Tombloo sandbox's window is pointing "hiddenWIndow.xul"
+			// the dialog is displayed topleft of the screen.
+			// we have to call it with visible window to avoid that.
 			var ret = ps.promptUsernameAndPassword(
-				window, formSubmitURL, "tombloo metaWeblog poster", user, pass, null, {});
+				this.interactiveWindow, formSubmitURL, "tombloo metaWeblog poster", user, pass, null, {});
 			if(ret){
 				var nsLoginInfo = new Components.Constructor(
 					"@mozilla.org/login-manager/loginInfo;1", Ci.nsILoginInfo, "init");
@@ -506,6 +516,7 @@ MetaWeblog.Photo = {
 }
 
 Tombloo.Service.posters['MetaWeblog'] = function (ctx, params) {
+	MetaWeblog.interactiveWindow = ctx.window;
 	if ( MetaWeblog[ String(params.type).capitalize() ] ) {
 		return MetaWeblog.post(params);
 	} else {

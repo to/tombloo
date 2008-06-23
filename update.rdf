@@ -2,21 +2,21 @@
 <RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
          xmlns:NC="http://home.netscape.com/NC-rdf#"
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Seq RDF:about="rdf:#$juv852">
-    <RDF:li RDF:resource="rdf:#$kuv852"/>
-  </RDF:Seq>
-  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
-                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAKTVNFq5ms7vn1I8qQfPF8aTuUoADU18QHsGkl2sXHxJO8JURp0Jboa3fk9bSAJ5hTwfOxyCkNtPV+7NNW4Ub7/pC0sUWEcNRtSeyZ2OBMB4137OUeBH7ebFCB/g7tARYL7Zu0tXl6aLwVXaZZ5A6tgw4zbk4QnfVCK62OdFoH97">
-    <em:updates RDF:resource="rdf:#$juv852"/>
+  <RDF:Description RDF:about="rdf:#$4w+7V2"
+                   em:version="0.2.2">
+    <em:targetApplication RDF:resource="rdf:#$7w+7V2"/>
   </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$nuv852"
+  <RDF:Seq RDF:about="rdf:#$3w+7V2">
+    <RDF:li RDF:resource="rdf:#$4w+7V2"/>
+  </RDF:Seq>
+  <RDF:Description RDF:about="rdf:#$7w+7V2"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="2.0"
                    em:maxVersion="3.0.*"
                    em:updateLink="http://tombloo.googlecode.com/svn/trunk/tombloo.xpi"
-                   em:updateHash="sha512:4775dacd1b43913aed436e7bcc83484776b2e8186b3a9ba45058da6aacf4b02c7177f11f371543c3e47009f81396c2192b381df7d861d0ea8417b57515dbac58" />
-  <RDF:Description RDF:about="rdf:#$kuv852"
-                   em:version="0.2.1.a">
-    <em:targetApplication RDF:resource="rdf:#$nuv852"/>
+                   em:updateHash="sha512:b510448fd12d55a1ad56942627438c4d81d59a4c2d2f6cdf51d6097df56f090c7977a91a8ba5899a768f1dd1aa001369f124cfac56b920b44726bba92e998508" />
+  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAHDrG3gnUCaIZKHhPNIKRfDegQ6PHVo+xLwTp9DpJ34FgwswhVWLAeV0vkBg5qHaweubQolPizIVjhVSQ4sCCvQlwsysKviiQFPdG9vYCjURbkVLzjzubfgunHKWkL3zr99MHN7SYjmCoGrAacYnD/NnT48BjzBTrf9lf1EtgJPl">
+    <em:updates RDF:resource="rdf:#$3w+7V2"/>
   </RDF:Description>
 </RDF:RDF>

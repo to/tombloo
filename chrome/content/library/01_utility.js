@@ -664,8 +664,9 @@ function tagName(elm){
 }
 
 function $x(exp, context, multi) {
-	var doc = currentDocument();
-	if (!context) context = doc;
+	context = context || currentDocument();
+	
+	var doc = context.ownerDocument || context;
 	
 	var resolver = function (prefix) {
 		var o = doc.createNSResolver(context)(prefix);

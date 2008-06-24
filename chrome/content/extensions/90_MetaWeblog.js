@@ -365,7 +365,7 @@ var MetaWeblogAPI = function () {
 		return this.request(
 			'newPost',
 			param( {
-				description: body,
+				description: ucnv.ConvertFromUnicode(body),
 				dateCreated: (new Date()).toString(),
 				title: ucnv.ConvertFromUnicode(title),
 				categories: categories

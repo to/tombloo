@@ -467,13 +467,10 @@ var MetaWeblog = {
 				params.source = permalink;
 				var c = MetaWeblog[capitalize(params.type)].convertToForm(params);
 				return mw.newPost(c.title, c.body, ["reblog", params.type]).addCallback( function (args) {
-					ConsoleService.logStringMessage(args[0].params);
 					var body = args[0].response_body;
-					ConsoleService.logStringMessage(body);
 					var xml = new XML( body.replace(/^.+?>/, '') );
 					if ( xml.fault.length() )
 						throw( [xml..int, xml..string].join(" ") );
-					ConsoleService.logStringMessage(xml);
 					return xml;
 				} );
 			} );

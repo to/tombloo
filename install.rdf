@@ -6,7 +6,7 @@
 		<em:id>tombloo@brasil.to</em:id>
 		<em:type>2</em:type>
 		<em:name>Tombloo</em:name>
-		<em:version>0.2.2</em:version>
+		<em:version>0.2.3</em:version>
 		<em:description>Tumblr Utilities</em:description>
 		<em:creator>to</em:creator>
 		<em:optionsURL>chrome://tombloo/content/prefs.xul</em:optionsURL>

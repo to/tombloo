@@ -2,21 +2,21 @@
 <RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
          xmlns:NC="http://home.netscape.com/NC-rdf#"
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
-                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAIbu+LqXIYUFzR2P8L9nqajUonoRNe1AnEt7/LxsxYanJu2SPmHXSLu5JAXZ6OYiG6/e671nUsS7y3Ir1G7Jj/pJrVts+jXyDfzICf+eywUuCJNYBivuSTNeluWGYclxs57fZlHg95apx1ff7N/lXw1TCA4t8tsO7bvymN3l2QEe">
-    <em:updates RDF:resource="rdf:#$ew+7V2"/>
+  <RDF:Seq RDF:about="rdf:#$xtDZv2">
+    <RDF:li RDF:resource="rdf:#$ytDZv2"/>
+  </RDF:Seq>
+  <RDF:Description RDF:about="rdf:#$ytDZv2"
+                   em:version="0.2.3">
+    <em:targetApplication RDF:resource="rdf:#$BtDZv2"/>
   </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$iw+7V2"
+  <RDF:Description RDF:about="rdf:#$BtDZv2"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="2.0"
                    em:maxVersion="3.0.*"
                    em:updateLink="http://tombloo.googlecode.com/svn/trunk/tombloo.xpi"
-                   em:updateHash="sha512:bdad1b0483b2d92f1c3459c0a69fb367efcd2d0788fd74000951055a774f309075776a2eee11f4cf4a9463bc082243cb1f222d8570875ca541364a6f447d2810" />
-  <RDF:Description RDF:about="rdf:#$fw+7V2"
-                   em:version="0.2.2">
-    <em:targetApplication RDF:resource="rdf:#$iw+7V2"/>
+                   em:updateHash="sha512:d10d8a952fd899ff946a721f46e907060e16e67d037c91e10806a7cb52fddcaca138f6bdfe0a39a9760ad094298196aa5795150a4b150b663093b5d1aba7e8a1" />
+  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAMCkGLLKos1vi8yFOCu+U3c8XKpdG0Ywj/rHKT+E+LaWWwRx08ebH9kQBARRFXWzU+UMVzsHPejXNlQisNZljM5BAYHXE6ZvKQ8ZpqxiClDs1nldROP+lAceGCj2hndjuotC9rRfZ2cmhWwFy2Tt+jwiDqewZTjfsdrDzUNaV7Xk">
+    <em:updates RDF:resource="rdf:#$xtDZv2"/>
   </RDF:Description>
-  <RDF:Seq RDF:about="rdf:#$ew+7V2">
-    <RDF:li RDF:resource="rdf:#$fw+7V2"/>
-  </RDF:Seq>
 </RDF:RDF>

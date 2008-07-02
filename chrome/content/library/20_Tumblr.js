@@ -186,9 +186,18 @@ var Tumblr = {
 			return Tumblr.reblog(params.source);
 		
 		var url = Tumblr.TUMBLR_URL + 'new/' + params.type;
-		return doXHR(url, {
-			referrer : url,
-			sendContent : Tumblr[capitalize(params.type)].convertToForm(params),
+		return doXHR(url).addCallback(function(res){
+			var form = formContents(res.responseText);
+			delete form.preview_post;
+			return doXHR(url, {
+				sendContent : update(
+					form, 
+					Tumblr[capitalize(params.type)].convertToForm(params), {
+						'post[tags]' : (params.tags && params.tags.length)? joinText(params.tags, ' ') : '',
+						'post[is_private]' : params.private==null? form['post[is_private]'] : (params.private? 1 : 0),
+					}
+				),
+			});
 		}).addCallback(function(res){
 			switch(res.channel.URI.asciiSpec.replace(/\?.*/,'')){
 			case Tumblr.TUMBLR_URL+'dashboard':

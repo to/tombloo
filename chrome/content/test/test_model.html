@@ -2,6 +2,7 @@
 <head>
 	<script type="text/javascript" src="library/MochiKit.js"></script>
 	<script type="text/javascript" src="library/SimpleTest.js"></script>
+	<script type="text/javascript" src="test.js"></script>
 	<link rel="stylesheet" type="text/css" href="library/test.css">
 </head>
 <body>
@@ -14,9 +15,12 @@
 try {
 	// chrome://tombloo/content/test/test_model.html
 	
+	
 	SimpleTest.waitForExplicitFinish();
 	
 	var d = succeed();
+	
+	
 	/*
 	.addBoth(function(res){
 		console.log(res);
@@ -25,96 +29,102 @@ try {
 	
 	
 	/*
+	FriendFeed
+	d.addCallback(function(){
+		return FriendFeed.post({
+			type        : 'photo',
+			pageUrl     : 'http://www.goo.ne.jp/',
+			page        : 'goo',
+			itemUrl     : 'http://www.goo.ne.jp/img2/logo/gh_logo2.gif',
+			description : 'ポータルサイト',
+		});
+	});
+	*/
+	
+	
+	/*
+	// Instapaper
+	d.addCallback(function(){
+		return Instapaper.post({
+			item        : 'goo',
+			itemUrl     : 'http://dictionary.goo.ne.jp/',
+			description : '辞書',
+		});
+	});
+	*/
+	
+	
+	/*
 	// YahooBookmarks
 	YahooBookmarks.post({
-		href    : 'http://www.goo.ne.jp/',
-		source  : 'http://dictionary.goo.ne.jp/',
-		title   : 'goo',
-		body    : '今日のニュース',
-		tags    : ['search', 'portal'],
-		private : true,
+		pageUrl     : 'http://www.goo.ne.jp/',
+		itemUrl     : 'http://dictionary.goo.ne.jp/',
+		item        : 'goo',
+		description : '今日のニュース',
+		tags        : ['search', 'portal'],
+		private     : true,
 	});
-	*/
-	
-	
-	/*
-	// HatenaStar
-	HatenaStar.post({
-		href    : 'http://www.goo.ne.jp/',
-		source  : 'http://dictionary.goo.ne.jp/',
-		title   : 'goo',
-		body    : '今日のニュース',
-	});
-	HatenaStar.remove({
-		source  : 'http://dictionary.goo.ne.jp/',
-		body    : '今日のニュース',
-	});
-	*/
-	
-	
-	/*
-	// GoogleBookmarks
-	GoogleBookmarks.post({
-		source  : 'http://www.goo.ne.jp/',
-		title   : 'goo',
-		body    : 'ポータルサイト',
-		tags    : ['search', 'portal'],
-	});
-	*/
-	
-	
-	/*
-	// Twitter
-	Twitter.addFavorite(808614559);
-	Twitter.remove(808692324);
-	Twitter.post({
-		source  : 'http://www.goo.ne.jp/',
-		title   : 'goo',
-		body    : 'ポータルサイト',
-	});
-	Twitter.getToken();
-	*/
-	
-	
-	/*
-	// Delicious
-	Delicious.post({
-		source  : 'http://www.goo.ne.jp/',
-		title   : 'goo',
-		body    : 'ポータルサイト',
-		tags    : ['search', 'portal'],
-		private : true,
-	});
-	
-	d.addCallback(bind('getUserTags', Delicious));;
-	d.addCallback(function(tags){
-		var ps = keys(tags);
-		ok(ps.length);
-		ok(ps[0]);
-		ok(tags[ps[0]], 'Delicious: タグの利用回数を取得できているか');
-	});
-	*/
-	ok(Delicious.getCurrentUser().length > 1);
-	
-	
-	/*
-	// GoogleWebHistory
-	is(GoogleWebHistory.getCh('http://google.com'), '6-1226505498');
-	d.addCallback(bind('post', GoogleWebHistory), 'http://google.com/');
 	d.addCallback(function(){
-		ok(true, 'GoogleWebHistory: 追加');
+		return YahooBookmarks.getUserTags();
+	});
+	d.addCallback(function(tags){
+		log(tags);
+		var tag = tags[0];
+		ok(tag.name.length > 0, 'YahooBookmarks: タグの名前を取得できているか');
+		ok(tag.frequency!=null, 'YahooBookmarks: タグの利用回数を取得できているか');
 	});
 	*/
+	
+	
+	/*
+	// Yahoo
+	d.addCallback(function(){
+		return Yahoo.getKanaReadings('"写真","あとで読む"');
+	}).addCallback(function(res){
+		is(res.join(''), '"しゃしん","あとでよむ"');
+	});
+	d.addCallback(function(){
+		return Yahoo.getRomaReadings('"写真","あとで読む"');
+	}).addCallback(function(res){
+		is(res.join(''), '"shashinn","atodeyomu"');
+	});
+	*/
+	
+	
+	/*
+	// Kawa
+	d.addCallback(function(){
+		return Kawa.getRomaReadings('"写真","あとで読む"');
+	}).addCallback(function(res){
+		log(res);
+	});
+	*/
+	
+	// Hatena
+	/*
+	d.addCallback(function(){
+		return Hatena.login('user', 'password');
+	});
+	d.addCallback(function(){
+		return Hatena.logout();
+	});
+	
+	d.addCallback(function(){
+		return Hatena.getCurrentUser();
+	}).addCallback(function(user){
+		ok(user);
+	});
+	*/
+	ok(Hatena.getPasswords().length, 'Hatena: アカウント情報を取得できているか');
 	
 	
 	/*
 	// HatenaBookmark
 	d.addCallback(bind('getUserTags', HatenaBookmark));;
 	d.addCallback(function(tags){
-		var ps = keys(tags);
-		ok(ps.length);
-		ok(ps[0]);
-		is(tags[ps[0]], -1, 'HatenaBookmark: タグの利用回数を取得できているか');
+		var tag = tags[0];
+		ok(tag.name.length > 0, 'HatenaBookmark: タグの名前を取得できているか');
+		ok(tag.frequency!=null, 'HatenaBookmark: タグの利用回数を取得できているか');
 	});
 	
 	d.addCallback(bind('getToken', HatenaBookmark));
@@ -123,9 +133,9 @@ try {
 	});
 	
 	d.addCallback(bind('post', HatenaBookmark), {
-		source  : 'http://dictionary.goo.ne.jp/',
-		body    : '今日のニュース',
-		tags    : ['search', 'portal'],
+		itemUrl     : 'http://dictionary.goo.ne.jp/',
+		description : '辞書',
+		tags        : ['search', 'portal'],
 	});
 	d.addCallback(function(){
 		ok(true, 'HatenaBookmark: 追加');
@@ -134,11 +144,95 @@ try {
 	
 	
 	/*
+	// HatenaStar
+	d.addCallback(function(){
+		return HatenaStar.post({
+			pageUrl     : 'http://www.goo.ne.jp/',
+			itemUrl     : 'http://dictionary.goo.ne.jp/',
+			item        : 'goo',
+			description : '今日のニュース',
+		});
+	})
+	d.addCallback(function(){
+		return HatenaStar.remove({
+			itemUrl     : 'http://dictionary.goo.ne.jp/',
+			description : '今日のニュース',
+		});
+	})
+	*/
+	
+	
+	/*
+	// GoogleBookmarks
+	d.addCallback(function(){
+		return GoogleBookmarks.post({
+			itemUrl     : 'http://www.goo.ne.jp/',
+			item        : 'goo',
+			description : 'ポータルサイト',
+			tags        : ['search', 'portal'],
+		});
+	})
+	*/
+	
+	
+	/*
+	// Twitter
+	Twitter.getToken();
+	d.addCallback(function(){
+		return Twitter.addFavorite(808614559);
+	});
+	d.addCallback(function(){
+		return Twitter.post({
+			itemUrl     : 'http://www.goo.ne.jp/',
+			item        : 'goo',
+			description : 'ポータルサイト',
+		});
+	});
+	d.addCallback(function(){
+		return Twitter.remove(847473592);
+	});
+	*/
+	
+	
+	/*
+	// Delicious
+	d.addCallback(function(){
+		return Delicious.post({
+			itemUrl     : 'http://www.goo.ne.jp/',
+			item        : 'goo',
+			description : 'ポータルサイト',
+			tags        : ['search', 'portal'],
+			private     : true,
+		});
+	});
+	
+	d.addCallback(bind('getUserTags', Delicious));;
+	d.addCallback(function(tags){
+		var tag = tags[0];
+		ok(tag.name.length > 0, 'Delicious: タグの名前を取得できているか');
+		ok(tag.frequency!=null, 'Delicious: タグの利用回数を取得できているか');
+	});
+	*/
+	ok(Delicious.getCurrentUser().length > 1);
+	
+	
+	/*
+	// GoogleWebHistory
+	d.addCallback(bind('post', GoogleWebHistory), 'http://google.com/');
+	d.addCallback(function(){
+		ok(true, 'GoogleWebHistory: 追加');
+	});
+	*/
+	is(GoogleWebHistory.getCh('http://google.com'), '6-1226505498');
+	
+	
+	/*
 	// Flickr
 	d.addCallback(bind('addFavorite', Flickr), 2371304094);
 	d.addCallback(function(){
 		ok(true, 'Flickr Favorite 追加');
 	});
+	
 	d.addCallback(bind('removeFavorite', Flickr), 2371304094);
 	d.addCallback(function(){
 		ok(true, 'Flickr Favorite 削除');
@@ -158,8 +252,6 @@ try {
 		is(info.urls.url[0].type,     'photopage');
 		is(info.urls.url[0]._content, 'http://www.flickr.com/photos/benpearce/2052869076/');
 	});
-	
-	
 	d.addCallback(bind('getSizes', Flickr), 2052869076);
 	d.addCallback(function(sizes){
 		is(sizes.length, 5);
@@ -167,7 +259,7 @@ try {
 		is(sizes[0].width, 75);
 		is(sizes[0].label,  'Square');
 		is(sizes[0].source, 'http://farm3.static.flickr.com/2106/2052869076_d7852e1a0b_s.jpg');
-		is(sizes[0].url,    'http://www.flickr.com/photo_zoom.gne?id=2052869076&size=sq');
+		is(sizes[0].url,    'http://www.flickr.com/photos/benpearce/2052869076/sizes/sq/');
 	});
 	d.addCallback(bind('getSizes', Flickr), 2150907410);
 	d.addErrback(function(e){
@@ -184,25 +276,25 @@ try {
 	});
 	
 	d.addCallback(bind('post', FFFFOUND), {
-		url     : 'http://www.hatena.ne.jp/images/top/navi_icon.gif',
-		referer : 'http://www.hatena.ne.jp/',
-		title   : 'はてな',
+		item    : 'はてな',
+		itemUrl : 'http://www.hatena.ne.jp/images/top/navi_icon.gif',
+		pageUrl : 'http://www.hatena.ne.jp/',
 	}).addCallbacks(partial(ok, false), function(e){
 		log(e);
 		is(e.message, 'The image you choose is too small.', 'ポスト失敗: 画像小さい')
 	});
 	d.addCallback(bind('post', FFFFOUND), {
-		url     : 'http://www.hatena.ne.jp/',
-		referer : 'http://www.hatena.ne.jp/',
-		title   : 'はてな',
+		item    : 'はてな',
+		itemUrl : 'http://www.hatena.ne.jp/',
+		pageUrl : 'http://www.hatena.ne.jp/',
 	}).addCallbacks(partial(ok, false), function(e){
 		is(e.message, 'UNSUPPORTED_TYPE', 'ポスト失敗: サポート外のタイプ')
 	});
-
+	
 	d.addCallback(bind('post', FFFFOUND), {
-		url     : 'http://www.sqlite.org/sqlite.gif',
-		referer : 'http://www.sqlite.org/',
-		title   : 'SQLite home page',
+		item    : 'Mya',
+		itemUrl : 'http://farm3.static.flickr.com/2106/2052869076_a02938d5af_o.jpg',
+		pageUrl : 'http://www.flickr.com/photos/benpearce/2052869076/sizes/o/',
 	});
 	
 	d.addCallback(bind('remove', FFFFOUND), 159182);
@@ -214,31 +306,78 @@ try {
 			is(e.message, 'EXISTS', 'ポスト失敗: 重複')
 		});
 	
-	d.addCallback(bind('getItem', Amazon), '4894712288');
+	d.addCallback(bind('getItem', Amazon), '4894716933');
 	d.addCallback(function(item){
-		ok(item.title.match('リファクタリング'))
-		is(item.creators.join(), 'マーチン ファウラー,Martin Fowler,児玉 公信,平澤 章,友野 晶夫,梅沢 真史')
+		log(item);
+		is(item.title, 'アナリシスパターン―再利用可能なオブジェクトモデル (Object Technology Series)')
+		is(item.creators.join(), '堀内 一,友野 晶夫,児玉 公信,大脇 文雄')
 		is(item.largestImage.size, 'large')
 		is(item.largestImage.width, 367)
 		is(item.largestImage.height, 475)
-		is(item.largestImage.url, 'http://ecx.images-amazon.com/images/I/51885S48YPL.jpg')
+		is(item.largestImage.url, 'http://ecx.images-amazon.com/images/I/51TJA4VW1GL.jpg')
 	});
 	*/
 	
 	
+	/*
+	Wassr
+	d.addCallback(function(){
+		return Wassr.post({
+			itemUrl     : 'http://www.goo.ne.jp/',
+			item        : 'goo',
+			description : 'ポータルサイト',
+		});
+	});
+	*/
+	
+	/*
+	Jaiku
+	d.addCallback(function(){
+		return Jaiku.post({
+			itemUrl     : 'http://www.goo.ne.jp/',
+			item        : 'goo',
+			description : 'ポータルサイト',
+		});
+	});
+	
+	ok(Jaiku.getCurrentUser().length > 1, 'Jaiku: ユーザー名を取得できるか(未ログインの場合エラー)');
+	*/
+	
+	if(models.FirefoxBookmark){
+		// FirefoxBookmark
+		var uri = 'chrome://tombloo/content/prefs.xul';
+		var title = 'Tombloo 設定画面';
+		var description = 'DESCRIPTION';
+		
+		models.FirefoxBookmark.addBookmark(uri, title, ['tombloo', 'chrome'], description);
+		sameObject(models.FirefoxBookmark.getBookmark(uri), {
+			title : title,
+			uri : uri,
+			description : description,
+		}, 'FirefoxBookmark: ブックマークの追加');
+		ok(models.FirefoxBookmark.isBookmarked(uri));
+		
+		models.FirefoxBookmark.removeBookmark(uri);
+		ok(!models.FirefoxBookmark.getBookmark(uri), 'FirefoxBookmark: ブックマークの削除');
+	}
+	
+	
 	d.addErrback(function(e){
-		log(e)
-		ok(false);
+		error(e.message);
+		ok(false, '遅延テストエラー');
 	});
 	d.addBoth(function(){
 		SimpleTest.finish()
 	});
+	
 } catch (err) {
 	var s = [];
 	s.push('TEST SUITE FAILURE!');
 	for(var prop in err)
 		s.push(prop + ':  ' + err[prop]);
 	ok(false, s.join('\n'));
+	
+	SimpleTest.finish()
 }
 </script>
 

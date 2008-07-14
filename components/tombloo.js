@@ -36,6 +36,7 @@ function NSGetModule(compMgr, fileSpec) {
 			if (!iid.equals(Components.interfaces.nsIFactory))
 				throw Cr.NS_ERROR_NOT_IMPLEMENTED;
 			
+			// スクリプト実行時点では取得できないサービスがあるためここまで遅らせる
 			initialize();
 			
 			return {
@@ -49,12 +50,13 @@ function NSGetModule(compMgr, fileSpec) {
 					
 					// アプリケーション全体で、同じloadSubScripts関数を使いまわし汚染を防ぐ
 					global.loadSubScripts = loadSubScripts;
+					global.loadAllSubScripts = loadAllSubScripts;
 					
 					// MochiKit内部で使用しているinstanceofで異常が発生するのを避ける
 					global.MochiKit = {};
 					
 					setupEnvironment(global);
-					loadSubScripts(getLibraries(), global);
+					global.loadAllSubScripts();
 					
 					return {wrappedJSObject : global};
 				}
@@ -64,21 +66,22 @@ function NSGetModule(compMgr, fileSpec) {
 }
 
 // ----[Application]--------------------------------------------
+function getScriptFiles(dir){
+	var scripts = [];
+	simpleIterator(dir.directoryEntries, ILocalFile, function(file){
+		if(file.leafName.match(/\.js$/))
+			scripts.push(file);
+	})
+	return scripts;
+}
+
 function getLibraries(){
 	var libDir = getContentDir();
 	libDir.append('library');
 	
-	var libs = [];
-	simpleIterator(libDir.directoryEntries, ILocalFile, function(file){
-		if(file.leafName.match(/\.js$/))
-			libs.push(file);
-	})
-	
-	libs.sort(function(l, r){
+	return getScriptFiles(libDir).sort(function(l, r){
 		return l.leafName < r.leafName? -1 : 1;
 	});
-	
-	return libs;
 }
 
 function getContentDir(){
@@ -95,7 +98,7 @@ function setupEnvironment(global){
 	
 	[
 		'navigator document window screen',
-		'XMLHttpRequest XPathResult Node Element Event DOMParser XSLTProcessor XML',
+		'XMLHttpRequest XPathResult Node Element Event DOMParser XSLTProcessor XML NodeFilter',
 	].join(' ').split(' ').forEach(function(p){
 		global[p] = win[p];
 	});
@@ -131,6 +134,11 @@ function getService(clsName, ifc){
 	} catch(e) {
 		return null;
 	}
+}
+
+function loadAllSubScripts(){
+	loadSubScripts(getLibraries(), this);
+	loadSubScripts(getScriptFiles(this.getPatchDir()), this);
 }
 
 function loadSubScripts(files, global){

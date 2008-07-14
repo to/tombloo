@@ -1,0 +1,315 @@
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<script type="text/javascript" src="library/MochiKit.js"></script>
+	<script type="text/javascript" src="library/SimpleTest.js"></script>
+	<script type="text/javascript" src="test.js"></script>
+	<link rel="stylesheet" type="text/css" href="library/test.css">
+</head>
+<body>
+<pre id="test">
+</pre>
+<script type="text/javascript" src="../library/00_Components.js"></script>
+<script type="text/javascript" src="../library/01_utility.js"></script>
+<script type="text/javascript" src="../library/10_Progress.js"></script>
+<script type="text/javascript" src="../library/10_Database.js"></script>
+<script type="text/javascript" src="../library/20_Tombloo.js"></script>
+<script type="text/javascript" src="../library/20_Tumblr.js"></script>
+<script type="text/javascript" src="../library/20_model.js"></script>
+<script type="text/javascript" src="../library/30_Tombloo.Service.js"></script>
+<script type="text/javascript" src="../library/31_Tombloo.Service.extracters.js"></script>
+
+<script type="text/javascript">
+try {
+	// chrome://tombloo/content/test/test_Tombloo.Service.extracters.html
+	
+	
+	SimpleTest.waitForExplicitFinish();
+	
+	var d = succeed();
+	var exts = Tombloo.Service.extracters;
+	
+	
+	// ---- [Test Support] -----------------------------------------
+	function arrangeContext(ctx, doc){
+		update(ctx, createURI(ctx.href));
+		ctx.title = doc.getElementsByTagName('title')[0].textContent.trim();
+		ctx.document = doc;
+	}
+	
+	function basicExtractorTest(name, url, exp){
+		var ext = exts[name];
+		var ctx = {href : url};
+		var doc;
+		if(url)
+			d.addCallback(doXHR, ctx.href);
+		d.addCallback(function(res){
+			log('Test: ' + name);
+			
+			if(url){
+				doc = convertToHTMLDocument(res.responseText);
+				arrangeContext(ctx, doc);
+			}
+			
+			return withDocument(doc, function(){
+				if(typeof(exp)=='function')
+					exp = exp(ext, ctx, doc);
+				
+				return ext.extract(ctx);
+			});
+		});
+		d.addCallback(function(res){
+			withDocument(doc, function(){
+				res.page = ctx.title;
+				res.pageUrl = ctx.href;
+				
+				exp && sameObject(res, exp, name + ': extract');
+				ok(ext.check(ctx), name + ': check');
+			});
+			return res;
+		});
+	}
+	
+	//	href  : 'http://www.tumblr.com/dashboard/iframe?src=http%3A%2F%2Fto.tumblr.com%2Fpost%2F38249621&pid=38249621&rk=exgZK6NR', 
+	/*	
+	basicExtractorTest(
+		'Photo - Flickr', 
+		null, 
+		function(ext, ctx, doc){
+			ctx.onImage = true;
+			ctx.target = {src:'http://farm4.static.flickr.com/3151/2569321947_04353b1f27_s.jpg'};
+			
+			return {
+				type      : 'photo',
+				page      : 'awkwardfeet on Flickr',
+				pageUrl   : 'http://www.flickr.com/photos/le_carabinier/2569321947/',
+				item      : 'awkwardfeet',
+				itemUrl   : 'http://farm4.static.flickr.com/3151/2569321947_a245340e65_o.jpg', 
+				author    : 'Sean Marc Lee',
+				authorUrl : 'http://www.flickr.com/photos/le_carabinier/',
+			}
+		});
+	
+	
+	basicExtractorTest('Quote - Twitter', 'http://twitter.com/ku/statuses/833768036', {
+		type    : 'quote',
+		page    : 'Twitter / ku: http://getfirebug.com/ does...',
+		pageUrl : 'http://twitter.com/ku/statuses/833768036',
+		item    : 'Twitter / ku',
+		itemUrl : 'http://twitter.com/ku/statuses/833768036',
+		body    : '<a href="http://getfirebug.com/">http://getfirebug.com/</a> does not respond......', 
+	});
+	
+	basicExtractorTest('Quote - inyo.jp', 'http://inyo.jp/quote/4528124a65fc7d03ca14a8b073ea49c964b463a0', {
+		type    : 'quote',
+		pageUrl : 'http://inyo.jp/quote/4528124a65fc7d03ca14a8b073ea49c964b463a0',
+		item    : 'Predicting The Future',
+		itemUrl : 'http://inyo.jp/quote/4528124a65fc7d03ca14a8b073ea49c964b463a0',
+		body    : 'the best way to predict the future is to invent it.', 
+	});
+	
+	
+	basicExtractorTest(
+		'Photo - Amazon', 
+		'http://www.amazon.co.jp/Master-Puppets-Metallica/dp/B000002H33/ref=sr_1_1?ie=UTF8&s=music&qid=1213360790&sr=8-1', 
+		function(ext, ctx, doc){
+			ctx.target = {
+				id    : 'prodImage', 
+				style : {},
+			};
+			
+			return {
+				type    : 'photo',
+				page    : 'Master of Puppets',
+				pageUrl : 'http://amazon.co.jp/o/ASIN/B000002H33',
+				item    : 'Master of Puppets',
+				itemUrl : 'http://ecx.images-amazon.com/images/I/418MR1SQNKL.jpg', 
+			}
+		});
+	
+	basicExtractorTest('Photo - webshots', 'http://good-times.webshots.com/photo/2222898030101141911OEtlZo', {
+		type      : 'photo',
+		page      : 'cat cat cat cat cat cat cat cat cat cat cat pictures from friends & fun photos on webshots',
+		pageUrl   : 'http://good-times.webshots.com/photo/2222898030101141911OEtlZo',
+		item      : 'cat cat cat cat cat cat cat cat cat cat cat',
+		itemUrl   : 'http://image16.webshots.com/16/8/98/3/2222898030101141911OEtlZo_fs.jpg', 
+		author    : 'mosbatboys',
+		authorUrl : 'http://community.webshots.com/user/mosbatboys/profile',
+	});
+	
+	basicExtractorTest(
+		'Photo - FFFFOUND!', 
+		'http://ffffound.com/', 
+		function(ext, ctx, doc){
+			ctx.onLink = true;
+			ctx.target = {};
+			ctx.link = {href : 'http://ffffound.com/image/b7c72b4d23e1805a10441824072e0eff5790b9d0'};
+			
+			return {
+				type      : 'photo',
+				page      : 'FFFFOUND!',
+				pageUrl   : 'http://ffffound.com/image/b7c72b4d23e1805a10441824072e0eff5790b9d0',
+				item      : 'REDRAW CMS',
+				itemUrl   : 'http://img.ffffound.com/static-data/assets/6/b7c72b4d23e1805a10441824072e0eff5790b9d0.jpg', 
+				author    : 'kssssk',
+				authorUrl : new RegExp('/home/kssssk/found/'),
+			}
+		});
+	
+	basicExtractorTest(
+		'Photo - FFFFOUND!', 
+		'http://ffffound.com/image/b7c72b4d23e1805a10441824072e0eff5790b9d0', 
+		function(ext, ctx, doc){
+			ctx.target = $x('id("assetib7c72b4d23e1805a10441824072e0eff5790b9d0-img")');
+			
+			return {
+				type      : 'photo',
+				page      : 'FFFFOUND!',
+				pageUrl   : 'http://ffffound.com/image/b7c72b4d23e1805a10441824072e0eff5790b9d0',
+				item      : 'REDRAW CMS',
+				itemUrl   : 'http://img.ffffound.com/static-data/assets/6/b7c72b4d23e1805a10441824072e0eff5790b9d0.jpg', 
+				author    : 'kssssk',
+				authorUrl : new RegExp('/home/kssssk/found/'),
+			}
+		});
+	
+	basicExtractorTest('Video - Vimeo', 'http://www.vimeo.com/752979', {
+		type      : 'video',
+		page      : 'White & Nerdy on Vimeo',
+		pageUrl   : 'http://www.vimeo.com/752979',
+		item      : 'White & Nerdy',
+		itemUrl   : 'http://www.vimeo.com/752979',
+		author    : 'waymoby',
+		authorUrl : '/weirdal',
+	});
+	
+	basicExtractorTest('Video - YouTube', 'http://jp.youtube.com/watch?v=rorBOzwR3Tc', {
+		type      : 'video',
+		page      : 'YouTube - KORG DS-10 #001',
+		pageUrl   : 'http://jp.youtube.com/watch?v=rorBOzwR3Tc',
+		item      : 'KORG DS-10 #001',
+		itemUrl   : 'http://jp.youtube.com/watch?v=rorBOzwR3Tc',
+		author    : 'aqi',
+		authorUrl : new RegExp('/user/aqi'),
+	});
+	
+	basicExtractorTest('Video - Google Video', 'http://video.google.com/videoplay?docid=3342755205038857742', {
+		type      : 'video',
+		page      : 'Little Nemo - 1984 Pilot',
+		item      : 'Little Nemo - 1984 Pilot',
+		pageUrl   : 'http://video.google.com/videoplay?docid=3342755205038857742',
+		itemUrl   : 'http://video.google.com/videoplay?docid=3342755205038857742',
+	});
+	
+	basicExtractorTest('Video - MySpaceTV', 'http://vids.myspace.com/index.cfm?fuseaction=vids.individual&VideoID=21937552', {
+		type    : 'video',
+		page    : /MySpaceTV.+/,
+		pageUrl : 'http://vids.myspace.com/index.cfm?fuseaction=vids.individual&videoid=21937552',
+		item    : 'Venetian Acrobat Son',
+		itemUrl : 'http://vids.myspace.com/index.cfm?fuseaction=vids.individual&videoid=21937552',
+		body    : /^<object.*object>$/,
+	});
+	
+	
+	basicExtractorTest('Video - Dailymotion', 'http://www.dailymotion.com/cluster/animals/featured/video/x5oeer_last-of-the-scottish-wildcats-dvd-p_animals', {
+		type      : 'video',
+		page      : /Video Last of the Scottish Wildcats DVD preview trailer - cat, chat, chats, animal, endangered - Dailymotion.+/,
+		pageUrl   : 'http://www.dailymotion.com/video/x5oeer_last-of-the-scottish-wildcats-dvd-p_animals',
+		item      : 'Last of the Scottish Wildcats DVD preview trailer',
+		itemUrl   : 'http://www.dailymotion.com/video/x5oeer_last-of-the-scottish-wildcats-dvd-p_animals',
+		author    : 'coffeefilms',
+		authorUrl : 'http://www.dailymotion.com/coffeefilms',
+		body      : /^<object.*object>$/,
+	});
+	
+	basicExtractorTest('Video - Rimo', 'http://rimo.tv/ja/ch/95269', {
+		type    : 'video',
+		page    : 'Rimo - 200806 Music channel',
+		pageUrl : 'http://rimo.tv/ja/ch/95269',
+		item    : '200806 Music channel',
+		itemUrl : 'http://rimo.tv/ja/ch/95269',
+		body    : /^<object.*object>$/,
+	});
+	
+	basicExtractorTest('Video - Rimo', 'http://rimo.tv/channel/show?url=http%3A%2F%2Fdocopenhagen.blogspot.com%2F2006%2F12%2Ftop-50-music-videos-of-2006.html', {
+		type    : 'video',
+		// page    : '日本語文字化け - 未テスト',
+		pageUrl : 'http://rimo.tv/channel/show?url=http%3A%2F%2Fdocopenhagen.blogspot.com%2F2006%2F12%2Ftop-50-music-videos-of-2006.html',
+		item    : 'DoCopenhagen: Top 50 Music Videos Of 2006',
+		itemUrl : 'http://rimo.tv/channel/show?url=http%3A%2F%2Fdocopenhagen.blogspot.com%2F2006%2F12%2Ftop-50-music-videos-of-2006.html',
+		body    : /^<object.*object>$/,
+	});
+	
+	
+	basicExtractorTest('ReBlog - Tumblr', 'http://to.tumblr.com/post/38249621', {
+		type  : 'reblog',
+		page    : 'to',
+		pageUrl : 'http://to.tumblr.com/post/38249621',
+		item    : 'to',
+		itemUrl : 'http://to.tumblr.com/post/38249621',
+		token   : {
+			token : 'exgZK6NR',
+			id    : '38249621',
+		},
+	});
+	
+	basicExtractorTest(
+		'ReBlog - Tumblr link', 
+		null, 
+		function(ext, ctx, doc){
+			ctx.link = {href : 'http://to.tumblr.com/post/38249621'};
+			
+			return {
+				type  : 'reblog',
+				page    : 'to',
+				pageUrl : 'http://to.tumblr.com/post/38249621',
+				item    : 'to',
+				itemUrl : 'http://to.tumblr.com/post/38249621',
+				token   : {
+					token : 'exgZK6NR',
+					id    : '38249621',
+				},
+			}
+		});
+	*/
+	
+	
+	/*
+	エラー
+	chrome://tombloo/content/library/00_Components.js :: findCacheFile :: line 369
+	basicExtractorTest('Photo - Upload from Cache', 'http://www.sqlite.org/', 
+		function(ext, ctx, doc){
+			ctx.document = document;
+			ctx.target = {
+				tagName : 'img',
+				src     : 'http://www.sqlite.org/images/SQLite.gif',
+			};
+			
+			return {
+				type    : 'photo',
+				title   : 'SQLite Home Page',
+				href    : 'http://www.sqlite.org/',
+				// source : file,
+			}
+		});
+	*/
+	
+	
+	d.addErrback(function(e){
+		log(e)
+		ok(false);
+	});
+	d.addBoth(function(){
+		SimpleTest.finish()
+	});
+} catch (err) {
+	var s = [];
+	s.push('TEST SUITE FAILURE!');
+	for(var prop in err)
+		s.push(prop + ':  ' + err[prop]);
+	ok(false, s.join('\n'));
+}
+</script>
+
+</body>
+</html>

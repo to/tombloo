@@ -1,0 +1,38 @@
+textbox {
+	-moz-binding: url("chrome://tombloo/content/library/completion.xml#textbox");
+	-moz-appearance: none;
+}
+
+textbox *|input {
+  ime-mode: inactive !important;
+}
+
+popup {
+	-moz-binding: url("chrome://tombloo/content/library/completion.xml#popup");
+	padding: 0;
+	
+	border: 1px solid ThreeDShadow;
+	-moz-border-top-colors: ThreeDShadow;
+	-moz-border-right-colors: ThreeDShadow;
+	-moz-border-bottom-colors: ThreeDShadow;
+	-moz-border-left-colors: ThreeDShadow;
+}
+
+listbox {
+	-moz-binding: url("chrome://tombloo/content/library/completion.xml#listbox");
+	-moz-appearance: none !important;
+	border: none !important;
+	margin: 0;
+	width : auto !important;
+}
+
+listitem {
+	-moz-binding: url("chrome://tombloo/content/library/completion.xml#listitem");
+	outline: none !important;
+	padding-right : 4px;
+}
+
+listitem[selected="true"] {
+	background-color: Highlight;
+	color: HighlightText;
+}

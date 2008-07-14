@@ -9,19 +9,29 @@ textbox[readonly=true] {
 	-moz-border-right-colors : transparent;
 	-moz-border-top-colors : transparent;
 }
-groupbox {
-	padding : 1em;
+tab {
+	padding : 0.4em 0.8em 0.1em 0.8em;
+}
+tabpanel {
+	padding : 1.2em 0.7em;
+}
+checkbox, radio, button, tab {
+	cursor : pointer;
+}
+
+checkbox:focus > .checkbox-label-box {
+  border: none !important;
 }
 " type="text/css"?>
 
 <!DOCTYPE prefwindow SYSTEM "chrome://tombloo/locale/tombloo.dtd" >
 
 <prefwindow 
-	style="width : 45em;" 
+	style="width: 50em;" 
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
-	title="&tombloo.prefs.TomblooOptions;" >
+	title="&label.tomblooOptions;" >
 	
-		<prefpane>
+	<prefpane flex="1">
 		<preferences>
 			<preference 
 				id="trimReblogInfo" 
@@ -36,10 +46,6 @@ groupbox {
 				name="extensions.tombloo.thumbnailTemplate" 
 				type="string"/>
 			<preference 
-				id="posterFilter" 
-				name="extensions.tombloo.posterFilter" 
-				type="string"/>
-			<preference 
 				id="ignoreError" 
 				name="extensions.tombloo.ignoreError" 
 				type="string"/>
@@ -47,68 +53,251 @@ groupbox {
 				id="accesskey.share" 
 				name="extensions.tombloo.accesskey.share" 
 				type="string"/>
+			<preference 
+				id="shortcutkey.quickPost.link" 
+				name="extensions.tombloo.shortcutkey.quickPost.link" 
+				type="string"/>
+			<preference 
+				id="shortcutkey.quickPost.regular" 
+				name="extensions.tombloo.shortcutkey.quickPost.regular" 
+				type="string"/>
+			<preference 
+				id="tagProvider" 
+				name="extensions.tombloo.tagProvider" 
+				type="string"/>
+			<preference 
+				id="tagAutoComplete" 
+				name="extensions.tombloo.tagAutoComplete" 
+				type="bool"/>
+			<preference 
+				id="dataDir" 
+				name="extensions.tombloo.dataDir" 
+				type="string"/>
 		</preferences>
 		
-		<groupbox>
-			<caption label="&tombloo.prefs.EntryContentsSettings;"/>
-			<grid>
-				<columns>
-					<column pack="end" align="end" orient="horizontal"/>
-					<column flex="1"/>
-				</columns>
-				<rows>
-					<row align="center">
-						<label value="&tombloo.prefs.AmazonAffiliateID;"/>
-						<textbox preference="amazonAffiliateId" />
-					</row>
-					<row align="center">
-						<label value="&tombloo.prefs.LinkThumbnailTemplate;"/>
-						<textbox preference="thumbnailTemplate" />
-					</row>
-					<row align="center">
-						<spacer />
-						<textbox readonly="true" value="&tombloo.prefs.LinkThumbnailTemplate_eg;" />
-					</row>
-					<row align="center">
-						<label value="&tombloo.prefs.TrimReblogInfo;"/>
-						<checkbox preference="trimReblogInfo" />
-					</row>
-				</rows>
-			</grid>
-		</groupbox>
-		<spacer style="height:2em;"/>
-		<groupbox>
-			<caption label="&tombloo.prefs.PostSettings;"/>
-			<grid>
-				<columns>
-					<column pack="end" align="end" orient="horizontal"/>
-					<column flex="1"/>
-				</columns>
-				<rows>
-					<row align="center">
-						<label value="&tombloo.prefs.AccessKey;"/>
-						<hbox>
-							<textbox preference="accesskey.share" maxlength="1" style="width:2em;" />
-						</hbox>
-					</row>
-					<row align="center">
-						<label value="&tombloo.prefs.Posters_RegExp;"/>
-						<textbox preference="posterFilter" />
-					</row>
-					<row align="center">
-						<spacer />
-						<textbox readonly="true" value="&tombloo.prefs.Posters_RegExp_eg;" />
-					</row>
-					<row align="center">
-						<label value="&tombloo.prefs.IgnoreErrors_RegExp;"/>
-						<textbox preference="ignoreError" />
-					</row>
-					<row align="center">
-						<spacer />
-						<textbox readonly="true" value="&tombloo.prefs.IgnoreErrors_RegExp_eg;" />
-					</row>
-				</rows>
-			</grid>
-		</groupbox>
+		<vbox flex="1" >
+			<tabbox flex="1">
+				<tabs>
+					<tab label="&label.postConfig;"/>
+					<tab label="&label.post;"/>
+					<tab label="&label.entry;"/>
+				</tabs>
+				<tabpanels flex="1">
+					<tabpanel>
+						<grid flex="1">
+							<columns>
+								<column/>
+								<column/>
+								<column/>
+								<column/>
+								<column/>
+								<column/>
+								<column/>
+								<column/>
+								<column/>
+							</columns>
+							<rows id="posters">
+								<row>
+									<spacer />
+									<label value="Text"/>
+									<label value="Photo"/>
+									<label value="Quote"/>
+									<label value="Link"/>
+									<label value="Video"/>
+									<label value="Chat"/>
+									<label value="Reblog"/>
+								</row>
+							</rows>
+						</grid>
+					</tabpanel>
+					<tabpanel>
+						<grid flex="1">
+							<columns>
+								<column pack="end" align="end"/>
+								<column flex="1"/>
+							</columns>
+							<rows>
+								<row align="center">
+									<label value="&label.accesskey.share;"/>
+									<hbox>
+										<textbox preference="accesskey.share" maxlength="1" size="3" />
+									</hbox>
+								</row>
+								<separator class="groove-thin" width="1" style="margin: 0.6em 0 1.5em 0;" />
+								<row align="center">
+									<label value="&label.shortcutkey.quickPost.regular;" />
+									<hbox>
+										<textbox preference="shortcutkey.quickPost.regular" size="35"/>
+									</hbox>
+								</row>
+								<row align="center">
+									<label value="&label.shortcutkey.quickPost.link;" />
+									<hbox>
+										<textbox preference="shortcutkey.quickPost.link" size="35"/>
+									</hbox>
+								</row>
+								<row align="center" style="margin-top: 0.6em;">
+									<label value="&label.tagProvider;" />
+									<radiogroup preference="tagProvider" />
+								</row>
+								<row align="center" style="margin: 0.4em 0 0.5em 0;">
+									<label value="&label.tagAutoComplete;" />
+									<checkbox preference="tagAutoComplete" />
+								</row>
+								<separator class="groove-thin" width="1" style="margin: 0.6em 0 1.5em 0;" />
+								<row align="center">
+									<label value="&label.ignoreError;"/>
+									<textbox preference="ignoreError" />
+								</row>
+								<row align="center" style="margin-top: -0.3em;">
+									<spacer />
+									<textbox readonly="true" value="&label.example; (ffffound: (?!auth)|already)" />
+								</row>
+							</rows>
+						</grid>
+					</tabpanel>
+					<tabpanel>
+						<grid flex="1">
+							<columns>
+								<column pack="end" align="end" orient="horizontal"/>
+								<column flex="1"/>
+							</columns>
+							<rows>
+								<row align="center">
+									<label value="&label.amazonAffiliateId;"/>
+									<hbox>
+										<textbox preference="amazonAffiliateId" size="35" />
+									</hbox>
+								</row>
+								<row align="center">
+									<label value="&label.thumbnailTemplate;"/>
+									<textbox preference="thumbnailTemplate" />
+								</row>
+								<row align="center" style="margin-top: -0.3em;">
+									<spacer />
+									<textbox readonly="true" value="&label.example; &lt;img src=&quot;http://mozshot.nemui.org/shot?{url}&quot; /&gt;" />
+								</row>
+								<row align="center">
+									<label value="&label.trimReblogInfo;"/>
+									<checkbox preference="trimReblogInfo" />
+								</row>
+								<separator class="groove-thin" width="1" style="margin: 1em 0 1em 0;" />
+								<row align="center">
+									<label value="&label.dataDir;"/>
+									<textbox preference="dataDir" />
+								</row>
+								<row align="center" style="margin-top: -0.3em;">
+									<spacer />
+									<textbox readonly="true" value="&label.example; {ProfD}/tombloo" />
+								</row>
+							</rows>
+						</grid>
+					</tabpanel>
+				</tabpanels>
+			</tabbox>
+		</vbox>
+		
+		<script><![CDATA[
+		// chrome://tombloo/content/prefs.xul
+		var tombloo = Components.classes['@brasil.to/tombloo-service;1'].getService().wrappedJSObject;
+		
+		
+		var prefpane = document.getElementsByTagName('prefpane')[0];
+		function keyStringField(elm, meta){
+			elm.addEventListener('keydown', function(e){
+				if(e.keyCode == e.DOM_VK_TAB)
+					return;
+				
+				tombloo.cancel(e);
+				var keyString = tombloo.keyString(e);
+				e.target.value = meta? keyString : keyString.split(' + ').pop();
+				prefpane.userChangedValue(e.target);
+			}, true);
+		}
+		
+		keyStringField(document.getElementsByAttribute('preference', 'shortcutkey.quickPost.link')[0], true);
+		keyStringField(document.getElementsByAttribute('preference', 'shortcutkey.quickPost.regular')[0], true);
+		keyStringField(document.getElementsByAttribute('preference', 'accesskey.share')[0], false);
+		
+		
+		var tagProvider = document.getElementsByAttribute('preference', 'tagProvider')[0];
+		var ms = tombloo.models;
+		for(var n in ms)
+			if(ms[n].getUserTags)
+				tagProvider.appendItem(n, n).setAttribute('src', tombloo[n].ICON);
+		window.addEventListener('load', function(){
+			// スクリプト実行時点でprefpaneのコンストラクターからvalueが先に与えられているため、
+			// 後から追加したradioのチェックをつけることはできない。
+			// またロード中はradiogroup._getRadioChildrenに反映されていないため、
+			// valueの変更でチェックをつけることもできない。
+			tagProvider.value = tagProvider.value;
+		}, true)
+		
+		var models = document.getElementById('posters');
+		var config = eval(tombloo.getPref('postConfig'));
+		tombloo.values(tombloo.models).forEach(function(model){
+			if(!model.check)
+				return;
+			
+			var conf = config[model.name] || {};
+			var row = <row style="margin: 0.1em 0;">
+				<hbox>
+					<box>
+						<image class="checkbox-icon" maxwidth="16" maxheight="16" src={model.ICON}/>
+					</box>
+					<label value={model.name} flex="1"/>
+				</hbox>
+			</row>;
+			
+			tombloo.reduce(function(memo, type){
+				var elm = memo.appendChild(model.check({
+					type : type,
+					pageUrl : {
+						match: function(){
+							return true
+						}
+					},
+				})? <checkbox 
+					type={type} model={model.name} 
+					checked={conf[type] === true} disabled={conf[type] === ''}/> : <spacer/>);
+				
+				return memo;
+			}, ['regular', 'photo', 'quote', 'link', 'video', 'conversation', 'reblog'], row)
+			models.appendChild(tombloo.convertToXULElement(row));
+		});
+		
+		models.addEventListener('click', function(e){
+			if(e.target.tagName != 'checkbox')
+				return;
+			
+			if(e.target.disabled) {
+				e.target.disabled = false;
+				tombloo.cancel(e);
+			} else if(e.target.checked){
+				e.target.disabled = true;
+				e.target.checked = false;
+			}
+		}, true);
+		
+		// MacではOK/キャンセルが表示されないため無条件にunloadで保存する
+		window.addEventListener(tombloo.AppInfo.OS.indexOf('WIN') == 0? 'beforeaccept' : 'unload', function(e){
+			var posters = {};
+			tombloo.$x('.//*[@model]', document, true).forEach(function(checkbox){
+				var name = checkbox.getAttribute('model');
+				if(!posters[name])
+					posters[name] = {};
+				posters[name][checkbox.getAttribute('type')] = 
+					checkbox.disabled? '' : checkbox.checked;
+			});
+			
+			tombloo.setPref('postConfig', uneval(posters));
+		}, true);
+		
+		window.addEventListener('unload', function(e){
+			// ショートカットキーの変更を反映させる(0.5秒程度掛かる)
+			tombloo.loadAllSubScripts();
+		}, true);
+		
+		]]></script>
 	</prefpane>
 </prefwindow>

@@ -1,0 +1,510 @@
+<?xml version="1.0"?>
+<bindings id="tombloo-completion-bindings"
+	xmlns="http://www.mozilla.org/xbl" 
+	xmlns:html="http://www.w3.org/1999/xhtml"
+	xmlns:xbl="http://www.mozilla.org/xbl" 
+	xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+	
+	
+	<binding id="container">
+		<resources>
+			<stylesheet src="chrome://tombloo/content/library/completion.css"/>
+		</resources>
+		
+		<content>
+			<xul:textbox anonid="textbox" xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction,flex"/>
+			<xul:popup anonid="popup" ignorekeys="true">
+				<xul:listbox anonid="listbox" style="height:auto"/>
+			</xul:popup>
+			<xul:box>
+				<xul:label anonid="measure" hidden="true"/>
+			</xul:box>
+		</content>
+		
+		<implementation>
+			<constructor><![CDATA[
+			function _log(msg){
+				Components.classes['@mozilla.org/consoleservice;1'].getService(Components.interfaces.nsIConsoleService).logStringMessage(''+msg);
+			}
+			]]></constructor>
+			
+			<field name="textbox">
+				document.getAnonymousElementByAttribute(this, 'anonid', 'textbox');
+			</field>
+			
+			<property name="value"
+				onset="return this.textbox.value = val;"
+				onget="return this.textbox.value;"/>
+			<property name="values"
+				onget="return this.textbox.values;"/>
+			<property name="candidates"
+				onset="return this.textbox.candidates = val;"/>
+			<property name="autoComplete"
+				onget="return this.textbox.autoComplete;"
+				onset="return this.textbox.autoComplete = val;"/>
+			
+			<method name="focus">
+				<body><![CDATA[
+					this.textbox.focus();
+				]]></body>
+			</method>
+		</implementation>
+	</binding>
+	
+	
+	<binding id="textbox" extends="chrome://global/content/bindings/textbox.xml#textbox">
+		<implementation>
+			<constructor><![CDATA[
+			]]></constructor>
+			
+			<field name="delimiter">
+				' ';
+			</field>
+			<field name="container">
+				this.parentNode;
+			</field>
+			<field name="popup">
+				document.getAnonymousElementByAttribute(this.container, 'anonid', 'popup');
+			</field>
+			<field name="listbox">
+				document.getAnonymousElementByAttribute(this.container, 'anonid', 'listbox');
+			</field>
+			<field name="measure">
+				document.getAnonymousElementByAttribute(this.container, 'anonid', 'measure');
+			</field>
+			<field name="input">
+				document.getAnonymousElementByAttribute(this, 'anonid', 'input')
+					.QueryInterface(Components.interfaces.nsIDOMNSEditableElement);
+			</field>
+			<field name="autoComplete">
+				false;
+			</field>
+			<property name="values"
+				onget="return this.value.split(this.delimiter).filter(function(i){return i});"/>
+			
+			<method name="notify">
+				<body><![CDATA[
+					function tween(callback, span, count){
+						count = (count || 20);
+						var interval = span / count;
+						var value = 0;
+						var calls = 0;
+						var intervalId = setInterval(function(){
+							callback(calls / count);
+							
+							if(count == calls){
+								canceler();
+								return;
+							}
+							calls++;
+						}, interval);
+						var canceler = function(){
+							clearInterval(intervalId)
+						}
+						
+						return canceler;
+					}
+					
+					function toHexString(c){
+						return  '' + 
+							toColorPart(255 * c.r) +
+							toColorPart(255 * c.g) +
+							toColorPart(255 * c.b);
+					}
+					
+					function toColorPart(num) {
+						num = Math.round(num);
+						var res = num.toString(16);
+						if (num < 16)
+							return '0' + res;
+						
+						return res;
+					}
+					
+					function hsvToRGB(h, s, v) {
+						var r, g, b;
+						if (s === 0) {
+							r = g = b = v;
+						} else {
+							var i = Math.floor(h * 6);
+							var f = (h * 6) - i;
+							var p = v * (1 - s);
+							var q = v * (1 - (s * f));
+							var t = v * (1 - (s * (1 - f)));
+							switch (i) {
+								case 1: r = q; g = v; b = p; break;
+								case 2: r = p; g = v; b = t; break;
+								case 3: r = p; g = q; b = v; break;
+								case 4: r = t; g = p; b = v; break;
+								case 5: r = v; g = p; b = q; break;
+								case 6: // fall through
+								case 0: r = v; g = t; b = p; break;
+							}
+						}
+						return {r: r, g: g, b: b,};
+					}
+					
+					function hslToRGB(h, s, l){
+						var r, g, b;
+						if (s === 0) {
+							r = g = b = l;
+						} else {
+							var m2;
+							if (l <= 0.5) {
+								m2 = l * (1.0 + s);
+							} else {
+								m2 = l + s - (l * s);
+							}
+							var m1 = (2.0 * l) - m2;
+							var hsl = function(n1, n2, h){
+								if (h > 6.0){
+									h -= 6.0;
+								} else if (h < 0.0){
+									h += 6.0;
+								}
+								
+								var val;
+								if (h < 1.0) {
+									val = n1 + (n2 - n1) * h;
+								} else if (h < 3.0) {
+									val = n2;
+								} else if (h < 4.0) {
+									val = n1 + (n2 - n1) * (4.0 - h);
+								} else {
+									val = n1;
+								}
+								return val;
+							};
+							
+							var h6 = h * 6.0;
+							r = hsl(m1, m2, h6 + 2);
+							g = hsl(m1, m2, h6);
+							b = hsl(m1, m2, h6 - 2);
+						}
+						return {r: r, g: g, b: b,};
+					}
+					
+					var self = this;
+					return (this.notify = function(){
+						self.canceler && self.canceler();
+						self.canceler = tween(function(ratio){
+							// #ccf0ff
+							self.style.backgroundColor = '#' + toHexString(hslToRGB(0.55, 1, 0.9 + (0.1*ratio)));
+						}, 300, 10);
+					})();
+					
+				]]></body>
+			</method>
+			
+			<method name="injectCandidate">
+				<parameter name="cand"/>
+				<parameter name="terminate"/>
+				<body><![CDATA[
+					var text = this.value;
+					var word = this.getCurrentWord();
+					
+					var suffix = text.substr(word.end);
+					var delimiter = (terminate && suffix.charAt(0) != this.delimiter) ? this.delimiter : '';
+					this.value = text.substring(0, word.start) + cand + delimiter + suffix;
+					this.selectionStart = this.selectionEnd = word.start + cand.length + delimiter.length;
+					
+					if(terminate)
+						this.notify();
+				]]></body>
+			</method>
+			
+			<method name="getCurrentWord">
+				<body><![CDATA[
+					var text = this.value;
+					var caret = this.selectionStart;
+					var start = text.lastIndexOf(this.delimiter, caret - 1) + 1;
+					var end = text.indexOf(this.delimiter, caret);
+					if(end == -1)
+						end = text.length;
+					
+					return {
+						start : start,
+						end : end,
+						word : text.slice(start, end),
+					};
+				]]></body>
+			</method>
+			
+			<method name="getCandidates">
+				<parameter name="hint"/>
+				<parameter name="used"/>
+				<body><![CDATA[
+					var cands = [];
+					var reStrict = new RegExp('^' + hint, 'i');
+					var reLoose = new RegExp('^' + hint.split('').join('.*'), 'i');
+					
+					this.candidates.forEach(function(cand){
+						if(reStrict.test(cand.reading))
+							cands.push(cand.value);
+					});
+					
+					if(!cands.length)
+						this.candidates.forEach(function(cand){
+							if(reLoose.test(cand.reading))
+								cands.push(cand.value);
+						});
+					
+					return cands.filter(function(cand){
+						return !used.some(function(u){return u==cand})
+					});
+				]]></body>
+			</method>
+			
+			<method name="complete">
+				<parameter name="denyEmpty"/>
+				<body><![CDATA[
+					var text = this.value;
+					var word = this.getCurrentWord();
+					var hint = word.word;
+					
+					if(!hint && denyEmpty){
+						this.popup.hidePopup();
+						return;
+					}
+					
+					var cands = this.getCandidates(hint, text.substring(0, word.start).split(this.delimiter));
+					if(this.autoComplete && cands.length==1 && (hint.length >=2 || cands[0].length == 1)){
+						if(!this.deleting)
+							this.injectCandidate(cands[0], true);
+						this.popup.hidePopup();
+						return;
+					}
+					
+					if(cands.length){
+						this.measure.value = text.substr(0, word.start);
+						this.measure.hidden = false;
+						var x = this.measure.boxObject.width;
+						this.measure.hidden = true;
+						
+						this.popup.show(this, x, -2, cands);
+					} else {
+						this.popup.hidePopup();
+					}
+				]]></body>
+			</method>
+		</implementation>
+		
+		<handlers>
+			<handler event="input" action="this.complete(true)" />
+			<handler event="keyup"><![CDATA[
+				switch (event.keyCode) {
+					case KeyEvent.DOM_VK_DELETE:
+					case KeyEvent.DOM_VK_BACK_SPACE:
+						this.deleting = false;
+						return;
+				}
+			]]></handler>
+			<handler event="keydown"><![CDATA[
+				switch (event.keyCode) {
+					case KeyEvent.DOM_VK_DELETE:
+					case KeyEvent.DOM_VK_BACK_SPACE:
+						this.deleting = true;
+						return;
+				}
+			]]></handler>
+			<handler event="keypress"><![CDATA[
+				switch (event.keyCode) {
+					case KeyEvent.DOM_VK_TAB:
+						if(!this.popup.visible)
+							return;
+						
+					case KeyEvent.DOM_VK_TAB:
+					case KeyEvent.DOM_VK_DOWN:
+						event.preventDefault();
+						
+						if(!this.popup.visible)
+							this.complete();
+						
+						if(this.listbox.rowCount==1){
+							this.listbox.enter(true)
+						} else {
+							this.listbox.moveCursor(1);
+						}
+						return;
+						
+					case KeyEvent.DOM_VK_UP:
+						event.preventDefault();
+						this.listbox.moveCursor(-1);
+						return;
+						
+					case KeyEvent.DOM_VK_RETURN:
+						if(this.popup.visible){
+							this.listbox.enter(true)
+						} else {
+							// FIXME
+						}
+						return;
+						
+					case KeyEvent.DOM_VK_ESCAPE:
+						// FIXME 入力途中の候補をクリア
+						this.popup.hidePopup();
+						return;
+				}
+			]]></handler>
+		</handlers>
+	</binding>
+	
+	
+	<binding id="popup" extends="chrome://global/content/bindings/popup.xml#popup">
+		<implementation>
+			<field name="container">
+				this.parentNode;
+			</field>
+			<field name="listbox">
+				document.getAnonymousElementByAttribute(this.container, 'anonid', 'listbox');
+			</field>
+			<field name="textbox">
+				document.getAnonymousElementByAttribute(this.container, 'anonid', 'textbox');
+			</field>
+			
+			<property name="visible"
+				onget="return this.state? (this.state != 'closed') : (!!this.boxObject.height);" />
+			
+			<method name="show">
+				<parameter name="anchor"/>
+				<parameter name="x"/>
+				<parameter name="y"/>
+				<parameter name="cands"/>
+				<body><![CDATA[
+					if(this.openPopup){
+						this.openPopup(anchor, 'after_start', x, y, false);
+					} else {
+						anchor = anchor.boxObject;
+						
+						// ポップアップ位置の基点を設定する
+						var doc = this.ownerDocument;
+						doc.popupNode = doc.documentElement;
+						this.showPopup(doc.documentElement, anchor.x + x, anchor.y + anchor.height + y, 'popup');
+					}
+					
+					if(cands){
+						this.listbox.removeAll();
+						this.listbox.appendItems(cands);
+					}
+				]]></body>
+			</method>
+		</implementation>
+		
+		<handlers>
+			<handler event="blur" action="this.hidePopup()" />
+		</handlers>
+	</binding>
+	
+	
+	<binding id="listbox" extends="chrome://global/content/bindings/listbox.xml#listbox">
+		<implementation>
+			<constructor><![CDATA[
+			]]></constructor>
+			
+			<field name="container">
+				this.parentNode.parentNode;
+			</field>
+			<field name="popup">
+				document.getAnonymousElementByAttribute(this.container, 'anonid', 'popup');
+			</field>
+			<field name="textbox">
+				document.getAnonymousElementByAttribute(this.container, 'anonid', 'textbox');
+			</field>
+			
+			<field name="maxRows">
+				20
+			</field>
+			<field name="rowCount" />
+			
+			<property name="rowHeight"
+				onget="return this._rowHeight || (this._rowHeight = this.childNodes[0].boxObject.height)" />
+			
+			<method name="removeAll">
+				<body><![CDATA[
+					while(this.lastChild)
+						this.removeChild(this.lastChild);
+				]]></body>
+			</method>
+			<method name="appendItems">
+				<parameter name="items"/>
+				<body><![CDATA[
+					for(var i=0 ; i<items.length; i++)
+						this.appendItem(items[i]);
+				]]></body>
+			</method>
+			<method name="adjustSize">
+				<body><![CDATA[
+					if(!this.rowHeight){
+						this.rows = Math.min(this.rowCount, this.maxRows);
+					} else {
+						// rowsの変更やheight:autoだけでは余白が生じることがあるため手動で高さを計算する
+						this.height = Math.min(this.rowCount, this.maxRows) * this.rowHeight;
+					}
+					
+					if(this.rowCount == 1){
+						this.style.backgroundColor = '#ccf0ff';
+					} else {
+						this.style.backgroundColor = '#ffffff';
+					}
+					
+					// スクロールバーが表示されると切れるため手動で幅を計算する
+					if(this.rowCount > this.maxRows){
+						this.width = null;
+						this.width = this.boxObject.width + 20;
+					} else {
+						this.width = null;
+					}
+				]]></body>
+			</method>
+			
+			<method name="moveCursor">
+				<parameter name="offset"/>
+				<body><![CDATA[
+					var index = this.selectedIndex + offset;
+					index = 
+						index >= this.rowCount ? 0 : 
+						index < 0 ? (this.rowCount - 1) : 
+						index;
+					
+					// リストボックス表示直後にカーソルを動かすと表示されない時があるため再描画を促す
+					if(index==0)
+						this.boxObject.height;
+					
+					this.selectedIndex = index;
+					this.ensureIndexIsVisible(index);
+				]]></body>
+			</method>
+			<method name="enter">
+				<parameter name="terminate"/>
+				<body><![CDATA[
+					var item = this.selectedItem || (this.rowCount==1 && this.firstChild);
+					if(!item)
+						return;
+					
+					this.textbox.injectCandidate(item.getAttribute('label'), terminate);
+					
+					if(terminate){
+						this.popup.hidePopup();
+						// this.textbox.focus();
+					}
+				]]></body>
+			</method>
+		</implementation>
+		
+		<handlers>
+			<handler event="select" action="this.enter()" />
+			<handler event="DOMNodeInserted"><![CDATA[
+				// getRowCountメソッドは不正確な場合があるため子要素を取得しキャッシュする
+				this.rowCount = this.getElementsByTagName('listitem').length;
+				
+				this.adjustSize();
+			]]></handler>
+		</handlers>
+	</binding>
+	
+	<binding id="listitem" extends="chrome://global/content/bindings/listbox.xml#listitem">
+		<handlers>
+			<handler event="click" action="this.control.enter(true)" />
+		</handlers>
+	</binding>
+</bindings>

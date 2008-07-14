@@ -2,6 +2,7 @@
 <head>
 	<script type="text/javascript" src="library/MochiKit.js"></script>
 	<script type="text/javascript" src="library/SimpleTest.js"></script>
+	<script type="text/javascript" src="test.js"></script>
 	<link rel="stylesheet" type="text/css" href="library/test.css">
 </head>
 <body>
@@ -16,7 +17,10 @@
 <script type="text/javascript" src="../library/20_Tombloo.js"></script>
 <script type="text/javascript">
 try {
+	
 	SimpleTest.waitForExplicitFinish();
+	
+	var d = succeed();
 	
 	// chrome://tombloo/content/test/test_Tumblr.html
 	
@@ -72,50 +76,34 @@ try {
 	is(Tumblr.trimReblogInfo(fields)['post[two]'], '<a href="http://www.tumblr.com/dashboard">Tumblr</a>');
 	
 	
-	var d = succeed();
-	var url = 'http://www.tumblr.com/dashboard/iframe?src=http%3A%2F%2Fto.tumblr.com%2Fpost%2F31464116&pid=31464116';
-	var url = 'http://www.tumblr.com/dashboard/iframe?pid=31464116';
-	var url = 'http://www.tumblr.com/dashboard/iframe?pid=31573890&rk=Vm1AnAen';
-	// var url = 'http://www.tumblr.com/dashboard/iframe?pid=31573890';
-	var url = 'http://www.tumblr.com/dashboard/iframe?pid=31573890&rk=6TQ3UnhD';
-	var post = 'http://pootee.tumblr.com/post/31573890'
+	// getReblogToken
+	sameObject(
+		Tumblr.getReblogToken('http://www.tumblr.com/dashboard/iframe?src=http%3A%2F%2Fpootee.tumblr.com%2Fpost%2F31573890&amp;pid=31573890&amp;rk=Vm1AnAen'), {
+			token : 'Vm1AnAen',
+			id    : '31573890',
+		});
+	sameObject(
+		Tumblr.getReblogToken('http://www.tumblr.com/reblog/31573890/Vm1AnAen?redirect_to=%2Fdashboard'), {
+			token : 'Vm1AnAen',
+			id    : '31573890',
+		});
+	sameObject(
+		Tumblr.getReblogToken('http://www.tumblr.com/reblog/31573890/Vm1AnAen'), {
+			token : 'Vm1AnAen',
+			id    : '31573890',
+		});
 	/*
-	doXHR(url).addBoth(function(res){
-		console.log(res.responseText);
-	});
-	sendByChannel(url).addCallback(function(res){
-		console.log(res.responseText);
-	});
-	Tumblr.reblog(31464116).addBoth(function(res){
-		alert(res);
-	});
-	Tumblr.getReblogToken(post).addBoth(function(res){
-		console.log(res);
-	});
-	console.log(Tumblr.getReblogToken(url));
-	Tumblr.reblog(url).addBoth(function(res){
-		console.log(res);
-	});
-	Tumblr.reblog(url).addBoth(function(res){
-		console.log(res);
-	});
+	TEST OK
+	d.addCallback(doXHR, 'http://to.tumblr.com/post/34424030');
+	d.addCallback(function(res){
+		sameObject(
+			Tumblr.getReblogToken(convertToHTMLDocument(res.responseText)), {
+				token : 'z514XaLi',
+				id    : '34424030',
+			});
+	})
 	*/
 	
-	
-	
-	
-	// getReblogToken
-	var t = Tumblr.getReblogToken('http://www.tumblr.com/dashboard/iframe?src=http%3A%2F%2Fpootee.tumblr.com%2Fpost%2F31573890&amp;pid=31573890&amp;rk=Vm1AnAen');
-	is(t.token, 'Vm1AnAen');
-	is(t.id, '31573890');
-	
-	var t = Tumblr.getReblogToken('http://www.tumblr.com/reblog/31573890/Vm1AnAen?redirect_to=%2Fdashboard');
-	is(t.token, 'Vm1AnAen');
-	is(t.id, '31573890');
-	
-	var t = Tumblr.getReblogToken('http://www.tumblr.com/reblog/31573890/Vm1AnAen');
-	is(t.token, 'Vm1AnAen');
-	is(t.id, '31573890');
 	
 	/* 
 	// remove
@@ -234,7 +222,23 @@ try {
 		title : 'TITLE',
 		body : 'Z:1\nX:2',
 	});
+	
+	d.addCallback(function(){
+		return Tumblr.getCurrentUser();
+	}).addCallback(function(user){
+		ok(user.length > 0, 'ログインユーザー名を取得できるか?');
+	});
+	
+	
+	d.addCallback(function(){
+		return Tumblr.logout();
+	});
+	
+	d.addCallback(function(){
+		return Tumblr.login('user@mail.com', 'password');
+	});
 	*/
+	
 	
 	d.addErrback(function(e){
 		log(e)
@@ -243,6 +247,7 @@ try {
 	d.addBoth(function(){
 		SimpleTest.finish()
 	});
+	
 	
 } catch (err) {
 	var s = 'test suite failure!\n';

@@ -1,81 +1,96 @@
-const XUL_NS  = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
-const HTML_NS = 'http://www.w3.org/1999/xhtml';
+var XUL_NS  = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
+var HTML_NS = 'http://www.w3.org/1999/xhtml';
 
-const Ci = Components.interfaces;
-const Cc = Components.classes;
+var Ci = Components.interfaces;
+var Cc = Components.classes;
 
 var INTERFACES = [];
 for(var i in Ci)
 	INTERFACES.push(Ci[i]);
 
 
-const IWebProgressListener = Ci.nsIWebProgressListener;
-const IFile                = Ci.nsIFile;
-const ILocalFile           = Ci.nsILocalFile;
-const IURI                 = Ci.nsIURI;
-const IFileProtocolHandler = Ci.nsIFileProtocolHandler;
-const IAccessNode          = Ci.nsIAccessNode;
-const IHttpChannel         = Ci.nsIHttpChannel;
-const IUploadChannel       = Ci.nsIUploadChannel;
-const IScriptError         = Ci.nsIScriptError;
-const IStreamListener      = Ci.nsIStreamListener;
-const IInputStream         = Ci.nsIInputStream;
-const ICache               = Ci.nsICache;
+var IWebProgressListener = Ci.nsIWebProgressListener;
+var IFile                = Ci.nsIFile;
+var ILocalFile           = Ci.nsILocalFile;
+var IURI                 = Ci.nsIURI;
+var IFileProtocolHandler = Ci.nsIFileProtocolHandler;
+var IAccessNode          = Ci.nsIAccessNode;
+var IHttpChannel         = Ci.nsIHttpChannel;
+var IUploadChannel       = Ci.nsIUploadChannel;
+var IScriptError         = Ci.nsIScriptError;
+var IStreamListener      = Ci.nsIStreamListener;
+var IInputStream         = Ci.nsIInputStream;
+var ICache               = Ci.nsICache;
+var ISelectionListener   = Ci.nsISelectionListener;
 
 
 // const AccessibilityService = getService('/accessibilityService;1', Ci.nsIAccessibilityService);
-const ExtensionManager = getService('/extensions/manager;1', Ci.nsIExtensionManager);
-const StorageService   = getService('/storage/service;1', Ci.mozIStorageService);
-const DirectoryService = getService('/file/directory_service;1', Ci.nsIProperties);
-const IOService        = getService('/network/io-service;1', Ci.nsIIOService);
-const AtomService      = getService('/atom-service;1', Ci.nsIAtomService);
-const ChromeRegistry   = getService('/chrome/chrome-registry;1', Ci.nsIXULChromeRegistry);
-const WindowMediator   = getService('/appshell/window-mediator;1', Ci.nsIWindowMediator);
-const ConsoleService   = getService('/consoleservice;1', Ci.nsIConsoleService);
-const AlertsService    = getService('/alerts-service;1', Ci.nsIAlertsService);
-const MIMEService      = getService('/uriloader/external-helper-app-service;1', Ci.nsIMIMEService);
-const PromptService    = getService('/embedcomp/prompt-service;1', Ci.nsIPromptService);
-const CacheService     = getService('/network/cache-service;1', Ci.nsICacheService);
-const	AppShellService  = getService('/appshell/appShellService;1', Ci.nsIAppShellService);
-const	CookieService    = getService('/cookieService;1', Ci.nsICookieService);
+var ExtensionManager    = getService('/extensions/manager;1', Ci.nsIExtensionManager);
+var StorageService      = getService('/storage/service;1', Ci.mozIStorageService);
+var DirectoryService    = getService('/file/directory_service;1', Ci.nsIProperties);
+var IOService           = getService('/network/io-service;1', Ci.nsIIOService);
+var AtomService         = getService('/atom-service;1', Ci.nsIAtomService);
+var ChromeRegistry      = getService('/chrome/chrome-registry;1', Ci.nsIXULChromeRegistry);
+var WindowMediator      = getService('/appshell/window-mediator;1', Ci.nsIWindowMediator);
+var ConsoleService      = getService('/consoleservice;1', Ci.nsIConsoleService);
+var AlertsService       = getService('/alerts-service;1', Ci.nsIAlertsService);
+var MIMEService         = getService('/uriloader/external-helper-app-service;1', Ci.nsIMIMEService);
+var PromptService       = getService('/embedcomp/prompt-service;1', Ci.nsIPromptService);
+var CacheService        = getService('/network/cache-service;1', Ci.nsICacheService);
+var AppShellService     = getService('/appshell/appShellService;1', Ci.nsIAppShellService);
+var DownloadManager     = getService('/download-manager;1', Ci.nsIDownloadManager);
+var AppInfo             = getService('/xre/app-info;1');
+var UnescapeHTML        = getService('/feed-unescapehtml;1', Ci.nsIScriptableUnescapeHTML);
+var CookieService       = getService('/cookieService;1', Ci.nsICookieService);
+var CookieManager       = getService('/cookiemanager;1', Ci.nsICookieManager);
+var PasswordManager     = getService('/passwordmanager;1', Ci.nsIPasswordManager);
+var LoginManager        = getService('/login-manager;1', Ci.nsILoginManager);
+var StringBundleService = getService('/intl/stringbundle;1', Ci.nsIStringBundleService);
+var NavBookmarksService = getService('/browser/nav-bookmarks-service;1', Ci.nsINavBookmarksService);
+var AnnotationService   = getService('/browser/annotation-service;1', Ci.nsIAnnotationService);
 
 
-const PrefBranch = 
+var PrefBranch = 
 	Components.Constructor('@mozilla.org/preferences;1', 'nsIPrefBranch');
-const LocalFile = 
+var LocalFile = 
 	Components.Constructor('@mozilla.org/file/local;1', 'nsILocalFile', 'initWithPath');
-const WebBrowserPersist = 
+var WebBrowserPersist = 
 	Components.Constructor('@mozilla.org/embedding/browser/nsWebBrowserPersist;1', 'nsIWebBrowserPersist');
-const StorageStatementWrapper = 
+var StorageStatementWrapper = 
 	Components.Constructor('@mozilla.org/storage/statement-wrapper;1', 'mozIStorageStatementWrapper', 'initialize');
-const ScriptError = 
+var ScriptError = 
 	Components.Constructor('@mozilla.org/scripterror;1', 'nsIScriptError', 'init');
+var Process = 
+	createConstructor('/process/util;1', 'nsIProcess', 'init');
 
-const InputStream = 
+var InputStream = 
 	Components.Constructor('@mozilla.org/scriptableinputstream;1', 'nsIScriptableInputStream', 'init');
-const BinaryInputStream = 
+var BinaryInputStream = 
 	Components.Constructor('@mozilla.org/binaryinputstream;1', 'nsIBinaryInputStream', 'setInputStream');
-
-const FileInputStream = 
+var FileInputStream = 
 	createConstructor('/network/file-input-stream;1', 'nsIFileInputStream', 'init');
-const MIMEInputStream = 
+var ConverterInputStream = 
+	createConstructor('/intl/converter-input-stream;1', 'nsIConverterInputStream', function(stream, charset, bufferSize){
+		this.init(stream, charset || 'UTF-8', bufferSize || 4096, ConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+	});
+var MIMEInputStream = 
 	createConstructor('/network/mime-input-stream;1', 'nsIMIMEInputStream', function(stream){
 		this.addContentLength = true;
 		this.setData(stream);
 	});
-const BufferedInputStream = 
+var BufferedInputStream = 
 	createConstructor('/network/buffered-input-stream;1', 'nsIBufferedInputStream', function(stream, bufferSize){
 		this.init(stream, bufferSize || 4096);
 	});
-const StringInputStream = 
+var StringInputStream = 
 	createConstructor('/io/string-input-stream;1', 'nsIStringInputStream', function(str){
 		this.setData(str, str.length);
 	});
-const UnicodeConverter = 
+var UnicodeConverter = 
 	createConstructor('/intl/scriptableunicodeconverter', 'nsIScriptableUnicodeConverter', function(charset){
 		this.charset = charset || 'UTF-8';
 	});
-const MultiplexInputStream = 
+var MultiplexInputStream = 
 	createConstructor('/io/multiplex-input-stream;1', 'nsIMultiplexInputStream', function(streams){
 		var self = this;
 		streams = streams || [];
@@ -89,12 +104,28 @@ const MultiplexInputStream =
 			self.appendStream(stream);
 		});
 	});
-const CryptoHash = 
+var CryptoHash = 
 	createConstructor('/security/hash;1', 'nsICryptoHash', 'init');
-
+var FileOutputStream = 
+	update(createConstructor('/network/file-output-stream;1', 'nsIFileOutputStream', 'init'), {
+		PR_RDONLY : 0x01,
+		PR_WRONLY : 0x02,
+		PR_RDWR   : 0x04,
+		PR_CREATE_FILE : 0x08,
+		PR_APPEND : 0x10,
+		PR_TRUNCATE : 0x20,
+		PR_SYNC : 0x40,
+		PR_EXCL : 0x80,
+	});
 
 
 // ----[Utility]-------------------------------------------------
+function update(t, s){
+	for(var p in s)
+		t[p] = s[p];
+	return t;
+}
+
 function createConstructor(pid, ifc, init){
 	var cls = Components.classes['@mozilla.org' + pid];
 	ifc = typeof(ifc)=='string'? Components.interfaces[ifc] : ifc;
@@ -120,7 +151,8 @@ function createConstructor(pid, ifc, init){
 function getService(clsName, ifc){
 	try{
 		var cls = Components.classes['@mozilla.org' + clsName];
-		return !cls? null : cls.getService(ifc);
+		return !cls? null : 
+			ifc? cls.getService(ifc) : broad(cls.getService());
 	} catch(e) {
 		return null;
 	}
@@ -263,11 +295,26 @@ function getPrefValue(){
 	}
 }
 
+	
+function getDownloadDir(){
+	try {
+		var dir = new LocalFile(getPrefValue('browser.download.dir') || getPrefValue('browser.download.lastDir'));
+		if(dir.exists())
+			return dir
+	} catch(e) {}
+	
+	return DownloadManager.userDownloadsDirectory;
+}
+
 function getProfileDir(){
 	return DirectoryService.get('ProfD', IFile);
 }
 
-function download(targetFile, sourceURL){
+function getTempDir(){
+	return DirectoryService.get('TmpD', IFile);
+}
+
+function download(sourceURL, targetFile){
 	var d = new Deferred();
 	var targetURI = IOService.newFileURI(targetFile);
 	var sourceURI = IOService.newURI(sourceURL, null, null);
@@ -281,7 +328,7 @@ function download(targetFile, sourceURL){
 			onStatusChange : function(){},
 			onStateChange : function(progress, req, state, status){
 				if (state & IWebProgressListener.STATE_STOP)
-					d.callback()
+					d.callback();
 			},
 		}
 		
@@ -384,6 +431,46 @@ function md5(str, charset){
 	}).join('');
 }
 
-function getCookieString(uri){
-	return CookieService.getCookieString(createURI(uri), null);
+function getContents(file, charset){
+	try{
+		return withStream(new FileInputStream(file, -1, 0, false), function(fis){
+			return withStream(new ConverterInputStream(fis, charset), function(cis){
+				var out = {};
+				cis.readString(fis.available(), out);
+				return out.value;
+			});
+		});
+	} catch(e){}
+}
+
+function putContents(file, text, charset){
+	withStream(new FileOutputStream(file, 
+		FileOutputStream.PR_WRONLY | FileOutputStream.PR_CREATE_FILE | FileOutputStream.PR_TRUNCATE, 420, -1), function(stream){
+		text = convertFromUnicode(text, charset);
+		stream.write(text, text.length);
+	});
+}
+
+function withStream(stream, func){
+	try{
+		return func(stream);
+	} finally{
+		stream && stream.close && stream.close();
+	}
+}
+
+function sanitizeHTML(html){
+	var doc = document.implementation.createDocument('', '', null);
+	var root = doc.appendChild(doc.createElement('root'));
+	
+	var fragment = UnescapeHTML.parseFragment(html, false, null, doc.documentElement);
+	doc.documentElement.appendChild(fragment);
+	
+	if(!root.childNodes.length)
+		return '';
+	return serializeToString(root).match(/^<root>(.*)<\/root>$/)[1];
+}
+
+function serializeToString(xml){
+	return (new XMLSerializer()).serializeToString(xml);
 }

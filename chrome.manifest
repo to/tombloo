@@ -1,4 +1,5 @@
 content  tombloo  chrome/content/
+skin     tombloo  classic  chrome/skin/
 overlay  chrome://browser/content/browser.xul  chrome://tombloo/content/browser.xul
 
 locale   tombloo  en-US  chrome/locale/en-US/

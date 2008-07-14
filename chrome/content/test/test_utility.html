@@ -24,18 +24,18 @@
 try {
 	// chrome://tombloo/content/test/test_utility.html
 	
-	var secret = 'bfdda251193b021c';
-	var param = {
-		cb         : 1206801061330,
-		photo_id   : 2371304094,
-		method     : 'flickr.favorites.add',
-		src        : 'js',
-		api_key    : '042ecfb4f851e1e60b7fdf78ec0d54ef',
-		auth_hash  : '7d1a0d02d70b7ee955346cd60bb8af6f',
-		auth_token : '',
-	};
-	// alert((secret + keys(param).sort().map(function(key){return key + param[key]}).join('')).md5());
+	// toRoma
+	is('アイウエオ'.toRoma(), 'aiueo');
+	is('ファイル'.toRoma(), 'fairu');
+	is('チャントシタ、ドゥーム。'.toRoma(), 'channtoshita,dwu-mu.');
+	is('"アトデヨム","シャシン"'.toRoma(), '"atodeyomu","shashinn"');
+	is('アッチ'.toRoma(), 'acchi');
+	is('あっち'.toRoma(), 'acchi');
+	is('あとでJavaScriptを読む'.toRoma(), 'atodeJavaScriptwo読mu');
+	is('webせいさく'.toRoma(), 'webseisaku');
 	
+	
+	// extract
 	is('abcdefg'.extract(/bc(de)/), 'de');
 	is('abcdefg'.extract(/(bc(de))/, 2), 'de');
 	is('abcdefg'.extract(/bc(de)(fg)/, 2), 'fg');
@@ -97,6 +97,7 @@ try {
 	is(queryString('a=5'), 'a=5');
 	is(queryString({a:void(0)}), '');
 	
+	setPref('test_string', 'あいうえお');
 	is(getPref('test_string'), 'あいうえお');
 	
 	ok(isEmpty(clearObject({a:1, b:''})));
@@ -119,9 +120,13 @@ try {
 	is(f.select, '2');
 	is(f.checkbox, 'on');
 	
-	
+	// String
 	is(' A '.trim(), 'A');
 	is('\n \t A\nB\n \n'.trim(), 'A\nB');
+	
+	ok(! 'ABC,DEF.[]/"()'.includesFullwidth());
+	ok(  '"あいう","あとで読む"'.includesFullwidth());
+	
 	
 	// SimpleEnumerator Iterator
 	var dir = getProfileDir();
@@ -230,6 +235,118 @@ try {
 	through('F:TOO',  re);
 	block  ('T:Post', re);
 	through('T:You',  re);
+	
+	
+	is('<a href="http://"><b>ABC</b></a>'.trimTag(), 'ABC');
+	is(joinText(['<a href="http://">ABC</a>', null, 'DEF', window.undefined], ' ', true), 'ABC DEF');
+	is(joinText(['1', '2']), '1,2');
+	is(joinText(['1'], ' ', true), '1');
+	is(joinText([null, null], ' ', true), '');
+	
+	
+	// Repository
+	var repo = new Repository();
+	ok(isEmpty(repo.copyTo({})));
+	
+	var repo = new Repository({
+		name  : 'ABC',
+		check : function(c1, c2){
+			return c1 < 5;
+		},
+	});
+	ok(repo.copyTo({}).ABC);
+	is(repo.names.join(), 'ABC');
+	is(repo.values.length, 1);
+	is(repo.size, 1);
+	is(repo.ABC.name, 'ABC');
+	is(repo.ZZZ, null);
+	is(repo.find('ABC').length, 1);
+	is(repo.find('ZZZ').length, 0);
+	is(repo.check(6).length, 0);
+	is(repo.check(4).length, 1);
+	
+	repo.register([{
+		name  : 'ABC',
+		check : function(c1, c2){
+			return c1 < 3;
+		},
+	},{
+		name  : 'DEF',
+		check : function(c1, c2){
+			return c1 < 1 || c2 > 6;
+		},
+	},]);
+	is(repo.names.join(), 'ABC,DEF');
+	is(repo.check(4).length, 0);
+	is(repo.check(4, 7).length, 1);
+	is(repo.check(2).length, 1);
+	is(repo.check(0).length, 2);
+	is(repo.check(0)[0].name, 'ABC', '順序が保たれているか');
+	is(repo.find('A|D').length, 2);
+	is(repo.find(/A|D/).length, 2);
+	
+	repo.register({
+		name  : 'GHI',
+		check : function(c){},
+	}, 'DEF');
+	is(repo.names.join(), 'ABC,GHI,DEF', '途中に追加できるか');
+	
+	ok(getDataDir().exists(), 'データディレクトリが存在するか');
+	
+	var event = document.createEvent('KeyboardEvent');
+	event.initKeyEvent('keydown', true, true, null,
+		true,  //  ctrl,
+		false, //  alt,
+		true,  //  shift
+		false, //  meta
+		65, // keyCode,
+		0); // in charCode
+	is(keyString(event), 'CTRL + SHIFT + A');
+	is(keyString(event), 'CTRL + SHIFT + A', '2回目の呼び出し');
+	$('text').addEventListener('keydown', function(e){
+		cancel(e);
+		log(keyString(e));
+	}, true);
+	
+	// Cookie
+	ok(getCookies('www.tumblr.com').length > 2, 'Tumblrのログイン情報が取得できるか(未ログインの場合エラー)');
+	ok(getCookieString('del.icio.us', '_user'));
+	
+	// Password
+	ok(getPasswords('http://www.tumblr.com').length);
+	
+	
+	// アスペクト
+	function Cat(name){
+		this.name = name;
+	}
+	Cat.prototype.mew = function(you){
+		return this.name + ' : ' + you + ' MEW!!';
+	}
+	var cat = new Cat('TAMA');
+	var _mew = Cat.prototype.mew; // オリジナルメソッドを保存
+	is(cat.mew('taro'), 'TAMA : taro MEW!!');
+	
+	addAround(Cat.prototype, 'mew', function(proceed, args, target, methodName){
+		return proceed(args);
+	});
+	is(cat.mew.overwrite, 1);
+	is(cat.mew('taro'), 'TAMA : taro MEW!!', 'ノーマルなアスペクト追加');
+	
+	addAround(Cat.prototype, 'mew', function(proceed, args, target, methodName){
+		is(methodName, 'mew');
+		args[0] = args[0] + ' san';
+		return '[' + proceed(args) + ']';
+	});
+	is(cat.mew.overwrite, 2);
+	is(cat.mew('taro'), '[TAMA : taro san MEW!!]', '多重アスペクト、引数と返り値の変形');
+	
+	Cat.prototype.mew = _mew;
+	ok(cat.mew.overwrite == null, 'アスペクトの除去');
+	
+	
+	// getMessage
+	is(getMessage('label.action.tomblooOptions'), 'Tomblooの設定');
 	
 } catch (err) {
 	var s = 'test suite failure!\n';

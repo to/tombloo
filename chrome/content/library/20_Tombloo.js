@@ -1,16 +1,6 @@
 var Tombloo = {
 	get root(){
-		if(this._root)
-			return this._root.clone();
-		
-		var root = getProfileDir();
-		root.append('tombloo');
-		this.root = root;
-		
-		if(!root.exists())
-			root.create(root.DIRECTORY_TYPE, 0664);
-		
-		return this.root.clone();
+		return (this._root || (this._root = getDataDir())).clone();
 	},
 	set root(root){
 		return this._root = root;

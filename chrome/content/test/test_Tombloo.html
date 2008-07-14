@@ -81,8 +81,8 @@ try {
 	photo.save();
 	is(Photo.countByUser('to'), 1, '保存され行が増えるか');
 	
-	ok(photo.checkFile(500), '[環境依存]ファイルが存在するか');
-	is(photo.getFile(500).exists(), true, '[環境依存]ファイルが存在するか');
+	// ok(photo.checkFile(500), '[環境依存]ファイルが存在するか');
+	// is(photo.getFile(500).exists(), true, '[環境依存]ファイルが存在するか');
 	
 	// 時間がかかるためスキップ
 	// ok(Photo.getFiles(500).length > 100 , '[環境依存]画像ファイルを取得できるか');

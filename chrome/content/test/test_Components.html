@@ -33,14 +33,13 @@ try {
 	is(typeof(Components.classes['not_found']), 'undefined');
 	ok(getService() === null);
 	ok(getService('hohoho') === null);
-	ok(getService('/consoleservice;1', null) === null);
 	ok(getService('/consoleservice;1', Ci.nsIConsoleService).logStringMessage);
 	
 	
 	// getInterfaces
 	var uri = createURI('http://google.com');
 	var ifcs = getInterfaces(uri);
-	is(ifcs.length, 6);
+	ok(ifcs.length >= 6, 'getInterfaces: インタフェース数(Firefox 2/3で違う)');
 	is(ifcs[0], Ci.nsIStandardURL);
 	
 	
@@ -64,6 +63,7 @@ try {
 	is(createURI(new LocalFile('C:\\')).spec, 'file:///C:/');
 	is(createURI('file:///C:/').spec, 'file:///C:/');
 	is(createURI('http://google.com').spec, 'http://google.com/', 'URIになると最後にスラッシュが付加される');
+	
 	
 	// notify
 	notify('TITLE', 'MESSAGE', notify.ICON_DOWNLOAD);
@@ -90,59 +90,73 @@ try {
 	is(getPrefValue(key), 'あいうえお');
 	is(typeof(getPrefValue(key)), 'string');
 	
+	
+	ok(getDownloadDir().exists());
+	ok(getProfileDir().exists());
+	
 	// 
 	// ok(  findCacheFile('http://f4.wretch.yimg.com/moblog/4/1939118735.jpg'), 'キャッシュファイルが(無い場合もあり)');
 	// log(findCacheFile('http://pics8.blog.yam.com/6/userfile/i/ivanaki0929/album/146b685908d2dc.jpg'));
 	ok(! findCacheFile('http://google.com/notFound.jpg'));
 	
-	
-	function unescapeHTML(html){
-		const UnescapeHTML = Components.classes['@mozilla.org/feed-unescapehtml;1']
-			.getService(Components.interfaces.nsIScriptableUnescapeHTML);
-		
-		var doc = document.implementation.createDocument('', '', null);
-		var root = doc.appendChild(doc.createElement('root'));
-		
-		var fragment = UnescapeHTML.parseFragment(html, false, null, doc.documentElement);
-		doc.documentElement.appendChild(fragment);
-		
-		if(!root.childNodes.length)
-			return '';
-		return serializeToString(root).match(/^<root>(.*)<\/root>$/)[1];
-	}
-	
-	function serializeToString(xml){
-		return (new XMLSerializer()).serializeToString(xml);
-	}
-	
-	
-	is(unescapeHTML(
+	is(sanitizeHTML(
 		'<body><style>body{color:red}</style></body>'), 
 		'');
-	is(unescapeHTML(
-		'TEXT<title>HELLO BLOG</tile><link rel="stylesheet" type="text/css" href="style.css">'), 
-		'TEXT');
-	is(unescapeHTML(
-		'<a href="javascript:alert(4)">yahoo</a>'), 
-		'<A>yahoo</A>');
-	is(unescapeHTML(
+	is(sanitizeHTML(
+		'<input<script src="alert(3)"<\/script>'), 
+		'<INPUT/>');
+	is(sanitizeHTML(
 		'<pre>CODE<pre/>'), 
 		'<PRE>CODE<PRE/></PRE>',
 		'誤ったpreタグ');
-	is(unescapeHTML(
-		'<a href="javascrip&#116;:alert(3)">YAHOO</a>'), 
-		'<A>YAHOO</A>',
-		'数値実体参照を使ったスクリプトの埋め込み');
-	is(unescapeHTML(
-		'<a href="javascrip&#116:alert(3)">YAHOO</a>'), 
-		'<A>YAHOO</A>',
-		'数値実体参照を使ったスクリプトの埋め込み(末尾セミコロンの省略)');
-	is(unescapeHTML(
-		'<input<script src="alert(3)"<\/script>'), 
-		'<INPUT/>');
-	is(unescapeHTML(
-		'<form action="foo.cgi"><input type="submit"></form>'), 
-		'<FORM action="foo.cgi"><INPUT type="submit"/></FORM>');
+	if(navigator.userAgent.match('Firefox/3')){
+		is(sanitizeHTML(
+			'TEXT<title>HELLO BLOG</tile><link rel="stylesheet" type="text/css" href="style.css">'), 
+			'TEXTHELLO BLOG');
+		is(sanitizeHTML(
+			'<a href="javascript:alert(4)">yahoo</a>'), 
+			'<A href="javascript:alert(4)">yahoo</A>');
+		is(sanitizeHTML(
+			'<a href="javascrip&#116;:alert(3)">YAHOO</a>'), 
+			'<A href="javascript:alert(3)">YAHOO</A>',
+			'数値実体参照を使ったスクリプトの埋め込み');
+		is(sanitizeHTML(
+			'<a href="javascrip&#116:alert(3)">YAHOO</a>'), 
+			'<A href="javascript:alert(3)">YAHOO</A>',
+			'数値実体参照を使ったスクリプトの埋め込み(末尾セミコロンの省略)');
+		is(sanitizeHTML(
+			'<form action="foo.cgi"><input type="submit"></form>'), 
+			'<FORM><INPUT type="submit"/></FORM>');
+	} else {
+		is(sanitizeHTML(
+			'TEXT<title>HELLO BLOG</tile><link rel="stylesheet" type="text/css" href="style.css">'), 
+			'TEXT');
+		is(sanitizeHTML(
+			'<a href="javascript:alert(4)">yahoo</a>'), 
+			'<A>yahoo</A>');
+		is(sanitizeHTML(
+			'<a href="javascrip&#116;:alert(3)">YAHOO</a>'), 
+			'<A>YAHOO</A>',
+			'数値実体参照を使ったスクリプトの埋め込み');
+		is(sanitizeHTML(
+			'<a href="javascrip&#116:alert(3)">YAHOO</a>'), 
+			'<A>YAHOO</A>',
+			'数値実体参照を使ったスクリプトの埋め込み(末尾セミコロンの省略)');
+		is(sanitizeHTML(
+			'<form action="foo.cgi"><input type="submit"></form>'), 
+			'<FORM action="foo.cgi"><INPUT type="submit"/></FORM>');
+	}
+	
+	
+	/*
+	正常動作、テストのためにgetContentsが必要
+	var file = getDownloadDir();
+	file.append('test_putContents.txt');
+	putContents(file, 'あいうえお', 'UTF-16');
+	*/
+	
+	// 
+	ok(parseFloat(AppInfo.version) > 1.5, 'Firefoxのバージョンを確認');
 	
 } catch (err) {
 	var s = 'test suite failure!\n';

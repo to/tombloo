@@ -1,12 +1,16 @@
-<!ENTITY tombloo.prefs.TomblooOptions "Tomblooの設定">
-<!ENTITY tombloo.prefs.EntryContentsSettings "エントリコンテンツの設定">
-<!ENTITY tombloo.prefs.AmazonAffiliateID "アマゾンアフィリエイトID">
-<!ENTITY tombloo.prefs.LinkThumbnailTemplate "サムネイルテンプレートのリンク">
-<!ENTITY tombloo.prefs.LinkThumbnailTemplate_eg "例: &lt;img src=&quot;http://mozshot.nemui.org/shot?{url}&quot; /&gt;">
-<!ENTITY tombloo.prefs.TrimReblogInfo "reblog情報を取り去る">
-<!ENTITY tombloo.prefs.PostSettings "ポストの設定">
-<!ENTITY tombloo.prefs.AccessKey "アクセスキー">
-<!ENTITY tombloo.prefs.Posters_RegExp "ポスト先(正規表現)">
-<!ENTITY tombloo.prefs.Posters_RegExp_eg "例: (tumblr: (quote|link)|ffffound)">
-<!ENTITY tombloo.prefs.IgnoreErrors_RegExp "無視するエラー(正規表現)">
-<!ENTITY tombloo.prefs.IgnoreErrors_RegExp_eg "例: ffffound: (?!auth)">
+<!ENTITY label.tomblooOptions "Tomblooの設定">
+<!ENTITY label.postConfig "デフォルトのポスト先">
+<!ENTITY label.post "ポスト関連">
+<!ENTITY label.entry "エントリ内容/他">
+
+<!ENTITY label.amazonAffiliateId "AmazonアフィリエイトID">
+<!ENTITY label.thumbnailTemplate "Linkポストのサムネイルテンプレート">
+<!ENTITY label.trimReblogInfo "reblog情報を除去する">
+<!ENTITY label.tagProvider "クイックポストで使うタグの取得元">
+<!ENTITY label.tagAutoComplete "タグの自動決定">
+<!ENTITY label.shortcutkey.quickPost.link "ショートカット - Linkクイックポスト">
+<!ENTITY label.shortcutkey.quickPost.regular "ショートカット - Textクイックポスト">
+<!ENTITY label.accesskey.share "アクセスキー - Share">
+<!ENTITY label.ignoreError "無視するエラー(正規表現)">
+<!ENTITY label.dataDir "データ/スクリプトディレクトリ">
+<!ENTITY label.example "例:">

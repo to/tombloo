@@ -41,7 +41,7 @@ function share(event){
 			window    : win,
 			selection : '' + win.getSelection(),
 			target    : target,
-			event     : event,
+			event     : {},
 			title     : null,
 			mouse     : null,
 			menu      : null,
@@ -50,10 +50,11 @@ function share(event){
 	// FFFFOUND / Flickr / iza newsphoto
 	if([
 		'flickr.com/', 
-		'http://ffffound.com/', 
-		'http://www.bighappyfunhouse.com/',
-		'http://f.hatena.ne.jp/',
-		'http://lpcoverlover.com/',
+		'http://ffffound.com', 
+		'http://www.bighappyfunhouse.com',
+		'http://f.hatena.ne.jp',
+		'http://lpcoverlover.com',
+		'http://www.chicksnbreasts.com',
 		'1eb46a2f1f83c340eee10cd49c144625'].some(function(pattern){
 			return feed.channel.link.indexOf(pattern) != -1;
 		})){
@@ -62,7 +63,8 @@ function share(event){
 		ctx.target = $x('.//img[1]', body);
 	}
 	
-	tombloo.share(ctx, tombloo.check(ctx)[0]);
+	var ext = tombloo.check(ctx)[0];
+	tombloo.share(ctx, ext, ext.name.match(/^Link /));
 	
 	win.addClass(parent, 'TMBL_posted');
 }

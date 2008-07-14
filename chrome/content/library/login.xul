@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="data:text/css,
+window {
+	margin : 0.7em 0.5em;
+}
+button, radio, listitem {
+	cursor : pointer;
+}
+.button-icon{
+	margin-right : 0.5em;
+}
+listitem {
+	outline: none !important;
+	padding: 0.5em 0.2em;
+}
+" type="text/css"?>
+<dialog buttons="accept" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" title="Change Acount">
+	<hbox flex="1">
+		<radiogroup id="models">
+		</radiogroup>
+		<vbox style="margin-left: 0.7em;" flex="1">
+			<listbox id="users" flex="1" >
+			</listbox>
+			<button dlgtype="accept" image="chrome://tombloo/skin/accept.png" label="Login" style="margin-top: 0.7em;padding: 0.5em 0;"/>
+		</vbox>
+	</hbox>
+	<script><![CDATA[
+	// chrome://tombloo/content/library/login.xul
+	var env = Components.classes['@brasil.to/tombloo-service;1'].getService().wrappedJSObject;
+	
+	var elmModels = document.getElementById('models');
+	var elmUsers = document.getElementById('users');
+	
+	elmModels.addEventListener('select', function(e){
+		// ユーザー名の取得で非同期処理を挟むため、その間再描画を止める
+		if(elmUsers.refreshing)
+			return;
+		
+		var model = env.models[elmModels.value];
+		elmUsers.refreshing = true;
+		(model.getCurrentUser? model.getCurrentUser() : succeed()).addCallback(function(user){
+			env.clearChildren(elmUsers);
+			
+			model.getPasswords().forEach(function(pw){
+				var item = elmUsers.appendItem(pw.user, pw.password);
+				item.setAttribute('class', 'listitem-iconic');
+				if(pw.user == user){
+					elmUsers.selectedItem = item;
+					item.setAttribute('image', 'chrome://tombloo/skin/tick.png');
+					item.disabled = true;
+				} else {
+					item.setAttribute('image', 'chrome://tombloo/skin/empty.png');
+				}
+			});
+			elmUsers.refreshing = false;
+		});
+	}, true);
+	
+	env.forEach(env.models.values, function(m){
+		if(!m.login || !m.getPasswords || !m.getPasswords().length)
+			return;
+		
+		elmModels.appendItem(m.name, m.name).setAttribute('src', m.ICON);
+	});
+	setTimeout(function(){
+		elmModels.selectedIndex = 0;
+	}, 0);
+	
+	window.addEventListener('dialogaccept', function(){
+		var item = elmUsers.selectedItem;
+		env.models[elmModels.value].login(item.label, item.value);
+	}, true);
+	
+	]]></script>
+</dialog>
+ 

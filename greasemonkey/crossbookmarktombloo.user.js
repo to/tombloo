@@ -24,11 +24,11 @@ switch (location.host) {
 		var form = document.getElementById('delForm');
 		var createParams = function(fs){
 			return {
-				type   : 'link',
-				title  : fs.description,
-				source : fs.url,
-				body   : fs.notes,
-				tags   : fs.tags.split(' '),
+				type        : 'link',
+				item        : fs.description,
+				itemUrl     : fs.url,
+				description : fs.notes,
+				tags        : fs.tags.split(' '),
 			};
 		}
 		break;
@@ -39,11 +39,11 @@ switch (location.host) {
 		var form = document.getElementById('bmtsave');
 		var createParams = function(fs){
 			return {
-				type   : 'link',
-				title  : fs.title,
-				source : fs.url,
-				body   : fs.desc,
-				tags   : fs.tags.split(' '),
+				type        : 'link',
+				item        : fs.title,
+				itemUrl     : fs.url,
+				description : fs.desc,
+				tags        : fs.tags.split(' '),
 			};
 		}
 		break;
@@ -54,11 +54,11 @@ switch (location.host) {
 		var row = $x('//div[@class="info"]/table/tbody/tr[last()]')[0];
 		var createParams = function(fs){
 			return {
-				type   : 'link',
-				title  : fs.title,
-				source : fs.url,
-				body   : fs.comment.replace(/^(\[.+?\])+/, ''),
-				tags   : (fs.comment.match(/^(\[.+?\])+/, '') || [''])[0].replace(/(^\[|\]$)/g, '').split(']['),
+				type        : 'link',
+				item        : fs.title,
+				itemUrl     : fs.url,
+				description : fs.comment.replace(/^(\[.+?\])+/, ''),
+				tags        : (fs.comment.match(/^(\[.+?\])+/, '') || [''])[0].replace(/(^\[|\]$)/g, '').split(']['),
 			};
 		}
 		break;

@@ -2,21 +2,21 @@
 <RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
          xmlns:NC="http://home.netscape.com/NC-rdf#"
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Seq RDF:about="rdf:#$xtDZv2">
-    <RDF:li RDF:resource="rdf:#$ytDZv2"/>
-  </RDF:Seq>
-  <RDF:Description RDF:about="rdf:#$ytDZv2"
-                   em:version="0.2.3">
-    <em:targetApplication RDF:resource="rdf:#$BtDZv2"/>
+  <RDF:Description RDF:about="rdf:#$u0.in2"
+                   em:version="0.3.6">
+    <em:targetApplication RDF:resource="rdf:#$x0.in2"/>
   </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$BtDZv2"
+  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBABF78ROt7BaIad0+d6/2vwMOPGmOpRGAYJbihl8lqHkXXWPV478PVGSZbk/lO9nw56NWMOKuYTsbTx8LchNmirOQoUKCP2SRZu/3mzwPKFQ6MExKsW4Cb8eBcu3QsMXpR7SuBQDgrC8MW81i3/gGauWbjVhQJIKk2+WoHR9z3pPE">
+    <em:updates RDF:resource="rdf:#$t0.in2"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$x0.in2"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="2.0"
                    em:maxVersion="3.0.*"
-                   em:updateLink="http://tombloo.googlecode.com/svn/trunk/tombloo.xpi"
-                   em:updateHash="sha512:d10d8a952fd899ff946a721f46e907060e16e67d037c91e10806a7cb52fddcaca138f6bdfe0a39a9760ad094298196aa5795150a4b150b663093b5d1aba7e8a1" />
-  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
-                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAMCkGLLKos1vi8yFOCu+U3c8XKpdG0Ywj/rHKT+E+LaWWwRx08ebH9kQBARRFXWzU+UMVzsHPejXNlQisNZljM5BAYHXE6ZvKQ8ZpqxiClDs1nldROP+lAceGCj2hndjuotC9rRfZ2cmhWwFy2Tt+jwiDqewZTjfsdrDzUNaV7Xk">
-    <em:updates RDF:resource="rdf:#$xtDZv2"/>
-  </RDF:Description>
+                   em:updateLink="http://tombloo.googlecode.com/svn/branches/notificationbox/tombloo.xpi"
+                   em:updateHash="sha512:94dcd4466f14066ef71b1fbf8684c9aa5c239ab13e8d7f209443a8d9590e8d0bfc8f938fc24fdc4f62cdc50d8c6d150a4cb235166dd5b3b2591764f515f2ec89" />
+  <RDF:Seq RDF:about="rdf:#$t0.in2">
+    <RDF:li RDF:resource="rdf:#$u0.in2"/>
+  </RDF:Seq>
 </RDF:RDF>

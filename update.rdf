@@ -2,21 +2,21 @@
 <RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
          xmlns:NC="http://home.netscape.com/NC-rdf#"
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Description RDF:about="rdf:#$u0.in2"
-                   em:version="0.3.6">
-    <em:targetApplication RDF:resource="rdf:#$x0.in2"/>
-  </RDF:Description>
   <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
-                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBABF78ROt7BaIad0+d6/2vwMOPGmOpRGAYJbihl8lqHkXXWPV478PVGSZbk/lO9nw56NWMOKuYTsbTx8LchNmirOQoUKCP2SRZu/3mzwPKFQ6MExKsW4Cb8eBcu3QsMXpR7SuBQDgrC8MW81i3/gGauWbjVhQJIKk2+WoHR9z3pPE">
-    <em:updates RDF:resource="rdf:#$t0.in2"/>
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAIE9ftqWOw4Ab1UeM+ZlJO5s6PBL8Te4LMumCb/6XElHbHNXx4bOHtWH7OZyq/WS0QO4dw8kzr48iQ6dqO6508czwVFXrmrXO8sYwew5aTiIp+PoE23V5akA33rGL/qlSDV3ds57XSVhUIUSLA4X07XHoknrNkP/WanaWnyB7ZB6">
+    <em:updates RDF:resource="rdf:#$E0.in2"/>
   </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$x0.in2"
+  <RDF:Seq RDF:about="rdf:#$E0.in2">
+    <RDF:li RDF:resource="rdf:#$F0.in2"/>
+  </RDF:Seq>
+  <RDF:Description RDF:about="rdf:#$I0.in2"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="2.0"
                    em:maxVersion="3.0.*"
-                   em:updateLink="http://tombloo.googlecode.com/svn/branches/notificationbox/tombloo.xpi"
-                   em:updateHash="sha512:94dcd4466f14066ef71b1fbf8684c9aa5c239ab13e8d7f209443a8d9590e8d0bfc8f938fc24fdc4f62cdc50d8c6d150a4cb235166dd5b3b2591764f515f2ec89" />
-  <RDF:Seq RDF:about="rdf:#$t0.in2">
-    <RDF:li RDF:resource="rdf:#$u0.in2"/>
-  </RDF:Seq>
+                   em:updateLink="http://tombloo.googlecode.com/svn/trunk/tombloo.xpi"
+                   em:updateHash="sha512:58deeb983db4b7eee53807f7173090adf4caa39ee3ddc9867366547b2d19881588cea6414b2267d19e8aad6bdd3879bed02949a1f11af541aaaecf01124bfe4e" />
+  <RDF:Description RDF:about="rdf:#$F0.in2"
+                   em:version="0.3.6">
+    <em:targetApplication RDF:resource="rdf:#$I0.in2"/>
+  </RDF:Description>
 </RDF:RDF>

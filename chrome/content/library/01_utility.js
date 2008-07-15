@@ -290,6 +290,8 @@ MochiKit.Base.update(MochiKit.Signal.Event.prototype, {
 			evt.getPreventDefault() :
 			evt.cancelBubble;
 	},
+	
+	// FIXME: 統合、現在Stroboで利用
 	keyString : function(){
 		var keys = [];
 		
@@ -605,6 +607,12 @@ function getPageDimensions(){
 	}
 	
 	return d;
+}
+
+function getElementPosition(elm){
+	return withWindow(elm.ownerDocument.defaultView, function(){
+		return MochiKit.Style.getElementPosition(elm);
+	});
 }
 
 
@@ -1188,19 +1196,19 @@ function keyString(e){
 	
 	return (keyString = function(e){
 		var code = e.keyCode;
+		var res = [];
+		(e.ctrlKey  || code == e.DOM_VK_CONTROL) && res.push('CTRL');
+		(e.shiftKey || code == e.DOM_VK_SHIFT)   && res.push('SHIFT');
+		(e.altKey   || code == e.DOM_VK_ALT)     && res.push('ALT');
+		
 		switch (code) {
 		case e.DOM_VK_CONTROL:
 		case e.DOM_VK_SHIFT:
 		case e.DOM_VK_ALT:
-			return '';
+			break;
+		default:
+			res.push(table[code]);
 		}
-		
-		var res = [];
-		e.ctrlKey  && res.push('CTRL');
-		e.shiftKey && res.push('SHIFT');
-		e.altKey   && res.push('ALT');
-		
-		res.push(table[code])
 		return res.join(' + ');
 	})(e);
 }

@@ -405,12 +405,14 @@ QuickPostForm.prototype = {
 
 
 function selectElement(doc){
-	var d = new Deferred();
+	var deferred = new Deferred();
 	doc = doc || currentDocument();
 	
+	var target;
 	function onMouseOver(e){
-		e.target.originalBackground = e.target.style.background;
-		e.target.style.background = selectElement.TARGET_BACKGROUND;
+		target = e.target;
+		target.originalBackground = target.style.background;
+		target.style.background = selectElement.TARGET_BACKGROUND;
 	}
 	function onMouseOut(e){
 		unpoint(e.target);
@@ -418,27 +420,159 @@ function selectElement(doc){
 	function onClick(e){
 		cancel(e);
 		
-		doc.removeEventListener('mouseover', onMouseOver, true);
-		doc.removeEventListener('mouseout', onMouseOut, true);
-		doc.removeEventListener('click', onClick, true);
+		finalize();
+		deferred.callback(target);
+	}
+	function onKeyDown(e){
+		cancel(e);
 		
-		unpoint(e.target);
-		d.callback(e.target);
+		switch(keyString(e)){
+		case 'ESCAPE':
+			finalize();
+			deferred.cancel();
+			return;
+		}
 	}
 	function unpoint(elm){
 		if(elm.originalBackground!=null){
-			elm.style.background=elm.originalBackground;
+			elm.style.background = elm.originalBackground;
 			elm.originalBackground = null;
 		}
+	}
+	function finalize(){
+		doc.removeEventListener('mouseover', onMouseOver, true);
+		doc.removeEventListener('mouseout', onMouseOut, true);
+		doc.removeEventListener('click', onClick, true);
+		doc.removeEventListener('keydown', onKeyDown, true);
+		
+		unpoint(target);
 	}
 	
 	doc.addEventListener('mouseover', onMouseOver, true);
 	doc.addEventListener('mouseout', onMouseOut, true);
 	doc.addEventListener('click', onClick, true);
+	doc.addEventListener('keydown', onKeyDown, true);
 	
-	return d;
+	return deferred;
 }
 selectElement.TARGET_BACKGROUND = '#888';
+
+
+function selectRegion(doc){
+	var deferred = new Deferred();
+	doc = doc || currentDocument();
+	
+	doc.documentElement.style.cursor = 'crosshair';
+	
+	var style = doc.createElement('style');
+	style.innerHTML = <><![CDATA[
+		* {
+			cursor: crosshair !important;
+			-moz-user-select: none;
+		}
+	]]></>;
+	doc.body.appendChild(style);
+	
+	var region, p, d, moving, square;
+	function mouse(e){
+		return {
+			x: e.clientX, 
+			y: e.clientY
+		};
+	}
+	
+	function onMouseMove(e){
+		var to = mouse(e);
+		
+		if(moving){
+			p = {
+				x: Math.max(to.x - d.w, 0), 
+				y: Math.max(to.y - d.h, 0)
+			};
+			setElementPosition(region, p);
+		}
+		
+		d = {
+			w: to.x - p.x, 
+			h: to.y - p.y
+		};
+		if(square){
+			var s = Math.min(d.w, d.h);
+			d = {w: s, h: s};
+		}
+		setElementDimensions(region, d);
+	}
+	
+	function onMouseDown(e){
+		cancel(e);
+		
+		p = mouse(e);
+		region = doc.createElement('div');
+		region.setAttribute('style', <>
+			background : #888;
+			opacity    : 0.5;
+			position   : fixed;
+			z-index    : 999999999;
+			top        : {p.y}px;
+			left       : {p.x}px;
+		</>);
+		doc.body.appendChild(region);
+		
+		doc.addEventListener('mousemove', onMouseMove, true);
+		doc.addEventListener('mouseup', onMouseUp, true);
+		doc.addEventListener('keydown', onKeyDown, true);
+		doc.addEventListener('keyup', onKeyUp, true);
+	}
+	
+	function onKeyDown(e){
+		cancel(e);
+		
+		switch(keyString(e)){
+		case 'SHIFT': square = true; return;
+		case 'SPACE': moving = true; return;
+		case 'ESCAPE':
+			finalize();
+			deferred.cancel();
+			return;
+		}
+	}
+	
+	function onKeyUp(e){
+		cancel(e);
+		
+		switch(keyString(e)){
+		case 'SHIFT': square = false; return;
+		case 'SPACE': moving = false; return;
+		}
+	}
+	
+	function onMouseUp(e){
+		p = getElementPosition(region);
+		finalize();
+		deferred.callback({
+			position: p,
+			dimensions: d,
+		});
+	}
+	
+	function finalize(){
+		doc.removeEventListener('mousedown', onMouseDown, true);
+		doc.removeEventListener('mousemove', onMouseMove, true);
+		doc.removeEventListener('mouseup', onMouseUp, true);
+		doc.removeEventListener('keydown', onKeyDown, true);
+		doc.removeEventListener('keyup', onKeyUp, true);
+		
+		doc.documentElement.style.cursor = '';
+		
+		removeElement(region);
+		removeElement(style);
+	}
+	
+	doc.addEventListener('mousedown', onMouseDown, true);
+	doc.defaultView.focus();
+	
+	return deferred;
+}
 
 
 // ----[Shortcutkey]-------------------------------------------------

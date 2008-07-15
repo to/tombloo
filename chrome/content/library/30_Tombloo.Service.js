@@ -1,6 +1,6 @@
 Tombloo.Service = {
 	check : function(ctx){
-		return withDocument(ctx.document, function(){
+		return withWindow(ctx.window, function(){
 			return Tombloo.Service.extracters.check(ctx);
 		});
 	},
@@ -56,6 +56,9 @@ Tombloo.Service = {
 				return config[p.name] && config[p.name][ps.type];
 			}));
 		}).addErrback(function(err){
+			if(err instanceof CancelledError)
+				return;
+			
 			Tombloo.Service.alertError(err, ctx.title, ctx.href);
 		});
 	},

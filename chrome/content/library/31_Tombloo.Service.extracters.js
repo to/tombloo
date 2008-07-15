@@ -816,38 +816,41 @@ Tombloo.Service.extracters = new Repository([
 			return true;
 		},
 		extract : function(ctx){
-			var type = input({'Capture Type' : ['Element', 'View', 'Page']});
+			var type = input({'Capture Type' : ['Region', 'Element', 'View', 'Page']});
 			if(!type)
 				return;
 			
 			var win = ctx.window;
-			return withWindow(win, function(){
-				return succeed().addCallback(function(){
-					switch (type){
-					case 'Element':
-						return selectElement().addCallback(function(elm){
-							// getBoundingClientRectで少数が返され切り取り範囲がずれるため丸める
-							var p = getElementPosition(elm);
-							p.x = Math.round(p.x);
-							p.y = Math.round(p.y);
-							return capture(win, p, getElementDimensions(elm));
-						});
-						
-					case 'View':
-						return capture(win, getViewportPosition(), getViewDimensions());
-						
-					case 'Page':
-						return capture(win, {x:0, y:0}, getPageDimensions());
-					}
-				}).addCallback(function(image){
-					return download(image, getTempFile('png'));
-				}).addCallback(function(file){
-					return {
-						type : 'photo',
-						item : ctx.title,
-						file : file,
-					}
-				});
+			return succeed().addCallback(function(){
+				switch (type){
+				case 'Region':
+					return selectRegion().addCallback(function(region){
+						return capture(win, region.position, region.dimensions);
+					});
+					
+				case 'Element':
+					return selectElement().addCallback(function(elm){
+						// getBoundingClientRectで少数が返され切り取り範囲がずれるため丸める
+						var p = getElementPosition(elm);
+						p.x = Math.round(p.x);
+						p.y = Math.round(p.y);
+						return capture(win, p, getElementDimensions(elm));
+					});
+					
+				case 'View':
+					return capture(win, getViewportPosition(), getViewDimensions());
+					
+				case 'Page':
+					return capture(win, {x:0, y:0}, getPageDimensions());
+				}
+			}).addCallback(function(image){
+				return download(image, getTempFile('png'));
+			}).addCallback(function(file){
+				return {
+					type : 'photo',
+					item : ctx.title,
+					file : file,
+				}
 			});
 		}
 	},
@@ -867,7 +870,7 @@ Tombloo.Service.extracters = new Repository([
 ]);
 
 Tombloo.Service.extracters.extract = function(ctx, ext){
-	return withDocument(ctx.document, function(){
+	return withWindow(ctx.window, function(){
 		return maybeDeferred(ext.extract(ctx)).addCallback(function(ps){
 			if(!ps)
 				return;

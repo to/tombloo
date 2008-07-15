@@ -345,7 +345,7 @@ QuickPostForm.prototype = {
 								<row>
 									<label value="Photo"/>
 									<html:div>
-										<html:img src={ps.itemUrl} style="max-height:80px; margin: 2px 4px;"/>
+										<html:img src={ps.itemUrl || createURI(ps.file).spec} style="max-height:80px; margin: 2px 4px;"/>
 									</html:div>
 								</row>
 								<spacer style="margin-top: 1em;"/>
@@ -402,6 +402,43 @@ QuickPostForm.prototype = {
 		return form;
 	},
 }
+
+
+function selectElement(doc){
+	var d = new Deferred();
+	doc = doc || currentDocument();
+	
+	function onMouseOver(e){
+		e.target.originalBackground = e.target.style.background;
+		e.target.style.background = selectElement.TARGET_BACKGROUND;
+	}
+	function onMouseOut(e){
+		unpoint(e.target);
+	}
+	function onClick(e){
+		cancel(e);
+		
+		doc.removeEventListener('mouseover', onMouseOver, true);
+		doc.removeEventListener('mouseout', onMouseOut, true);
+		doc.removeEventListener('click', onClick, true);
+		
+		unpoint(e.target);
+		d.callback(e.target);
+	}
+	function unpoint(elm){
+		if(elm.originalBackground!=null){
+			elm.style.background=elm.originalBackground;
+			elm.originalBackground = null;
+		}
+	}
+	
+	doc.addEventListener('mouseover', onMouseOver, true);
+	doc.addEventListener('mouseout', onMouseOut, true);
+	doc.addEventListener('click', onClick, true);
+	
+	return d;
+}
+selectElement.TARGET_BACKGROUND = '#888';
 
 
 // ----[Shortcutkey]-------------------------------------------------

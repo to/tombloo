@@ -15,11 +15,11 @@ Tombloo.Service = {
 		var msg = [];
 		for(var p in err){
 			var val = err[p];
-			if(p == 'stack' || typeof(val)=='function')
+			if(val == null || p == 'stack' || typeof(val)=='function')
 				continue;
 			
-			if(p == 'fileName')
-				val = val.replace(/file:[^ ]+\/(.+?)( |$)/g, '$1');
+			if(p.toLowerCase() == 'filename' || p == 'location')
+				val = ('' + val).replace(/file:[^ ]+\/(.+?)( |$)/g, '$1');
 			
 			msg.push(p + ' : ' + val);
 		}
@@ -36,10 +36,14 @@ Tombloo.Service = {
 	},
 	
 	share : function(ctx, ext, showForm){
+		// エラー処理をまとめるためDeferredの中に入れる
 		return succeed().addCallback(function(){
 			return Tombloo.Service.extracters.extract(ctx, ext);
 		}).addCallback(function(ps){
 			log(ps);
+			
+			if(!ps)
+				return;
 			
 			if(showForm){
 				new QuickPostForm(ps).show();

@@ -38,6 +38,13 @@ function getDataDir(){
 	return createDir(getLocalFile(path));
 }
 
+function getTempFile(ext){
+	var file = getTempDir();
+	file.append(joinText(['tombloo_' + (new Date()).getTime(), ext], '.'));
+	
+	return file;
+}
+
 function openProgressDialog(progress, max, value){
 	if(!(progress instanceof Progress))
 		progress = new Progress(progress, max, value);
@@ -199,6 +206,62 @@ function getMessage(key){
 	}
 }
 
+function input(form, title){
+	var pair;
+	if(some(form, function(p){
+		pair = p;
+		return isArrayLike(p[1]);
+	})){
+		var selected = {};
+		var [msg, list] = pair;
+		if(!PromptService.select(null, title || '', msg, list.length, list, selected))
+			return;
+		
+		return list[selected.value];
+	} else {
+		var args = [null, title || ''];
+		for(var msg in form){
+			var val = {value : form[msg]};
+			form[msg] = val;
+			args.push(msg);
+			args.push(val);
+		}
+		
+		if(!PromptService.prompt.apply(PromptService, args))
+			return;
+		
+		for(var msg in form)
+			form[msg] = form[msg].value;
+		
+		return form;
+	}
+}
+
+function download(sourceURL, targetFile){
+	var d = new Deferred();
+	var targetURI = IOService.newFileURI(targetFile);
+	var sourceURI = IOService.newURI(sourceURL, null, null);
+	
+	var persist = WebBrowserPersist();
+	with(persist){
+		persist.progressListener = {
+			onLocationChange : function(){},
+			onProgressChange : function(){},
+			onSecurityChange : function(){},
+			onStatusChange : function(){},
+			onStateChange : function(progress, req, state, status){
+				if (state & IWebProgressListener.STATE_STOP)
+					d.callback(targetFile);
+			},
+		}
+		
+		persistFlags = PERSIST_FLAGS_FROM_CACHE;
+		saveURI(sourceURI, null, null, null, null, targetURI);
+	}
+	
+	return d;
+}
+
 
 // ----[MochiKit]-------------------------------------------------
 var StopProcess = {};
@@ -211,9 +274,9 @@ function connect(src, sig){
 function maybeDeferred(d) {
 	return typeof(d) == 'function'? 
 		MochiKit.Async.maybeDeferred(d) : 
-		d.addCallback? 
-			d : 
-			succeed(d);
+		(d==null || !d.addCallback)? 
+			succeed(d) : 
+			d;
 }
 
 MochiKit.Base.update(MochiKit.Signal.Event.prototype, {
@@ -513,6 +576,36 @@ function DeferredHash(ds){
 		return res;
 	});
 };
+
+function getViewDimensions(){
+	var d = new Dimensions();
+	var doc = currentDocument();
+
+	if(doc.compatMode == 'CSS1Compat'){
+		d.h = doc.documentElement.clientHeight;
+		d.w = doc.documentElement.clientWidth;
+	} else {
+		d.h = doc.body.clientHeight;
+		d.w = doc.body.clientWidth;
+	}
+	
+	return d;
+}
+
+function getPageDimensions(){
+	var d = new Dimensions();
+	var doc = currentDocument();
+
+	if(doc.compatMode == 'CSS1Compat'){
+		d.h = doc.documentElement.scrollHeight;
+		d.w = doc.documentElement.scrollWidth;
+	} else {
+		d.h = doc.body.scrollHeight;
+		d.w = doc.body.scrollWidth;
+	}
+	
+	return d;
+}
 
 
 // ----[Prototype]-------------------------------------------------
@@ -1147,4 +1240,12 @@ function showNotification(fragments, animation){
 	}
 	
 	return notification;
+}
+
+function capture(win, p, d){
+	var c = document.createElement('canvas');
+	c.width = d.w;
+	c.height = d.h;
+	c.getContext('2d').drawWindow(win, p.x, p.y, d.w, d.h, '#FFF');
+	return c.toDataURL('image/png', '');
 }

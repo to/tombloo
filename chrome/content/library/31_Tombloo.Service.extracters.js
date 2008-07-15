@@ -634,16 +634,14 @@ Tombloo.Service.extracters = new Repository([
 			
 			var target = ctx.target;
 			var itemUrl = tagName(target)=='object'? target.data : target.src;
-			var file = getTempDir();
-			file.append('tombloo_' + (new Date()).getTime());
-			download(itemUrl, file);
-			
-			return {
-				type    : 'photo',
-				item    : ctx.title,
-				itemUrl : itemUrl,
-				file    : file,
-			}
+			return download(itemUrl, getTempFile()).addCallback(function(file){
+				return {
+					type    : 'photo',
+					item    : ctx.title,
+					itemUrl : itemUrl,
+					file    : file,
+				}
+			});
 		},
 	},
 	
@@ -812,6 +810,49 @@ Tombloo.Service.extracters = new Repository([
 	},
 	
 	{
+		name : 'Photo - Capture',
+		ICON : 'chrome://tombloo/skin/photo.png',
+		check : function(ctx){
+			return true;
+		},
+		extract : function(ctx){
+			var type = input({'Capture Type' : ['Element', 'View', 'Page']});
+			if(!type)
+				return;
+			
+			var win = ctx.window;
+			return withWindow(win, function(){
+				return succeed().addCallback(function(){
+					switch (type){
+					case 'Element':
+						return selectElement().addCallback(function(elm){
+							// getBoundingClientRectで少数が返され切り取り範囲がずれるため丸める
+							var p = getElementPosition(elm);
+							p.x = Math.round(p.x);
+							p.y = Math.round(p.y);
+							return capture(win, p, getElementDimensions(elm));
+						});
+						
+					case 'View':
+						return capture(win, getViewportPosition(), getViewDimensions());
+						
+					case 'Page':
+						return capture(win, {x:0, y:0}, getPageDimensions());
+					}
+				}).addCallback(function(image){
+					return download(image, getTempFile('png'));
+				}).addCallback(function(file){
+					return {
+						type : 'photo',
+						item : ctx.title,
+						file : file,
+					}
+				});
+			});
+		}
+	},
+	
+	{
 		name : 'Text',
 		ICON : 'chrome://tombloo/skin/text.png',
 		check : function(ctx){
@@ -828,6 +869,9 @@ Tombloo.Service.extracters = new Repository([
 Tombloo.Service.extracters.extract = function(ctx, ext){
 	return withDocument(ctx.document, function(){
 		return maybeDeferred(ext.extract(ctx)).addCallback(function(ps){
+			if(!ps)
+				return;
+			
 			ps = update({
 				page    : ctx.title,
 				pageUrl : ctx.href,

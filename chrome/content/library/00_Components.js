@@ -314,31 +314,6 @@ function getTempDir(){
 	return DirectoryService.get('TmpD', IFile);
 }
 
-function download(sourceURL, targetFile){
-	var d = new Deferred();
-	var targetURI = IOService.newFileURI(targetFile);
-	var sourceURI = IOService.newURI(sourceURL, null, null);
-	
-	var persist = WebBrowserPersist();
-	with(persist){
-		persist.progressListener = {
-			onLocationChange : function(){},
-			onProgressChange : function(){},
-			onSecurityChange : function(){},
-			onStatusChange : function(){},
-			onStateChange : function(progress, req, state, status){
-				if (state & IWebProgressListener.STATE_STOP)
-					d.callback();
-			},
-		}
-		
-		persistFlags = PERSIST_FLAGS_FROM_CACHE;
-		saveURI(sourceURI, null, null, null, null, targetURI);
-	}
-	
-	return d;
-}
-
 function openInEditor(file){
 	function getFile(path){
 		return path && LocalFile(path);
@@ -360,24 +335,6 @@ function openInEditor(file){
 
 function getMostRecentWindow(){
 	return WindowMediator.getMostRecentWindow('navigator:browser');
-}
-
-function input(form){
-	var args = [null, ''];
-	for(var msg in form){
-		var val = {value : form[msg]};
-		form[msg] = val;
-		args.push(msg);
-		args.push(val);
-	}
-	
-	if(!PromptService.prompt.apply(PromptService, args))
-		return;
-	
-	for(var msg in form)
-		form[msg] = form[msg].value;
-	
-	return form;
 }
 
 function findCacheFile(url){

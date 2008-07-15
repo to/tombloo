@@ -63,9 +63,10 @@ listitem {
 		
 		elmModels.appendItem(m.name, m.name).setAttribute('src', m.ICON);
 	});
-	setTimeout(function(){
+	
+	window.addEventListener('load', function(){
 		elmModels.selectedIndex = 0;
-	}, 0);
+	}, true);
 	
 	window.addEventListener('dialogaccept', function(){
 		var item = elmUsers.selectedItem;

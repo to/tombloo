@@ -324,7 +324,7 @@ models.register({
 		if(ps.pageUrl.match('^http://4u.straightline.jp/image/'))
 			return this.iLoveHer(ps);
 		
-		return doXHR(ForU.URL + 'power/manage/register', {
+		return doXHR(this.URL + 'power/manage/register', {
 			referrer : ps.pageUrl,
 			queryString : {
 				site_title  : ps.page,
@@ -341,13 +341,14 @@ models.register({
 
 	iLoveHer : function(ps){
 		// doXHR(ps.pageUrl)
+		// FIXME: id
 		if(!ps.id)
 			return;
 		
-		return doXHR(ForU.URL + 'user/manage/do_register', {
+		return doXHR(this.URL + 'user/manage/do_register', {
 			referrer : ps.pageUrl,
 			queryString : {
-				src : id,
+				src : ps.id,
 			},
 		}).addCallback(function(res){
 			if(res.channel.URI.asciiSpec.match('login')){

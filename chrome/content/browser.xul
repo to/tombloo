@@ -35,14 +35,14 @@
 		
 		// ショートカットキーの設定
 		window.addEventListener('keydown', function(e){
-			var proc = env.shortcutkeys[env.keyString(e)];
-			if(!proc)
+			var key = env.shortcutkeys[env.keyString(e)];
+			if(!key)
 				return;
 			
 			e.preventDefault();
 			e.stopPropagation();
 			
-			proc();
+			key.execute(e);
 		}, true);
 		
 		// Greasemonkeyコンテキストの準備

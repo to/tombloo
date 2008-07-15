@@ -430,5 +430,7 @@ forEach({
 }, function(pair){
 	var key = getPref(pair[0]);
 	if(key)
-		shortcutkeys[key] = pair[1];
+		shortcutkeys[key] = {
+			execute : pair[1],
+		};
 });

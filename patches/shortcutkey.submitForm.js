@@ -4,7 +4,7 @@ shortcutkeys['CTRL + RETURN'] = {
 		var target = e.originalTarget;
 		if((/^(input|textarea)/i).test(target.nodeName)){
 			cancel(e);
-			$x('./ancestor::form', target).submit();
+			target.form.submit();
 		}
 	}
 }

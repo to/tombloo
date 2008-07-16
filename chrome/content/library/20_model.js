@@ -376,7 +376,11 @@ models.register({
 	},
 	
 	post : function(ps){
-		return this[capitalize(ps.type)].post(ps);
+		if(ps.type=='photo'){
+			return this.Photo.post(ps);
+		} else {
+			return Local.append(getDataDir(ps.type + '.txt'), ps);
+		}
 	},
 	
 	append : function(file, ps){
@@ -388,33 +392,10 @@ models.register({
 		return succeed();
 	},
 	
-	Regular : {
-		post : function(ps){
-			var file = getDataDir();
-			file.append('text.txt');
-			return Local.append(file, ps);
-		},
-	},
-	
-	Quote : {
-		post : function(ps){
-			var file = getDataDir();
-			file.append('quote.txt');
-			return Local.append(file, ps);
-		},
-	},
-	
-	Link : {
-		post : function(ps){
-			var file = getDataDir();
-			file.append('link.txt');
-			return Local.append(file, ps);
-		},
-	},
-	
 	Photo : {
 		post : function(ps){
-			var file = getDownloadDir();
+			var file = getDataDir('photo');
+			createDir(file);
 			
 			if(ps.file){
 				file.append(ps.file.leafName);

@@ -195,12 +195,14 @@ function getPatchDir(){
 	return createDir(dir);
 }
 
-function getDataDir(){
+function getDataDir(name){
 	var path = 'file:///' + getPref('dataDir').replace(/\{(.*?)\}/g, function(all, name){
 		return DirectoryService.get(name, IFile).path;
 	}).replace(/\\/g, '/')
 	
-	return createDir(getLocalFile(path));
+	var dir = createDir(getLocalFile(path));
+	name && dir.append(name);
+	return dir;
 }
 
 function getTempFile(ext){

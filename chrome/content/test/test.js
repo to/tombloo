@@ -58,3 +58,41 @@ function sameObject(act, exp, msg){
 		}
 	}
 }
+
+
+function autoReload(paths){
+	paths = paths || [];
+	
+	var baseUri = IOService.newURI(location.href, null, null);
+	Array.forEach(document.getElementsByTagNameNS(XUL_NS,'script'), function(script){
+		var src = script.getAttribute('src');
+		if(!src)
+			return;
+		
+		paths.push(IOService.newURI(src, null, baseUri).spec);
+	})
+	Array.forEach(document.getElementsByTagName('script'), function(script){
+		script.src && paths.push(script.src);
+	})
+	Array.forEach(document.styleSheets, function(style){
+		style.href && paths.push(style.href);
+	})
+	paths.push(location.href);
+	
+	function getModifiedTime(path){
+		var file = getLocalFile(path);
+		return file? file.lastModifiedTime : 0;
+	}
+	
+	var original = {};
+	paths.forEach(function(path){
+		original[path] = getModifiedTime(path);
+	});
+	
+	var intervalId = setInterval(function(){
+		paths.forEach(function(path){
+			if(original[path] != getModifiedTime(path))
+				location.reload();
+		});
+	}, 1000)
+}

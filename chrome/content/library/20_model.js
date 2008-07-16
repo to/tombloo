@@ -424,8 +424,7 @@ models.register({
 			
 			return download(ps.itemUrl, file).addCallback(function(){
 				if(AppInfo.OS == 'Darwin'){
-					// FIXME: Tempディレクトリを使う
-					var script = getDataDir();
+					var script = getTempDir();
 					script.append('setcomment.scpt');
 					
 					putContents(script, [

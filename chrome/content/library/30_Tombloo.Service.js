@@ -31,7 +31,7 @@ Tombloo.Service = {
 		error(msg);
 		
 		if(confirm(getMessage('error.post', this.reprError(msg).indent(4), page, pageUrl))){
-			addTab(ps.pageUrl);
+			addTab(pageUrl);
 		}
 	},
 	

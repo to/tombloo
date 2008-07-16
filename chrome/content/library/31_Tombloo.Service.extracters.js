@@ -322,7 +322,7 @@ Tombloo.Service.extracters = new Repository([
 				'sizes' : Flickr.getSizes(id),
 			}).addCallback(function(r){
 				if(!r.info[0])
-					throw r.info[1].message;
+					throw new Error(r.info[1].message);
 				
 				var info = r.info[1];
 				var sizes = r.sizes[1];
@@ -872,15 +872,10 @@ Tombloo.Service.extracters = new Repository([
 Tombloo.Service.extracters.extract = function(ctx, ext){
 	return withWindow(ctx.window, function(){
 		return maybeDeferred(ext.extract(ctx)).addCallback(function(ps){
-			if(!ps)
-				return;
-			
-			ps = update({
+			return ps && update({
 				page    : ctx.title,
 				pageUrl : ctx.href,
 			}, ps);
-			
-			return ps;
 		});
 	});
 }

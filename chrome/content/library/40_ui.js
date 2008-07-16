@@ -273,10 +273,6 @@ QuickPostForm.prototype = {
 								</row>
 								<spacer style="margin-top: 1em;"/>
 								<row>
-									<label value="Title"/>
-									<textbox name="item" />
-								</row>
-								<row>
 									<label value="Description"/>
 									<textbox name="description" multiline="true" rows="6" value={ps.description}/>
 								</row>

@@ -2,21 +2,21 @@
 <RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
          xmlns:NC="http://home.netscape.com/NC-rdf#"
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
-                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAIE9ftqWOw4Ab1UeM+ZlJO5s6PBL8Te4LMumCb/6XElHbHNXx4bOHtWH7OZyq/WS0QO4dw8kzr48iQ6dqO6508czwVFXrmrXO8sYwew5aTiIp+PoE23V5akA33rGL/qlSDV3ds57XSVhUIUSLA4X07XHoknrNkP/WanaWnyB7ZB6">
-    <em:updates RDF:resource="rdf:#$E0.in2"/>
-  </RDF:Description>
-  <RDF:Seq RDF:about="rdf:#$E0.in2">
-    <RDF:li RDF:resource="rdf:#$F0.in2"/>
-  </RDF:Seq>
-  <RDF:Description RDF:about="rdf:#$I0.in2"
+  <RDF:Description RDF:about="rdf:#$V5xNi2"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="2.0"
                    em:maxVersion="3.0.*"
                    em:updateLink="http://tombloo.googlecode.com/svn/trunk/tombloo.xpi"
-                   em:updateHash="sha512:58deeb983db4b7eee53807f7173090adf4caa39ee3ddc9867366547b2d19881588cea6414b2267d19e8aad6bdd3879bed02949a1f11af541aaaecf01124bfe4e" />
-  <RDF:Description RDF:about="rdf:#$F0.in2"
-                   em:version="0.3.6">
-    <em:targetApplication RDF:resource="rdf:#$I0.in2"/>
+                   em:updateHash="sha512:052f82cad809e9a010a5abbe53cd447c043d1e5d7b855b05f55f95b66c8d0059d178b7cca1d08685473a6a66abc2c9ee528abd2c78a49d5c729a199299c65293" />
+  <RDF:Seq RDF:about="rdf:#$R5xNi2">
+    <RDF:li RDF:resource="rdf:#$S5xNi2"/>
+  </RDF:Seq>
+  <RDF:Description RDF:about="rdf:#$S5xNi2"
+                   em:version="0.3.7">
+    <em:targetApplication RDF:resource="rdf:#$V5xNi2"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAHKe+siA6FmZwDwvFNQgEacPiS1efq6T9OzEJgIaQLlZS7Cp+ukLCk885ljYp6dtX3RYIfO2b6zi7lvxKIMV9g6jnjtn2zF1bdMjpCRDgjamgS0yR0hCC6X8bggiBMm0pQKvP0H0/tFaPPSlDYbMmvPfK4I9Zj9cjsOAmQ56XeH9">
+    <em:updates RDF:resource="rdf:#$R5xNi2"/>
   </RDF:Description>
 </RDF:RDF>

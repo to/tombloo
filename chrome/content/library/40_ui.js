@@ -549,6 +549,13 @@ function selectRegion(doc){
 	function onMouseUp(e){
 		p = getElementPosition(region);
 		finalize();
+		
+		// FIXME: 暫定/左上方向への選択不可/クリックとのダブルインターフェース未実装
+		if(!d || d.w<0 || d.h<0){
+			deferred.cancel();
+			return;
+		}
+		
 		deferred.callback({
 			position: p,
 			dimensions: d,

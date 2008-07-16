@@ -581,7 +581,9 @@ function selectRegion(doc){
 // ----[Shortcutkey]-------------------------------------------------
 var shortcutkeys = {};
 forEach({
-	'shortcutkey.quickPost.link' : function(){
+	'shortcutkey.quickPost.link' : function(e){
+		cancel(e);
+		
 		var win = getMostRecentWindow().getBrowser().contentWindow;
 		var doc = win.document;
 		new QuickPostForm({
@@ -592,7 +594,9 @@ forEach({
 			itemUrl : win.location.href,
 		}).show();
 	},
-	'shortcutkey.quickPost.regular' : function(){
+	'shortcutkey.quickPost.regular' : function(e){
+		cancel(e);
+		
 		var win = getMostRecentWindow().getBrowser().contentWindow;
 		var doc = win.document;
 		new QuickPostForm({

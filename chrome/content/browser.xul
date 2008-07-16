@@ -39,9 +39,6 @@
 			if(!key)
 				return;
 			
-			e.preventDefault();
-			e.stopPropagation();
-			
 			key.execute(e);
 		}, true);
 		

@@ -1,6 +1,8 @@
 shortcutkeys['CTRL + F'] = {
 	description : 'Toggle Find Bar',
-	execute : function(){
+	execute : function(e){
+		cancel(e);
+		
 		with(getMostRecentWindow()){
 			var bar = document.getElementById('FindToolbar');
 			if(bar.close){

@@ -5,7 +5,7 @@ models.register({
 	name : 'FriendFeed',
 	ICON : 'chrome://tombloo/skin/models/friendfeed.ico',
 	check : function(ps){
-		return ps.type != 'regular';
+		return ps.type != 'regular' && !ps.file;
 	},
 	
 	post : function(ps){
@@ -38,7 +38,7 @@ models.register({
 	},
 	
 	check : function(ps){
-		return ps.type == 'photo';
+		return ps.type == 'photo' && !ps.file;
 	},
 	
 	post : function(ps){
@@ -176,7 +176,7 @@ models.register({
 	API_KEY : 'ecf21e55123e4b31afa8dd344def5cc5',
 	
 	check : function(ps){
-		return ps.type == 'photo' && ps.pageUrl.match('^http://www.flickr.com/photos/');
+		return ps.type == 'photo' && ps.pageUrl.match('^http://www.flickr.com/photos/') && !ps.file;
 	},
 	
 	post : function(ps){
@@ -276,7 +276,7 @@ models.register({
 	URL : 'http://weheartit.com/',
 	
 	check : function(ps){
-		return ps.type == 'photo';
+		return ps.type == 'photo' && !ps.file;
 	},
 	
 	post : function(ps){
@@ -317,7 +317,7 @@ models.register({
 	URL : 'http://4u.straightline.jp/',
 	
 	check : function(ps){
-		return ps.type == 'photo';
+		return ps.type == 'photo' && !ps.file;
 	},
 	
 	post : function(ps){
@@ -414,15 +414,24 @@ models.register({
 	
 	Photo : {
 		post : function(ps){
-			var uri = broad(createURI(ps.itemUrl));
-			var fileName = validateFileName(uri.fileName);
 			var file = getDownloadDir();
-			file.append(fileName);
 			
-			for(var count = 2 ; file.exists() ; count++)
-				file.leafName = fileName.replace(/(.*)\./, '$1('+count+').');
+			if(ps.file){
+				file.append(ps.file.leafName);
+			} else {
+				var uri = broad(createURI(ps.itemUrl));
+				var fileName = validateFileName(uri.fileName);
+				file.append(fileName);
+			}
+			clearCollision(file);
 			
-			return download(ps.itemUrl, file).addCallback(function(){
+			return succeed().addCallback(function(){
+				if(ps.file){
+					return ps.file.copyTo(file.parent, file.leafName);
+				} else {
+					return download(ps.itemUrl, file);
+				}
+			}).addCallback(function(file){
 				if(AppInfo.OS == 'Darwin'){
 					var script = getTempDir();
 					script.append('setcomment.scpt');
@@ -447,7 +456,7 @@ models.register({
 	ICON : 'chrome://tombloo/skin/models/twitter.ico',
 	
 	check : function(ps){
-		return true;
+		return !ps.file;
 	},
 	
 	getToken : function(){
@@ -500,7 +509,7 @@ models.register({
 	URL : 'http://jaiku.com/',
 	
 	check : function(ps){
-		return true;
+		return !ps.file;
 	},
 	
 	getCurrentUser : function(){
@@ -579,7 +588,7 @@ models.register({
 	ICON : models.Google.ICON,
 	
 	check : function(ps){
-		return ps.type != 'regular';
+		return ps.type!='regular' && !ps.file;
 	},
 	
 	post : function(ps){
@@ -630,7 +639,7 @@ models.register({
 	},
 	
 	check : function(ps){
-		return ps.type != 'regular';
+		return ps.type!='regular' && !ps.file;
 	},
 	
 	post : function(ps){
@@ -836,7 +845,7 @@ models.register({
 	ICON : 'chrome://tombloo/skin/models/yahoobookmarks.ico',
 	
 	check : function(ps){
-		return ps.type != 'regular';
+		return ps.type!='regular' && !ps.file;
 	},
 	
 	post : function(ps){
@@ -959,7 +968,7 @@ models.register({
 	},
 	
 	check : function(ps){
-		return ps.type != 'regular';
+		return ps.type!='regular' && !ps.file;
 	},
 	
 	post : function(ps){
@@ -992,7 +1001,7 @@ models.register({
 	},
 	
 	check : function(ps){
-		return ps.type != 'regular';
+		return ps.type!='regular' && !ps.file;
 	},
 	
 	post : function(ps){
@@ -1028,7 +1037,7 @@ models.register({
 	ICON : 'chrome://tombloo/skin/models/wassr.ico',
 	
 	check : function(ps){
-		return true;
+		return !ps.file;
 	},
 	
 	post : function(ps){
@@ -1043,4 +1052,3 @@ models.register({
 });
 
 models.copyTo(this);
-

@@ -8,101 +8,6 @@ var CHROME_CONTENT_DIR = CHROME_DIR + '/content';
 var EXTENSION_ID = 'tombloo@brasil.to';
 
 
-function createDir(dir){
-	var dir = (dir instanceof IFile) ? dir : new LocalFile(dir);
-	if(!dir.exists())
-		dir.create(dir.DIRECTORY_TYPE, 0664);
-	
-	return dir;
-}
-
-function getContentDir(){
-	var contentDir = getExtensionDir(EXTENSION_ID);
-	contentDir.setRelativeDescriptor(contentDir, 'chrome/content');
-	
-	return contentDir;
-}
-
-function getPatchDir(){
-	var dir = getDataDir();
-	dir.append('script');
-	
-	return createDir(dir);
-}
-
-function getDataDir(){
-	var path = 'file:///' + getPref('dataDir').replace(/\{(.*?)\}/g, function(all, name){
-		return DirectoryService.get(name, IFile).path;
-	}).replace(/\\/g, '/')
-	
-	return createDir(getLocalFile(path));
-}
-
-function getTempFile(ext){
-	var file = getTempDir();
-	file.append(joinText(['tombloo_' + (new Date()).getTime(), ext], '.'));
-	
-	return file;
-}
-
-function openProgressDialog(progress, max, value){
-	if(!(progress instanceof Progress))
-		progress = new Progress(progress, max, value);
-	
-	openDialog('chrome://tombloo/content/library/progressDialog.xul', 400, 95, 'dialog', progress);
-	
-	return progress;
-}
-
-function openDialog(url, w, h, features, value){
-	var x = (screen.width - w) / 2;
-	var y = (screen.height - h) / 2;
-	window.openDialog(url, '_blank', (features? features + ',' : '') + openParamString({
-		width : w,
-		height : h,
-		left : x,
-		top : y,
-	}), value);
-}
-
-function autoReload(paths){
-	paths = paths || [];
-	
-	var baseUri = IOService.newURI(location.href, null, null);
-	Array.forEach(document.getElementsByTagNameNS(XUL_NS,'script'), function(script){
-		var src = script.getAttribute('src');
-		if(!src)
-			return;
-		
-		paths.push(IOService.newURI(src, null, baseUri).spec);
-	})
-	Array.forEach(document.getElementsByTagName('script'), function(script){
-		script.src && paths.push(script.src);
-	})
-	Array.forEach(document.styleSheets, function(style){
-		style.href && paths.push(style.href);
-	})
-	paths.push(location.href);
-	
-	function getModifiedTime(path){
-		var file = getLocalFile(path);
-		return file? file.lastModifiedTime : 0;
-	}
-	
-	var original = {};
-	paths.forEach(function(path){
-		original[path] = getModifiedTime(path);
-	});
-	
-	var intervalId = setInterval(function(){
-		paths.forEach(function(path){
-			if(original[path] != getModifiedTime(path))
-				location.reload();
-		});
-	}, 1000)
-}
-
-
 // ----[XPCOM]-------------------------------------------------
 function createMock(ifcNames, sample, proto, cons){
 	var non = function(){};
@@ -260,6 +165,69 @@ function download(sourceURL, targetFile){
 	}
 	
 	return d;
+}
+
+function createDir(dir){
+	var dir = (dir instanceof IFile) ? dir : new LocalFile(dir);
+	if(!dir.exists())
+		dir.create(dir.DIRECTORY_TYPE, 0664);
+	
+	return dir;
+}
+
+function clearCollision(file){
+	var name = file.leafName;
+	for(var count = 2 ; file.exists() ; count++)
+		file.leafName = name.replace(/(.*)\./, '$1('+count+').');
+}
+
+function getContentDir(){
+	var contentDir = getExtensionDir(EXTENSION_ID);
+	contentDir.setRelativeDescriptor(contentDir, 'chrome/content');
+	
+	return contentDir;
+}
+
+function getPatchDir(){
+	var dir = getDataDir();
+	dir.append('script');
+	
+	return createDir(dir);
+}
+
+function getDataDir(){
+	var path = 'file:///' + getPref('dataDir').replace(/\{(.*?)\}/g, function(all, name){
+		return DirectoryService.get(name, IFile).path;
+	}).replace(/\\/g, '/')
+	
+	return createDir(getLocalFile(path));
+}
+
+function getTempFile(ext){
+	var file = getTempDir();
+	file.append(joinText(['tombloo_' + (new Date()).getTime(), ext], '.'));
+	
+	return file;
+}
+
+function openProgressDialog(progress, max, value){
+	if(!(progress instanceof Progress))
+		progress = new Progress(progress, max, value);
+	
+	openDialog('chrome://tombloo/content/library/progressDialog.xul', 400, 95, 'dialog', progress);
+	
+	return progress;
+}
+
+function openDialog(url, w, h, features, value){
+	var x = (screen.width - w) / 2;
+	var y = (screen.height - h) / 2;
+	window.openDialog(url, '_blank', (features? features + ',' : '') + openParamString({
+		width : w,
+		height : h,
+		left : x,
+		top : y,
+	}), value);
 }
 
 

@@ -634,7 +634,12 @@ Tombloo.Service.extracters = new Repository([
 			
 			var target = ctx.target;
 			var itemUrl = tagName(target)=='object'? target.data : target.src;
-			return download(itemUrl, getTempFile()).addCallback(function(file){
+			
+			var uri = broad(createURI(itemUrl));
+			var file = getTempDir();
+			file.append(validateFileName(uri.fileName));
+			
+			return download(itemUrl, file).addCallback(function(file){
 				return {
 					type    : 'photo',
 					item    : ctx.title,
@@ -844,7 +849,11 @@ Tombloo.Service.extracters = new Repository([
 					return capture(win, {x:0, y:0}, getPageDimensions());
 				}
 			}).addCallback(function(image){
-				return download(image, getTempFile('png'));
+				var uri = broad(createURI(ctx.href));
+				var file = getTempDir();
+				file.append(uri.fileName.replace(/(.*?)(\.|$)(.*)/, '$1.png'));
+				
+				return download(image, file);
 			}).addCallback(function(file){
 				return {
 					type : 'photo',

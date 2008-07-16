@@ -155,12 +155,6 @@ var Tumblr = {
 		var url = Tumblr.TUMBLR_URL + 'reblog/' + id + '/' + token;
 		
 		return doXHR(url).addCallback(function(res){
-			if(formContents(res.responseText)['post[type]'] != 'regular')
-				return res;
-			
-			// reblog as quote
-			return doXHR(url + '/quote');
-		}).addCallback(function(res){
 			var fields = formContents(res.responseText);
 			Tumblr.trimReblogInfo(fields);
 			fields.redirect_to = Tumblr.TUMBLR_URL+'dashboard';

@@ -1226,6 +1226,7 @@ function showNotification(fragments, animation){
 }
 
 function capture(win, p, d){
+	// デフォルトではAppShellService.hiddenDOMWindowが使われる
 	var c = document.createElementNS(HTML_NS, 'canvas');
 	c.width = d.w;
 	c.height = d.h;

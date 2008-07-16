@@ -114,8 +114,15 @@ try {
 	}).addCallback(function(user){
 		ok(user);
 	});
+	
+	d.addCallback(function(){
+		return Hatena.getToken();
+	}).addCallback(function(token){
+		ok(token);
+	});
 	*/
 	ok(Hatena.getPasswords().length, 'Hatena: アカウント情報を取得できているか');
+	ok(Hatena.getAuthCookie(), 'Hatena: ログインしているか(未ログインの場合エラー)');
 	
 	
 	/*

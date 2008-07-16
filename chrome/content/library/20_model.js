@@ -383,10 +383,7 @@ models.register({
 		return doXHR('http://gyazo.com/upload.cgi', {
 			sendContent : {
 				id        : this.getId(),
-				imagedata : {
-					file : ps.file,
-					contentType : 'image/png',
-				},
+				imagedata : ps.file,
 			},
 		}).addCallback(function(res){
 			addTab(res.responseText);
@@ -922,7 +919,7 @@ models.register({
 				},
 			});
 		}).addCallback(function(){
-			self.cookie = self.getAuthCookie();
+			self.updateSession();
 			self.user = user;
 		});
 	},
@@ -935,20 +932,84 @@ models.register({
 		return getCookieString('.hatena.ne.jp', 'rk');
 	},
 	
-	getCurrentUser : function(){
-		var self = this;
+	updateSession : function(){
 		var cookie = this.getAuthCookie();
-		if(!cookie){
-			return succeed('');
-		} else if(self.cookie == cookie){
-			return succeed(self.user);
-		}
+		if(cookie && this.cookie==cookie)
+			return 'same';
 		
-		return doXHR('http://www.hatena.ne.jp/my').addCallback(function(res){
-			self.cookie = cookie;
-			return self.user = $x(
-				'(//*[@class="username"]//strong)[1]/text()', 
-				convertToHTMLDocument(res.responseText));
+		delete this.cookie;
+		delete this.user;
+		delete this.token;
+		
+		if(!cookie)
+			return 'none';
+		
+		this.cookie = cookie;
+		
+		return 'changed';
+	},
+	
+	getToken : function(){
+		var status = this.updateSession();
+		switch (status){
+		case 'none':
+			throw new Error('AUTH_FAILD');
+			
+		case 'same':
+			if(this.token)
+				return succeed(this.token);
+			
+		case 'changed':
+			var self = this;
+			return doXHR(HatenaBookmark.POST_URL).addCallback(function(res){
+				if(res.responseText.match(/Hatena\.rkm\s*=\s*['"](.+?)['"]/))
+					return self.token = RegExp.$1;
+			});
+		}
+	},
+	
+	getCurrentUser : function(){
+		var status = this.updateSession();
+		switch (status){
+		case 'none':
+			return succeed('');
+			
+		case 'same':
+			if(this.user)
+				return succeed(this.user);
+			
+		case 'changed':
+			var self = this;
+			return doXHR('http://www.hatena.ne.jp/my').addCallback(function(res){
+				return self.user = $x(
+					'(//*[@class="username"]//strong)[1]/text()', 
+					convertToHTMLDocument(res.responseText));
+			});
+		}
+	},
+});
+
+models.register({
+	name : 'HatenaFotolife',
+	ICON : 'chrome://tombloo/skin/models/hatenafotolife.ico',
+	
+	check : function(ps){
+		return ps.type=='photo' && ps.file;
+	},
+	
+	post : function(ps){
+		var content = {
+			mode   : 'enter',
+			image1 : ps.file,
+		};
+		return Hatena.getToken().addCallback(function(token){
+			content.rkm = token;
+			
+			return Hatena.getCurrentUser();
+		}).addCallback(function(user){
+			return doXHR('http://f.hatena.ne.jp/'+user+'/up', {
+				sendContent : content,
+			});
 		});
 	},
 });
@@ -975,21 +1036,12 @@ models.register({
 		});
 	},
 	
-	getToken : function(){
-		return doXHR(HatenaBookmark.POST_URL).addCallback(function(res){
-			if(res.responseText.match(/Hatena\.rkm\s*=\s*['"](.+?)['"]/))
-				return RegExp.$1;
-			
-			throw new Error('AUTH_FAILD');
-		});
-	},
-	
 	check : function(ps){
 		return ps.type!='regular' && !ps.file;
 	},
 	
 	post : function(ps){
-		return HatenaBookmark.getToken().addCallback(function(token){
+		return Hatena.getToken().addCallback(function(token){
 			var content = {
 				mode    : 'enter',
 				rkm     : token,

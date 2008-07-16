@@ -442,7 +442,8 @@ function addTab(url){
 		browser.removeEventListener('DOMContentLoaded', arguments.callee, true);
 		browser = null;
 		
-		d.callback(event.target.defaultView);
+		var win = event.originalTarget.defaultView;
+		d.callback(win.wrappedJSObject || win);
 	}, true);
 	return d;
 }

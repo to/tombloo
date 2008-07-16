@@ -990,6 +990,30 @@ models.register({
 });
 
 models.register({
+	name : 'Snipshot',
+	ICON : 'chrome://tombloo/skin/models/snipshot.ico',
+	
+	check : function(ps){
+		return ps.type=='photo';
+	},
+	
+	post : function(ps){
+		return doXHR('http://services.snipshot.com/', {
+			sendContent : {
+				snipshot_input : ps.file || ps.itemUrl,
+			},
+		}).addCallback(function(res){
+			return addTab(res.channel.URI.asciiSpec);
+		}).addCallback(function(win){
+			win.SnipshotImport = {
+				title : ps.page,
+				url   : ps.pageUrl,
+			};
+		});
+	},
+});
+
+models.register({
 	name : 'HatenaFotolife',
 	ICON : 'chrome://tombloo/skin/models/hatenafotolife.ico',
 	

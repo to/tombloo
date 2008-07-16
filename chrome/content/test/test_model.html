@@ -343,6 +343,9 @@ try {
 	ok(Jaiku.getCurrentUser().length > 1, 'Jaiku: ユーザー名を取得できるか(未ログインの場合エラー)');
 	*/
 	
+	is(Gyazo.getId().length, 14);
+	
+	
 	if(models.FirefoxBookmark){
 		// FirefoxBookmark
 		var uri = 'chrome://tombloo/content/prefs.xul';

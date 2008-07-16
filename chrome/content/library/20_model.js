@@ -357,7 +357,47 @@ models.register({
 		});
 	},
 });
+
+models.register({
+	name : 'Gyazo',
+	ICON : 'chrome://tombloo/skin/models/item.ico',
 	
+	/*
+	check : function(ps){
+		return ps.type=='photo' && ps.file;
+	},
+	*/
+	
+	getId : function(){
+		var id = getPref('model.gyazo.id');
+		if(!id){
+			with(new Date()){
+				id = getFullYear() + [getMonth()+1, getDate(), getHours(), getMinutes(), getSeconds()].map(function(n){
+					return (''+n).pad(2, '0');
+				}).join('');
+			}
+			setPref('model.gyazo.id', id);
+		}
+		return id;
+	},
+	
+	post : function(ps){
+		return doXHR('http://gyazo.com/upload.cgi', {
+			sendContent : {
+				id        : this.getId(),
+				imagedata : {
+					file : ps.file,
+					contentType : 'image/png',
+				},
+			},
+		}).addCallback(function(res){
+log(res);
+		}).addBoth(function(res){
+log(res);
+		});
+	},
+});
+
 models.register({
 	name : 'Local',
 	

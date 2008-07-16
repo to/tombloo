@@ -597,6 +597,11 @@ Number.prototype.toHexString = function(){
 
 
 String.prototype = update(String.prototype, {
+	pad :function(len, ch){
+		len = len-this.length;
+		if(len<=0) return this;
+		return (ch || ' ').repeat(len) + this;
+	},
 	indent : function(num, c){
 		c = c || ' ';
 		return this.replace(/^/mg, c.repeat(num))
@@ -1221,7 +1226,8 @@ function showNotification(fragments, animation){
 }
 
 function capture(win, p, d){
-	var c = document.createElement('canvas');
+	prompt('', document);
+	var c = document.createElementNS(HTML_NS, 'canvas');
 	c.width = d.w;
 	c.height = d.h;
 	c.getContext('2d').drawWindow(win, p.x, p.y, d.w, d.h, '#FFF');

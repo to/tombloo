@@ -386,7 +386,7 @@ function sendByChannel(url, opts){
 					streams.push('');
 				}
 			}
-			streams.push('--' + boundary);
+			streams.push('--' + boundary + '--');
 			
 			var mimeStream = new MIMEInputStream(new MultiplexInputStream(streams));
 			mimeStream.addHeader('Content-Type', 'multipart/form-data; boundary=' + boundary);
@@ -1226,7 +1226,6 @@ function showNotification(fragments, animation){
 }
 
 function capture(win, p, d){
-	prompt('', document);
 	var c = document.createElementNS(HTML_NS, 'canvas');
 	c.width = d.w;
 	c.height = d.h;

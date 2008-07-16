@@ -362,11 +362,9 @@ models.register({
 	name : 'Gyazo',
 	ICON : 'chrome://tombloo/skin/models/item.ico',
 	
-	/*
 	check : function(ps){
 		return ps.type=='photo' && ps.file;
 	},
-	*/
 	
 	getId : function(){
 		var id = getPref('model.gyazo.id');
@@ -391,9 +389,7 @@ models.register({
 				},
 			},
 		}).addCallback(function(res){
-log(res);
-		}).addBoth(function(res){
-log(res);
+			addTab(res.responseText);
 		});
 	},
 });

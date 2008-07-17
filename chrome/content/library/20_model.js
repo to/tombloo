@@ -207,10 +207,11 @@ models.register(update({
 	post : function(ps){
 		if(ps.file){
 			return this.upload({
-				photo     : ps.file,
-				title     : ps.page,
-				is_public : ps.private? 0 : 1,
-				tags      : joinText(ps.tags, ' '),
+				photo       : ps.file,
+				title       : ps.page,
+				description : ps.description,
+				is_public   : ps.private? 0 : 1,
+				tags        : joinText(ps.tags, ' '),
 			});
 		} else {
 			return this.addFavorite(ps.pageUrl.replace(/\/$/, '').split('/').pop());
@@ -315,6 +316,14 @@ models.register(update({
 		});
 	},
 	
+	// photo
+	// title (optional)
+	// description (optional)
+	// tags (optional)
+	// is_public, is_friend, is_family (optional)
+	// safety_level (optional)
+	// content_type (optional)
+	// hidden (optional)
 	upload : function(ps){
 		return this.callAuthMethod(update({
 			method   : 'flickr.photos.upload',
@@ -1057,17 +1066,24 @@ models.register({
 	},
 	
 	post : function(ps){
-		var content = {
-			mode   : 'enter',
-			image1 : ps.file,
-		};
+		return this.upload({
+			image1     : ps.file,
+			fototitle1 : ps.page,
+		});
+	},
+	
+	// image1 - image5
+	// fototitle1 - fototitle5 (optional)
+	upload : function(ps){
 		return Hatena.getToken().addCallback(function(token){
-			content.rkm = token;
+			ps.rkm = token;
 			
 			return Hatena.getCurrentUser();
 		}).addCallback(function(user){
 			return doXHR('http://f.hatena.ne.jp/'+user+'/up', {
-				sendContent : content,
+				sendContent : update({
+					mode : 'enter',
+				}, ps),
 			});
 		});
 	},

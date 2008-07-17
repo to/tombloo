@@ -106,6 +106,7 @@ function QuickPostForm(ps){
 	this.posters = new Repository(models.check(ps));
 }
 
+QuickPostForm.refreshCache = true;
 QuickPostForm.candidates = [];
 QuickPostForm.prototype = {
 	get checked(){
@@ -128,6 +129,8 @@ QuickPostForm.prototype = {
 			return;
 		
 		Tombloo.Service.post(ps, this.checked);
+		if(this.elmTags)
+			QuickPostForm.refreshCache = this.elmTags.includesNewTag;
 		this.notification.close();
 	},
 	
@@ -170,7 +173,7 @@ QuickPostForm.prototype = {
 		this.elmPost.addEventListener('command', bind('post', this), true);
 		this.checkPostable();
 		
-		this.prepareTags();
+		this.elmTags = this.prepareTags();
 		
 		setTimeout(function(){
 			$x('.//xul:textbox', notification).focus();
@@ -187,43 +190,45 @@ QuickPostForm.prototype = {
 			return;
 		
 		elmTags.autoComplete = getPref('tagAutoComplete');
+		elmTags.candidates = QuickPostForm.candidates;
 		
 		var tagProvider = getPref('tagProvider');
-		if(tagProvider){
-			elmTags.candidates = QuickPostForm.candidates;
-			models[tagProvider].getUserTags().addCallback(function(tags){
-				if(!tags || !tags.length)
-					return;
-				
-				if(QuickPostForm.candidates.length==tags.length){
-					elmTags.candidates = QuickPostForm.candidates
-					return;
-				}
-				
-				tags = tags.sort(function(a, b){
-					return b.frequency != a.frequency ? compare(b.frequency, a.frequency) : compare(a.name, b.name);
-				}).map(itemgetter('name'));
-				
-				var d = succeed();
-				var readings = tags;
-				var source = tags.join(' [');
-				if(source.includesFullwidth()){
-					d = Yahoo.getRomaReadings(source).addCallback(function(rs){
-						readings = rs.join('').split(' [');
-					});
-				}
-				
-				d.addCallback(function(){
-					// 次回すぐに利用できるようにキャッシュする
-					elmTags.candidates = QuickPostForm.candidates = zip(readings, tags).map(function(cand){
-						return {
-							reading : cand[0],
-							value : cand[1],
-						}
-					});
+		if(!tagProvider || !QuickPostForm.refreshCache)
+			return elmTags;
+		
+		models[tagProvider].getUserTags().addCallback(function(tags){
+			if(!tags || !tags.length)
+				return;
+			
+			if(QuickPostForm.candidates.length==tags.length){
+				elmTags.candidates = QuickPostForm.candidates
+				return;
+			}
+			
+			tags = tags.sort(function(a, b){
+				return b.frequency != a.frequency ? compare(b.frequency, a.frequency) : compare(a.name, b.name);
+			}).map(itemgetter('name'));
+			
+			var d = succeed();
+			var readings = tags;
+			var source = tags.join(' [');
+			if(source.includesFullwidth()){
+				d = Yahoo.getRomaReadings(source).addCallback(function(rs){
+					readings = rs.join('').split(' [');
+				});
+			}
+			
+			d.addCallback(function(){
+				// 次回すぐに利用できるようにキャッシュする
+				QuickPostForm.refreshCache = false;
+				elmTags.candidates = QuickPostForm.candidates = zip(readings, tags).map(function(cand){
+					return {
+						reading : cand[0],
+						value : cand[1],
+					}
 				});
 			});
-		}
+		});
 		
 		return elmTags;
 	},

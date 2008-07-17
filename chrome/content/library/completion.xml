@@ -42,6 +42,8 @@
 			<property name="autoComplete"
 				onget="return this.textbox.autoComplete;"
 				onset="return this.textbox.autoComplete = val;"/>
+			<property name="includesNewTag"
+				onget="return this.textbox.includesNewTag;"/>
 			
 			<method name="focus">
 				<body><![CDATA[
@@ -54,9 +56,6 @@
 	
 	<binding id="textbox" extends="chrome://global/content/bindings/textbox.xml#textbox">
 		<implementation>
-			<constructor><![CDATA[
-			]]></constructor>
-			
 			<field name="delay">
 				300;
 			</field>
@@ -84,6 +83,23 @@
 			</field>
 			<property name="values"
 				onget="return this.value.split(this.delimiter).filter(function(i){return i});"/>
+			<property name="includesNewTag">
+				<getter><![CDATA[
+					var check = {};
+					this.values.forEach(function(val){
+						check[val] = true;
+					});
+					
+					this.candidates.forEach(function(cand){
+						delete check[cand.value];
+					});
+					
+					for(var k in check)
+						return true;
+					
+					return false;
+				]]></getter>
+			</property>
 			
 			<method name="notify">
 				<body><![CDATA[
@@ -412,9 +428,6 @@
 	
 	<binding id="listbox" extends="chrome://global/content/bindings/listbox.xml#listbox">
 		<implementation>
-			<constructor><![CDATA[
-			]]></constructor>
-			
 			<field name="container">
 				this.parentNode.parentNode;
 			</field>

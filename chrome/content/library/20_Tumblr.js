@@ -191,7 +191,7 @@ var Tumblr = {
 				sendContent : update(
 					form, 
 					Tumblr[capitalize(ps.type)].convertToForm(ps), {
-						'post[tags]' : (ps.tags && ps.tags.length)? joinText(ps.tags, ' ') : '',
+						'post[tags]' : (ps.tags && ps.tags.length)? joinText(ps.tags, ',') : '',
 						'post[is_private]' : ps.private==null? form['post[is_private]'] : (ps.private? 1 : 0),
 					}
 				),

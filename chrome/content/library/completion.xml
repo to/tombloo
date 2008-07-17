@@ -325,11 +325,6 @@
 				}
 			]]></handler>
 			<handler event="keydown"><![CDATA[
-				if(this.sleeping){
-					event.preventDefault();
-					return;
-				}
-				
 				switch (event.keyCode) {
 					case KeyEvent.DOM_VK_DELETE:
 					case KeyEvent.DOM_VK_BACK_SPACE:
@@ -338,11 +333,16 @@
 				}
 			]]></handler>
 			<handler event="keypress"><![CDATA[
+				// フォーカス移動は何も処理を行わない/遮らない
+				if(event.keyCode==KeyEvent.DOM_VK_TAB && !this.popup.visible)
+					return;
+				
+				if(this.sleeping){
+					event.preventDefault();
+					return;
+				}
+				
 				switch (event.keyCode) {
-					case KeyEvent.DOM_VK_TAB:
-						if(!this.popup.visible)
-							return;
-						
 					case KeyEvent.DOM_VK_TAB:
 					case KeyEvent.DOM_VK_DOWN:
 						event.preventDefault();

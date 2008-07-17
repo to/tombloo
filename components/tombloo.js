@@ -195,15 +195,15 @@ function NSGetModule(compMgr, fileSpec) {
 		},
  		getClassObject : function(compMgr, cid, iid){
 			if (!cid.equals(Module.CID))
-				throw Cr.NS_ERROR_NO_INTERFACE;
+				throw Cr.NS_ERROR_NOT_IMPLEMENTED;
 			
 			if (!iid.equals(Ci.nsIFactory))
-				throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+				throw Cr.NS_ERROR_NO_INTERFACE;
 			
 			Module.onInit && Module.onInit(compMgr, cid, iid);
 			
 			return {
-				createInstance: function (outer, iid) {
+				createInstance: function(outer, iid) {
 					if (outer != null)
 						throw Cr.NS_ERROR_NO_AGGREGATION;
 					

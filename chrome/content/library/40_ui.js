@@ -582,6 +582,29 @@ function selectRegion(doc){
 	return deferred;
 }
 
+function flashView(){
+	var d = new Deferred();
+	var doc = currentDocument();
+	var flash = doc.createElement('div');
+	flash.setAttribute('style', <>
+		background : #EEE;
+		position   : fixed;
+		z-index    : 999999999;
+		top        : 0;
+		left       : 0;
+	</>);
+	setElementDimensions(flash, getViewDimensions());
+	doc.body.appendChild(flash);
+	fade(flash, {
+		duration : 0.1,
+		afterFinish : function(){
+			removeElement(flash);
+			d.callback();
+		},
+	});
+	
+	return d;
+}
 
 // ----[Shortcutkey]-------------------------------------------------
 var shortcutkeys = {};

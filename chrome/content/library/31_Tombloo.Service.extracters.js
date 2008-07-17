@@ -821,7 +821,8 @@ Tombloo.Service.extracters = new Repository([
 			return true;
 		},
 		extract : function(ctx){
-			var type = input({'Capture Type' : ['Region', 'Element', 'View', 'Page']});
+			// ショートカットキーからポストするためcaptureTypeを追加
+			var type = ctx.captureType || input({'Capture Type' : ['Region', 'Element', 'View', 'Page']});
 			if(!type)
 				return;
 			
@@ -847,7 +848,7 @@ Tombloo.Service.extracters = new Repository([
 				}
 			}).addCallback(function(image){
 				var uri = broad(createURI(ctx.href));
-				uri = uri.host+uri.filePath;
+				uri = (uri.host+uri.filePath).replace(/\/$/, '');
 				
 				var file = getTempDir(validateFileName(uri + '.png'));
 				

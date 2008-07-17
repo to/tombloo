@@ -205,6 +205,13 @@ function getDataDir(name){
 	return dir;
 }
 
+function getTempDir(name){
+	var dir = DirectoryService.get('TmpD', IFile);
+	name && dir.append(name);
+	
+	return dir;
+}
+
 function getTempFile(ext){
 	var file = getTempDir();
 	file.append(joinText(['tombloo_' + (new Date()).getTime(), ext], '.'));
@@ -584,6 +591,12 @@ function getElementPosition(elm){
 	return withWindow(elm.ownerDocument.defaultView, function(){
 		return MochiKit.Style.getElementPosition(elm);
 	});
+}
+
+function roundPosition(p){
+	return new Coordinates(
+		Math.round(p.x), 
+		Math.round(p.y));
 }
 
 

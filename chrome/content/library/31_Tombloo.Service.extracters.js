@@ -836,10 +836,7 @@ Tombloo.Service.extracters = new Repository([
 				case 'Element':
 					return selectElement().addCallback(function(elm){
 						// getBoundingClientRectで少数が返され切り取り範囲がずれるため丸める
-						var p = getElementPosition(elm);
-						p.x = Math.round(p.x);
-						p.y = Math.round(p.y);
-						return capture(win, p, getElementDimensions(elm));
+						return capture(win, roundPosition(getElementPosition(elm)), getElementDimensions(elm));
 					});
 					
 				case 'View':
@@ -850,8 +847,9 @@ Tombloo.Service.extracters = new Repository([
 				}
 			}).addCallback(function(image){
 				var uri = broad(createURI(ctx.href));
-				var file = getTempDir();
-				file.append(uri.fileName.replace(/(.*?)(\.|$)(.*)/, '$1.png'));
+				uri = uri.host+uri.filePath;
+				
+				var file = getTempDir(validateFileName(uri + '.png'));
 				
 				return download(image, file);
 			}).addCallback(function(file){

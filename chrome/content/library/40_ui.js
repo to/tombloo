@@ -341,7 +341,7 @@ QuickPostForm.prototype = {
 								<row>
 									<label value="Photo"/>
 									<html:div>
-										<html:img src={ps.itemUrl || createURI(ps.file).spec} style="max-height:80px; margin: 2px 4px;"/>
+										<html:img src={ps.itemUrl || (createURI(ps.file).spec + '?' + Date.now())} style="max-height:80px; margin: 2px 4px;"/>
 									</html:div>
 								</row>
 								<spacer style="margin-top: 1em;"/>

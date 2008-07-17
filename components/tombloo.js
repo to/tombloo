@@ -4,66 +4,63 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 
-var ILocalFile       = Ci.nsILocalFile;
+var ILocalFile = Ci.nsILocalFile;
 
-function initialize(){
-	AppShellService  = getService('/appshell/appShellService;1', Ci.nsIAppShellService);
-	ScriptLoader     = getService('/moz/jssubscript-loader;1', Ci.mozIJSSubScriptLoader);
-	ExtensionManager = getService('/extensions/manager;1', Ci.nsIExtensionManager);
-	ConsoleService   = getService('/consoleservice;1', Ci.nsIConsoleService);
-	IOService        = getService('/network/io-service;1', Ci.nsIIOService);
-	WindowMediator   = getService('/appshell/window-mediator;1', Ci.nsIWindowMediator);
-}
+ConsoleService   = getService('/consoleservice;1', Ci.nsIConsoleService);
+AppShellService  = getService('/appshell/appShellService;1', Ci.nsIAppShellService);
+ScriptLoader     = getService('/moz/jssubscript-loader;1', Ci.mozIJSSubScriptLoader);
+ExtensionManager = getService('/extensions/manager;1', Ci.nsIExtensionManager);
+IOService        = getService('/network/io-service;1', Ci.nsIIOService);
+WindowMediator   = getService('/appshell/window-mediator;1', Ci.nsIWindowMediator);
 
-function NSGetModule(compMgr, fileSpec) {
-	return {
-		CID  : Components.ID('{aec75109-b143-4e49-a708-4904cfe85ea0}'),
-		NAME : 'TomblooService',
-		PID  : '@brasil.to/tombloo-service;1',
+Module = {
+	CID  : Components.ID('{aec75109-b143-4e49-a708-4904cfe85ea0}'),
+	NAME : 'TomblooService',
+	PID  : '@brasil.to/tombloo-service;1',
+	
+	createInstance : function(){
+		// createInstanceで呼び出されたときのために独自にシングルトン機構を持つ
+		if(this.instance)
+			return this.instance;
 		
-		registerSelf : function (compMgr, fileSpec, location, type) {
-			compMgr.QueryInterface(Ci.nsIComponentRegistrar).registerFactoryLocation(
-				this.CID, this.NAME, this.PID,
-				fileSpec, location, type);
-		},
-		canUnload : function(compMgr) {
-			return true;
-		},
- 		getClassObject : function (compMgr, cid, iid) {
-			if (!cid.equals(this.CID))
-				throw Cr.NS_ERROR_NO_INTERFACE;
-				
-			if (!iid.equals(Components.interfaces.nsIFactory))
-				throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+		var env = function(){};
+		env.getContentDir = getContentDir;
+		env.getLibraries = getLibraries;
+		
+		// アプリケーション全体で、同じloadSubScripts関数を使いまわし汚染を防ぐ
+		env.loadSubScripts = loadSubScripts;
+		env.loadAllSubScripts = loadAllSubScripts;
+		
+		// MochiKit内部で使用しているinstanceofで異常が発生するのを避ける
+		env.MochiKit = {};
+		
+		setupEnvironment(env);
+		env.loadAllSubScripts();
+		
+		// Greasemonkeyコンテキストの準備
+		var gm = Components.classes['@greasemonkey.mozdev.org/greasemonkey-service;1'];
+		if(gm){
+			gm = gm.getService().wrappedJSObject;
 			
-			// スクリプト実行時点では取得できないサービスがあるためここまで遅らせる
-			initialize();
-			
-			return {
-				createInstance: function (outer, iid) {
-					if (outer != null)
-						throw Cr.NS_ERROR_NO_AGGREGATION;
-					
-					var global = function(){};
-					global.getContentDir = getContentDir;
-					global.getLibraries = getLibraries;
-					
-					// アプリケーション全体で、同じloadSubScripts関数を使いまわし汚染を防ぐ
-					global.loadSubScripts = loadSubScripts;
-					global.loadAllSubScripts = loadAllSubScripts;
-					
-					// MochiKit内部で使用しているinstanceofで異常が発生するのを避ける
-					global.MochiKit = {};
-					
-					setupEnvironment(global);
-					global.loadAllSubScripts();
-					
-					return {wrappedJSObject : global};
+			var GM_Tombloo = copy({
+				Tombloo : {
+					Service : copy({}, env.Tombloo.Service, /(check|share|posters|extracters)/),
 				}
-			};
-		},
-	};
+			}, env, /(Deferred|DeferredHash)/);
+			
+			for(var name in env.models)
+				if(env.models.hasOwnProperty(name))
+					GM_Tombloo[name] = copy({}, env.models[name], /^(?!.*(password|cookie))/i);
+			
+			env.addBefore(gm, 'evalInSandbox', function(code, codebase, sandbox){
+				sandbox.GM_Tombloo = GM_Tombloo;
+			});
+		}
+		
+		return this.instance = env;
+	}, 
 }
+
 
 // ----[Application]--------------------------------------------
 function getScriptFiles(dir){
@@ -175,4 +172,46 @@ function bind(func, obj) {
 			return func.apply(obj, arguments);
 		}
 	}
+}
+
+function copy(t, s, re){
+	for(var p in s)
+		if(!re || re.test(p))
+			t[p] = s[p];
+	return t;
+}
+
+function NSGetModule(compMgr, fileSpec) {
+	return {
+		registerSelf : function(compMgr, fileSpec, location, type) {
+			compMgr.QueryInterface(Ci.nsIComponentRegistrar).registerFactoryLocation(
+				Module.CID, Module.NAME, Module.PID,
+				fileSpec, location, type);
+			
+			Module.onRegister && Module.onRegister(compMgr, fileSpec, location, type);
+		},
+		canUnload : function(compMgr) {
+			return true;
+		},
+ 		getClassObject : function(compMgr, cid, iid){
+			if (!cid.equals(Module.CID))
+				throw Cr.NS_ERROR_NO_INTERFACE;
+			
+			if (!iid.equals(Ci.nsIFactory))
+				throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+			
+			Module.onInit && Module.onInit(compMgr, cid, iid);
+			
+			return {
+				createInstance: function (outer, iid) {
+					if (outer != null)
+						throw Cr.NS_ERROR_NO_AGGREGATION;
+					
+					return {
+						wrappedJSObject : Module.createInstance(outer, iid),
+					};
+				}
+			};
+		},
+	};
 }

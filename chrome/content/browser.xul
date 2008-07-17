@@ -1,8 +1,12 @@
 <?xml version="1.0"?>
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 	<popup id="contentAreaContextMenu">
-		<menuitem insertbefore="context-bookmarklink" 
-			label="Share" id="tombloo-menu-share" accesskey="J"/>
+		<menuitem 
+			class="menuitem-iconic"
+			insertbefore="context-bookmarklink" 
+			label="Share" 
+			id="tombloo-menu-share" 
+			accesskey="J"/>
 		<menu 
 			class="menu-iconic"
 			image="chrome://tombloo/skin/empty.png"
@@ -19,19 +23,7 @@
 	</menupopup>
 	<script type="text/javascript; version=1.7"><![CDATA[
 	(function(){
-		const TomblooServiceClass = Cc['@brasil.to/tombloo-service;1'];
-		
-		var env = TomblooServiceClass.getService().wrappedJSObject;
-		if(env.getPref('debug'))
-			env.loadAllSubScripts();
-		
-		function getEnvironment(){
-			if(!env.getPref('debug'))
-				return env;
-			
-			// デバッグ時は毎回サブスクリプトをロードする
-			return TomblooServiceClass.createInstance().wrappedJSObject;
-		}
+		var env = Cc['@brasil.to/tombloo-service;1'].getService().wrappedJSObject;
 		
 		// ショートカットキーの設定
 		window.addEventListener('keydown', function(e){
@@ -42,21 +34,6 @@
 			key.execute(e);
 		}, true);
 		
-		// Greasemonkeyコンテキストの準備
-		var gm = Components.classes['@greasemonkey.mozdev.org/greasemonkey-service;1'];
-		if(gm){
-			gm = gm.getService().wrappedJSObject;
-			
-			var GM_Tombloo = update(function(){}, env.models);
-			update(GM_Tombloo, env, ['Deferred', 'DeferredHash']);
-			GM_Tombloo.Tombloo = {};
-			GM_Tombloo.Tombloo.Service = update({}, env.Tombloo.Service, 
-				'check share posters extracters'.split(' '));
-			env.addBefore(gm, 'evalInSandbox', function(code, codebase, sandbox){
-				sandbox.GM_Tombloo = GM_Tombloo;
-			});
-		}
-		
 		window.addEventListener('load', function(){
 			var context;
 			var menuContext = document.getElementById('contentAreaContextMenu');
@@ -64,52 +41,50 @@
 			var menuSelect = document.getElementById('tombloo-menu-select');
 			
 			menuShare.setAttribute('accesskey', env.getPref('accesskey.share'));
-			menuShare.setAttribute('class', 'menuitem-iconic');
 			
 			// Menu Editor拡張によって個別メニューのイベントを取得できなくなる現象を回避
-			menuContext.addEventListener('popupshowing', function(event){
-				if(event.eventPhase != Event.AT_TARGET || (context && context.target == gContextMenu.target))
+			menuContext.addEventListener('popupshowing', function(e){
+				if(e.eventPhase != Event.AT_TARGET || (context && context.target == gContextMenu.target))
 					return;
 				
 				var doc = gContextMenu.target.ownerDocument;
 				var win = doc.defaultView.wrappedJSObject;
-				var mouse = {
-					x : event.pageX,
-					y : event.pageY,
-				};
-				
 				try{
 					// about:config などで無効にする
 					win.location.host;
 					
-					menuShare.removeAttribute('disabled');
-					menuSelect.parentNode.removeAttribute('disabled');
+					menuShare.disabled = false;
+					menuSelect.parentNode.disabled = false;
 				}catch(e){
-					menuShare.setAttribute('disabled', true);
-					menuSelect.parentNode.setAttribute('disabled', true);
+					menuShare.disabled = true;
+					menuSelect.parentNode.disabled = true;
 					
 					return;
 				}
 				
-				context = update(update({
+				// command時にはクリック箇所などの情報が失われるためコンテキストを保持しておく
+				context = env.update({
 					document  : doc,
 					window    : win,
 					title     : ''+doc.title || '',
 					selection : ''+win.getSelection(),
-					event     : event,
-					mouse     : mouse,
+					event     : e,
+					mouse     : {
+						x : e.pageX,
+						y : e.pageY,
+					},
 					menu      : gContextMenu,
-				}, gContextMenu), win.location);
+				}, gContextMenu, win.location);
 				
-				var exts = getEnvironment().Tombloo.Service.check(context);
+				var exts = env.Tombloo.Service.check(context);
 				menuShare.label = 'Share - ' + exts[0].name;
 				menuShare.extracter = exts[0].name;
 				menuShare.setAttribute('image', exts[0].ICON || 'chrome://tombloo/skin/empty.png');
 				
 				if(exts.length<=1){
-					menuSelect.parentNode.setAttribute('disabled', true);
+					menuSelect.parentNode.disabled = true;
 				} else {
-					menuSelect.parentNode.removeAttribute('disabled');
+					menuSelect.parentNode.disabled = false;
 					
 					for(var i=0 ; i<exts.length ; i++){
 						var ext = exts[i];
@@ -120,8 +95,8 @@
 				}
 			}, true);
 			
-			menuContext.addEventListener('popuphidden', function(event){
-				if(event.eventPhase != Event.AT_TARGET)
+			menuContext.addEventListener('popuphidden', function(e){
+				if(e.eventPhase != Event.AT_TARGET)
 					return;
 				
 				context = null;
@@ -129,24 +104,24 @@
 				env.clearChildren(menuSelect);
 			}, true);
 			
-			menuContext.addEventListener('command', function(event){
-				if(!event.target.extracter)
+			menuContext.addEventListener('command', function(e){
+				if(!e.target.extracter)
 					return;
 				
-				context.event = event;
+				context.event = e;
 				
-				var service = getEnvironment().Tombloo.Service;
-				service.share(context, service.extracters[event.target.extracter], event.target.showForm);
+				var svc = env.Tombloo.Service;
+				svc.share(context, svc.extracters[e.target.extracter], e.target.showForm);
 			}, true);
 			
 			
 			var menuAction = document.getElementById('tombloo-menu-main');
-			getEnvironment().Tombloo.Service.actions.names.forEach(function(name){
+			env.Tombloo.Service.actions.names.forEach(function(name){
 					appendMenuItem(menuAction, name);
 			});
 			
-			menuAction.addEventListener('command', function(event){
-				getEnvironment().Tombloo.Service.actions[event.originalTarget.label].execute();
+			menuAction.addEventListener('command', function(e){
+				env.Tombloo.Service.actions[e.originalTarget.label].execute();
 			}, true);
 		}, false);
 		
@@ -166,21 +141,6 @@
 			
 			return item;
 		}
-		
-		function update(target, src, keys){
-			if(keys){
-				keys.forEach(function(key){
-					target[key] = src[key];
-				});
-			} else {
-				for(var key in src)
-					target[key] = src[key];
-			}
-			
-			return target;
-		}
 	})();
-	
-	
 	]]></script>
 </overlay>

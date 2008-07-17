@@ -1,3 +1,22 @@
+AbstractSessionService = {
+	updateSession : function(){
+		var cookie = this.getAuthCookie();
+		if(cookie && this.cookie==cookie)
+			return 'same';
+		
+		delete this.cookie;
+		delete this.user;
+		delete this.token;
+		
+		if(!cookie)
+			return 'none';
+		
+		this.cookie = cookie;
+		
+		return 'changed';
+	},
+}
+
 if(typeof(models)=='undefined')
 	this.models = models = new Repository();
 
@@ -170,17 +189,25 @@ models.register({
 	},
 });
 
-models.register({
+models.register(update({
 	name : 'Flickr',
 	ICON : 'chrome://tombloo/skin/models/flickr.ico',
 	API_KEY : 'ecf21e55123e4b31afa8dd344def5cc5',
 	
+	getAuthCookie : function(){
+		return getCookieString('flickr.com', 'cookie_accid');
+	},
+	
 	check : function(ps){
-		return ps.type == 'photo' && ps.pageUrl.match('^http://www.flickr.com/photos/') && !ps.file;
+		return ps.type == 'photo' && (ps.pageUrl.match('^http://www.flickr.com/photos/') || ps.file);
 	},
 	
 	post : function(ps){
-		return this.addFavorite(ps.pageUrl.replace(/\/$/, '').split('/').pop());
+		if(ps.file){
+			return this.upload(ps);
+		} else {
+			return this.addFavorite(ps.pageUrl.replace(/\/$/, '').split('/').pop());
+		}
 	},
 	
 	callMethod : function(ps){
@@ -199,42 +226,54 @@ models.register({
 	},
 	
 	callAuthMethod : function(ps){
-		return this.getToken(ps.photo_id).addCallback(function(page){
-			ps = update(update({
-				nojsoncallback : 1,
-				format         : 'json',
-				src            : 'js',
-				cb             : new Date().getTime(),
-			}, page.token), ps);
-			ps.api_sig = (page.secret + keys(ps).sort().map(function(key){
+		return this.getToken().addCallback(function(page){
+			if(ps.method=='flickr.photos.upload')
+				delete ps.method;
+			
+			update(ps, page.token);
+			ps.cb = new Date().getTime(),
+			ps.api_sig = (page.secret + keys(ps).sort().filter(function(key){
+				// ファイルを取り除く
+				return typeof(ps[key])!='object';
+			}).map(function(key){
 				return key + ps[key]
 			}).join('')).md5();
 			
-			return doXHR('http://flickr.com/services/rest/', {
+			return doXHR('http://flickr.com/services/' + (ps.method? 'rest/' : 'upload/'), {
 				sendContent : ps,
 			});
 		}).addCallback(function(res){
-			eval('var json=' + res.responseText);
-			if(json.stat!='ok')
-				throw json.message;
-			return json;
+			res = convertToXML(res.responseText);
+			if(res.@stat!='ok')
+				throw new Error(''+res.err.@msg);
+			return res;
 		});
 	},
 	
-	getToken : function(id){
-		return this.getInfo(id).addCallback(function(photo){
-			return doXHR(photo.urls.url[0]._content);
-		}).addCallback(function(res){
-			var html = res.responseText;
-			return {
-				secret : html.extract(/global_flickr_secret[ =]+'(.*?)'/),
-				token  : {
-					api_key    : html.extract(/global_magisterLudi[ =]+'(.*?)'/),
-					auth_hash  : html.extract(/global_auth_hash[ =]+'(.*?)'/),
-					auth_token : html.extract(/global_auth_token[ =]+'(.*?)'/),
-				},
-			};
-		});
+	getToken : function(){
+		var status = this.updateSession();
+		switch (status){
+		case 'none':
+			throw new Error('AUTH_FAILD');
+			
+		case 'same':
+			if(this.token)
+				return succeed(this.token);
+			
+		case 'changed':
+			var self = this;
+			return doXHR('http://www.flickr.com/').addCallback(function(res){
+				var html = res.responseText;
+				return self.token = {
+					secret : html.extract(/global_flickr_secret[ =]+'(.*?)'/),
+					token  : {
+						api_key    : html.extract(/global_magisterLudi[ =]+'(.*?)'/),
+						auth_hash  : html.extract(/global_auth_hash[ =]+'(.*?)'/),
+						auth_token : html.extract(/global_auth_token[ =]+'(.*?)'/),
+					},
+				};
+			});
+		}
 	},
 	
 	addFavorite : function(id){
@@ -255,8 +294,8 @@ models.register({
 		return this.callMethod({
 			method   : 'flickr.photos.getSizes',
 			photo_id : id,
-		}).addCallback(function(json){
-			return json.sizes.size;
+		}).addCallback(function(res){
+			return res.sizes.size;
 		});
 	},
 	
@@ -264,11 +303,20 @@ models.register({
 		return this.callMethod({
 			method   : 'flickr.photos.getInfo',
 			photo_id : id,
-		}).addCallback(function(json){
-			return json.photo;
+		}).addCallback(function(res){
+			return res.photo;
 		});
 	},
-});
+	
+	upload : function(ps){
+		return this.callAuthMethod({
+			method   : 'flickr.photos.upload',
+			photo    : ps.file,
+		}).addCallback(function(res){
+			return ''+res.photoid;
+		});
+	},
+}, AbstractSessionService));
 
 models.register({
 	name : 'WeHeartIt',
@@ -899,7 +947,7 @@ models.register({
 	},
 });
 
-models.register({
+models.register(update({
 	name : 'Hatena',
 	ICON : 'chrome://tombloo/skin/models/hatena.ico',
 	
@@ -932,26 +980,8 @@ models.register({
 		return getCookieString('.hatena.ne.jp', 'rk');
 	},
 	
-	updateSession : function(){
-		var cookie = this.getAuthCookie();
-		if(cookie && this.cookie==cookie)
-			return 'same';
-		
-		delete this.cookie;
-		delete this.user;
-		delete this.token;
-		
-		if(!cookie)
-			return 'none';
-		
-		this.cookie = cookie;
-		
-		return 'changed';
-	},
-	
 	getToken : function(){
-		var status = this.updateSession();
-		switch (status){
+		switch (this.updateSession()){
 		case 'none':
 			throw new Error('AUTH_FAILD');
 			
@@ -969,8 +999,7 @@ models.register({
 	},
 	
 	getCurrentUser : function(){
-		var status = this.updateSession();
-		switch (status){
+		switch (this.updateSession()){
 		case 'none':
 			return succeed('');
 			
@@ -987,7 +1016,7 @@ models.register({
 			});
 		}
 	},
-});
+}, AbstractSessionService));
 
 models.register({
 	name : 'Snipshot',

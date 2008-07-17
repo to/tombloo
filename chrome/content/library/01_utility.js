@@ -368,7 +368,7 @@ function sendByChannel(url, opts){
 						'--' + boundary,
 						'Content-Disposition: form-data; name="' + name + '"',
 						'',
-						value.convertFromUnicode(),
+						(value.convertFromUnicode? value.convertFromUnicode() : value),
 					]);
 				} else {
 					if(value.file instanceof IFile){

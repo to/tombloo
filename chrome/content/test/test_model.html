@@ -245,7 +245,6 @@ try {
 		ok(true, 'Flickr Favorite 削除');
 	});
 	
-	
 	d.addCallback(bind('getInfo', Flickr), 2052869076);
 	d.addCallback(function(info){
 		is(info.title._content, 'Mya');
@@ -272,6 +271,21 @@ try {
 	d.addErrback(function(e){
 		is(e.message, 'Photo not found');
 	});
+	
+	d.addCallback(function(){
+		return Flickr.getToken();
+	}).addCallback(function(token){
+		ok(token);
+	});
+	
+	d.addCallback(function(){
+		return Flickr.upload({
+			file : getLocalFile(Flickr.ICON),
+		});
+	}).addErrback(function(err){
+		is(err.message, 'Filetype was not recognised');
+	});
+	ok(Flickr.getAuthCookie(), 'Flickr: ログインしているか(未ログインの場合エラー)');
 	*/
 	
 	

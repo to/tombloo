@@ -1195,4 +1195,53 @@ models.register({
 	},
 });
 
+models.register( {
+	name: 'HatenaDiary',
+	ICON: 'http://d.hatena.ne.jp/favicon.ico',
+	POST_URL : 'http://d.hatena.ne.jp',
+	check : function (ps) {
+		return ps.type.match(/^(regular|photo|link|quote)$/);
+	},
+	converters: {
+		formatTagString: function (tags) {
+			return tags ? tags.map( function (t) {
+				return "[" + t + "]";
+			} ).join("") : "" ;
+		},
+		getTitle: function ( ps ) {
+			return this.formatTagString(ps.tags) + (ps.page || '')
+		},
+		renderingTemplates: {
+			regular: '<>{ps.description}</>',
+			photo: '<><blockquote class="tombloo_photo" cite={ps.pageUrl} title={ps.page}><img src={ps.itemUrl} /></blockquote>{ps.description}</>',
+			link: '<><div class="tombloo_link"><a href={ps.pageUrl} title={ps.page}>{ps.page}</a></div>{ps.description}</>',
+			quote: '<><blockquote class="tombloo_quote" cite={ps.pageUrl} title={ps.page}>{ps.body}</blockquote>{ps.description}</>',
+		},
+		__noSuchMethod__: function (name, args) {
+			var ps = args[0];
+			return {
+				title: this.getTitle(ps),
+				body: eval( this.renderingTemplates[name] ).toString()
+			};
+		},
+	},
+	post : function(params){
+		var content;
+		var self = this;
+		return models.Hatena.getToken().addCallback( function (token) {
+			content = self.converters[params.type](params);
+			content.rkm = token;
+			return models.Hatena.getCurrentUser();
+		}).addCallback( function (id) {
+			var endpoint = [self.POST_URL, id, "" ].join("/");
+			return doXHR( endpoint, {
+				method : 'POST',
+				mimeType: "application/x-www-form-urlencoded",
+				referrer    : endpoint,
+				sendContent : content
+			} );
+		} );
+	}
+} );
+
 models.copyTo(this);

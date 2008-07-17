@@ -1220,7 +1220,7 @@ models.register( {
 		__noSuchMethod__: function (name, args) {
 			var ps = args[0];
 			return {
-				title: this.getTitle(ps),
+				title: (name == 'regular' ) ? "" : this.getTitle(ps),
 				body: eval( this.renderingTemplates[name] ).toString()
 			};
 		},

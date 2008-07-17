@@ -189,6 +189,8 @@ models.register({
 	},
 });
 
+// Flickr API Documentation 
+// http://www.flickr.com/services/api/
 models.register(update({
 	name : 'Flickr',
 	ICON : 'chrome://tombloo/skin/models/flickr.ico',
@@ -204,7 +206,12 @@ models.register(update({
 	
 	post : function(ps){
 		if(ps.file){
-			return this.upload(ps);
+			return this.upload({
+				photo     : ps.file,
+				title     : ps.page,
+				is_public : ps.private? 0 : 1,
+				tags      : joinText(ps.tags, ' '),
+			});
 		} else {
 			return this.addFavorite(ps.pageUrl.replace(/\/$/, '').split('/').pop());
 		}
@@ -309,10 +316,9 @@ models.register(update({
 	},
 	
 	upload : function(ps){
-		return this.callAuthMethod({
+		return this.callAuthMethod(update({
 			method   : 'flickr.photos.upload',
-			photo    : ps.file,
-		}).addCallback(function(res){
+		}, ps)).addCallback(function(res){
 			return ''+res.photoid;
 		});
 	},

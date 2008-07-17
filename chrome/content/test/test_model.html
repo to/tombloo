@@ -278,14 +278,26 @@ try {
 		ok(token);
 	});
 	
+	ok(Flickr.getAuthCookie(), 'Flickr: ログインしているか(未ログインの場合エラー)');
+	
+	d.addCallback(function(){
+		return Flickr.post({
+			file    : getLocalFile('chrome://tombloo/skin/quote.png'),
+			page    : '',
+			private : true,
+			tags    : ['test', 'icon'],
+		});
+	}).addCallback(function(id){
+		ok(id, 'Flickr: メタ情報を付加してアップロード');
+	});
+	
 	d.addCallback(function(){
 		return Flickr.upload({
 			file : getLocalFile(Flickr.ICON),
 		});
 	}).addErrback(function(err){
-		is(err.message, 'Filetype was not recognised');
+		is(err.message, 'Filetype was not recognised', 'Flickr: アップロードエラーメッセージの確認');
 	});
-	ok(Flickr.getAuthCookie(), 'Flickr: ログインしているか(未ログインの場合エラー)');
 	*/
 	
 	

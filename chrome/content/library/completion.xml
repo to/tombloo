@@ -57,6 +57,9 @@
 			<constructor><![CDATA[
 			]]></constructor>
 			
+			<field name="delay">
+				300;
+			</field>
 			<field name="delimiter">
 				' ';
 			</field>
@@ -84,13 +87,13 @@
 			
 			<method name="notify">
 				<body><![CDATA[
-					function tween(callback, span, count){
+					function tween(func, span, count, callback){
 						count = (count || 20);
 						var interval = span / count;
 						var value = 0;
 						var calls = 0;
 						var intervalId = setInterval(function(){
-							callback(calls / count);
+							func(calls / count);
 							
 							if(count == calls){
 								canceler();
@@ -99,6 +102,8 @@
 							calls++;
 						}, interval);
 						var canceler = function(){
+							callback && callback();
+							callback = null;
 							clearInterval(intervalId)
 						}
 						
@@ -186,11 +191,15 @@
 					
 					var self = this;
 					return (this.notify = function(){
+						// 誤入力を防止するため、タグ決定後一定時間キー入力を受けつけない
+						self.sleeping = true;
 						self.canceler && self.canceler();
 						self.canceler = tween(function(ratio){
 							// #ccf0ff
 							self.style.backgroundColor = '#' + toHexString(hslToRGB(0.55, 1, 0.9 + (0.1*ratio)));
-						}, 300, 10);
+						}, self.delay, 10, function(){
+							self.sleeping = false;
+						});
 					})();
 					
 				]]></body>
@@ -300,6 +309,11 @@
 				}
 			]]></handler>
 			<handler event="keydown"><![CDATA[
+				if(this.sleeping){
+					event.preventDefault();
+					return;
+				}
+				
 				switch (event.keyCode) {
 					case KeyEvent.DOM_VK_DELETE:
 					case KeyEvent.DOM_VK_BACK_SPACE:

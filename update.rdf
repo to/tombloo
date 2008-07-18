@@ -2,21 +2,21 @@
 <RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
          xmlns:NC="http://home.netscape.com/NC-rdf#"
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Description RDF:about="rdf:#$V5xNi2"
+  <RDF:Description RDF:about="rdf:#$shGRb3"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="2.0"
                    em:maxVersion="3.0.*"
                    em:updateLink="http://tombloo.googlecode.com/svn/trunk/tombloo.xpi"
-                   em:updateHash="sha512:052f82cad809e9a010a5abbe53cd447c043d1e5d7b855b05f55f95b66c8d0059d178b7cca1d08685473a6a66abc2c9ee528abd2c78a49d5c729a199299c65293" />
-  <RDF:Seq RDF:about="rdf:#$R5xNi2">
-    <RDF:li RDF:resource="rdf:#$S5xNi2"/>
-  </RDF:Seq>
-  <RDF:Description RDF:about="rdf:#$S5xNi2"
-                   em:version="0.3.7">
-    <em:targetApplication RDF:resource="rdf:#$V5xNi2"/>
-  </RDF:Description>
+                   em:updateHash="sha512:2233fe2f17ee48970f61bad5fd4d50779612eb199cee478661ee4de042ec2839a39d3ad71417cfffc020e4c3cf89c91ac4dba46f22f643a3e99c7fa35945c056" />
   <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
-                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAHKe+siA6FmZwDwvFNQgEacPiS1efq6T9OzEJgIaQLlZS7Cp+ukLCk885ljYp6dtX3RYIfO2b6zi7lvxKIMV9g6jnjtn2zF1bdMjpCRDgjamgS0yR0hCC6X8bggiBMm0pQKvP0H0/tFaPPSlDYbMmvPfK4I9Zj9cjsOAmQ56XeH9">
-    <em:updates RDF:resource="rdf:#$R5xNi2"/>
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAA4bu5O8k7ldq89IpcN7QPcx/TSCEK5wFJIxVrhIZhEBNpdz5EyCAsg3cP3UFS070yaQiipMzF1Dn5iH2ieeK01PsdoVeHyv1qAQcJ13j0CWW+olF0ByJakjsEpJ30LwzBZxOLeOFUInL8raZ2C2nMtq1IVKVhU9YpXMEcVbJefn">
+    <em:updates RDF:resource="rdf:#$ohGRb3"/>
+  </RDF:Description>
+  <RDF:Seq RDF:about="rdf:#$ohGRb3">
+    <RDF:li RDF:resource="rdf:#$phGRb3"/>
+  </RDF:Seq>
+  <RDF:Description RDF:about="rdf:#$phGRb3"
+                   em:version="0.3.8">
+    <em:targetApplication RDF:resource="rdf:#$shGRb3"/>
   </RDF:Description>
 </RDF:RDF>

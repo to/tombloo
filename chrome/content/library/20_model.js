@@ -201,7 +201,11 @@ models.register(update({
 	},
 	
 	check : function(ps){
-		return ps.type == 'photo' && (ps.pageUrl.match('^http://www.flickr.com/photos/') || ps.file);
+		// Favoriteまたはキャプチャか
+		// itemUrlをチェックしPhoto - Upload from Cacheを避ける
+		return ps.type == 'photo' && 
+			!ps.itemUrl && 
+			(ps.pageUrl.match('^http://www.flickr.com/photos/') || (ps.file));
 	},
 	
 	post : function(ps){

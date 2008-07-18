@@ -4,6 +4,7 @@ shortcutkeys['PAUSE'] = {
 		cancel(e);
 		var MODEL_NAME = 'Local'; // Tumblr Flickr Gyazo HatenaFotolife Local
 		var CAPTURE_TYPE = 'View' // View Page
+		var TAGS = [] // ['capture', 'web']
 		
 		var win = getMostRecentWindow().document.getElementById('content').contentWindow;
 		var doc = win.document;
@@ -31,7 +32,7 @@ shortcutkeys['PAUSE'] = {
 			
 			// Post!!!
 			return models[MODEL_NAME].post(update(ps, {
-				tags        : ['capture', 'web'],
+				tags        : TAGS,
 				description : MODEL_NAME=='Tumblr'? '' : joinText([ps.page, ps.pageUrl], '\n'),
 				// private     : true,
 			}));

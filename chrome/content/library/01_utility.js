@@ -370,6 +370,9 @@ function sendByChannel(url, opts){
 			
 			for(var name in contents){
 				var value = contents[name];
+				if(value==null)
+					value = '';
+				
 				if(!value.file){
 					streams.push([
 						'--' + boundary,

@@ -212,8 +212,8 @@ models.register(update({
 		if(ps.file){
 			return this.upload({
 				photo       : ps.file,
-				title       : ps.page,
-				description : ps.description,
+				title       : ps.page || '',
+				description : ps.description || '',
 				is_public   : ps.private? 0 : 1,
 				tags        : joinText(ps.tags, ' '),
 			});
@@ -1239,13 +1239,11 @@ models.register( {
 		}).addCallback( function (id) {
 			var endpoint = [self.POST_URL, id, "" ].join("/");
 			return doXHR( endpoint, {
-				method : 'POST',
-				mimeType: "application/x-www-form-urlencoded",
 				referrer    : endpoint,
 				sendContent : content
-			} );
-		} );
+			});
+		});
 	}
-} );
+});
 
 models.copyTo(this);

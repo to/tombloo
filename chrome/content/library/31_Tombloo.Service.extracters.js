@@ -28,7 +28,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'Quote - LDR',
-		ICON : 'chrome://tombloo/skin/models/livedoorreader.ico',
+		ICON : 'http://reader.livedoor.com/favicon.ico',
 		check : function(ctx){
 			return Tombloo.Service.extracters.LDR.getItem(ctx, true) && 
 				ctx.selection;
@@ -43,7 +43,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'ReBlog - LDR',
-		ICON : 'chrome://tombloo/skin/models/livedoorreader.ico',
+		ICON : 'http://reader.livedoor.com/favicon.ico',
 		check : function(ctx){
 			var item = Tombloo.Service.extracters.LDR.getItem(ctx, true);
 			return item && (
@@ -60,7 +60,7 @@ Tombloo.Service.extracters = new Repository([
 		
 	{
 		name : 'Photo - LDR(FFFFOUND!)',
-		ICON : 'chrome://tombloo/skin/models/livedoorreader.ico',
+		ICON : 'http://reader.livedoor.com/favicon.ico',
 		check : function(ctx){
 			var item = Tombloo.Service.extracters.LDR.getItem(ctx, true);
 			return item && 
@@ -83,7 +83,7 @@ Tombloo.Service.extracters = new Repository([
 		
 	{
 		name : 'Photo - LDR',
-		ICON : 'chrome://tombloo/skin/models/livedoorreader.ico',
+		ICON : 'http://reader.livedoor.com/favicon.ico',
 		check : function(ctx){
 			return Tombloo.Service.extracters.LDR.getItem(ctx, true) && 
 				ctx.onImage;
@@ -97,7 +97,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'Link - LDR',
-		ICON : 'chrome://tombloo/skin/models/livedoorreader.ico',
+		ICON : 'http://reader.livedoor.com/favicon.ico',
 		check : function(ctx){
 			return Tombloo.Service.extracters.LDR.getItem(ctx, true);
 		},
@@ -111,7 +111,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'Quote - Twitter',
-		ICON : 'chrome://tombloo/skin/models/twitter.ico',
+		ICON : models.Twitter.ICON,
 		check : function(ctx){
 			return ctx.href.match('//twitter.com/.*?/statuses/\\d+');
 		},
@@ -162,7 +162,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'Photo - Amazon',
-		ICON : 'chrome://tombloo/skin/models/amazon.ico',
+		ICON : models.Amazon.ICON,
 		check : function(ctx){
 			return ctx.host.match(/amazon\.co\.jp/) && ctx.target.id == 'prodImage';
 		},
@@ -193,7 +193,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'Quote - Amazon',
-		ICON : 'chrome://tombloo/skin/models/amazon.ico',
+		ICON : models.Amazon.ICON,
 		check : function(ctx){
 			return ctx.host.match(/amazon\.co\.jp/) && ctx.selection;
 		},
@@ -207,7 +207,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'Link - Amazon',
-		ICON : 'chrome://tombloo/skin/models/amazon.ico',
+		ICON : models.Amazon.ICON,
 		check : function(ctx){
 			return ctx.host.match(/amazon\.co\.jp/);
 		},
@@ -221,7 +221,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'ReBlog - Tumblr',
-		ICON : 'chrome://tombloo/skin/models/reblog.ico',
+		ICON : 'chrome://tombloo/skin/reblog.ico',
 		check : function(ctx){
 			return Tumblr.getReblogToken(currentDocument());
 		},
@@ -237,7 +237,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'ReBlog',
-		ICON : 'chrome://tombloo/skin/models/reblog.ico',
+		ICON : 'chrome://tombloo/skin/reblog.ico',
 		check : function(ctx){},
 		extract : function(ctx){
 			return doXHR(ctx.href).addCallback(function(res){
@@ -256,7 +256,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'ReBlog - Dashbord',
-		ICON : 'chrome://tombloo/skin/models/reblog.ico',
+		ICON : 'chrome://tombloo/skin/reblog.ico',
 		check : function(ctx){
 			return ctx.href.match(Tumblr.TUMBLR_URL) && this.getLink(ctx);
 		},
@@ -276,7 +276,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'ReBlog - Mosaic',
-		ICON : 'chrome://tombloo/skin/models/reblog.ico',
+		ICON : 'chrome://tombloo/skin/reblog.ico',
 		check : function(ctx){
 			return ctx.href.match(/mosaic.html/i) && ctx.target.photo;
 		},
@@ -288,7 +288,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'ReBlog - Tumblr link',
-		ICON : 'chrome://tombloo/skin/models/reblog.ico',
+		ICON : 'chrome://tombloo/skin/reblog.ico',
 		check : function(ctx){
 			return ctx.link && ctx.link.href.match(/^http:\/\/[^.]+.tumblr\.com\/post\/\d+/);
 		},
@@ -300,7 +300,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'Photo - Flickr',
-		ICON : 'chrome://tombloo/skin/models/flickr.ico',
+		ICON : models.Flickr.ICON,
 		ICON : Flickr.ICON,
 		RE : new RegExp('^http://(?:.+?.)?static.flickr.com/\\d+?/(\\d+?)_.*'),
 		getImageId : function(img){
@@ -344,7 +344,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'Photo - 4u',
-		ICON : 'chrome://tombloo/skin/models/4u.ico',
+		ICON : models['4u'].ICON,
 		check : function(ctx){
 			return ctx.onImage && ctx.href.match('^http://4u.straightline.jp/image/') && ctx.target.src.match('/static/upload/l/l_');
 		},
@@ -364,7 +364,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'Photo - Snipshot',
-		ICON : 'chrome://tombloo/skin/models/snipshot.ico',
+		ICON : models.Snipshot.ICON,
 		check : function(ctx){
 			return ctx.href.match('http://services.snipshot.com/edit/');
 		},
@@ -390,7 +390,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'Photo - Fishki.Net',
-		ICON : 'chrome://tombloo/skin/models/fishki.ico',
+		ICON : 'http://de.fishki.net/favicon.ico',
 		check : function(ctx){
 			return ctx.onImage && 
 				ctx.target.src.match('//fishki.net/');
@@ -406,7 +406,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'Photo - Google',
-		ICON : 'chrome://tombloo/skin/models/google.ico',
+		ICON : models.Google.ICON,
 		check : function(ctx){
 			return (ctx.onLink && ctx.link.href.match('http://lh..(google.ca|ggpht.com)/.*(png|gif|jpe?g)$'));
 		},
@@ -423,7 +423,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'Photo - Picasa',
-		ICON : 'chrome://tombloo/skin/models/picasa.ico',
+		ICON : 'http://picasaweb.google.com/favicon.ico',
 		check : function(ctx){
 			return ctx.host == 'picasaweb.google.com' && ctx.onImage;
 		},
@@ -440,7 +440,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'Photo - webshots',
-		ICON : 'chrome://tombloo/skin/models/webshots.ico',
+		ICON : 'http://www.webshots.com/favicon.ico',
 		check : function(ctx){
 			return ctx.host.match('^.+\.webshots\.com') && this.getAuthor();
 		},
@@ -461,7 +461,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'Photo - Blogger',
-		ICON : 'chrome://tombloo/skin/models/blogger.ico',
+		ICON : 'https://www.blogger.com/favicon.ico',
 		check : function(ctx){
 			return ctx.onLink && 
 				(''+ctx.link).match(/(png|gif|jpe?g)$/i) &&
@@ -478,7 +478,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'Photo - Shorpy',
-		ICON : 'chrome://tombloo/skin/models/shorpy.ico',
+		ICON : 'http://www.shorpy.com/favicon.ico',
 		check : function(ctx){
 			return ctx.onImage && 
 				ctx.target.src.match(/www.shorpy.com\/.*.preview\.jpg/i);
@@ -494,7 +494,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'Photo - FFFFOUND!',
-		ICON : 'chrome://tombloo/skin/models/ffffound.ico',
+		ICON : models.FFFFOUND.ICON,
 		check : function(ctx){
 			return (ctx.href.match('http://ffffound.com/image/') && (/^asset/).test(ctx.target.id)) ||
 				(ctx.onLink && ctx.link.href.match('http://ffffound.com/image/'));
@@ -533,7 +533,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'Photo - Google Image Search',
-		ICON : 'chrome://tombloo/skin/models/google.ico',
+		ICON : models.Google.ICON,
 		check : function(ctx){
 			return ctx.host == 'images.google.co.jp' && 
 				ctx.onImage && ctx.onLink;
@@ -652,7 +652,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'Video - Vimeo',
-		ICON : 'chrome://tombloo/skin/models/vimeo.ico',
+		ICON : 'http://vimeo.com/favicon.ico',
 		check : function(ctx){
 			return ctx.host.match('vimeo.com');
 		},
@@ -670,7 +670,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'Video - YouTube',
-		ICON : 'chrome://tombloo/skin/models/youtube.ico',
+		ICON : 'http://youtube.com/favicon.ico',
 		check : function(ctx){
 			return ctx.host.match('youtube.com');
 		},
@@ -688,7 +688,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'Video - Google Video',
-		ICON : 'chrome://tombloo/skin/models/google.ico',
+		ICON : models.Google.ICON,
 		check : function(ctx){
 			return ctx.host.match('video.google.com');
 		},
@@ -704,7 +704,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'Video - MySpaceTV',
-		ICON : 'chrome://tombloo/skin/models/myspace.ico',
+		ICON : 'http://vids.myspace.com/favicon.ico',
 		check : function(ctx){
 			return ctx.host.match(/vids\.myspace\.com/) && this.getTag();
 		},
@@ -726,7 +726,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'Video - Dailymotion',
-		ICON : 'chrome://tombloo/skin/models/dailymotion.ico',
+		ICON : 'http://www.dailymotion.com/favicon.ico',
 		check : function(ctx){
 			return ctx.host.match('dailymotion.com') && this.getTag();
 		},
@@ -751,7 +751,7 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'Video - Rimo',
-		ICON : 'chrome://tombloo/skin/models/rimo.ico',
+		ICON : 'http://rimo.tv/favicon.ico',
 		check : function(ctx){
 			return ctx.host == 'rimo.tv' && this.getTag();
 		},

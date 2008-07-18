@@ -22,7 +22,7 @@ if(typeof(models)=='undefined')
 
 models.register({
 	name : 'FriendFeed',
-	ICON : 'chrome://tombloo/skin/models/friendfeed.ico',
+	ICON : 'http://friendfeed.com/favicon.ico',
 	check : function(ps){
 		return ps.type != 'regular' && !ps.file;
 	},
@@ -47,7 +47,7 @@ models.register({
 
 models.register({
 	name : 'FFFFOUND',
-	ICON : 'chrome://tombloo/skin/models/ffffound.ico',
+	ICON : 'http://ffffound.com/favicon.ico',
 	URL : 'http://FFFFOUND.com/',
 	
 	getToken : function(){
@@ -112,7 +112,7 @@ models.register({
 
 models.register({
 	name : 'Amazon',
-	ICON : 'chrome://tombloo/skin/models/amazon.ico',
+	ICON : 'http://www.amazon.co.jp/favicon.ico',
 	getItem : function(asin){
 		return doXHR('http://webservices.amazon.co.jp/onca/xml', {
 			queryString : {
@@ -193,7 +193,7 @@ models.register({
 // http://www.flickr.com/services/api/
 models.register(update({
 	name : 'Flickr',
-	ICON : 'chrome://tombloo/skin/models/flickr.ico',
+	ICON : 'http://www.flickr.com/favicon.ico',
 	API_KEY : 'ecf21e55123e4b31afa8dd344def5cc5',
 	
 	getAuthCookie : function(){
@@ -339,7 +339,7 @@ models.register(update({
 
 models.register({
 	name : 'WeHeartIt',
-	ICON : 'chrome://tombloo/skin/models/weheartit.ico',
+	ICON : 'http://weheartit.com/img/favicon.ico',
 	URL : 'http://weheartit.com/',
 	
 	check : function(ps){
@@ -379,7 +379,7 @@ models.register({
 
 models.register({
 	name : '4u',
-	ICON : 'chrome://tombloo/skin/models/4u.ico',
+	ICON : 'http://www.straightline.jp/html/common/static/favicon.ico',
 	
 	URL : 'http://4u.straightline.jp/',
 	
@@ -427,7 +427,7 @@ models.register({
 
 models.register({
 	name : 'Gyazo',
-	ICON : 'chrome://tombloo/skin/models/item.ico',
+	ICON : 'chrome://tombloo/skin/item.ico',
 	
 	check : function(ps){
 		return ps.type=='photo' && ps.file;
@@ -463,7 +463,7 @@ models.register({
 	
 	// Mark James
 	// http://www.famfamfam.com/lab/icons/silk/
-	ICON : 'chrome://tombloo/skin/models/local.ico',
+	ICON : 'chrome://tombloo/skin/local.ico',
 	
 	check : function(ps){
 		switch (ps.type){
@@ -534,7 +534,7 @@ models.register({
 
 models.register({
 	name : 'Twitter',
-	ICON : 'chrome://tombloo/skin/models/twitter.ico',
+	ICON : 'http://twitter.com/favicon.ico',
 	
 	check : function(ps){
 		return !ps.file;
@@ -585,7 +585,7 @@ models.register({
 
 models.register({
 	name : 'Jaiku',
-	ICON : 'chrome://tombloo/skin/models/jaiku.ico',
+	ICON : 'http://jaiku.com/favicon.ico',
 	
 	URL : 'http://jaiku.com/',
 	
@@ -618,7 +618,7 @@ models.register({
 
 models.register({
 	name : 'Google',
-	ICON : 'chrome://tombloo/skin/models/google.ico',
+	ICON : 'http://www.google.com/favicon.ico',
 });
 
 // copied from http://userscripts.org/scripts/show/19741
@@ -699,7 +699,7 @@ models.register({
 
 models.register({
 	name : 'Delicious',
-	ICON : 'chrome://tombloo/skin/models/delicious.ico',
+	ICON : 'http://del.icio.us/favicon.ico',
 	getUserTags : function(user){
 		return doXHR('http://feeds.delicious.com/feeds/json/tags/' + (user || Delicious.getCurrentUser())).addCallback(function(res){
 			return reduce(function(memo, tag){
@@ -751,7 +751,7 @@ models.register({
 if(NavBookmarksService){
 	models.register({
 		name : 'FirefoxBookmark',
-		ICON : 'chrome://tombloo/skin/models/firefox.ico',
+		ICON : 'chrome://tombloo/skin/firefox.ico',
 		ANNO_DESCRIPTION : 'bookmarkProperties/description',
 		
 		check : function(ps){
@@ -846,7 +846,7 @@ if(NavBookmarksService){
 
 models.register({
 	name : 'Instapaper',
-	ICON : 'chrome://tombloo/skin/models/instapaper.ico',
+	ICON : 'chrome://tombloo/skin/instapaper.ico',
 	
 	check : function(ps){
 		return ps.type == 'link' || ps.type == 'quote';
@@ -923,7 +923,7 @@ models.register({
 
 models.register({
 	name : 'YahooBookmarks',
-	ICON : 'chrome://tombloo/skin/models/yahoobookmarks.ico',
+	ICON : 'http://bookmarks.yahoo.co.jp/favicon.ico',
 	
 	check : function(ps){
 		return ps.type!='regular' && !ps.file;
@@ -968,7 +968,7 @@ models.register({
 
 models.register(update({
 	name : 'Hatena',
-	ICON : 'chrome://tombloo/skin/models/hatena.ico',
+	ICON : 'http://www.hatena.ne.jp/favicon.ico',
 	
 	getPasswords : function(){
 		return getPasswords('https://www.hatena.ne.jp');
@@ -1039,7 +1039,7 @@ models.register(update({
 
 models.register({
 	name : 'Snipshot',
-	ICON : 'chrome://tombloo/skin/models/snipshot.ico',
+	ICON : 'http://snipshot.com/favicon.ico',
 	
 	check : function(ps){
 		return ps.type=='photo';
@@ -1063,7 +1063,7 @@ models.register({
 
 models.register({
 	name : 'HatenaFotolife',
-	ICON : 'chrome://tombloo/skin/models/hatenafotolife.ico',
+	ICON : 'http://f.hatena.ne.jp/favicon.ico',
 	
 	check : function(ps){
 		return ps.type=='photo' && ps.file;
@@ -1095,7 +1095,7 @@ models.register({
 
 models.register({
 	name : 'HatenaBookmark',
-	ICON : 'chrome://tombloo/skin/models/hatenabookmark.ico',
+	ICON : 'http://b.hatena.ne.jp/favicon.ico',
 	
 	POST_URL : 'http://b.hatena.ne.jp/add',
 	
@@ -1138,7 +1138,7 @@ models.register({
 
 models.register({
 	name : 'HatenaStar',
-	ICON : 'chrome://tombloo/skin/models/hatenastar.ico',
+	ICON : 'http://s.hatena.ne.jp/favicon.ico',
 	
 	getToken : function(){
 		return doXHR('http://s.hatena.ne.jp/entries.json').addCallback(function(res){
@@ -1182,7 +1182,7 @@ models.register({
 
 models.register({
 	name : 'Wassr',
-	ICON : 'chrome://tombloo/skin/models/wassr.ico',
+	ICON : 'http://wassr.jp/favicon.ico',
 	
 	check : function(ps){
 		return !ps.file;

@@ -352,6 +352,18 @@ try {
 	// getMessage
 	is(getMessage('label.action.tomblooOptions'), 'Tomblooの設定');
 	
+	
+	// connected
+	var obj = {};
+	connect(obj, 'load', function(){});
+	is(connected(obj, 'load').length, 1);
+	
+	connect(obj, 'load', function(){});
+	is(connected(obj, 'load').length, 2);
+	
+	disconnectAll(obj);
+	is(connected(obj, 'load').length, 0);
+	
 } catch (err) {
 	var s = 'test suite failure!\n';
 	var o = {};

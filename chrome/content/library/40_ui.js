@@ -1,5 +1,5 @@
 function QueryForm(elmForm, params){
-	// ユーザー一選択ボックスの作成
+	// ユーザー選択ボックスの作成
 	var elmUser = $x('//select[@name="user"]', elmForm);
 	appendChildNodes(elmUser,
 		Tombloo.Photo.findUsers().map(function(user){
@@ -193,7 +193,7 @@ QuickPostForm.prototype = {
 		elmTags.candidates = QuickPostForm.candidates;
 		
 		var tagProvider = getPref('tagProvider');
-		if(!tagProvider || !QuickPostForm.refreshCache)
+		if(!tagProvider || (tagProvider==QuickPostForm.tagProvider && !QuickPostForm.refreshCache))
 			return elmTags;
 		
 		models[tagProvider].getUserTags().addCallback(function(tags){
@@ -221,6 +221,7 @@ QuickPostForm.prototype = {
 			d.addCallback(function(){
 				// 次回すぐに利用できるようにキャッシュする
 				QuickPostForm.refreshCache = false;
+				QuickPostForm.tagProvider = tagProvider;
 				elmTags.candidates = QuickPostForm.candidates = zip(readings, tags).map(function(cand){
 					return {
 						reading : cand[0],

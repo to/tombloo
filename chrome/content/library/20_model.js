@@ -204,8 +204,7 @@ models.register(update({
 		// Favoriteまたはキャプチャか
 		// itemUrlをチェックしPhoto - Upload from Cacheを避ける
 		return ps.type == 'photo' && 
-			!ps.itemUrl && 
-			(ps.pageUrl.match('^http://www.flickr.com/photos/') || (ps.file));
+			(ps.pageUrl.match('^http://www.flickr.com/photos/') || (!ps.itemUrl && ps.file));
 	},
 	
 	post : function(ps){

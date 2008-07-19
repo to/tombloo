@@ -7,6 +7,7 @@ var CHROME_CONTENT_DIR = CHROME_DIR + '/content';
 
 var EXTENSION_ID = 'tombloo@brasil.to';
 
+var grobal = this;
 
 // ----[XPCOM]-------------------------------------------------
 function createMock(ifcNames, sample, proto, cons){
@@ -169,8 +170,12 @@ function download(sourceURL, targetFile){
 
 function createDir(dir){
 	var dir = (dir instanceof IFile) ? dir : new LocalFile(dir);
-	if(!dir.exists())
-		dir.create(dir.DIRECTORY_TYPE, 0664);
+	if(dir.exists()){
+		if(dir.isDirectory())
+			dir.permissions = 0774;
+	} else {
+		dir.create(dir.DIRECTORY_TYPE, 0774);
+	}
 	
 	return dir;
 }
@@ -246,6 +251,12 @@ var StopProcess = {};
 function connect(src, sig){
 	sig = sig=='onmousewheel' ? 'onDOMMouseScroll' : sig;
 	return MochiKit.Signal.connect.apply(null, [].slice.apply(arguments));
+}
+
+function connected(src, sig){
+	return MochiKit.Signal._observers.filter(function(o){
+		return (o.source === src && o.signal === sig && o.connected);
+	});
 }
 
 function maybeDeferred(d) {

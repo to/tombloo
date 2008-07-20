@@ -140,6 +140,11 @@ QuickPostForm.prototype = {
 			cancel(e);
 			this.post();
 			break;
+			
+		case 'CTRL + W':
+			cancel(e);
+			this.notification.close();
+			break;
 		}
 	},
 	

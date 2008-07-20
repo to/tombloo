@@ -600,6 +600,7 @@ Tombloo.Service.extracters = new Repository([
 			var target = ctx.target;
 			var source = tagName(target)=='object'? target.data : target.src;
 			if([
+				'files.posterous.com',
 				'image.itmedia.co.jp',
 				'wretch.yimg.com/',
 				'pics.*\.blog.yam.com/',

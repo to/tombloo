@@ -1008,6 +1008,7 @@ models.register(update({
 				return succeed(this.token);
 			
 		case 'changed':
+			// 画面要素やDBアクセスが少なそうなためブックマーク入力画面から取得する
 			var self = this;
 			return doXHR(HatenaBookmark.POST_URL).addCallback(function(res){
 				if(res.responseText.match(/Hatena\.rkm\s*=\s*['"](.+?)['"]/))

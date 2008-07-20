@@ -24,6 +24,7 @@
 	<script type="text/javascript; version=1.7"><![CDATA[
 	(function(){
 		var env = Cc['@brasil.to/tombloo-service;1'].getService().wrappedJSObject;
+		env.signal(env, 'browser-open', window);
 		
 		// ショートカットキーの設定
 		window.addEventListener('keydown', function(e){
@@ -34,7 +35,9 @@
 			key.execute(e);
 		}, true);
 		
-		window.addEventListener('load', function(){
+		window.addEventListener('load', function(e){
+			env.signal(env, 'browser-load', e);
+			
 			var context;
 			var menuContext = document.getElementById('contentAreaContextMenu');
 			var menuShare = document.getElementById('tombloo-menu-share');

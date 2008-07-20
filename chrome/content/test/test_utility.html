@@ -74,14 +74,6 @@ try {
 	
 	is('hello world'.md5(), '5eb63bbbe01eeed093cb22bb8f5acdc3');
 	
-	// createQueryInterface / createMock
-	var mock = {QueryInterface : createQueryInterface([IScriptError])};
-	is(mock.QueryInterface(IScriptError), mock);
-	try{
-		mock.QueryInterface(ILocalFile);
-	} catch (e){
-		is(e, Components.results.NS_NOINTERFACE);
-	}
 	
 	// Firebug無効時はエラーコンソールに出力
 	log('LOG TEST');
@@ -356,13 +348,13 @@ try {
 	// connected
 	var obj = {};
 	connect(obj, 'load', function(){});
-	is(connected(obj, 'load').length, 1);
+	ok(connected(obj, 'load'));
 	
 	connect(obj, 'load', function(){});
-	is(connected(obj, 'load').length, 2);
+	ok(connected(obj, 'load'));
 	
 	disconnectAll(obj);
-	is(connected(obj, 'load').length, 0);
+	ok(!connected(obj, 'load'));
 	
 } catch (err) {
 	var s = 'test suite failure!\n';

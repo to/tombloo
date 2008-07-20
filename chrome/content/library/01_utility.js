@@ -10,60 +10,6 @@ var EXTENSION_ID = 'tombloo@brasil.to';
 var grobal = this;
 
 // ----[XPCOM]-------------------------------------------------
-function createMock(ifcNames, sample, proto, cons){
-	var non = function(){};
-	var sample = !sample? {QueryInterface : non} : 
-		typeof(sample)=='object'? sample : Cc[sample].createInstance();
-	ifcNames = [].concat(ifcNames).map(function(ifcNames){
-		return ''+ifcNames;
-	});
-	
-	var Mock = cons || function(){};
-	
-	var ifcs = [Ci.nsISupports];
-	ifcNames.forEach(function(ifcName){
-		var ifc = Ci[ifcName];
-		ifcs.push(ifc);
-		
-		sample.QueryInterface(ifc);
-	});
-	for(var prop in sample){
-		if(typeof(sample[prop])=='function')
-			Mock.prototype[prop] = non;
-	}
-	
-	Mock.prototype.QueryInterface = function(iid){
-		if(ifcs.some(function(ifc){
-			return iid.equals(ifc);
-		})){
-			return this;
-		}
-		
-		throw Components.results.NS_NOINTERFACE;
-	}
-	
-	extend(Mock.prototype, proto);
-	extend(Mock, Mock.prototype);
-	
-	return Mock;
-}
-
-function createQueryInterface(ifcNames){
-	var ifcs = ['nsISupports'].concat(ifcNames).map(function(ifcNames){
-		return Ci[''+ifcNames];
-	});
-	
-	return function(iid){
-		if(ifcs.some(function(ifc){
-			return iid.equals(ifc);
-		})){
-			return this;
-		}
-		
-		throw Components.results.NS_NOINTERFACE;
-	}
-}
-
 function getCookies(host, name){
 	var re = new RegExp(host + '$');
 	return list(ifilter(function(c){
@@ -254,8 +200,8 @@ function connect(src, sig){
 }
 
 function connected(src, sig){
-	return MochiKit.Signal._observers.filter(function(o){
-		return (o.source === src && o.signal === sig && o.connected);
+	return MochiKit.Signal._observers.some(function(o){
+		return o.source === src && o.signal === sig && o.connected;
 	});
 }
 
@@ -829,17 +775,23 @@ function warn(msg){
 }
 
 function firebug(method, args){
+	if(!getPref('useFirebug'))
+		return false;
+	
 	var win = getMostRecentWindow();
 	if(win.FirebugConsole && win.FirebugContext) {
 		var console = new win.FirebugConsole(win.FirebugContext, win.content);
 		console[method].apply(console, args);
-	} else if ( win.Firebug && win.Firebug.Console ) {
-		// Firebug 1.2~
-		win.Firebug.Console.logFormatted.call(win.Firebug.Console, Array.slice(args), win.FirebugContext, method);
-	} else {
-		return false;
+		return true;
 	}
-	return true;
+	
+	// Firebug 1.2~
+	if ( win.Firebug && win.Firebug.Console ) {
+		win.Firebug.Console.logFormatted.call(win.Firebug.Console, Array.slice(args), win.FirebugContext, method);
+		return true;
+	}
+	
+	return false;
 }
 
 function clearObject(obj){
@@ -900,6 +852,8 @@ function capitalize(str){
 	return str.substr(0, 1).toUpperCase() + str.substr(1);
 }
 
+// [FIXME] __lookupGetter__ を使う
+// http://d.hatena.ne.jp/brazil/20070719/1184838243
 function extend(target, source){
 	for(var p in source){
 		if(p.match(/get_(.*)/)){

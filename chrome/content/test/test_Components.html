@@ -24,6 +24,25 @@ try {
 	});
 	*/
 	
+	// createMock
+	var BaseWebProgressListener = createMock('@mozilla.org/appshell/component/browser-status-filter;1');
+	ok(BaseWebProgressListener.STATE_TRANSFERRING);
+	
+	var listner = new BaseWebProgressListener();
+	ok(listner);
+	is(listner.STATE_TRANSFERRING, BaseWebProgressListener.STATE_TRANSFERRING);
+	is(listner.QueryInterface(Ci.nsIWebProgressListener), listner);
+	ok(! (listner instanceof Ci.nsIWebProgressListener), 'createMockで生成したオブジェクトはinstanceofが通らない');
+	
+	// createQueryInterface
+	var mock = {QueryInterface : createQueryInterface([IScriptError])};
+	is(mock.QueryInterface(IScriptError), mock);
+	try{
+		mock.QueryInterface(ILocalFile);
+	} catch (e){
+		is(e, Components.results.NS_NOINTERFACE);
+	}
+	
 	// createConstructor
 	var str = 'ABCD';
 	is(new InputStream(new StringInputStream(str)).read(str.length), 'ABCD');
@@ -67,9 +86,6 @@ try {
 	
 	// notify
 	notify('TITLE', 'MESSAGE', notify.ICON_DOWNLOAD);
-	
-	// getCookieString
-	ok(getCookieString('http://google.com/').length > 10);
 	
 	
 	// preference

@@ -1,6 +1,7 @@
 pref('extensions.tombloo.dataDir',           '{ProfD}/tombloo');
 
 pref('extensions.tombloo.debug',             false);
+pref('extensions.tombloo.useFirebug',        true);
 pref('extensions.tombloo.updateUsers',       '');
 
 pref('extensions.tombloo.tagProvider',       '');

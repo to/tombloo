@@ -48,6 +48,8 @@ var LoginManager        = getService('/login-manager;1', Ci.nsILoginManager);
 var StringBundleService = getService('/intl/stringbundle;1', Ci.nsIStringBundleService);
 var NavBookmarksService = getService('/browser/nav-bookmarks-service;1', Ci.nsINavBookmarksService);
 var AnnotationService   = getService('/browser/annotation-service;1', Ci.nsIAnnotationService);
+var ObserverService     = getService('/observer-service;1', Ci.nsIObserverService);
+var WindowWatcher       = getService('/embedcomp/window-watcher;1', Ci.nsIWindowWatcher);
 
 
 var PrefBranch = 
@@ -118,12 +120,61 @@ var FileOutputStream =
 		PR_EXCL : 0x80,
 	});
 
-
 // ----[Utility]-------------------------------------------------
 function update(t, s){
 	for(var p in s)
 		t[p] = s[p];
 	return t;
+}
+
+
+function createMock(sample, proto){
+	var non = function(){};
+	sample = typeof(sample)=='object'? sample : Cc[sample].createInstance();
+	
+	var ifcs = getInterfaces(sample);
+	var Mock = function(){};
+	
+	for(var key in sample){
+		try{
+			var val = sample[key];
+			switch (typeof(val)){
+			case 'number':
+			case 'string':
+				Mock.prototype[key] = val;
+				continue;
+				
+			case 'function':
+				Mock.prototype[key] = non;
+				continue;
+			}
+		} catch(e){
+			// コンポーネント実装により発生するプロパティ取得エラーを無視する
+		}
+	}
+	
+	Mock.prototype.QueryInterface = createQueryInterface(ifcs);
+	
+	update(Mock.prototype, proto);
+	update(Mock, Mock.prototype);
+	
+	return Mock;
+}
+
+function createQueryInterface(ifcNames){
+	var ifcs = ['nsISupports'].concat(ifcNames).map(function(ifcNames){
+		return Ci[''+ifcNames];
+	});
+	
+	return function(iid){
+		if(ifcs.some(function(ifc){
+			return iid.equals(ifc);
+		})){
+			return this;
+		}
+		
+		throw Components.results.NS_NOINTERFACE;
+	}
 }
 
 function createConstructor(pid, ifc, init){

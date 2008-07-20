@@ -57,7 +57,7 @@
 	<binding id="textbox" extends="chrome://global/content/bindings/textbox.xml#textbox">
 		<implementation>
 			<field name="delay">
-				300;
+				230;
 			</field>
 			<field name="delimiter">
 				' ';

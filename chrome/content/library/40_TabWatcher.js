@@ -18,12 +18,20 @@ var TabWatcher = createMock('@mozilla.org/appshell/component/browser-status-filt
 		// layout-dummy-requestはFirefox 2のみ、document-onload-blockerも発生しているがその時点では遅い
 		// Firefox 3ではdocument-onload-blockerでよい
 		// STATE_IS_REQUEST STATE_START
-		if(this.locationChanged && flag==65537 && (request.name=='about:layout-dummy-request' || request.name=='about:document-onload-blocker')){
-			this.locationChanged = false;
-
-			signal(grobal, 'content-ready', progress.DOMWindow.wrappedJSObject);
-			return;
+		if(this.locationChanged && flag==65537){
+			var name = this.safeGetName(request);
+			if(name && (name=='about:layout-dummy-request' || name=='about:document-onload-blocker')){
+				this.locationChanged = false;
+				
+				signal(grobal, 'content-ready', progress.DOMWindow.wrappedJSObject);
+				return;
+			}
 		}
+	},
+	safeGetName : function(request){
+		try{
+			return request.name;
+		} catch (e){}
 	},
 	watchWindow : function(win){
 		var tabbrowser = win.document.getElementById('content');

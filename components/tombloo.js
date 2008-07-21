@@ -26,6 +26,7 @@ Module = {
 		var env = function(){};
 		env.getContentDir = getContentDir;
 		env.getLibraries = getLibraries;
+		env.PID = this.PID;
 		
 		// アプリケーション全体で、同じloadSubScripts関数を使いまわし汚染を防ぐ
 		env.loadSubScripts = loadSubScripts;
@@ -207,9 +208,9 @@ function NSGetModule(compMgr, fileSpec) {
 					if (outer != null)
 						throw Cr.NS_ERROR_NO_AGGREGATION;
 					
-					return {
-						wrappedJSObject : Module.createInstance(outer, iid),
-					};
+					var obj = Module.createInstance(outer, iid);
+					obj.wrappedJSObject = obj;
+					return obj;
 				}
 			};
 		},

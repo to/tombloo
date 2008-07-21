@@ -554,6 +554,8 @@ function selectRegion(doc){
 	}
 	
 	function onMouseUp(e){
+		cancel(e);
+		
 		p = getElementPosition(region);
 		finalize();
 		
@@ -567,6 +569,14 @@ function selectRegion(doc){
 			position: p,
 			dimensions: d,
 		});
+	}
+
+	function onClick(e){
+		// リンククリックによる遷移を抑止する
+		cancel(e);
+		
+		// mouseupよりも後にイベントが発生するため、ここで取り除く
+		doc.removeEventListener('click', onClick, true);
 	}
 	
 	function finalize(){
@@ -583,6 +593,7 @@ function selectRegion(doc){
 	}
 	
 	doc.addEventListener('mousedown', onMouseDown, true);
+	doc.addEventListener('click', onClick, true);
 	doc.defaultView.focus();
 	
 	return deferred;

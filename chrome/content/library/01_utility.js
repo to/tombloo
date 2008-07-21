@@ -194,11 +194,6 @@ function openDialog(url, w, h, features, value){
 // ----[MochiKit]-------------------------------------------------
 var StopProcess = {};
 
-function connect(src, sig){
-	sig = sig=='onmousewheel' ? 'onDOMMouseScroll' : sig;
-	return MochiKit.Signal.connect.apply(null, [].slice.apply(arguments));
-}
-
 function connected(src, sig){
 	return MochiKit.Signal._observers.some(function(o){
 		return o.source === src && o.signal === sig && o.connected;
@@ -214,6 +209,7 @@ function maybeDeferred(d) {
 }
 
 MochiKit.Base.update(MochiKit.Signal.Event.prototype, {
+	// [FIXME] mouse.wheel.yを利用
 	wheelDelta : function(){
 		return 	this.event().detail;
 	},

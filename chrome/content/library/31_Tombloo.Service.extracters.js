@@ -150,8 +150,11 @@ Tombloo.Service.extracters = new Repository([
 	
 	{
 		name : 'Amazon',
+		getAsin : function(ctx){
+			return $x('id("ASIN")/@value');
+		},
 		extract : function(ctx){
-			var asin = $x('id("ASIN")/@value');
+			var asin = this.getAsin(ctx);
 			return  Amazon.getItem(asin).addCallback(function(item){
 				ctx.href  = Amazon.normalizeUrl(asin);
 				ctx.title = item.title + (item.creators.length? ' / ' + item.creators.join(', ') : '');
@@ -164,7 +167,9 @@ Tombloo.Service.extracters = new Repository([
 		name : 'Photo - Amazon',
 		ICON : models.Amazon.ICON,
 		check : function(ctx){
-			return ctx.host.match(/amazon\.co\.jp/) && ctx.target.id == 'prodImage';
+			return ctx.host.match(/amazon\./) && 
+				Tombloo.Service.extracters.Amazon.getAsin(ctx) && 
+				ctx.target.id == 'prodImage';
 		},
 		extract : function(ctx){
 			return Tombloo.Service.extracters.Amazon.extract(ctx).addCallback(function(item){
@@ -195,7 +200,9 @@ Tombloo.Service.extracters = new Repository([
 		name : 'Quote - Amazon',
 		ICON : models.Amazon.ICON,
 		check : function(ctx){
-			return ctx.host.match(/amazon\.co\.jp/) && ctx.selection;
+			return ctx.host.match(/amazon\./) && 
+				Tombloo.Service.extracters.Amazon.getAsin(ctx) && 
+				ctx.selection;
 		},
 		extract : function(ctx){
 			var exts = Tombloo.Service.extracters;
@@ -209,7 +216,8 @@ Tombloo.Service.extracters = new Repository([
 		name : 'Link - Amazon',
 		ICON : models.Amazon.ICON,
 		check : function(ctx){
-			return ctx.host.match(/amazon\.co\.jp/);
+			return ctx.host.match(/amazon\./) && 
+				Tombloo.Service.extracters.Amazon.getAsin(ctx);
 		},
 		extract : function(ctx){
 			var exts = Tombloo.Service.extracters;

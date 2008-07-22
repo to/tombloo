@@ -94,12 +94,15 @@ function getContentDir(){
 function setupEnvironment(global){
 	var win = AppShellService.hiddenDOMWindow;
 	
+	// 変数/定数はhiddenDOMWindowのものを直接使う
 	[
 		'navigator document window screen',
-		'XMLHttpRequest XPathResult Node Element Event DOMParser XSLTProcessor XML NodeFilter',
+		'XMLHttpRequest XPathResult Node Element KeyEvent Event DOMParser XSLTProcessor XML NodeFilter',
 	].join(' ').split(' ').forEach(function(p){
 		global[p] = win[p];
 	});
+	
+	// メソッドはthisが変わるとエラーになることがあるためbindして使う
 	[
 		'setTimeout setInterval clearTimeout clearInterval',
 		'open openDialog',
@@ -107,6 +110,8 @@ function setupEnvironment(global){
 	].join(' ').split(' ').forEach(function(p){
 		global[p] = bind(p, win);
 	});
+	
+	// モーダルにするためhiddenDOMWindowdではなく最新のウィンドウのメソッドを使う
 	[
 		'alert confirm prompt',
 	].join(' ').split(' ').forEach(function(p){

@@ -3,7 +3,7 @@ shortcutkeys['CTRL + SHIFT + R'] = {
 	execute : function(e){
 		cancel(e);
 		
-		loadAllSubScripts();
+		reload();
 		log('Tombloo: reloaded');
 	}
 }

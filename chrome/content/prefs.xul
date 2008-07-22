@@ -62,6 +62,10 @@ checkbox:focus > .checkbox-label-box {
 				name="extensions.tombloo.shortcutkey.quickPost.regular" 
 				type="string"/>
 			<preference 
+				id="shortcutkey.checkAndPost" 
+				name="extensions.tombloo.shortcutkey.checkAndPost" 
+				type="string"/>
+			<preference 
 				id="tagProvider" 
 				name="extensions.tombloo.tagProvider" 
 				type="string"/>
@@ -135,6 +139,12 @@ checkbox:focus > .checkbox-label-box {
 									<textbox preference="shortcutkey.quickPost.link" size="35"/>
 								</hbox>
 							</row>
+							<row align="center">
+								<label value="&label.shortcutkey.checkAndPost;" />
+								<hbox>
+									<textbox preference="shortcutkey.checkAndPost" size="35"/>
+								</hbox>
+							</row>
 							<row align="center" style="margin-top: 0.6em;">
 								<label value="&label.tagProvider;" />
 								<radiogroup preference="tagProvider" />
@@ -197,32 +207,64 @@ checkbox:focus > .checkbox-label-box {
 		
 		<script><![CDATA[
 		// chrome://tombloo/content/prefs.xul
-		var tombloo = Components.classes['@brasil.to/tombloo-service;1'].getService().wrappedJSObject;
-		
+		var env = Components.classes['@brasil.to/tombloo-service;1'].getService().wrappedJSObject;
 		
 		var prefpane = document.getElementsByTagName('prefpane')[0];
-		function keyStringField(elm, meta){
+		function getField(name){
+			return document.getElementsByAttribute('preference', name)[0];
+		}
+		
+		function keyStringField(name, meta){
+			var elm = getField(name);
 			elm.addEventListener('keydown', function(e){
-				if(e.keyCode == e.DOM_VK_TAB)
+				var key = env.keyString(e);
+				switch(key) {
+				case 'TAB':
+				case 'SHIFT + TAB':
 					return;
+					
+				}
 				
-				tombloo.cancel(e);
-				var keyString = tombloo.keyString(e);
-				e.target.value = meta? keyString : keyString.split(' + ').pop();
-				prefpane.userChangedValue(e.target);
+				env.cancel(e);
+				elm.value = (key=='ESCAPE')? '' : 
+					(meta)? key : key.split(' + ').pop();
+				prefpane.userChangedValue(elm);
 			}, true);
 		}
 		
-		keyStringField(document.getElementsByAttribute('preference', 'shortcutkey.quickPost.link')[0], true);
-		keyStringField(document.getElementsByAttribute('preference', 'shortcutkey.quickPost.regular')[0], true);
-		keyStringField(document.getElementsByAttribute('preference', 'accesskey.share')[0], false);
+		function mouseStringField(name, meta){
+			var elm = getField(name);
+			env.observeMouseShortcut(elm, function(e, key){
+				elm.value = key;
+				prefpane.userChangedValue(elm);
+				return true;
+			});
+			elm.addEventListener('keydown', function(e){
+				switch(env.keyString(e)) {
+				case 'TAB':
+				case 'SHIFT + TAB':
+					return;
+					
+				case 'ESCAPE':
+					elm.value = '';
+					prefpane.userChangedValue(elm);
+				}
+				
+				env.cancel(e);
+			}, false);
+		}
+		
+		mouseStringField('shortcutkey.checkAndPost');
+		keyStringField('shortcutkey.quickPost.link', true);
+		keyStringField('shortcutkey.quickPost.regular', true);
+		keyStringField('accesskey.share', false);
 		
 		
 		var tagProvider = document.getElementsByAttribute('preference', 'tagProvider')[0];
-		var ms = tombloo.models;
+		var ms = env.models;
 		for(var n in ms)
 			if(ms[n].getUserTags)
-				tagProvider.appendItem(n, n).setAttribute('src', tombloo[n].ICON);
+				tagProvider.appendItem(n, n).setAttribute('src', ms[n].ICON);
 		window.addEventListener('load', function(){
 			// スクリプト実行時点でprefpaneのコンストラクターからvalueが先に与えられているため、
 			// 後から追加したradioのチェックをつけることはできない。
@@ -232,8 +274,8 @@ checkbox:focus > .checkbox-label-box {
 		}, true)
 		
 		var models = document.getElementById('posters');
-		var config = eval(tombloo.getPref('postConfig'));
-		tombloo.values(tombloo.models).forEach(function(model){
+		var config = eval(env.getPref('postConfig'));
+		env.values(env.models).forEach(function(model){
 			if(!model.check)
 				return;
 			
@@ -247,7 +289,7 @@ checkbox:focus > .checkbox-label-box {
 				</hbox>
 			</row>;
 			
-			tombloo.reduce(function(memo, type){
+			env.reduce(function(memo, type){
 				var elm = memo.appendChild(model.check({
 					type : type,
 					pageUrl : {
@@ -261,7 +303,7 @@ checkbox:focus > .checkbox-label-box {
 				
 				return memo;
 			}, ['regular', 'photo', 'quote', 'link', 'video', 'conversation', 'reblog'], row)
-			models.appendChild(tombloo.convertToXULElement(row));
+			models.appendChild(env.convertToXULElement(row));
 		});
 		
 		models.addEventListener('click', function(e){
@@ -270,7 +312,7 @@ checkbox:focus > .checkbox-label-box {
 			
 			if(e.target.disabled) {
 				e.target.disabled = false;
-				tombloo.cancel(e);
+				env.cancel(e);
 			} else if(e.target.checked){
 				e.target.disabled = true;
 				e.target.checked = false;
@@ -278,9 +320,9 @@ checkbox:focus > .checkbox-label-box {
 		}, true);
 		
 		// MacではOK/キャンセルが表示されないため無条件にunloadで保存する
-		window.addEventListener(tombloo.AppInfo.OS.indexOf('WIN') == 0? 'beforeaccept' : 'unload', function(e){
+		window.addEventListener(env.AppInfo.OS.indexOf('WIN') == 0? 'beforeaccept' : 'unload', function(e){
 			var posters = {};
-			tombloo.$x('.//*[@model]', document, true).forEach(function(checkbox){
+			env.$x('.//*[@model]', document, true).forEach(function(checkbox){
 				var name = checkbox.getAttribute('model');
 				if(!posters[name])
 					posters[name] = {};
@@ -288,12 +330,13 @@ checkbox:focus > .checkbox-label-box {
 					checkbox.disabled? '' : checkbox.checked;
 			});
 			
-			tombloo.setPref('postConfig', uneval(posters));
+			env.setPref('postConfig', uneval(posters));
 		}, true);
 		
+		// beforeaccept時点ではpreferenceが更新されていないためunloadを使う
 		window.addEventListener('unload', function(e){
-			// ショートカットキーの変更を反映させる(0.5秒程度掛かる)
-			tombloo.loadAllSubScripts();
+			// ショートカットキーの変更を反映させる
+			env.reload();
 		}, true);
 		
 		]]></script>

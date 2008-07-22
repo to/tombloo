@@ -8,14 +8,15 @@ var CHROME_CONTENT_DIR = CHROME_DIR + '/content';
 var EXTENSION_ID = 'tombloo@brasil.to';
 
 var grobal = this;
+disconnectAll(grobal);
 
 // ----[XPCOM]-------------------------------------------------
 function getCookies(host, name){
 	var re = new RegExp(host + '$');
-	return list(ifilter(function(c){
+	return filter(function(c){
 		return (c.host.search(re) != -1) && 
 			(name? c.name == name : true);
-	}, CookieManager.enumerator));
+	}, CookieManager.enumerator);
 }
 
 function getCookieString(host, name){
@@ -26,10 +27,10 @@ function getCookieString(host, name){
 
 function getPasswords(host, user){
 	if(PasswordManager){
-		return list(ifilter(function(p){
+		return ifilter(function(p){
 			return (p.host == host) && 
 				(user? p.user == user : true);
-		}, PasswordManager.enumerator));
+		}, PasswordManager.enumerator);
 	} else {
 		return map(function(p){
 			return {
@@ -400,10 +401,9 @@ function sendByChannel(url, opts){
 
 function addTab(url){
 	var d = new Deferred();
-	var browser = getMostRecentWindow().document.getElementById('content').addTab(url).linkedBrowser;
+	var browser = getMostRecentWindow().getBrowser().addTab(url).linkedBrowser;
 	browser.addEventListener('DOMContentLoaded', function(event){
 		browser.removeEventListener('DOMContentLoaded', arguments.callee, true);
-		browser = null;
 		
 		var win = event.originalTarget.defaultView;
 		d.callback(win.wrappedJSObject || win);
@@ -918,7 +918,7 @@ function joinText(txts, delm, trimTag){
 	
 	if(delm==null)
 		delm = ',';
-	txts = txts.filter(operator.truth);
+	txts = flattenArray(txts.filter(operator.truth));
 	return (trimTag? txts.map(methodcaller('trimTag')) : txts).join(delm);
 }
 
@@ -1141,26 +1141,22 @@ function convertToXULElement(str){
 }
 
 function keyString(e){
+	// 初回呼び出し時にキーテーブルを作成する
 	var table = [];
-	for(var name in e)
+	for(var name in KeyEvent)
 		if(name.indexOf('DOM_VK_')==0)
-			table[e[name]] = name.substring(7);
+			table[KeyEvent[name]] = name.substring(7);
 	
 	return (keyString = function(e){
 		var code = e.keyCode;
 		var res = [];
-		(e.ctrlKey  || code == e.DOM_VK_CONTROL) && res.push('CTRL');
-		(e.shiftKey || code == e.DOM_VK_SHIFT)   && res.push('SHIFT');
-		(e.altKey   || code == e.DOM_VK_ALT)     && res.push('ALT');
+		(e.ctrlKey  || code==KeyEvent.DOM_VK_CONTROL) && res.push('CTRL');
+		(e.shiftKey || code==KeyEvent.DOM_VK_SHIFT)   && res.push('SHIFT');
+		(e.altKey   || code==KeyEvent.DOM_VK_ALT)     && res.push('ALT');
 		
-		switch (code) {
-		case e.DOM_VK_CONTROL:
-		case e.DOM_VK_SHIFT:
-		case e.DOM_VK_ALT:
-			break;
-		default:
+		if(code < KeyEvent.DOM_VK_SHIFT || KeyEvent.DOM_VK_ALT < code)
 			res.push(table[code]);
-		}
+		
 		return res.join(' + ');
 	})(e);
 }
@@ -1209,4 +1205,265 @@ function capture(win, p, d){
 	c.height = d.h;
 	c.getContext('2d').drawWindow(win, p.x, p.y, d.w, d.h, '#FFF');
 	return c.toDataURL('image/png', '');
+}
+
+// ----[UI]-------------------------------------------------
+function observeMouseShortcut(target, check){
+	var BUTTONS = ['LEFT_DOWN', 'CENTER_DOWN', 'RIGHT_DOWN'];
+	var downed = {};
+	var event;
+	var executed = false;
+	target.addEventListener('mousedown', function(e){
+		if(isEmpty(downed)){
+			target.addEventListener('keydown', onKeyDown, true);
+			executed = false;
+			event = e;
+		}
+		
+		downed[BUTTONS[e.button]] = true;
+		
+		checkKey(e, [keyString(e), keys(downed)])
+	}, true);
+	
+	target.addEventListener('mouseup', function(e){
+		delete downed[BUTTONS[e.button]];
+		if(isEmpty(downed)){
+			target.removeEventListener('keydown', onKeyDown, true);
+			event = null;
+		}
+	}, true);
+
+	target.addEventListener('click', function(e){
+		// クリックによる遷移などをキャンセルする
+		if(executed)
+			cancel(e)
+	}, true);
+	
+	function onKeyDown(e){
+		var code = e.keyCode;
+		if(KeyEvent.DOM_VK_SHIFT <= code && code <= KeyEvent.DOM_VK_ALT)
+			return;
+		
+		if(checkKey(e, [keys(downed), keyString(e)]))
+			cancel(e);
+	}
+	
+	function checkKey(e, keys){
+		var hit = check(event, joinText(keys, (' + ')));
+		if(hit)
+			executed = true;
+		
+		return hit;
+	}
+}
+
+function selectElement(doc){
+	var deferred = new Deferred();
+	doc = doc || currentDocument();
+	
+	var target;
+	function onMouseOver(e){
+		target = e.target;
+		target.originalBackground = target.style.background;
+		target.style.background = selectElement.TARGET_BACKGROUND;
+	}
+	function onMouseOut(e){
+		unpoint(e.target);
+	}
+	function onClick(e){
+		cancel(e);
+		
+		finalize();
+		deferred.callback(target);
+	}
+	function onKeyDown(e){
+		cancel(e);
+		
+		switch(keyString(e)){
+		case 'ESCAPE':
+			finalize();
+			deferred.cancel();
+			return;
+		}
+	}
+	function unpoint(elm){
+		if(elm.originalBackground!=null){
+			elm.style.background = elm.originalBackground;
+			elm.originalBackground = null;
+		}
+	}
+	function finalize(){
+		doc.removeEventListener('mouseover', onMouseOver, true);
+		doc.removeEventListener('mouseout', onMouseOut, true);
+		doc.removeEventListener('click', onClick, true);
+		doc.removeEventListener('keydown', onKeyDown, true);
+		
+		unpoint(target);
+	}
+	
+	doc.addEventListener('mouseover', onMouseOver, true);
+	doc.addEventListener('mouseout', onMouseOut, true);
+	doc.addEventListener('click', onClick, true);
+	doc.addEventListener('keydown', onKeyDown, true);
+	
+	return deferred;
+}
+selectElement.TARGET_BACKGROUND = '#888';
+
+function selectRegion(doc){
+	var deferred = new Deferred();
+	doc = doc || currentDocument();
+	
+	doc.documentElement.style.cursor = 'crosshair';
+	
+	var style = doc.createElement('style');
+	style.innerHTML = <><![CDATA[
+		* {
+			cursor: crosshair !important;
+			-moz-user-select: none;
+		}
+	]]></>;
+	doc.body.appendChild(style);
+	
+	var region, p, d, moving, square;
+	function mouse(e){
+		return {
+			x: e.clientX, 
+			y: e.clientY
+		};
+	}
+	
+	function onMouseMove(e){
+		var to = mouse(e);
+		
+		if(moving){
+			p = {
+				x: Math.max(to.x - d.w, 0), 
+				y: Math.max(to.y - d.h, 0)
+			};
+			setElementPosition(region, p);
+		}
+		
+		d = {
+			w: to.x - p.x, 
+			h: to.y - p.y
+		};
+		if(square){
+			var s = Math.min(d.w, d.h);
+			d = {w: s, h: s};
+		}
+		setElementDimensions(region, d);
+	}
+	
+	function onMouseDown(e){
+		cancel(e);
+		
+		p = mouse(e);
+		region = doc.createElement('div');
+		region.setAttribute('style', <>
+			background : #888;
+			opacity    : 0.5;
+			position   : fixed;
+			z-index    : 999999999;
+			top        : {p.y}px;
+			left       : {p.x}px;
+		</>);
+		doc.body.appendChild(region);
+		
+		doc.addEventListener('mousemove', onMouseMove, true);
+		doc.addEventListener('mouseup', onMouseUp, true);
+		doc.addEventListener('keydown', onKeyDown, true);
+		doc.addEventListener('keyup', onKeyUp, true);
+	}
+	
+	function onKeyDown(e){
+		cancel(e);
+		
+		switch(keyString(e)){
+		case 'SHIFT': square = true; return;
+		case 'SPACE': moving = true; return;
+		case 'ESCAPE':
+			finalize();
+			deferred.cancel();
+			return;
+		}
+	}
+	
+	function onKeyUp(e){
+		cancel(e);
+		
+		switch(keyString(e)){
+		case 'SHIFT': square = false; return;
+		case 'SPACE': moving = false; return;
+		}
+	}
+	
+	function onMouseUp(e){
+		cancel(e);
+		
+		p = getElementPosition(region);
+		finalize();
+		
+		// FIXME: 暫定/左上方向への選択不可/クリックとのダブルインターフェース未実装
+		if(!d || d.w<0 || d.h<0){
+			deferred.cancel();
+			return;
+		}
+		
+		deferred.callback({
+			position: p,
+			dimensions: d,
+		});
+	}
+
+	function onClick(e){
+		// リンククリックによる遷移を抑止する
+		cancel(e);
+		
+		// mouseupよりも後にイベントが発生するため、ここで取り除く
+		doc.removeEventListener('click', onClick, true);
+	}
+	
+	function finalize(){
+		doc.removeEventListener('mousedown', onMouseDown, true);
+		doc.removeEventListener('mousemove', onMouseMove, true);
+		doc.removeEventListener('mouseup', onMouseUp, true);
+		doc.removeEventListener('keydown', onKeyDown, true);
+		doc.removeEventListener('keyup', onKeyUp, true);
+		
+		doc.documentElement.style.cursor = '';
+		
+		removeElement(region);
+		removeElement(style);
+	}
+	
+	doc.addEventListener('mousedown', onMouseDown, true);
+	doc.addEventListener('click', onClick, true);
+	doc.defaultView.focus();
+	
+	return deferred;
+}
+
+function flashView(doc){
+	var d = new Deferred();
+	var doc = doc || currentDocument();
+	var flash = doc.createElement('div');
+	flash.setAttribute('style', <>
+		background : #EEE;
+		position   : fixed;
+		z-index    : 999999999;
+		top        : 0;
+		left       : 0;
+	</>);
+	setElementDimensions(flash, getViewDimensions());
+	doc.body.appendChild(flash);
+	fade(flash, {
+		duration : 0.1,
+		afterFinish : function(){
+			removeElement(flash);
+			d.callback();
+		},
+	});
+	
+	return d;
 }

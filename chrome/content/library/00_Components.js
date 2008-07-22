@@ -388,6 +388,10 @@ function getMostRecentWindow(){
 	return WindowMediator.getMostRecentWindow('navigator:browser');
 }
 
+function getWindows(){
+	return list(WindowMediator.getEnumerator('navigator:browser'));
+}
+
 function findCacheFile(url){
 	var entry;
 	CacheService.visitEntries({

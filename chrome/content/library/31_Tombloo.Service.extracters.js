@@ -880,7 +880,7 @@ Tombloo.Service.extracters = new Repository([
 		},
 		extract : function(ctx){
 			return {
-				type    : 'regular',
+				type : 'regular',
 			}
 		}
 	},

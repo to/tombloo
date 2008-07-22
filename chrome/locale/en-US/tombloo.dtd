@@ -10,6 +10,7 @@
 <!ENTITY label.tagAutoComplete "Tag Auto Complete">
 <!ENTITY label.shortcutkey.quickPost.link "Shortcutkey - Link Quick Post">
 <!ENTITY label.shortcutkey.quickPost.regular "Shortcutkey - Text Quick Post">
+<!ENTITY label.shortcutkey.checkAndPost "Mouse Shortcut - Suitable Type for Executed Point">
 <!ENTITY label.accesskey.share "Access Key - Share">
 <!ENTITY label.ignoreError "Ignore Errors(RegExp)">
 <!ENTITY label.dataDir "Data/Scripts Directory">

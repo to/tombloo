@@ -1,25 +1,18 @@
-// ウィンドウが開かれロードされる度に呼び出される
-connect(grobal, 'browser-load', function(e){
-	// パフォーマンスを考慮しconnectしているものがいなければウォッチしない
-	if(!connected(grobal, 'content-ready'))
-		return;
-	
-	TabWatcher.watchWindow(e.target.defaultView);
-});
-
 // ガベージコレクトされずに残る可能性があるのと、パフォーマンスを考慮し、ひとつのインスタンスで捕捉する
 // 並列動作によりlocationChangedが交差する可能性があるが、観察したかぎり発生しなかった
 var TabWatcher = createMock('@mozilla.org/appshell/component/browser-status-filter;1', {
+	
+	// nsIWebProgressListener
 	onLocationChange : function(progress ,request ,location){
 		this.locationChanged = true;
 	},
 	onStateChange : function(progress, request, flag, status){
 		// ページ遷移後の一番はじめの条件にマッチするステートのみ取得する
-		// layout-dummy-requestはFirefox 2のみ、document-onload-blockerも発生しているがその時点では遅い
+		// layout-dummy-requestはFirefox 2のみ発生、document-onload-blockerも発生しているがその時点では遅い
 		// Firefox 3ではdocument-onload-blockerでよい
 		// STATE_IS_REQUEST STATE_START
 		if(this.locationChanged && flag==65537){
-			var name = this.safeGetName(request);
+			var name = this.getName(request);
 			if(name && (name=='about:layout-dummy-request' || name=='about:document-onload-blocker')){
 				this.locationChanged = false;
 				
@@ -28,15 +21,11 @@ var TabWatcher = createMock('@mozilla.org/appshell/component/browser-status-filt
 			}
 		}
 	},
-	safeGetName : function(request){
-		try{
-			return request.name;
-		} catch (e){}
-	},
+	
 	watchWindow : function(win){
-		var tabbrowser = win.document.getElementById('content');
+		var tabbrowser = win.getBrowser();
 		tabbrowser.browsers.forEach(function(browser){
-			// ブラウザ起動時に開かれているタブにフックする
+			// 取得以前に開かれているタブにフックする
 			TabWatcher.addProgressListener(browser);
 		});
 		
@@ -60,5 +49,10 @@ var TabWatcher = createMock('@mozilla.org/appshell/component/browser-status-filt
 	},
 	removeProgressListener : function(browser){
 		browser.webProgress.removeProgressListener(this);
+	},
+	getName : function(request){
+		try{
+			return request.name;
+		} catch (e){}
 	},
 });

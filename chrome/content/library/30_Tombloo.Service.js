@@ -1,6 +1,12 @@
 Tombloo.Service = {
 	check : function(ctx){
 		return withWindow(ctx.window, function(){
+			if(!ctx.menu && ctx.target){
+				ctx.link = $x('.//ancestor::a', ctx.target);
+				ctx.onLink = !!ctx.link;
+				ctx.onImage = ctx.target instanceof Ci.nsIImageLoadingContent;
+			}
+			
 			return Tombloo.Service.extracters.check(ctx);
 		});
 	},

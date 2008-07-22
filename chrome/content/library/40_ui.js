@@ -410,227 +410,16 @@ QuickPostForm.prototype = {
 	},
 }
 
-
-function selectElement(doc){
-	var deferred = new Deferred();
-	doc = doc || currentDocument();
-	
-	var target;
-	function onMouseOver(e){
-		target = e.target;
-		target.originalBackground = target.style.background;
-		target.style.background = selectElement.TARGET_BACKGROUND;
-	}
-	function onMouseOut(e){
-		unpoint(e.target);
-	}
-	function onClick(e){
-		cancel(e);
-		
-		finalize();
-		deferred.callback(target);
-	}
-	function onKeyDown(e){
-		cancel(e);
-		
-		switch(keyString(e)){
-		case 'ESCAPE':
-			finalize();
-			deferred.cancel();
-			return;
-		}
-	}
-	function unpoint(elm){
-		if(elm.originalBackground!=null){
-			elm.style.background = elm.originalBackground;
-			elm.originalBackground = null;
-		}
-	}
-	function finalize(){
-		doc.removeEventListener('mouseover', onMouseOver, true);
-		doc.removeEventListener('mouseout', onMouseOut, true);
-		doc.removeEventListener('click', onClick, true);
-		doc.removeEventListener('keydown', onKeyDown, true);
-		
-		unpoint(target);
-	}
-	
-	doc.addEventListener('mouseover', onMouseOver, true);
-	doc.addEventListener('mouseout', onMouseOut, true);
-	doc.addEventListener('click', onClick, true);
-	doc.addEventListener('keydown', onKeyDown, true);
-	
-	return deferred;
-}
-selectElement.TARGET_BACKGROUND = '#888';
-
-
-function selectRegion(doc){
-	var deferred = new Deferred();
-	doc = doc || currentDocument();
-	
-	doc.documentElement.style.cursor = 'crosshair';
-	
-	var style = doc.createElement('style');
-	style.innerHTML = <><![CDATA[
-		* {
-			cursor: crosshair !important;
-			-moz-user-select: none;
-		}
-	]]></>;
-	doc.body.appendChild(style);
-	
-	var region, p, d, moving, square;
-	function mouse(e){
-		return {
-			x: e.clientX, 
-			y: e.clientY
-		};
-	}
-	
-	function onMouseMove(e){
-		var to = mouse(e);
-		
-		if(moving){
-			p = {
-				x: Math.max(to.x - d.w, 0), 
-				y: Math.max(to.y - d.h, 0)
-			};
-			setElementPosition(region, p);
-		}
-		
-		d = {
-			w: to.x - p.x, 
-			h: to.y - p.y
-		};
-		if(square){
-			var s = Math.min(d.w, d.h);
-			d = {w: s, h: s};
-		}
-		setElementDimensions(region, d);
-	}
-	
-	function onMouseDown(e){
-		cancel(e);
-		
-		p = mouse(e);
-		region = doc.createElement('div');
-		region.setAttribute('style', <>
-			background : #888;
-			opacity    : 0.5;
-			position   : fixed;
-			z-index    : 999999999;
-			top        : {p.y}px;
-			left       : {p.x}px;
-		</>);
-		doc.body.appendChild(region);
-		
-		doc.addEventListener('mousemove', onMouseMove, true);
-		doc.addEventListener('mouseup', onMouseUp, true);
-		doc.addEventListener('keydown', onKeyDown, true);
-		doc.addEventListener('keyup', onKeyUp, true);
-	}
-	
-	function onKeyDown(e){
-		cancel(e);
-		
-		switch(keyString(e)){
-		case 'SHIFT': square = true; return;
-		case 'SPACE': moving = true; return;
-		case 'ESCAPE':
-			finalize();
-			deferred.cancel();
-			return;
-		}
-	}
-	
-	function onKeyUp(e){
-		cancel(e);
-		
-		switch(keyString(e)){
-		case 'SHIFT': square = false; return;
-		case 'SPACE': moving = false; return;
-		}
-	}
-	
-	function onMouseUp(e){
-		cancel(e);
-		
-		p = getElementPosition(region);
-		finalize();
-		
-		// FIXME: 暫定/左上方向への選択不可/クリックとのダブルインターフェース未実装
-		if(!d || d.w<0 || d.h<0){
-			deferred.cancel();
-			return;
-		}
-		
-		deferred.callback({
-			position: p,
-			dimensions: d,
-		});
-	}
-
-	function onClick(e){
-		// リンククリックによる遷移を抑止する
-		cancel(e);
-		
-		// mouseupよりも後にイベントが発生するため、ここで取り除く
-		doc.removeEventListener('click', onClick, true);
-	}
-	
-	function finalize(){
-		doc.removeEventListener('mousedown', onMouseDown, true);
-		doc.removeEventListener('mousemove', onMouseMove, true);
-		doc.removeEventListener('mouseup', onMouseUp, true);
-		doc.removeEventListener('keydown', onKeyDown, true);
-		doc.removeEventListener('keyup', onKeyUp, true);
-		
-		doc.documentElement.style.cursor = '';
-		
-		removeElement(region);
-		removeElement(style);
-	}
-	
-	doc.addEventListener('mousedown', onMouseDown, true);
-	doc.addEventListener('click', onClick, true);
-	doc.defaultView.focus();
-	
-	return deferred;
-}
-
-function flashView(){
-	var d = new Deferred();
-	var doc = currentDocument();
-	var flash = doc.createElement('div');
-	flash.setAttribute('style', <>
-		background : #EEE;
-		position   : fixed;
-		z-index    : 999999999;
-		top        : 0;
-		left       : 0;
-	</>);
-	setElementDimensions(flash, getViewDimensions());
-	doc.body.appendChild(flash);
-	fade(flash, {
-		duration : 0.1,
-		afterFinish : function(){
-			removeElement(flash);
-			d.callback();
-		},
-	});
-	
-	return d;
-}
-
 // ----[Shortcutkey]-------------------------------------------------
 var shortcutkeys = {};
 forEach({
 	'shortcutkey.quickPost.link' : function(e){
 		cancel(e);
 		
-		var win = getMostRecentWindow().getBrowser().contentWindow;
-		var doc = win.document;
+		var doc = e.target.ownerDocument;
+		var win = doc.defaultView;
+		win = win.wrappedJSObject || win;
+		
 		new QuickPostForm({
 			type    : 'link',
 			page    : doc.title,
@@ -642,13 +431,36 @@ forEach({
 	'shortcutkey.quickPost.regular' : function(e){
 		cancel(e);
 		
-		var win = getMostRecentWindow().getBrowser().contentWindow;
-		var doc = win.document;
+		var doc = e.target.ownerDocument;
+		var win = doc.defaultView;
+		win = win.wrappedJSObject || win;
+		
 		new QuickPostForm({
 			type    : 'regular',
 			page    : doc.title,
 			pageUrl : win.location.href,
 		}).show();
+	},
+	'shortcutkey.checkAndPost' : function(e){
+		var doc = e.target.ownerDocument;
+		var win = doc.defaultView;
+		win = win.wrappedJSObject || win;
+		
+		var ctx = update({
+			document  : doc,
+			window    : win,
+			title     : doc.title,
+			selection : ''+win.getSelection(),
+			event     : e,
+			target    : e.target,
+			mouse     : {
+				x : e.pageX,
+				y : e.pageY,
+			},
+		}, win.location);
+		
+		var ext = Tombloo.Service.check(ctx)[0];
+		Tombloo.Service.share(ctx, ext, ext.name.match(/^Link/));
 	},
 }, function(pair){
 	var key = getPref(pair[0]);
@@ -657,3 +469,162 @@ forEach({
 			execute : pair[1],
 		};
 });
+
+
+// ----[browser]-------------------------------------------------
+connect(grobal, 'browser-load', function(e){
+	var win = e.target.defaultView;
+	var doc = win.document;
+	
+	connectToBrowser(win);
+		
+	var context;
+	var menuContext = doc.getElementById('contentAreaContextMenu');
+	var menuShare = doc.getElementById('tombloo-menu-share');
+	var menuSelect = doc.getElementById('tombloo-menu-select');
+	
+	menuShare.setAttribute('accesskey', getPref('accesskey.share'));
+	
+	// Menu Editor拡張によって個別メニューのイベントを取得できなくなる現象を回避
+	menuContext.addEventListener('popupshowing', function(e){
+		if(e.eventPhase != Event.AT_TARGET || (context && context.target == gContextMenu.target))
+			return;
+		
+		try{
+			// about:config などで無効にする
+			win.location.host;
+			
+			menuShare.disabled = false;
+			menuSelect.parentNode.disabled = false;
+		}catch(e){
+			menuShare.disabled = true;
+			menuSelect.parentNode.disabled = true;
+			
+			return;
+		}
+		
+		// [FIXME] selection文字列化再検討
+		// command時にはクリック箇所などの情報が失われるためコンテキストを保持しておく
+		context = update({
+			document  : doc,
+			window    : win,
+			title     : ''+doc.title || '',
+			selection : ''+win.getSelection(),
+			event     : e,
+			mouse     : {
+				x : e.pageX,
+				y : e.pageY,
+			},
+			menu      : win.gContextMenu,
+		}, win.gContextMenu, win.location);
+		
+		var exts = Tombloo.Service.check(context);
+		menuShare.label = 'Share - ' + exts[0].name;
+		menuShare.extracter = exts[0].name;
+		menuShare.setAttribute('image', exts[0].ICON || 'chrome://tombloo/skin/empty.png');
+		
+		if(exts.length<=1){
+			menuSelect.parentNode.disabled = true;
+		} else {
+			menuSelect.parentNode.disabled = false;
+			
+			for(var i=0 ; i<exts.length ; i++){
+				var ext = exts[i];
+				var item = appendMenuItem(menuSelect, ext.name, ext.ICON || 'chrome://tombloo/skin/empty.png');
+				item.extracter = ext.name;
+				item.showForm = true;
+			}
+		}
+	}, true);
+	
+	menuContext.addEventListener('popuphidden', function(e){
+		if(e.eventPhase != Event.AT_TARGET)
+			return;
+		
+		context = null;
+		
+		clearChildren(menuSelect);
+	}, true);
+	
+	menuContext.addEventListener('command', function(e){
+		if(!e.target.extracter)
+			return;
+		
+		context.event = e;
+		
+		var svc = Tombloo.Service;
+		svc.share(context, svc.extracters[e.target.extracter], e.target.showForm);
+	}, true);
+	
+	var menuAction = doc.getElementById('tombloo-menu-main');
+	Tombloo.Service.actions.names.forEach(function(name){
+		appendMenuItem(menuAction, name);
+	});
+	
+	menuAction.addEventListener('command', function(e){
+		Tombloo.Service.actions[e.originalTarget.label].execute();
+	}, true);
+	
+	
+	// FIXME: docを解決し汎用に
+	function appendMenuItem(menu, label, image){
+		if((/^----/).test(label))
+			return menu.appendChild(doc.createElement('menuseparator'));
+		
+		var item = menu.appendChild(doc.createElement('menuitem'));
+		item.setAttribute('label', label);
+		
+		if(image){
+			item.setAttribute('class', 'menuitem-iconic');
+			item.setAttribute('image', image);
+		}
+		
+		return item;
+	}
+});
+
+function reload(){
+	loadAllSubScripts();
+	getWindows().forEach(connectToBrowser);
+}
+
+function connectToBrowser(win){
+	// パフォーマンスを考慮しconnectしているものがいなければウォッチしない
+	// リロードや設定変更により繰り返し呼ばれたときに多重フックしないようにチェック
+	// チェック状況をグローバル環境に持つのは複雑になりリークを招くためwindowに置く
+	var Tombloo = win.Tombloo = (win.Tombloo || {});
+	var hooked = Tombloo.hooked = (Tombloo.hooked || {});
+	var tabbrowser = win.getBrowser();
+	var version = parseFloat(AppInfo.version);
+	
+	// Firefox 2ではリロードと同時にTabWatcherがガベージコレクトされフックが外れる
+	if((!hooked.contentReady || version <= 2) && connected(grobal, 'content-ready')){
+		TabWatcher.watchWindow(win);
+		hooked.contentReady = true;
+	} else {
+		// Firefox 3では一度フックした後にフックを無くすとガベージコレクトされるため再フックを促す
+		hooked.contentReady = false;
+	}
+	
+	if(!hooked.shortcutkey && !isEmpty(shortcutkeys)){
+		tabbrowser.addEventListener('keydown', function(e){
+			var key = shortcutkeys[keyString(e)];
+			if(!key)
+				return;
+			
+			key.execute(e);
+		}, true);
+		hooked.shortcutkey = true;
+	}
+	
+	if(!hooked.mouseShortcut && keys(shortcutkeys).some(function(key){return key.indexOf('_DOWN')!=-1})){
+		observeMouseShortcut(tabbrowser, function(e, key){
+			key = shortcutkeys[key];
+			if(!key)
+				return false;
+			
+			return !key.execute(e);
+		});
+		hooked.mouseShortcut = true;
+	}
+}

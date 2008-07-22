@@ -16,3 +16,4 @@ pref('extensions.tombloo.ignoreError',       '');
 
 pref('extensions.tombloo.shortcutkey.quickPost.link',   '');
 pref('extensions.tombloo.shortcutkey.quickPost.regular','');
+pref('extensions.tombloo.shortcutkey.checkAndPost',     '');

@@ -10,6 +10,7 @@
 <!ENTITY label.tagAutoComplete "タグの自動決定">
 <!ENTITY label.shortcutkey.quickPost.link "ショートカット - Linkクイックポスト">
 <!ENTITY label.shortcutkey.quickPost.regular "ショートカット - Textクイックポスト">
+<!ENTITY label.shortcutkey.checkAndPost "ショートカット(マウス) - 実行場所に適したタイプ">
 <!ENTITY label.accesskey.share "アクセスキー - Share">
 <!ENTITY label.ignoreError "無視するエラー(正規表現)">
 <!ENTITY label.dataDir "データ/スクリプトディレクトリ">

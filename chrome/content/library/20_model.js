@@ -1125,7 +1125,7 @@ models.register({
 				mode    : 'enter',
 				rkm     : token,
 				url     : ps.itemUrl,
-				comment : ((ps.tags && ps.tags.length)? '[' + ps.tags.join('][') + ']' : '') + joinText([ps.body, ps.description], ' ', true),
+				comment : ((ps.tags && ps.tags.length)? '[' + ps.tags.join('][') + ']' : '') + joinText([ps.body, ps.description], ' ', true).replace(/[\n\r]+/g, ' '),
 			};
 			if(ps.item)
 				content.title = ps.item;

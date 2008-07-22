@@ -263,7 +263,7 @@ Tombloo.Service.extracters = new Repository([
 	},
 	
 	{
-		name : 'ReBlog - Dashbord',
+		name : 'ReBlog - Dashboard',
 		ICON : 'chrome://tombloo/skin/reblog.ico',
 		check : function(ctx){
 			return ctx.href.match(Tumblr.TUMBLR_URL) && this.getLink(ctx);
@@ -422,7 +422,7 @@ Tombloo.Service.extracters = new Repository([
 			return doXHR(ctx.link.href).addCallback(function(res){
 				return {
 					type    : 'photo',
-					itme    : ctx.title,
+					item    : ctx.title,
 					itemUrl : $x('//img[1]', convertToHTMLDocument(res.responseText)).src,
 				}
 			});

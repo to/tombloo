@@ -778,6 +778,22 @@ Tombloo.Service.extracters = new Repository([
 	},
 	
 	{
+		name : 'Video - Nico Nico Douga',
+		ICON : 'http://www.nicovideo.jp/favicon.ico',
+		check : function(ctx){
+			return ctx.href.match('^http://www\.nicovideo\.jp/watch/');
+		},
+		extract : function(ctx){
+			return {
+				type    : 'video',
+				item    : ctx.title,
+				itemUrl : ctx.href,
+				body    : $x('//form[@name="form_iframe"]/input/@value'),
+			};
+		}
+	},
+	
+	{
 		name : 'Quote',
 		ICON : 'chrome://tombloo/skin/quote.png',
 		check : function(ctx){

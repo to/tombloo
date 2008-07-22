@@ -473,10 +473,10 @@ forEach({
 
 // ----[browser]-------------------------------------------------
 connect(grobal, 'browser-load', function(e){
-	var win = e.target.defaultView;
-	var doc = win.document;
+	var cwin = e.target.defaultView;
+	var doc = cwin.document;
 	
-	connectToBrowser(win);
+	connectToBrowser(cwin);
 		
 	var context;
 	var menuContext = doc.getElementById('contentAreaContextMenu');
@@ -487,8 +487,12 @@ connect(grobal, 'browser-load', function(e){
 	
 	// Menu Editor拡張によって個別メニューのイベントを取得できなくなる現象を回避
 	menuContext.addEventListener('popupshowing', function(e){
-		if(e.eventPhase != Event.AT_TARGET || (context && context.target == gContextMenu.target))
+		if(e.eventPhase != Event.AT_TARGET || (context && context.target == cwin.gContextMenu.target))
 			return;
+		
+		var doc = cwin.gContextMenu.target.ownerDocument;
+		var win = doc.defaultView;
+		win = win.wrappedJSObject || win;
 		
 		try{
 			// about:config などで無効にする
@@ -515,8 +519,8 @@ connect(grobal, 'browser-load', function(e){
 				x : e.pageX,
 				y : e.pageY,
 			},
-			menu      : win.gContextMenu,
-		}, win.gContextMenu, win.location);
+			menu      : cwin.gContextMenu,
+		}, cwin.gContextMenu, win.location);
 		
 		var exts = Tombloo.Service.check(context);
 		menuShare.label = 'Share - ' + exts[0].name;

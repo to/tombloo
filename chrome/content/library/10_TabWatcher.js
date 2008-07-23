@@ -48,7 +48,10 @@ var TabWatcher = createMock('@mozilla.org/appshell/component/browser-status-filt
 		browser.webProgress.addProgressListener(this, this.NOTIFY_ALL);
 	},
 	removeProgressListener : function(browser){
-		browser.webProgress.removeProgressListener(this);
+		try{
+			// 再ロードによりインスタンスが変わりremoveできない時あり
+			browser.webProgress.removeProgressListener(this);
+		}catch(e){}
 	},
 	getName : function(request){
 		try{

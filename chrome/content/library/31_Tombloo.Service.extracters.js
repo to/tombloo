@@ -872,12 +872,7 @@ Tombloo.Service.extracters = new Repository([
 					return capture(win, {x:0, y:0}, getPageDimensions());
 				}
 			}).addCallback(function(image){
-				var uri = broad(createURI(ctx.href));
-				uri = (uri.host+uri.filePath).replace(/\/$/, '');
-				
-				var file = getTempDir(validateFileName(uri + '.png'));
-				
-				return download(image, file);
+				return download(image, getTempDir(uriToFileName(ctx.href) + '.png'));
 			}).addCallback(function(file){
 				return {
 					type : 'photo',

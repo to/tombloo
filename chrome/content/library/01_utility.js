@@ -127,6 +127,12 @@ function createDir(dir){
 	return dir;
 }
 
+function uriToFileName(uri){
+	uri = broad(createURI(uri));
+	uri = (uri.host+uri.filePath).replace(/\/$/, '');
+	return validateFileName(uri);
+}
+
 function clearCollision(file){
 	var name = file.leafName;
 	for(var count = 2 ; file.exists() ; count++)
@@ -1199,13 +1205,24 @@ function showNotification(fragments, animation){
 	return notification;
 }
 
-function capture(win, p, d){
+function capture(win, pos, dim, scale){
 	// デフォルトではAppShellService.hiddenDOMWindowが使われる
-	var c = document.createElementNS(HTML_NS, 'canvas');
-	c.width = d.w;
-	c.height = d.h;
-	c.getContext('2d').drawWindow(win, p.x, p.y, d.w, d.h, '#FFF');
-	return c.toDataURL('image/png', '');
+	var canvas = document.createElementNS(HTML_NS, 'canvas');
+	var ctx = canvas.getContext('2d');
+	canvas.width = dim.w;
+	canvas.height = dim.h;
+	
+	if(scale){
+		scale	= scale.w? scale.w/dim.w : 
+			scale.h? scale.h/dim.h : scale;
+		
+		canvas.width = dim.w * scale;
+		canvas.height = dim.h * scale;
+		ctx.scale(scale, scale);
+	}
+	
+	ctx.drawWindow(win, pos.x, pos.y, dim.w, dim.h, '#FFF');
+	return canvas.toDataURL('image/png', '');
 }
 
 // ----[UI]-------------------------------------------------

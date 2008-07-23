@@ -33,13 +33,13 @@ Tombloo.Service = {
 			msg.push(p + ' : ' + val);
 		}
 		
-		return '\n'+msg.join('\n').indent(4);
+		return '\n'+msg.join('\n');
 	},
 	
 	alertError : function(msg, page, pageUrl){
 		error(msg);
 		
-		if(confirm(getMessage('error.post', this.reprError(msg).indent(4), page, pageUrl))){
+		if(confirm(getMessage('error.post', this.reprError(msg).indent(8), page, pageUrl))){
 			addTab(pageUrl);
 		}
 	},
@@ -95,7 +95,7 @@ Tombloo.Service = {
 				var [success, res] = ress[name];
 				if(!success){
 					var msg = name + ': ' + 
-						(res.message.status? 'HTTP Status Code ' + res.message.status : self.reprError(res));
+						(res.message.status? 'HTTP Status Code ' + res.message.status : self.reprError(res).indent(4));
 					
 					if(!ignoreError || !msg.match(ignoreError))
 						errs.push(msg);

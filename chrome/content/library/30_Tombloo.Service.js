@@ -15,6 +15,9 @@ Tombloo.Service = {
 		if(err.name && err.name.match('GenericError'))
 			err = err.message;
 		
+		if(err.status)
+			err = err.message + '(' + err.status + ')';
+		
 		if(!err.lineNumber)
 			return '' + err;
 		

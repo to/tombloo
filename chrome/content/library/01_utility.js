@@ -389,6 +389,7 @@ function sendByChannel(url, opts){
 			if(Components.isSuccessCode(status) && res.status < 400){
 				d.callback(res);
 			}else{
+				res.message = getMessage('error.http.' + res.status);
 				d.errback(res);
 			}
 			

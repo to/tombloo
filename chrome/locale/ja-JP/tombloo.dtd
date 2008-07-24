@@ -15,3 +15,4 @@
 <!ENTITY label.ignoreError "無視するエラー(正規表現)">
 <!ENTITY label.dataDir "データ/スクリプトディレクトリ">
 <!ENTITY label.example "例:">
+<!ENTITY label.browse "参照...">

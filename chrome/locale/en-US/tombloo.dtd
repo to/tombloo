@@ -15,3 +15,4 @@
 <!ENTITY label.ignoreError "Ignore Errors(RegExp)">
 <!ENTITY label.dataDir "Data/Scripts Directory">
 <!ENTITY label.example "e.g.">
+<!ENTITY label.browse "Browse...">

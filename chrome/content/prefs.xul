@@ -232,7 +232,9 @@ Windows Firefox 2にてpngをマウスカーソルにすると透過できなか
 							<separator class="groove-thin" width="1" style="margin: 1em 0 1em 0;" />
 							<row align="center">
 								<label value="&label.dataDir;"/>
-								<textbox preference="dataDir" />
+								<hbox>
+									<textbox preference="dataDir" flex="1"/><button label="&label.browse;"/>
+								</hbox>
 							</row>
 							<row align="center" style="margin-top: -0.3em;">
 								<spacer />
@@ -314,7 +316,6 @@ Windows Firefox 2にてpngをマウスカーソルにすると透過できなか
 		
 		var models = document.getElementById('posters');
 		var config = eval(env.getPref('postConfig'));
-		env.log(window);
 		env.values(env.models).forEach(function(model){
 			if(!model.check)
 				return;
@@ -409,6 +410,16 @@ Windows Firefox 2にてpngをマウスカーソルにすると透過できなか
 			elmPostConfig.className = '';
 		}, true);
 		
+		
+		var elmDataDir = getField('dataDir');
+		elmDataDir.nextSibling.addEventListener('command', function(){
+			var fp = new env.FilePicker(window, env.getMessage('label.dataDir'), env.FilePicker.modeGetFolder);
+			fp.displayDirectory = env.getDataDir();
+			if(fp.show() == fp.returnOK){
+				elmDataDir.value = fp.file.path.replace(env.getProfileDir().path, '{ProfD}');
+				prefpane.userChangedValue(elmDataDir);
+			}
+		}, true)
 		
 		// MacではOK/キャンセルが表示されないため無条件にunloadで保存する
 		window.addEventListener(env.AppInfo.OS.indexOf('WIN') == 0? 'beforeaccept' : 'unload', function(e){

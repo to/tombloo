@@ -64,6 +64,8 @@ var ScriptError =
 	Components.Constructor('@mozilla.org/scripterror;1', 'nsIScriptError', 'init');
 var Process = 
 	createConstructor('/process/util;1', 'nsIProcess', 'init');
+var FilePicker = 
+	createConstructor('/filepicker;1', 'nsIFilePicker', 'init');
 
 var InputStream = 
 	Components.Constructor('@mozilla.org/scriptableinputstream;1', 'nsIScriptableInputStream', 'init');

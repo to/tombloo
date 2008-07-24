@@ -416,7 +416,7 @@ forEach({
 	'shortcutkey.quickPost.link' : function(e){
 		cancel(e);
 		
-		var doc = e.target.ownerDocument;
+		var doc = e.originalTarget.ownerDocument;
 		var win = doc.defaultView;
 		win = win.wrappedJSObject || win;
 		
@@ -431,7 +431,7 @@ forEach({
 	'shortcutkey.quickPost.regular' : function(e){
 		cancel(e);
 		
-		var doc = e.target.ownerDocument;
+		var doc = e.originalTarget.ownerDocument;
 		var win = doc.defaultView;
 		win = win.wrappedJSObject || win;
 		
@@ -442,7 +442,7 @@ forEach({
 		}).show();
 	},
 	'shortcutkey.checkAndPost' : function(e){
-		var doc = e.target.ownerDocument;
+		var doc = e.originalTarget.ownerDocument;
 		var win = doc.defaultView;
 		win = win.wrappedJSObject || win;
 		

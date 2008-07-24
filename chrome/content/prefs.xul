@@ -79,15 +79,15 @@ checkbox:focus > .checkbox-label-box {
 				type="string"/>
 		</preferences>
 		
-		<vbox flex="1">
-			<tabbox flex="1">
-				<tabs>
-					<tab label="&label.postConfig;"/>
-					<tab label="&label.post;"/>
-					<tab label="&label.entry;"/>
-				</tabs>
-				<tabpanels flex="1">
-					<tabpanel>
+		<tabbox flex="1">
+			<tabs>
+				<tab label="&label.postConfig;"/>
+				<tab label="&label.post;"/>
+				<tab label="&label.entry;"/>
+			</tabs>
+			<tabpanels flex="1">
+				<tabpanel>
+					<vbox flex="1" style="overflow:auto">
 						<grid flex="1">
 							<columns>
 								<column/>
@@ -113,99 +113,99 @@ checkbox:focus > .checkbox-label-box {
 								</row>
 							</rows>
 						</grid>
-					</tabpanel>
-					<tabpanel>
-						<grid flex="1">
-							<columns>
-								<column pack="end" align="end"/>
-								<column flex="1"/>
-							</columns>
-							<rows>
-								<row align="center">
-									<label value="&label.accesskey.share;"/>
-									<hbox>
-										<textbox preference="accesskey.share" maxlength="1" size="3" />
-									</hbox>
-								</row>
-								<separator class="groove-thin" width="1" style="margin: 0.6em 0 1.5em 0;" />
-								<row align="center">
-									<label value="&label.shortcutkey.quickPost.regular;" />
-									<hbox>
-										<textbox preference="shortcutkey.quickPost.regular" size="35"/>
-									</hbox>
-								</row>
-								<row align="center">
-									<label value="&label.shortcutkey.quickPost.link;" />
-									<hbox>
-										<textbox preference="shortcutkey.quickPost.link" size="35"/>
-									</hbox>
-								</row>
-								<row align="center">
-									<label value="&label.shortcutkey.checkAndPost;" />
-									<hbox>
-										<textbox preference="shortcutkey.checkAndPost" size="35"/>
-									</hbox>
-								</row>
-								<row align="center" style="margin-top: 0.6em;">
-									<label value="&label.tagProvider;" />
-									<radiogroup preference="tagProvider" />
-								</row>
-								<row align="center" style="margin: 0.4em 0 0.5em 0;">
-									<label value="&label.tagAutoComplete;" />
-									<checkbox preference="tagAutoComplete" />
-								</row>
-								<separator class="groove-thin" width="1" style="margin: 0.6em 0 1.5em 0;" />
-								<row align="center">
-									<label value="&label.ignoreError;"/>
-									<textbox preference="ignoreError" />
-								</row>
-								<row align="center" style="margin-top: -0.3em;">
-									<spacer />
-									<textbox readonly="true" value="&label.example; (ffffound: (?!auth)|already)" />
-								</row>
-							</rows>
-						</grid>
-					</tabpanel>
-					<tabpanel>
-						<grid flex="1">
-							<columns>
-								<column pack="end" align="end" orient="horizontal"/>
-								<column flex="1"/>
-							</columns>
-							<rows>
-								<row align="center">
-									<label value="&label.amazonAffiliateId;"/>
-									<hbox>
-										<textbox preference="amazonAffiliateId" size="35" />
-									</hbox>
-								</row>
-								<row align="center">
-									<label value="&label.thumbnailTemplate;"/>
-									<textbox preference="thumbnailTemplate" />
-								</row>
-								<row align="center" style="margin-top: -0.3em;">
-									<spacer />
-									<textbox readonly="true" value="&label.example; &lt;img src=&quot;http://mozshot.nemui.org/shot?{url}&quot; /&gt;" />
-								</row>
-								<row align="center">
-									<label value="&label.trimReblogInfo;"/>
-									<checkbox preference="trimReblogInfo" />
-								</row>
-								<separator class="groove-thin" width="1" style="margin: 1em 0 1em 0;" />
-								<row align="center">
-									<label value="&label.dataDir;"/>
-									<textbox preference="dataDir" />
-								</row>
-								<row align="center" style="margin-top: -0.3em;">
-									<spacer />
-									<textbox readonly="true" value="&label.example; {ProfD}/tombloo" />
-								</row>
-							</rows>
-						</grid>
-					</tabpanel>
-				</tabpanels>
-			</tabbox>
-		</vbox>
+					</vbox>
+				</tabpanel>
+				<tabpanel>
+					<grid flex="1">
+						<columns>
+							<column pack="end" align="end"/>
+							<column flex="1"/>
+						</columns>
+						<rows>
+							<row align="center">
+								<label value="&label.accesskey.share;"/>
+								<hbox>
+									<textbox preference="accesskey.share" maxlength="1" size="3" />
+								</hbox>
+							</row>
+							<separator class="groove-thin" width="1" style="margin: 0.6em 0 1.5em 0;" />
+							<row align="center">
+								<label value="&label.shortcutkey.quickPost.regular;" />
+								<hbox>
+									<textbox preference="shortcutkey.quickPost.regular" size="35"/>
+								</hbox>
+							</row>
+							<row align="center">
+								<label value="&label.shortcutkey.quickPost.link;" />
+								<hbox>
+									<textbox preference="shortcutkey.quickPost.link" size="35"/>
+								</hbox>
+							</row>
+							<row align="center">
+								<label value="&label.shortcutkey.checkAndPost;" />
+								<hbox>
+									<textbox preference="shortcutkey.checkAndPost" size="35"/>
+								</hbox>
+							</row>
+							<row align="center" style="margin-top: 0.6em;">
+								<label value="&label.tagProvider;" />
+								<radiogroup preference="tagProvider" />
+							</row>
+							<row align="center" style="margin: 0.4em 0 0.5em 0;">
+								<label value="&label.tagAutoComplete;" />
+								<checkbox preference="tagAutoComplete" />
+							</row>
+							<separator class="groove-thin" width="1" style="margin: 0.6em 0 1.5em 0;" />
+							<row align="center">
+								<label value="&label.ignoreError;"/>
+								<textbox preference="ignoreError" />
+							</row>
+							<row align="center" style="margin-top: -0.3em;">
+								<spacer />
+								<textbox readonly="true" value="&label.example; (ffffound: (?!auth)|already)" />
+							</row>
+						</rows>
+					</grid>
+				</tabpanel>
+				<tabpanel>
+					<grid flex="1">
+						<columns>
+							<column pack="end" align="end" orient="horizontal"/>
+							<column flex="1"/>
+						</columns>
+						<rows>
+							<row align="center">
+								<label value="&label.amazonAffiliateId;"/>
+								<hbox>
+									<textbox preference="amazonAffiliateId" size="35" />
+								</hbox>
+							</row>
+							<row align="center">
+								<label value="&label.thumbnailTemplate;"/>
+								<textbox preference="thumbnailTemplate" />
+							</row>
+							<row align="center" style="margin-top: -0.3em;">
+								<spacer />
+								<textbox readonly="true" value="&label.example; &lt;img src=&quot;http://mozshot.nemui.org/shot?{url}&quot; /&gt;" />
+							</row>
+							<row align="center">
+								<label value="&label.trimReblogInfo;"/>
+								<checkbox preference="trimReblogInfo" />
+							</row>
+							<separator class="groove-thin" width="1" style="margin: 1em 0 1em 0;" />
+							<row align="center">
+								<label value="&label.dataDir;"/>
+								<textbox preference="dataDir" />
+							</row>
+							<row align="center" style="margin-top: -0.3em;">
+								<spacer />
+								<textbox readonly="true" value="&label.example; {ProfD}/tombloo" />
+							</row>
+						</rows>
+					</grid>
+				</tabpanel>
+			</tabpanels>
+		</tabbox>
 		
 		<script><![CDATA[
 		// chrome://tombloo/content/prefs.xul

@@ -1,6 +1,5 @@
 textbox {
 	-moz-binding: url("chrome://tombloo/content/library/completion.xml#textbox");
-	-moz-appearance: none;
 }
 
 textbox *|input {

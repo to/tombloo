@@ -212,7 +212,7 @@
 						self.canceler && self.canceler();
 						self.canceler = tween(function(ratio){
 							// #ccf0ff
-							self.style.backgroundColor = '#' + toHexString(hslToRGB(0.55, 1, 0.9 + (0.1*ratio)));
+							self.input.style.backgroundColor = '#' + toHexString(hslToRGB(0.55, 1, 0.9 + (0.1*ratio)));
 						}, self.delay, 10, function(){
 							self.sleeping = false;
 						});

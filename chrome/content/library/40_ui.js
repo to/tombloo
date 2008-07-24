@@ -613,7 +613,7 @@ function connectToBrowser(win){
 	}
 	
 	if(!hooked.shortcutkey && !isEmpty(shortcutkeys)){
-		tabbrowser.addEventListener('keydown', function(e){
+		win.addEventListener('keydown', function(e){
 			var key = shortcutkeys[keyString(e)];
 			if(!key)
 				return;

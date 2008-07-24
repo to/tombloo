@@ -10,6 +10,12 @@ var EXTENSION_ID = 'tombloo@brasil.to';
 var grobal = this;
 disconnectAll(grobal);
 
+// リロードによっって変更されない領域を用意する
+// イベントに安定してフックするためなどに使われる
+if(typeof(constant)=='undefined')
+	constant = {};
+
+
 // ----[XPCOM]-------------------------------------------------
 function getCookies(host, name){
 	var re = new RegExp(host + '$');

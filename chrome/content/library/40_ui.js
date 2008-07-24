@@ -601,13 +601,10 @@ function connectToBrowser(win){
 	var tabbrowser = win.getBrowser();
 	var version = parseFloat(AppInfo.version);
 	
-	// Firefox 2ではリロードと同時にTabWatcherがガベージコレクトされフックが外れる
-	if((!hooked.contentReady || version <= 2) && connected(grobal, 'content-ready')){
-		TabWatcher.watchWindow(win);
+	if(!hooked.contentReady && connected(grobal, 'content-ready')){
+		constant.tabWatcher = constant.tabWatcher || new TabWatcher();
+		constant.tabWatcher.watchWindow(win);
 		hooked.contentReady = true;
-	} else {
-		// Firefox 3では一度フックした後にフックを無くすとガベージコレクトされるため再フックを促す
-		hooked.contentReady = false;
 	}
 	
 	if(!hooked.shortcutkey && !isEmpty(shortcutkeys)){

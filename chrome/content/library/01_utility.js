@@ -33,7 +33,7 @@ function getCookieString(host, name){
 
 function getPasswords(host, user){
 	if(PasswordManager){
-		return ifilter(function(p){
+		return filter(function(p){
 			return (p.host == host) && 
 				(user? p.user == user : true);
 		}, PasswordManager.enumerator);

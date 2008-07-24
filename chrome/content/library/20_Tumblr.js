@@ -201,13 +201,13 @@ var Tumblr = {
 			case Tumblr.TUMBLR_URL+'dashboard':
 				return;
 			case Tumblr.TUMBLR_URL+'login':
-				throw 'Not loggedin.';
-			case Tumblr.TUMBLR_URL+'share':
+				throw new Error('Not loggedin.');
+			case Tumblr.TUMBLR_URL+'new/photo':
 				if(res.responseText.match(/(exceeded|tomorrow)/))
-					throw "You've exceeded your daily post limit.";
+					throw new Error("You've exceeded your daily post limit.");
 			default:
 				error(res);
-				throw 'Error posting entry.';
+				throw new Error('Error posting entry.');
 			}
 		});
 	},

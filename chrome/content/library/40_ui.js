@@ -169,6 +169,11 @@ QuickPostForm.prototype = {
 			contentWindow.focus();
 		});
 		
+		// FIXME: 外部cssに
+		notification.style.color = '-moz-DialogText';
+		notification.style.backgroundImage = 'none';
+		notification.style.backgroundColor = '-moz-Dialog';
+		
 		this.notification.addEventListener('command', function(e){
 			if(e.target.nodeName == 'checkbox')
 				self.checkPostable();

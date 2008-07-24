@@ -2,25 +2,60 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css" ?>
 <?xml-stylesheet href="data:text/css,
 textbox[readonly=true] {
-	-moz-appearance : none;
-	-moz-user-focus : ignore !important;
-	-moz-border-bottom-colors : transparent;
-	-moz-border-left-colors : transparent;
-	-moz-border-right-colors : transparent;
-	-moz-border-top-colors : transparent;
+	-moz-appearance: none;
+	-moz-user-focus: ignore !important;
+	-moz-border-bottom-colors: transparent;
+	-moz-border-left-colors: transparent;
+	-moz-border-right-colors: transparent;
+	-moz-border-top-colors: transparent;
 }
 tab {
-	padding : 0.4em 0.8em 0.1em 0.8em;
+	padding: 0.4em 0.8em 0.1em 0.8em;
 }
 tabpanel {
-	padding : 1.2em 0.7em;
+	padding: 1.2em 0.7em;
 }
 checkbox, radio, button, tab {
-	cursor : pointer;
+	cursor: pointer;
 }
 
 checkbox:focus > .checkbox-label-box {
   border: none !important;
+}
+
+#postConfig .checkbox-check{
+  -moz-appearance: none;
+	border: none !important;
+	background: url('chrome://tombloo/skin/disabled.png') no-repeat !important;
+  min-width: 16px;
+  min-height: 16px;
+	-moz-opacity: .3;
+}
+
+#postConfig checkbox[checked='true'] > .checkbox-check{
+	background: url('chrome://tombloo/skin/tick.png') no-repeat !important;
+	list-style-image: none !important;
+	-moz-opacity: 1;
+}
+
+#postConfig checkbox[disabled='true'] > .checkbox-check{
+	background: url('chrome://tombloo/skin/cross.png') no-repeat !important;
+	-moz-opacity: .5;
+}
+
+/*
+Windows Firefox 2にてpngをマウスカーソルにすると透過できなかったためicoを用意
+*/
+#postConfig.copyChecked * {
+	cursor: url(chrome://tombloo/skin/tick.ico), pointer !important;
+}
+
+#postConfig.copyDisabled * {
+	cursor: url(chrome://tombloo/skin/cross.ico), pointer !important;
+}
+
+#postConfig.copyNormal * {
+	cursor: url(chrome://tombloo/skin/disabled.ico), pointer !important;
 }
 " type="text/css"?>
 
@@ -28,6 +63,7 @@ checkbox:focus > .checkbox-label-box {
 
 <prefwindow 
 	style="width: 50em;" 
+	xmlns:html="http://www.w3.org/1999/xhtml" 
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
 	title="&label.tomblooOptions;" >
 	
@@ -86,7 +122,7 @@ checkbox:focus > .checkbox-label-box {
 				<tab label="&label.entry;"/>
 			</tabs>
 			<tabpanels flex="1">
-				<tabpanel>
+				<tabpanel id="postConfig">
 					<vbox flex="1" style="overflow:auto">
 						<grid flex="1">
 							<columns>
@@ -102,6 +138,7 @@ checkbox:focus > .checkbox-label-box {
 							</columns>
 							<rows id="posters">
 								<row>
+									<spacer />
 									<spacer />
 									<label value="Text"/>
 									<label value="Photo"/>
@@ -277,16 +314,17 @@ checkbox:focus > .checkbox-label-box {
 		
 		var models = document.getElementById('posters');
 		var config = eval(env.getPref('postConfig'));
+		env.log(window);
 		env.values(env.models).forEach(function(model){
 			if(!model.check)
 				return;
 			
 			var conf = config[model.name] || {};
-			var row = <row style="margin: 0.1em 0;">
+			var row = <row style="margin: 0.1em 0; height: 1.7em;" xmlns:html={env.HTML_NS}>
+				<vbox>
+					<html:img src={model.ICON} />
+				</vbox>
 				<hbox>
-					<box>
-						<image class="checkbox-icon" maxwidth="16" maxheight="16" src={model.ICON}/>
-					</box>
 					<label value={model.name} flex="1"/>
 				</hbox>
 			</row>;
@@ -304,22 +342,73 @@ checkbox:focus > .checkbox-label-box {
 					checked={conf[type] === true} disabled={conf[type] === ''}/> : <spacer/>);
 				
 				return memo;
-			}, ['regular', 'photo', 'quote', 'link', 'video', 'conversation', 'reblog'], row)
+			}, ['regular', 'photo', 'quote', 'link', 'video', 'conversation', 'reblog'], row);
 			models.appendChild(env.convertToXULElement(row));
 		});
 		
-		models.addEventListener('click', function(e){
-			if(e.target.tagName != 'checkbox')
+		
+		var elmPostConfig = document.getElementById('postConfig');
+		var elmSource;
+		
+		elmPostConfig.addEventListener('mousedown', function(e){
+			var target = e.target;
+			if(target.tagName != 'checkbox')
 				return;
 			
-			if(e.target.disabled) {
-				e.target.disabled = false;
-				env.cancel(e);
-			} else if(e.target.checked){
-				e.target.disabled = true;
-				e.target.checked = false;
-			}
+			elmSource = target;
 		}, true);
+		
+		elmPostConfig.addEventListener('click', function(e){
+			var target = e.target;
+			if(target.tagName != 'checkbox')
+				return;
+			
+			env.cancel(e);
+			
+			if(target.disabled) {
+				target.disabled = false;
+				target.checked = false;
+				return;
+			}
+			if(target.checked){
+				target.disabled = true;
+				target.checked = false;
+				return;
+			}
+			
+			target.disabled = false;
+			target.checked = true;
+		}, true);
+		
+		elmPostConfig.addEventListener('mouseover', function(e){
+			var target = e.target;
+			if(!elmSource)
+				return;
+			
+			// Firefox 2でクラスを変える処理に時間が掛かるためmousedownではなくここで行う
+			if(!elmPostConfig.className)
+				elmPostConfig.className = elmSource.checked? 'copyChecked' : elmSource.disabled? 'copyDisabled' : 'copyNormal';
+			
+			if(target.tagName != 'checkbox')
+				return;
+			
+			target.disabled = elmSource.disabled;
+			target.checked = elmSource.checked;
+		}, true);
+		
+		elmPostConfig.addEventListener('mouseout', function(e){
+			if(e.target != elmPostConfig)
+				return;
+			
+			elmSource = null;
+			elmPostConfig.className = '';
+		}, false);
+		
+		elmPostConfig.addEventListener('mouseup', function(e){
+			elmSource = null;
+			elmPostConfig.className = '';
+		}, true);
+		
 		
 		// MacではOK/キャンセルが表示されないため無条件にunloadで保存する
 		window.addEventListener(env.AppInfo.OS.indexOf('WIN') == 0? 'beforeaccept' : 'unload', function(e){

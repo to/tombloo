@@ -421,8 +421,8 @@ forEach({
 	'shortcutkey.quickPost.link' : function(e){
 		cancel(e);
 		
-		var doc = e.originalTarget.ownerDocument;
-		var win = doc.defaultView;
+		var win = e.currentTarget.content;
+		var doc = win.document;
 		win = win.wrappedJSObject || win;
 		
 		new QuickPostForm({
@@ -436,8 +436,8 @@ forEach({
 	'shortcutkey.quickPost.regular' : function(e){
 		cancel(e);
 		
-		var doc = e.originalTarget.ownerDocument;
-		var win = doc.defaultView;
+		var win = e.currentTarget.content;
+		var doc = win.document;
 		win = win.wrappedJSObject || win;
 		
 		new QuickPostForm({

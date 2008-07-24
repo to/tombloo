@@ -965,6 +965,30 @@ models.register({
 	},
 });
 
+models.register({
+	name : 'Snipshot',
+	ICON : 'http://snipshot.com/favicon.ico',
+	
+	check : function(ps){
+		return ps.type=='photo';
+	},
+	
+	post : function(ps){
+		return doXHR('http://services.snipshot.com/', {
+			sendContent : {
+				snipshot_input : ps.file || ps.itemUrl,
+			},
+		}).addCallback(function(res){
+			return addTab(res.channel.URI.asciiSpec);
+		}).addCallback(function(win){
+			win.SnipshotImport = {
+				title : ps.page,
+				url   : ps.pageUrl,
+			};
+		});
+	},
+});
+
 models.register(update({
 	name : 'Hatena',
 	ICON : 'http://www.hatena.ne.jp/favicon.ico',
@@ -1035,31 +1059,13 @@ models.register(update({
 			});
 		}
 	},
+	
+	reprTags: function (tags) {
+		return tags ? tags.map(function(t){
+			return '[' + t + ']';
+		}).join('') : '' ;
+	},
 }, AbstractSessionService));
-
-models.register({
-	name : 'Snipshot',
-	ICON : 'http://snipshot.com/favicon.ico',
-	
-	check : function(ps){
-		return ps.type=='photo';
-	},
-	
-	post : function(ps){
-		return doXHR('http://services.snipshot.com/', {
-			sendContent : {
-				snipshot_input : ps.file || ps.itemUrl,
-			},
-		}).addCallback(function(res){
-			return addTab(res.channel.URI.asciiSpec);
-		}).addCallback(function(win){
-			win.SnipshotImport = {
-				title : ps.page,
-				url   : ps.pageUrl,
-			};
-		});
-	},
-});
 
 models.register({
 	name : 'HatenaFotolife',
@@ -1099,39 +1105,41 @@ models.register({
 	
 	POST_URL : 'http://b.hatena.ne.jp/add',
 	
-	getUserTags : function(){
-		return doXHR(HatenaBookmark.POST_URL+'?mode=confirm').addCallback(function(res){
-			if(res.responseText.match(/var tags ?=(.*);/)){
-				return reduce(function(memo, tag){
-					memo.push({
-						name      : tag,
-						frequency : -1,
-					});
-					return memo;
-				}, Components.utils.evalInSandbox(RegExp.$1, Components.utils.Sandbox('http://b.hatena.ne.jp/')), []);
-			}
-			
-			throw new Error('AUTH_FAILD');
-		});
-	},
-	
 	check : function(ps){
 		return ps.type!='regular' && !ps.file;
 	},
 	
 	post : function(ps){
+		// タイトルは共有されているため送信しない
+		return this.addBookmark(ps.itemUrl, null, ps.tags, joinText([ps.body, ps.description], ' ', true));
+	},
+	
+	addBookmark : function(url, title, tags, description){
 		return Hatena.getToken().addCallback(function(token){
-			var content = {
-				mode    : 'enter',
-				rkm     : token,
-				url     : ps.itemUrl,
-				comment : ((ps.tags && ps.tags.length)? '[' + ps.tags.join('][') + ']' : '') + joinText([ps.body, ps.description], ' ', true).replace(/[\n\r]+/g, ' '),
-			};
-			if(ps.item)
-				content.title = ps.item;
 			return doXHR(HatenaBookmark.POST_URL, {
-				sendContent : content,
+				sendContent : {
+					mode    : 'enter',
+					rkm     : token,
+					url     : url,
+					title   : title, 
+					comment : Hatena.reprTags(tags) + description.replace(/[\n\r]+/g, ' '),
+				},
 			});
+		});
+	},
+	
+	getUserTags : function(){
+		return doXHR(HatenaBookmark.POST_URL+'?mode=confirm').addCallback(function(res){
+			if(!res.responseText.match(/var tags ?=(.*);/))
+				throw new Error('AUTH_FAILD');
+			
+			return reduce(function(memo, tag){
+				memo.push({
+					name      : tag,
+					frequency : -1,
+				});
+				return memo;
+			}, Components.utils.evalInSandbox(RegExp.$1, Components.utils.Sandbox('http://b.hatena.ne.jp/')), []);
 		});
 	},
 });
@@ -1140,28 +1148,24 @@ models.register( {
 	name: 'HatenaDiary',
 	ICON: 'http://d.hatena.ne.jp/favicon.ico',
 	POST_URL : 'http://d.hatena.ne.jp',
-	check : function (ps) {
+	
+	check : function(ps){
 		return ps.type.match(/^(regular|photo|link|quote)$/);
 	},
 	converters: {
-		formatTagString: function (tags) {
-			return tags ? tags.map( function (t) {
-				return "[" + t + "]";
-			} ).join("") : "" ;
-		},
-		getTitle: function ( ps ) {
-			return this.formatTagString(ps.tags) + (ps.page || '')
+		getTitle: function(ps){
+			return Hatena.reprTags(ps.tags) + (ps.page || '')
 		},
 		renderingTemplates: {
 			regular: '<>{ps.description}</>',
 			photo: '<><blockquote class="tombloo_photo" cite={ps.pageUrl} title={ps.page}><img src={ps.itemUrl} /></blockquote>{ps.description}</>',
 			link: '<><div class="tombloo_link"><a href={ps.pageUrl} title={ps.page}>{ps.page}</a></div>{ps.description}</>',
-			quote: '<><blockquote class="tombloo_quote" cite={ps.pageUrl} title={ps.page}>{ps.body}</blockquote>{ps.description}</>',
+			quote: '<>blockquote class="tombloo_quote" cite={ps.pageUrl} title={ps.page}>{ps.body}</blockquote>{ps.description}</>',
 		},
-		__noSuchMethod__: function (name, args) {
+		__noSuchMethod__: function(name, args){
 			var ps = args[0];
 			return {
-				title: (name == 'regular' ) ? "" : this.getTitle(ps),
+				title: (name == 'regular') ? '' : this.getTitle(ps),
 				body: eval( this.renderingTemplates[name] ).toString()
 			};
 		},
@@ -1169,12 +1173,12 @@ models.register( {
 	post : function(params){
 		var content;
 		var self = this;
-		return models.Hatena.getToken().addCallback( function (token) {
+		return models.Hatena.getToken().addCallback(function(token){
 			content = self.converters[params.type](params);
 			content.rkm = token;
 			return models.Hatena.getCurrentUser();
-		}).addCallback( function (id) {
-			var endpoint = [self.POST_URL, id, "" ].join("/");
+		}).addCallback(function(id){
+			var endpoint = [self.POST_URL, id, ''].join('/');
 			return doXHR( endpoint, {
 				referrer    : endpoint,
 				sendContent : content

@@ -457,7 +457,7 @@ forEach({
 			title     : doc.title,
 			selection : ''+win.getSelection(),
 			event     : e,
-			target    : e.target,
+			target    : e.originalTarget,
 			mouse     : {
 				x : e.pageX,
 				y : e.pageY,
@@ -474,7 +474,7 @@ forEach({
 
 			color              : #666;
 			background         : #EEEEEE no-repeat;
-			position           : absolute;
+			position           : fixed;
 			z-index            : 999999999;
 			width              : auto; 
 			height             : 16px;
@@ -485,8 +485,10 @@ forEach({
 			padding-right      : 2px;
 		</>);
 		tip.textContent = ext.name;
-		tip.style.backgroundImage = 'url(' + convertToDataURL(ext.ICON) + ')';
-		setElementPosition(tip, {x: e.pageX-24, y: e.pageY-24});
+		convertToDataURL(ext.ICON).addCallback(function(dataUrl){
+			tip.style.backgroundImage = 'url(' + dataUrl + ')';
+		});
+		setElementPosition(tip, {x: e.clientX - 24, y: e.clientY - 24});
 		doc.body.appendChild(tip);
 		fade(tip, {
 			duration : 0.8,

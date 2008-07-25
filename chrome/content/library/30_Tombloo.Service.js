@@ -4,7 +4,7 @@ Tombloo.Service = {
 			if(!ctx.menu && ctx.target){
 				ctx.link = $x('.//ancestor::a', ctx.target);
 				ctx.onLink = !!ctx.link;
-				ctx.onImage = ctx.target instanceof Ci.nsIImageLoadingContent;
+				ctx.onImage = ctx.target instanceof Ci.nsIDOMHTMLImageElement;
 			}
 			
 			return Tombloo.Service.extracters.check(ctx);
@@ -114,26 +114,26 @@ Tombloo.Service = {
 		if(p.ended)
 			return;
 		
-log('update : ---');
-log('update : START');
-log('update : user = ' + user);
-log('update : type = ' + type);
+debug('update : ---');
+debug('update : START');
+debug('update : user = ' + user);
+debug('update : type = ' + type);
 	return succeed().
 		addCallback(bind('getInfo', Tumblr), user, type).
 		addCallback(function(info){
 			p.max = info.total - Tombloo[type? capitalize(type) : 'Post'].countByUser(user);
-log('update : ---');
-log('update : p.max = ' + p.max);
-log('update : p.ended = ' + p.ended);
+debug('update : ---');
+debug('update : p.max = ' + p.max);
+debug('update : p.ended = ' + p.ended);
 			
 			if(p.ended)
 				return;
 			
 			return Tumblr.read(user, type, info.total, function(post){
-// log('update : ---');
-// log('update : UPDATE : ' + type);
-// log('update : ' + p.value + '/' + p.max);
-// log('update : p.ended = ' + p.ended);
+// debug('update : ---');
+// debug('update : UPDATE : ' + type);
+// debug('update : ' + p.value + '/' + p.max);
+// debug('update : p.ended = ' + p.ended);
 				if(p.ended)
 					throw StopProcess;
 				
@@ -141,17 +141,17 @@ log('update : p.ended = ' + p.ended);
 					Tombloo.Post.insert(post);
 					p.value++;
 				} catch(e if e instanceof Database.DuplicateKeyException) {
-// log('update : DuplicateKeyException!!!!!!!!!!!!!!!!!!!!!!!!!!');
+// debug('update : DuplicateKeyException!!!!!!!!!!!!!!!!!!!!!!!!!!');
 					// 重複エラーを無視し読み飛ばす
 				}
 			});
 		}).
 		addBoth(function(res){
-log('update : ---');
-log('update : END');
-log('update : user = ' + user);
-log('update : type = ' + type);
-// log(res);
+debug('update : ---');
+debug('update : END');
+debug('update : user = ' + user);
+debug('update : type = ' + type);
+// debug(res);
 			}).
 			addCallback(bind('complete', p));
 	},
@@ -163,24 +163,24 @@ Tombloo.Service.Photo = {
 		p = p || new Progress();
 		if(p.ended)
 			return;
-log('download : ---');
-log('download : user = ' + user);
-log('download : size = ' + size);
+debug('download : ---');
+debug('download : user = ' + user);
+debug('download : size = ' + size);
 	
 	return Tombloo.Service.Photo.getByFileExists(user, size, false).
 		addCallback(function(photos){
 			p.max = photos.length;
-log('download : ---');
-log('download : p.max = ' + p.max);
+debug('download : ---');
+debug('download : p.max = ' + p.max);
 			
 			if(p.ended)
 				return;
 			
 			return deferredForEach(photos, function(photo){
-// log('download : ---');
-// log('download : ' + p.value + '/' + p.max);
-// log('download : ' + p.ended);
-// log('download : ' + photo.getFile(size).leafName);
+// debug('download : ---');
+// debug('download : ' + p.value + '/' + p.max);
+// debug('download : ' + p.ended);
+// debug('download : ' + photo.getFile(size).leafName);
 				if(p.ended)
 					throw StopIteration;
 				
@@ -190,24 +190,24 @@ log('download : p.max = ' + p.max);
 			});
 		}).
 		addBoth(function(res){
-log('download : ---');
-log('download : END');
-// log(res);
+debug('download : ---');
+debug('download : END');
+// debug(res);
 			}).
 			addBoth(bind('complete', p));
 	},
 	getByFileExists : function(user, size, exists){
 		exists = exists==null? true : exists;
 		
-log('getByFileExists : START');
-log('getByFileExists : user = ' + user);
+debug('getByFileExists : START');
+debug('getByFileExists : user = ' + user);
 		var all = [];
 		var photoAll = Tombloo.Photo.findByUser(user);
 var c = counter();
-log('getByFileExists : photoAll.length = ' + photoAll.length);
+debug('getByFileExists : photoAll.length = ' + photoAll.length);
 // 		return deferredForEach(Tombloo.Photo.findByUser(user).split(100), function(photos){
 		return deferredForEach(photoAll.split(100), function(photos){
-log('getByFileExists : ' + (c() * 100));
+debug('getByFileExists : ' + (c() * 100));
 			forEach(photos, function(photo){
 				if(photo.checkFile(size) == exists)
 					all.push(photo);

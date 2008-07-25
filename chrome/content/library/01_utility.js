@@ -388,7 +388,7 @@ function sendByChannel(url, opts){
 			try{
 				text = charset? convertToUnicode(text, charset) : text;
 			} catch(err){
-				// [FIXME] debugging
+				// [FIXME] 調査中
 				error(err);
 				error(charset);
 				error(text);
@@ -766,10 +766,14 @@ Array.prototype = update(Array.prototype, {
 
 
 // ----[General]-------------------------------------------------
-function log(msg){
+function debug(msg){
 	if(!getPref('debug'))
 		return msg;
 	
+	return log(msg);
+}
+
+function log(msg){
 	firebug('log', arguments) || 
 		ConsoleService.logStringMessage(''+msg);
 	
@@ -1239,6 +1243,7 @@ function capture(win, pos, dim, scale){
 }
 
 function convertToDataURL(src){
+	var d = new Deferred();
 	var canvas = document.createElementNS(HTML_NS, 'canvas');
 	
 	if(src instanceof Ci.nsIDOMHTMLImageElement){
@@ -1247,12 +1252,13 @@ function convertToDataURL(src){
 		var img = document.createElementNS(HTML_NS, 'img');
 		img.src = src;
 	}
-
-	canvas.width = img.width;
-	canvas.height = canvas.height;
-	
-	canvas.getContext('2d').drawImage(img, 0, 0);
-	return canvas.toDataURL('image/png', '');
+	img.onload = function(){
+		canvas.width = img.width;
+		canvas.height = img.height;
+		canvas.getContext('2d').drawImage(img, 0, 0);
+		d.callback(canvas.toDataURL('image/png', ''));
+	}
+	return d;
 }
 
 // ----[UI]-------------------------------------------------
@@ -1264,8 +1270,11 @@ function observeMouseShortcut(target, check){
 	target.addEventListener('mousedown', function(e){
 		if(isEmpty(downed)){
 			target.addEventListener('keydown', onKeyDown, true);
+			target.addEventListener('keypress', cancelEvent, true);
 			executed = false;
-			event = e;
+			
+			// Firefox 2において後でclientXなどが取得できなくなるためクローンする
+			event = update({}, e);
 		}
 		
 		downed[BUTTONS[e.button]] = true;
@@ -1277,20 +1286,19 @@ function observeMouseShortcut(target, check){
 		delete downed[BUTTONS[e.button]];
 		if(isEmpty(downed)){
 			target.removeEventListener('keydown', onKeyDown, true);
+			target.removeEventListener('keypress', cancelEvent, true);
 			event = null;
 		}
 	}, true);
 
-	target.addEventListener('contextmenu', function(e){
-		if(executed)
-			cancel(e)
-	}, true);
+	target.addEventListener('contextmenu', cancelEvent, true);
+	target.addEventListener('click', cancelEvent, true);
 	
-	target.addEventListener('click', function(e){
-		// クリックによる遷移などをキャンセルする
+	function cancelEvent(e){
+		// クリックによる遷移やコンテキストメニュー、ショートカットキーなどを抑制する
 		if(executed)
 			cancel(e)
-	}, true);
+	}
 	
 	function onKeyDown(e){
 		var code = e.keyCode;

@@ -465,6 +465,36 @@ forEach({
 		}, win.location);
 		
 		var ext = Tombloo.Service.check(ctx)[0];
+		
+		// FIXME: xul:popup要素の使用を検討
+		var tip = doc.createElement('div');
+		tip.setAttribute('style', <>
+			font-family        : 'Arial Black', Arial, sans-serif;
+			font-size          : 12px;
+
+			color              : #666;
+			background         : #EEEEEE no-repeat;
+			position           : absolute;
+			z-index            : 999999999;
+			width              : auto; 
+			height             : 16px;
+			
+			-moz-border-radius : 4px;
+			border             : 4px solid #EEE;
+			padding-left       : 20px;
+			padding-right      : 2px;
+		</>);
+		tip.textContent = ext.name;
+		tip.style.backgroundImage = 'url(' + convertToDataURL(ext.ICON) + ')';
+		setElementPosition(tip, {x: e.pageX-24, y: e.pageY-24});
+		doc.body.appendChild(tip);
+		fade(tip, {
+			duration : 0.8,
+			afterFinish : function(){
+				removeElement(tip);
+			},
+		});
+		
 		Tombloo.Service.share(ctx, ext, ext.name.match(/^Link/));
 	},
 }, function(pair){
@@ -624,7 +654,7 @@ function connectToBrowser(win){
 	}
 	
 	if(!hooked.mouseShortcut && keys(shortcutkeys).some(function(key){return key.indexOf('_DOWN')!=-1})){
-		observeMouseShortcut(tabbrowser, function(e, key){
+		observeMouseShortcut(win, function(e, key){
 			key = shortcutkeys[key];
 			if(!key)
 				return false;

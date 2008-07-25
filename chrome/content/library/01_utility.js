@@ -767,20 +767,27 @@ Array.prototype = update(Array.prototype, {
 
 // ----[General]-------------------------------------------------
 function log(msg){
-	if(!getPref('debug')) return;
+	if(!getPref('debug'))
+		return msg;
 	
 	firebug('log', arguments) || 
 		ConsoleService.logStringMessage(''+msg);
+	
+	return msg;
 }
 
 function error(err){
 	firebug('error', arguments) || 
 		Components.utils.reportError(err);
+	
+	return err;
 }
 
 function warn(msg){
 	firebug('warn', arguments) || 
 		ConsoleService.logMessage(new ScriptError(msg, null, null, null, null, IScriptError.warningFlag, null));
+	
+	return msg;
 }
 
 function firebug(method, args){
@@ -1231,6 +1238,23 @@ function capture(win, pos, dim, scale){
 	return canvas.toDataURL('image/png', '');
 }
 
+function convertToDataURL(src){
+	var canvas = document.createElementNS(HTML_NS, 'canvas');
+	
+	if(src instanceof Ci.nsIDOMHTMLImageElement){
+		var img = src;
+	} else {
+		var img = document.createElementNS(HTML_NS, 'img');
+		img.src = src;
+	}
+
+	canvas.width = img.width;
+	canvas.height = canvas.height;
+	
+	canvas.getContext('2d').drawImage(img, 0, 0);
+	return canvas.toDataURL('image/png', '');
+}
+
 // ----[UI]-------------------------------------------------
 function observeMouseShortcut(target, check){
 	var BUTTONS = ['LEFT_DOWN', 'CENTER_DOWN', 'RIGHT_DOWN'];
@@ -1257,6 +1281,11 @@ function observeMouseShortcut(target, check){
 		}
 	}, true);
 
+	target.addEventListener('contextmenu', function(e){
+		if(executed)
+			cancel(e)
+	}, true);
+	
 	target.addEventListener('click', function(e){
 		// クリックによる遷移などをキャンセルする
 		if(executed)

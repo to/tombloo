@@ -302,11 +302,11 @@ QuickPostForm.prototype = {
 								</row>
 								<row>
 									<label value="Title"/>
-									<label value={ps.item} />
+									<label value={ps.item} crop="end" />
 								</row>
 								<row>
 									<label value="URL"/>
-									<label value={ps.itemUrl} />
+									<label value={ps.itemUrl} crop="end" />
 								</row>
 								<spacer style="margin-top: 1em;"/>
 								<row>
@@ -327,7 +327,7 @@ QuickPostForm.prototype = {
 								</row>
 								<row>
 									<label value="Title"/>
-									<label value={ps.item} />
+									<label value={ps.item} crop="end" />
 								</row>
 								<spacer style="margin-top: 1em;"/>
 								<row>
@@ -352,7 +352,7 @@ QuickPostForm.prototype = {
 								</row>
 								<row>
 									<label value="Title"/>
-									<label value={ps.item} />
+									<label value={ps.item} crop="end" />
 								</row>
 								<row>
 									<label value="Photo"/>
@@ -379,7 +379,7 @@ QuickPostForm.prototype = {
 								</row>
 								<row>
 									<label value="Title"/>
-									<label value={ps.item} />
+									<label value={ps.item} crop="end" />
 								</row>
 								<spacer style="margin-top: 1em;"/>
 								<row>

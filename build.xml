@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project name="xpi" default="build">
-	<property name="project" value="tombloo"/>
+	<property file="build.properties" />
 	
 	<target name="build">
 		<xmlproperty file="install.rdf" collapseAttributes="true" />
@@ -50,5 +50,24 @@
 		<replace file="dest/update.rdf" token="update.rdf" value="${project}.xpi" />
 		
 		<delete dir="dest/build" />
+	</target>
+	
+	<target name="release" depends="build" >
+		<property name="update.rdf" location="dest/update.rdf"/>
+		<exec executable="${mccoy}">
+			<arg value="-command"/>
+			<arg value="update"/>
+			<arg value="-key"/>
+			<arg value="${key}"/>
+			<arg value="-updateRDF"/>
+			<arg value="${update.rdf}"/>
+		</exec>
+		
+		<copy todir=".">
+			<fileset dir="dest">
+				<include name="update.rdf" />
+				<include name="*.xpi" />
+			</fileset>
+		</copy>
 	</target>
 </project>

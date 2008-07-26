@@ -1,22 +1,3 @@
-AbstractSessionService = {
-	updateSession : function(){
-		var cookie = this.getAuthCookie();
-		if(cookie && this.cookie==cookie)
-			return 'same';
-		
-		delete this.cookie;
-		delete this.user;
-		delete this.token;
-		
-		if(!cookie)
-			return 'none';
-		
-		this.cookie = cookie;
-		
-		return 'changed';
-	},
-}
-
 if(typeof(models)=='undefined')
 	this.models = models = new Repository();
 

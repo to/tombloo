@@ -1,4 +1,4 @@
-var Tumblr = {
+var Tumblr = update({}, AbstractSessionService, {
 	name : 'Tumblr',
 	ICON : "data:image/gif,GIF89a%10%00%10%00%91%00%00%13%14%17Y%5C_-08%F0%F0%F0!%F9%04%00%00%00%00%00%2C%00%00%00%00%10%00%10%00%00%02%40%94%8F%08%20%E1%0F!%0B)%AD0M%7C7%8B%01%86%A0%00%60M%03%02c0%60%26%C5.c%E9z%8B%3A%90%F7%7B%C8%F9%5D%F2%E8f%3B%9BO%D79%DDD%C8%17%10%D2%9C%00%A7E%DAfC%CD%02%0B%00%3B",
 	DATA_URL : 'http://data.tumblr.com/',
@@ -94,12 +94,16 @@ var Tumblr = {
 	},
 	
 	remove : function(id){
-		return doXHR(this.TUMBLR_URL+'delete', {
-			referrer    : Tumblr.TUMBLR_URL,
-			sendContent : {
-				id : id,
-				redirect_to : 'dashboard',
-			},
+		var self = this;
+		return this.getToken().addCallback(function(token){
+			return doXHR(self.TUMBLR_URL+'delete', {
+				referrer    : Tumblr.TUMBLR_URL,
+				sendContent : {
+					id          : id,
+					form_key    : token,
+					redirect_to : 'dashboard',
+				},
+			});
 		});
 	},
 	
@@ -254,7 +258,7 @@ var Tumblr = {
 				password : password,
 			}
 		}).addCallback(function(){
-			self.cookie = self.getAuthCookie();
+			self.updateSession();
 			self.user = user;
 		});
 	},
@@ -268,22 +272,59 @@ var Tumblr = {
 	},
 	
 	getCurrentUser : function(){
-		var self = this;
-		var cookie = this.getAuthCookie();
-		if(!cookie){
+		switch (this.updateSession()){
+		case 'none':
 			return succeed('');
-		} else if(self.cookie == cookie){
-			return succeed(self.user);
+			
+		case 'same':
+			if(this.user)
+				return succeed(this.user);
+			
+		case 'changed':
+			var self = this;
+			return doXHR(this.TUMBLR_URL+'preferences').addCallback(function(res){
+				var doc = convertToHTMLDocument(res.responseText);
+				return self.user = $x('id("user_email")/@value', doc);
+			});
 		}
-		
-		return doXHR(this.TUMBLR_URL+'preferences').addCallback(function(res){
-			self.cookie = cookie;
-			return self.user = $x(
-				'id("user_email")/@value', 
-				convertToHTMLDocument(res.responseText));
-		});
 	},
-}
+	
+	getCurrentId : function(){
+		switch (this.updateSession()){
+		case 'none':
+			return succeed('');
+			
+		case 'same':
+			if(this.id)
+				return succeed(this.id);
+			
+		case 'changed':
+			var self = this;
+			return doXHR(this.TUMBLR_URL+'customize').addCallback(function(res){
+				var doc = convertToHTMLDocument(res.responseText);
+				return self.id = $x('id("edit_tumblelog_name")/@value', doc);
+			});
+		}
+	},
+	
+	getToken : function(){
+		switch (this.updateSession()){
+		case 'none':
+			throw new Error('AUTH_FAILD');
+			
+		case 'same':
+			if(this.token)
+				return succeed(this.token);
+			
+		case 'changed':
+			var self = this;
+			return doXHR(this.TUMBLR_URL+'new/text').addCallback(function(res){
+				var doc = convertToHTMLDocument(res.responseText);
+				return self.token = $x('id("form_key")/@value', doc);
+			});
+		}
+	},
+});
 
 
 Tumblr.Regular = {

@@ -1,6 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
-<project name="xpi" default="build">
+<project name="xpi" default="test">
 	<property name="project" value="tombloo"/>
+	
+	<target name="test">
+		<xmlproperty file="install.rdf" collapseAttributes="true" />
+		<delete dir="dest/build" />
+		<mkdir dir="dest/build" />
+		
+		<copy todir="dest/build">
+			<fileset dir=".">
+				<include name="components/**" />
+				<include name="defaults/**" />
+				<include name="chrome/**" />
+				
+				<include name="chrome.manifest" />
+				<include name="install.rdf" />
+				
+				<exclude name="chrome/content/test/**" />
+				<exclude name="chrome/content/work/**" />
+			</fileset>
+		</copy>
+		
+		<zip destfile="dest/${project}.xpi" basedir="dest/build" />
+		<checksum file="dest/${project}.xpi" algorithm="SHA-512" property="hash" />
+		<echo file="dest/update.rdf" ><![CDATA[<?xml version="1.0" encoding="utf-8"?>
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+	<Description about="urn:mozilla:extension:${RDF.Description.em:id}">
+		<em:updates>
+			<Seq>
+				<li>
+					<Description>
+						<em:version>${RDF.Description.em:version}</em:version>
+						<em:targetApplication>
+							<Description>
+								<em:id>${RDF.Description.em:targetApplication.Description.em:id}</em:id>
+								<em:minVersion>${RDF.Description.em:targetApplication.Description.em:minVersion}</em:minVersion>
+								<em:maxVersion>${RDF.Description.em:targetApplication.Description.em:maxVersion}</em:maxVersion>
+								<em:updateLink>${RDF.Description.em:updateURL}</em:updateLink>
+								<em:updateHash>sha512:${hash}</em:updateHash>
+							</Description>
+						</em:targetApplication>
+					</Description>
+				</li>
+			</Seq>
+		</em:updates>
+	</Description>
+</RDF>]]></echo>
+		<replace file="dest/update.rdf" token="update.rdf" value="${project}.xpi" />
+		
+		<delete dir="dest/build" />
+	</target>
 	
 	<target name="build">
 		<xmlproperty file="install.rdf" collapseAttributes="true" />

@@ -478,6 +478,7 @@ forEach({
 			z-index            : 999999999;
 			width              : auto; 
 			height             : 16px;
+			overflow           : hidden; 
 			
 			-moz-border-radius : 4px;
 			border             : 4px solid #EEE;

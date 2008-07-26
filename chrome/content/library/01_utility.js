@@ -1261,6 +1261,7 @@ function convertToDataURL(src){
 	return d;
 }
 
+
 // ----[UI]-------------------------------------------------
 function observeMouseShortcut(target, check){
 	var BUTTONS = ['LEFT_DOWN', 'CENTER_DOWN', 'RIGHT_DOWN'];
@@ -1304,6 +1305,11 @@ function observeMouseShortcut(target, check){
 		var code = e.keyCode;
 		if(KeyEvent.DOM_VK_SHIFT <= code && code <= KeyEvent.DOM_VK_ALT)
 			return;
+		
+		if(executed){
+			cancel(e)
+			return;
+		}
 		
 		if(checkKey(e, [keys(downed), keyString(e)]))
 			cancel(e);
@@ -1527,4 +1533,24 @@ function flashView(doc){
 	});
 	
 	return d;
+}
+
+// ----[Model/Service]-------------------------------------------------
+AbstractSessionService = {
+	updateSession : function(){
+		var cookie = this.getAuthCookie();
+		if(cookie && this.cookie==cookie)
+			return 'same';
+		
+		delete this.cookie;
+		delete this.user;
+		delete this.token;
+		
+		if(!cookie)
+			return 'none';
+		
+		this.cookie = cookie;
+		
+		return 'changed';
+	},
 }

@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://mozapps/skin/extensions/about.css" type="text/css"?> 
+<?xml-stylesheet href="data:text/css,
+.famfamfam {
+	margin  : 0;
+	padding : 0;
+	cursor  : pointer;
+}
+.sectionTitle {
+  margin-top: 10px;
+}
+" type="text/css"?>
+
+<!DOCTYPE dialog SYSTEM "chrome://mozapps/locale/extensions/about.dtd">
+
+<dialog 
+	id="genericAbout"
+	xmlns:html="http://www.w3.org/1999/xhtml" 
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	buttons="accept" onload="init();" onaccept="close();">
+
+	<script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
+	
+	<stringbundleset id="aboutSet">
+		<stringbundle id="extensionsStrings" src="chrome://mozapps/locale/extensions/extensions.properties"/>
+	</stringbundleset>
+
+	<vbox id="clientBox" flex="1">
+		<label value="Tombloo" 
+			id="extensionName" 
+			onclick="openURL('http://code.google.com/p/tombloo/')" 
+			class="text-link" />
+		
+		<label class="sectionTitle">&creator.label;</label>
+		<vbox class="boxIndent" >
+			<label value="to" 
+				onclick="openURL('http://to.tumblr.com/')" 
+				class="text-link" />
+		</vbox>
+			
+		<label class="sectionTitle">&contributors.label;</label>
+		<vbox class="boxIndent">
+			<label value="ku"/>
+			<label value="mattn"/>
+			<label value="youpy"/>
+			<label value="cxx"/>
+		</vbox>
+			
+		<label class="sectionTitle"></label>
+		<vbox class="boxIndent">
+			<description>
+				Icons provided under the Creative Commons Attribution 2.5 License by 
+				<hbox onclick="openURL('http://www.famfamfam.com/')" >
+					<label class="famfamfam" style="color:#FF085A;">FAM</label>
+					<label class="famfamfam" style="color:#10D3FF;">FAM</label>
+					<label class="famfamfam" style="color:#C6FF31;">FAM</label>
+				</hbox>
+			</description>
+		</vbox>
+	</vbox>
+		
+	<separator id="groove" class="groove"/>
+	<script><![CDATA[
+	// chrome://tombloo/content/about.xul
+	function init(){
+		var bundle = document.getElementById('extensionsStrings');
+		var button = document.documentElement.getButton('accept');
+		button.label = bundle.getString('aboutWindowCloseButton');
+	}
+	function openURL(url) {
+		window.opener.openURL(url);
+	}
+	]]></script>
+
+</dialog>

@@ -7,13 +7,9 @@
 		<em:type>2</em:type>
 		<em:name>Tombloo</em:name>
 		<em:version>0.3.9.1</em:version>
-		<em:description>Tumblr Utilities</em:description>
-		<em:creator>to</em:creator>
-		<em:contributor>ku</em:contributor>
-		<em:contributor>mattn</em:contributor>
-		<em:contributor>youpy</em:contributor>
-		<em:contributor>cxx</em:contributor>
+		<em:description></em:description>
 		<em:optionsURL>chrome://tombloo/content/prefs.xul</em:optionsURL>
+		<em:aboutURL>chrome://tombloo/content/about.xul</em:aboutURL>
 		<em:updateURL>http://tombloo.googlecode.com/svn/trunk/update.rdf</em:updateURL>
 		<em:updateKey>MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDkDKakUfa66DxM47cHMltH9sviYxIBUNLhj8c6S5zbg2atrmraQVigfxQW9Oqj13WLGl2LiZPcbekEEViEsYa8CrqYNrF6tBZmW6Zp0eZmvIMABJOZfgt/sCWs6OF15BiOgl3kP92IJzMgOhizbnYOHhtPL6U4ZBQN61SWRxIdmwIDAQAB</em:updateKey>
 		

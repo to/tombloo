@@ -412,9 +412,14 @@ function sendByChannel(url, opts){
 	return d;
 }
 
-function addTab(url){
+function addTab(url, background){
 	var d = new Deferred();
-	var browser = getMostRecentWindow().getBrowser().addTab(url).linkedBrowser;
+	var tabbrowser = getMostRecentWindow().getBrowser();
+	var tab = tabbrowser.addTab(url);
+	var browser = tab.linkedBrowser;
+	if(!background)
+		tabbrowser.selectedTab = tab;
+	
 	browser.addEventListener('DOMContentLoaded', function(event){
 		browser.removeEventListener('DOMContentLoaded', arguments.callee, true);
 		
@@ -462,7 +467,25 @@ registerIteratorFactory(
 		};
 	});
 
-// experimental
+registerIteratorFactory(
+	'nsINavHistoryContainerResultNode', 
+	function(it){
+		return it instanceof Ci.nsINavHistoryContainerResultNode;
+	}, 
+	function(it){
+		var i = 0;
+		var len = it.childCount;
+		return {
+			next: function(){
+				if(i >= len)
+					throw StopIteration;
+				
+				return it.getChild(i++);
+			}
+		};
+	});
+
+// 実験的、itemsの利用を推奨
 registerIteratorFactory(
 	'Object', 
 	function(it){
@@ -1107,7 +1130,7 @@ function $x(exp, context, multi) {
 }
 
 function convertToDOM(xml){
-	var elm = currentDocument().createElement('span');
+	var elm = currentDocument().createElementNS(HTML_NS, 'span');
 	elm.innerHTML = xml.toXMLString();
 	return elm.childNodes[0];
 }

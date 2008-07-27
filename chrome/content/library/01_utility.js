@@ -467,23 +467,25 @@ registerIteratorFactory(
 		};
 	});
 
-registerIteratorFactory(
-	'nsINavHistoryContainerResultNode', 
-	function(it){
-		return it instanceof Ci.nsINavHistoryContainerResultNode;
-	}, 
-	function(it){
-		var i = 0;
-		var len = it.childCount;
-		return {
-			next: function(){
-				if(i >= len)
-					throw StopIteration;
-				
-				return it.getChild(i++);
-			}
-		};
-	});
+if(NavHistoryService){
+	registerIteratorFactory(
+		'nsINavHistoryContainerResultNode', 
+		function(it){
+			return it instanceof Ci.nsINavHistoryContainerResultNode;
+		}, 
+		function(it){
+			var i = 0;
+			var len = it.childCount;
+			return {
+				next: function(){
+					if(i >= len)
+						throw StopIteration;
+					
+					return it.getChild(i++);
+				}
+			};
+		});
+}
 
 // 実験的、itemsの利用を推奨
 registerIteratorFactory(

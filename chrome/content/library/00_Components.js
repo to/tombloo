@@ -50,9 +50,9 @@ var NavBookmarksService = getService('/browser/nav-bookmarks-service;1', Ci.nsIN
 var AnnotationService   = getService('/browser/annotation-service;1', Ci.nsIAnnotationService);
 var ObserverService     = getService('/observer-service;1', Ci.nsIObserverService);
 var WindowWatcher       = getService('/embedcomp/window-watcher;1', Ci.nsIWindowWatcher);
+var ClipboardHelper     = getService('/widget/clipboardhelper;1', Ci.nsIClipboardHelper);
 var NavHistoryService   = getService('/browser/nav-history-service;1', Ci.nsINavHistoryService);
 var FaviconService      = getService('/browser/favicon-service;1', Ci.nsIFaviconService);
-var ClipboardHelper     = getService('/widget/clipboardhelper;1', Ci.nsIClipboardHelper);
 
 
 var PrefBranch = 

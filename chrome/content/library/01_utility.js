@@ -1263,6 +1263,14 @@ function convertToDataURL(src){
 
 
 // ----[UI]-------------------------------------------------
+/**
+ * マウスショートカットを監視する。
+ * マウスダウンにより1セッションがはじまり、全てのボタンのマウスアップで終わる。
+ * 2重実行を防ぐため、そのセッションで一度でも処理が行われると以降は実行されない。
+ *
+ * @target {Element} 監視対象のエレメント
+ * @check {Function} イベント処理関数(未処理の場合はtrueを返す)
+ */
 function observeMouseShortcut(target, check){
 	var BUTTONS = ['LEFT_DOWN', 'CENTER_DOWN', 'RIGHT_DOWN'];
 	var downed = {};
@@ -1316,7 +1324,7 @@ function observeMouseShortcut(target, check){
 	}
 	
 	function checkKey(e, keys){
-		var hit = check(event, joinText(keys, (' + ')));
+		var hit = !check(event, joinText(keys, (' + ')));
 		if(hit)
 			executed = true;
 		

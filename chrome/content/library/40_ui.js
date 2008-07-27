@@ -446,10 +446,16 @@ forEach({
 			pageUrl : win.location.href,
 		}).show();
 	},
+	
+	// 処理を行わなかった場合はtrueを返す
 	'shortcutkey.checkAndPost' : function(e){
 		var doc = e.originalTarget.ownerDocument;
 		var win = doc.defaultView;
 		win = win.wrappedJSObject || win;
+		
+		// XULは処理しない
+		if(!doc.body)
+			return true;
 		
 		var ctx = update({
 			document  : doc,
@@ -660,9 +666,9 @@ function connectToBrowser(win){
 		observeMouseShortcut(win, function(e, key){
 			key = shortcutkeys[key];
 			if(!key)
-				return false;
+				return true;
 			
-			return !key.execute(e);
+			return key.execute(e);
 		});
 		hooked.mouseShortcut = true;
 	}

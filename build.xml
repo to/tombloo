@@ -3,18 +3,13 @@
 	<property file="build.properties" />
 	
 	<target name="build">
-		<xmlproperty file="install.rdf" collapseAttributes="true" />
+		<xmlproperty file="./xpi/install.rdf" collapseAttributes="true" />
 		<delete dir="dest/build" />
 		<mkdir dir="dest/build" />
 		
 		<copy todir="dest/build">
-			<fileset dir=".">
-				<include name="components/**" />
-				<include name="defaults/**" />
-				<include name="chrome/**" />
-				
-				<include name="chrome.manifest" />
-				<include name="install.rdf" />
+			<fileset dir="./xpi">
+				<include name="**/**" />
 				
 				<exclude name="chrome/content/test/**" />
 				<exclude name="chrome/content/work/**" />

@@ -711,10 +711,10 @@ models.register({
 			},
 		}).addCallback(function(res){
 			var doc = convertToHTMLDocument(res.responseText);
-			if(!doc.getElementById('delForm'))
+			if(!doc.getElementById('saveitem'))
 				throw new Error('AUTH_FAILD');
 			
-			return doXHR('http://del.icio.us'+$x('id("delForm")/@action', doc), {
+			return doXHR('http://delicious.com'+$x('id("saveitem")/@action', doc), {
 				sendContent : update(formContents(doc), {
 					description : ps.item,
 					jump        : 'no',

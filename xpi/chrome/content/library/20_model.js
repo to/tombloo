@@ -679,21 +679,24 @@ models.register({
 
 models.register({
 	name : 'Delicious',
-	ICON : 'http://del.icio.us/favicon.ico',
+	ICON : 'http://delicious.com/favicon.ico',
 	getUserTags : function(user){
 		return doXHR('http://feeds.delicious.com/feeds/json/tags/' + (user || Delicious.getCurrentUser())).addCallback(function(res){
+			var tags = Components.utils.evalInSandbox(
+				res.responseText, 
+				Components.utils.Sandbox('http://feeds.delicious.com/'));
 			return reduce(function(memo, tag){
 				memo.push({
 					name      : tag[0],
 					frequency : tag[1],
 				});
 				return memo;
-			}, Components.utils.evalInSandbox(res.responseText, Components.utils.Sandbox('http://feeds.delicious.com/')), []);
+			}, tags, []);
 		});
 	},
 	
 	getCurrentUser : function(){
-		if(decodeURIComponent(getCookieString('del.icio.us', '_user')).match(/user=(.*?) /))
+		if(decodeURIComponent(getCookieString('delicious.com', '_user')).match(/user=(.*?) /))
 			return RegExp.$1;
 		
 		throw new Error('AUTH_FAILD');
@@ -704,7 +707,7 @@ models.register({
 	},
 	
 	post : function(ps){
-		return doXHR('http://del.icio.us/post/', {
+		return doXHR('http://delicious.com/post/', {
 			queryString :	{
 				title : ps.item,
 				url   : ps.itemUrl,

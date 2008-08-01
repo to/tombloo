@@ -1,22 +1,24 @@
-<?xml version="1.0"?>
-<RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
-         xmlns:NC="http://home.netscape.com/NC-rdf#"
-         xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Description RDF:about="rdf:#$NePTT"
-                   em:version="0.3.9.1">
-    <em:targetApplication RDF:resource="rdf:#$QePTT"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$QePTT"
-                   em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
-                   em:minVersion="2.0"
-                   em:maxVersion="3.0.*"
-                   em:updateLink="http://tombloo.googlecode.com/svn/trunk/tombloo.xpi"
-                   em:updateHash="sha512:943ccf7ee2dcac7c6aa61d3c2a57e19159ff4ffed92bd70e77d2b85b2d1ed69bf7be01f753bcebd0fd45912cc5c274420a9763cf1e77b85227e8fe7c8c6161b9" />
-  <RDF:Seq RDF:about="rdf:#$MePTT">
-    <RDF:li RDF:resource="rdf:#$NePTT"/>
-  </RDF:Seq>
-  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
-                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBANdT86tp+jb1O1LNQb85UsBXNcAoajy6XV+7hSNkUohT9++6UScrAicseDvPSjcaYKpvWhMebtfsVprOPteNKiZ2HPUJRlp90OtO2tsXZiDnQ6fNJUn9kfvydqqYXX0x4VaX9mxlZKWVxmkJ3RsQfP5jYtcDMrf0TAhZt9yeAYju">
-    <em:updates RDF:resource="rdf:#$MePTT"/>
-  </RDF:Description>
-</RDF:RDF>
+<?xml version="1.0" encoding="utf-8"?>
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+	<Description about="urn:mozilla:extension:tombloo@brasil.to">
+		<em:updates>
+			<Seq>
+				<li>
+					<Description>
+						<em:version>0.3.9.2</em:version>
+						<em:targetApplication>
+							<Description>
+								<em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+								<em:minVersion>2.0</em:minVersion>
+								<em:maxVersion>3.0.*</em:maxVersion>
+								<em:updateLink>http://github.com/to/tombloo/tree/master/tombloo.xpi?raw=true</em:updateLink>
+								<em:updateHash>sha512:06616e2c1094535d2b797a994915868d61abe6b06be49713c9d8d74c6114ccf03c600e0464b76d2930ba3c6e7110e4d1a055e7a1ca2ceab77c1c51143e1e37a5</em:updateHash>
+							</Description>
+						</em:targetApplication>
+					</Description>
+				</li>
+			</Seq>
+		</em:updates>
+	</Description>
+</RDF>

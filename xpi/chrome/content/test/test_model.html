@@ -4,6 +4,7 @@
 	<script type="text/javascript" src="library/SimpleTest.js"></script>
 	<script type="text/javascript" src="test.js"></script>
 	<link rel="stylesheet" type="text/css" href="library/test.css">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 </head>
 <body>
 <pre id="test">
@@ -363,6 +364,7 @@ try {
 	});
 	*/
 	
+	
 	/*
 	Jaiku
 	d.addCallback(function(){
@@ -377,6 +379,36 @@ try {
 	*/
 	
 	is(Gyazo.getId().length, 14);
+	
+	
+	/*
+	d.addCallback(function(){
+		return LivedoorClip.getToken();
+	});
+	d.addCallback(function(token){
+		ok(token);
+	});
+	d.addCallback(function(){
+		return LivedoorClip.post({
+			rate        : 5,
+			private     : true,
+			item        : 'goo 辞書',
+			itemUrl     : 'http://dictionary.goo.ne.jp/',
+			description : '辞書',
+			body        : '大辞林 第二版',
+			tags        : ['便利', 'dictionary', 'english'],
+		});
+	});
+	
+	d.addCallback(function(){
+		return LivedoorClip.getUserTags();
+	});
+	d.addCallback(function(tags){
+		ok(tags.length);
+	});
+	*/
+	
+	ok(LivedoorClip.getAuthCookie(), 'LivedoorClip: ログインしているか(未ログインの場合エラー)');
 	
 	
 	if(models.FirefoxBookmark){

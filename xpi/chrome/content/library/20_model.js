@@ -881,6 +881,7 @@ models.register({
 	parse : function(ps){
 		ps.appid = this.APP_ID;
 		return doXHR('http://api.jlp.yahoo.co.jp/MAService/V1/parse', {
+			charset     : 'utf-8',
 			sendContent : ps
 		}).addCallback(function(res){
 			return convertToXML(res.responseText);
@@ -1214,6 +1215,72 @@ models.register({
 	},
 });
 
+models.register(update({
+	name : 'LivedoorClip',
+	ICON : 'http://clip.livedoor.com/favicon.ico',
+	POST_URL : 'http://clip.livedoor.com/clip/add',
+
+	check : function(ps){
+		return ps.type!='regular' && !ps.file;
+	},
+	
+	post : function(ps){
+		return LivedoorClip.getToken().addCallback(function(token){
+			var content = {
+				rate    : ps.rate? ps.rate : '',
+				title   : ps.item,
+				postKey : token,
+				link    : ps.itemUrl,
+				tags    : ps.tags? ps.tags.join(' ') : '',
+				notes   : joinText([ps.body, ps.description], ' ', true),
+				public  : ps.private? 'off' : 'on',
+			};
+			return doXHR(LivedoorClip.POST_URL, {
+				sendContent : content,
+			});
+		});
+	},
+	
+	getAuthCookie : function(){
+		return getCookieString('livedoor.com', '.LRC');
+	},
+	
+	getUserTags : function(){
+		if(!this.getAuthCookie())
+			throw new Error('AUTH_FAILD');
+		
+		return doXHR(LivedoorClip.POST_URL+'?link=http%3A%2F%2Ftombloo/').addCallback(function(res){
+			var doc = convertToHTMLDocument(res.responseText);
+			return $x('id("tag_list")/span/text()', doc, true).map(function(tag){
+				return {
+					name      : tag,
+					frequency : -1,
+				};
+			});
+		});
+	},
+	
+	getToken : function(){
+		switch (this.updateSession()){
+		case 'none':
+			throw new Error('AUTH_FAILD');
+		
+		case 'same':
+			if(this.token)
+				return succeed(this.token);
+		
+		case 'changed':
+			var self = this;
+				return doXHR(LivedoorClip.POST_URL+'?link=http%3A%2F%2Ftombloo/').addCallback(function(res){
+					if(res.responseText.match(/"postkey" value="(.*)"/)){
+						self.token = RegExp.$1;
+						return self.token;
+					}
+					throw new Error('AUTH_FAILD');
+				});
+		}
+	},
+}, AbstractSessionService));
 
 models.register({
 	name : 'Wassr',

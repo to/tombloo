@@ -35,7 +35,7 @@
 		<label class="sectionTitle">&creator.label;</label>
 		<vbox class="boxIndent" >
 			<label value="to" 
-				onclick="openURL('http://to.tumblr.com/')" 
+				onclick="openURL('http://github.com/to')" 
 				class="text-link" />
 		</vbox>
 			
@@ -43,8 +43,9 @@
 		<vbox class="boxIndent">
 			<label value="ku"/>
 			<label value="mattn"/>
-			<label value="youpy"/>
+			<label value="youpy" class="text-link" onclick="openURL('http://github.com/youpy')" />
 			<label value="cxx"/>
+			<label value="Constellation" class="text-link" onclick="openURL('http://d.hatena.ne.jp/Constellation/')" />
 		</vbox>
 			
 		<label class="sectionTitle"></label>

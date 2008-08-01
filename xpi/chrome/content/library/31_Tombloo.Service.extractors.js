@@ -1,4 +1,4 @@
-Tombloo.Service.extracters = new Repository([
+Tombloo.Service.extractors = new Repository([
 	{
 		name : 'LDR',
 		getItem : function(ctx, getOnly){
@@ -30,11 +30,11 @@ Tombloo.Service.extracters = new Repository([
 		name : 'Quote - LDR',
 		ICON : 'http://reader.livedoor.com/favicon.ico',
 		check : function(ctx){
-			return Tombloo.Service.extracters.LDR.getItem(ctx, true) && 
+			return Tombloo.Service.extractors.LDR.getItem(ctx, true) && 
 				ctx.selection;
 		},
 		extract : function(ctx){
-			with(Tombloo.Service.extracters){
+			with(Tombloo.Service.extractors){
 				LDR.getItem(ctx);
 				return Quote.extract(ctx);
 			}
@@ -45,13 +45,13 @@ Tombloo.Service.extracters = new Repository([
 		name : 'ReBlog - LDR',
 		ICON : 'http://reader.livedoor.com/favicon.ico',
 		check : function(ctx){
-			var item = Tombloo.Service.extracters.LDR.getItem(ctx, true);
+			var item = Tombloo.Service.extractors.LDR.getItem(ctx, true);
 			return item && (
 				item.href.match('^http://.*?\\.tumblr\\.com/') || 
 				(ctx.onImage && ctx.target.src.match('^http://data\.tumblr\.com/')));
 		},
 		extract : function(ctx){
-			with(Tombloo.Service.extracters){
+			with(Tombloo.Service.extractors){
 				LDR.getItem(ctx);
 				return ReBlog.extract(ctx);
 			}
@@ -62,13 +62,13 @@ Tombloo.Service.extracters = new Repository([
 		name : 'Photo - LDR(FFFFOUND!)',
 		ICON : 'http://reader.livedoor.com/favicon.ico',
 		check : function(ctx){
-			var item = Tombloo.Service.extracters.LDR.getItem(ctx, true);
+			var item = Tombloo.Service.extractors.LDR.getItem(ctx, true);
 			return item && 
 				ctx.onImage && 
 				item.href.match('^http://ffffound\\.com/');
 		},
 		extract : function(ctx){
-			var item = Tombloo.Service.extracters.LDR.getItem(ctx);
+			var item = Tombloo.Service.extractors.LDR.getItem(ctx);
 			ctx.title = item.title;
 			
 			return {
@@ -85,11 +85,11 @@ Tombloo.Service.extracters = new Repository([
 		name : 'Photo - LDR',
 		ICON : 'http://reader.livedoor.com/favicon.ico',
 		check : function(ctx){
-			return Tombloo.Service.extracters.LDR.getItem(ctx, true) && 
+			return Tombloo.Service.extractors.LDR.getItem(ctx, true) && 
 				ctx.onImage;
 		},
 		extract : function(ctx){
-			var exts = Tombloo.Service.extracters;
+			var exts = Tombloo.Service.extractors;
 			exts.LDR.getItem(ctx);
 			return exts.check(ctx)[0].extract(ctx);
 		},
@@ -99,10 +99,10 @@ Tombloo.Service.extracters = new Repository([
 		name : 'Link - LDR',
 		ICON : 'http://reader.livedoor.com/favicon.ico',
 		check : function(ctx){
-			return Tombloo.Service.extracters.LDR.getItem(ctx, true);
+			return Tombloo.Service.extractors.LDR.getItem(ctx, true);
 		},
 		extract : function(ctx){
-			with(Tombloo.Service.extracters){
+			with(Tombloo.Service.extractors){
 				LDR.getItem(ctx);
 				return Link.extract(ctx);
 			}
@@ -168,11 +168,11 @@ Tombloo.Service.extracters = new Repository([
 		ICON : models.Amazon.ICON,
 		check : function(ctx){
 			return ctx.host.match(/amazon\./) && 
-				Tombloo.Service.extracters.Amazon.getAsin(ctx) && 
+				Tombloo.Service.extractors.Amazon.getAsin(ctx) && 
 				ctx.target.id == 'prodImage';
 		},
 		extract : function(ctx){
-			return Tombloo.Service.extracters.Amazon.extract(ctx).addCallback(function(item){
+			return Tombloo.Service.extractors.Amazon.extract(ctx).addCallback(function(item){
 				var img = item.largestImage;
 				if(!img){
 					alert('Image not found.');
@@ -201,11 +201,11 @@ Tombloo.Service.extracters = new Repository([
 		ICON : models.Amazon.ICON,
 		check : function(ctx){
 			return ctx.host.match(/amazon\./) && 
-				Tombloo.Service.extracters.Amazon.getAsin(ctx) && 
+				Tombloo.Service.extractors.Amazon.getAsin(ctx) && 
 				ctx.selection;
 		},
 		extract : function(ctx){
-			var exts = Tombloo.Service.extracters;
+			var exts = Tombloo.Service.extractors;
 			return exts.Amazon.extract(ctx).addCallback(function(item){
 				return exts.Quote.extract(ctx);
 			});
@@ -217,10 +217,10 @@ Tombloo.Service.extracters = new Repository([
 		ICON : models.Amazon.ICON,
 		check : function(ctx){
 			return ctx.host.match(/amazon\./) && 
-				Tombloo.Service.extracters.Amazon.getAsin(ctx);
+				Tombloo.Service.extractors.Amazon.getAsin(ctx);
 		},
 		extract : function(ctx){
-			var exts = Tombloo.Service.extracters;
+			var exts = Tombloo.Service.extractors;
 			return exts.Amazon.extract(ctx).addCallback(function(item){
 				return exts.Link.extract(ctx);
 			});
@@ -270,7 +270,7 @@ Tombloo.Service.extracters = new Repository([
 		},
 		extract : function(ctx){
 			ctx.href = this.getLink(ctx);
-			return Tombloo.Service.extracters.ReBlog.extract(ctx);
+			return Tombloo.Service.extractors.ReBlog.extract(ctx);
 		},
 		getLink : function(ctx){
 			var target = ctx.target;
@@ -290,7 +290,7 @@ Tombloo.Service.extracters = new Repository([
 		},
 		extract : function(ctx){
 			ctx.href = ctx.target.photo.url;
-			return Tombloo.Service.extracters.ReBlog.extract(ctx);
+			return Tombloo.Service.extractors.ReBlog.extract(ctx);
 		},
 	},
 	
@@ -302,7 +302,7 @@ Tombloo.Service.extracters = new Repository([
 		},
 		extract : function(ctx){
 			ctx.href = ctx.link.href;
-			return Tombloo.Service.extracters.ReBlog.extract(ctx);
+			return Tombloo.Service.extractors.ReBlog.extract(ctx);
 		},
 	},
 	
@@ -617,7 +617,7 @@ Tombloo.Service.extracters = new Repository([
 			].some(function(re){
 				return source.match(re);
 			})){
-				return Tombloo.Service.extracters['Photo - Upload from Cache'].extract(ctx);
+				return Tombloo.Service.extractors['Photo - Upload from Cache'].extract(ctx);
 			};
 			
 			if(ctx.document.contentType.match(/^image/))
@@ -897,7 +897,7 @@ Tombloo.Service.extracters = new Repository([
 	},
 ]);
 
-Tombloo.Service.extracters.extract = function(ctx, ext){
+Tombloo.Service.extractors.extract = function(ctx, ext){
 	return withWindow(ctx.window, function(){
 		return maybeDeferred(ext.extract(ctx)).addCallback(function(ps){
 			return ps && update({

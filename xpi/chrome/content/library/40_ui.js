@@ -568,7 +568,7 @@ connect(grobal, 'browser-load', function(e){
 		
 		var exts = Tombloo.Service.check(context);
 		menuShare.label = 'Share - ' + exts[0].name;
-		menuShare.extracter = exts[0].name;
+		menuShare.extractor = exts[0].name;
 		menuShare.setAttribute('image', exts[0].ICON || 'chrome://tombloo/skin/empty.png');
 		
 		if(exts.length<=1){
@@ -579,7 +579,7 @@ connect(grobal, 'browser-load', function(e){
 			for(var i=0 ; i<exts.length ; i++){
 				var ext = exts[i];
 				var item = appendMenuItem(menuSelect, ext.name, ext.ICON || 'chrome://tombloo/skin/empty.png');
-				item.extracter = ext.name;
+				item.extractor = ext.name;
 				item.showForm = true;
 			}
 		}
@@ -595,13 +595,13 @@ connect(grobal, 'browser-load', function(e){
 	}, true);
 	
 	menuContext.addEventListener('command', function(e){
-		if(!e.target.extracter)
+		if(!e.target.extractor)
 			return;
 		
 		context.event = e;
 		
 		var svc = Tombloo.Service;
-		svc.share(context, svc.extracters[e.target.extracter], e.target.showForm);
+		svc.share(context, svc.extractors[e.target.extractor], e.target.showForm);
 	}, true);
 	
 	var menuAction = doc.getElementById('tombloo-menu-main');

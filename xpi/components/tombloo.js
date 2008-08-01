@@ -45,7 +45,7 @@ Module = {
 			
 			var GM_Tombloo = copy({
 				Tombloo : {
-					Service : copy({}, env.Tombloo.Service, /(check|share|posters|extracters)/),
+					Service : copy({}, env.Tombloo.Service, /(check|share|posters|extractors)/),
 				}
 			}, env, /(Deferred|DeferredHash)/);
 			

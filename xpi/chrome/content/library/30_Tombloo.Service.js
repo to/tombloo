@@ -7,7 +7,7 @@ Tombloo.Service = {
 				ctx.onImage = ctx.target instanceof Ci.nsIDOMHTMLImageElement;
 			}
 			
-			return Tombloo.Service.extracters.check(ctx);
+			return Tombloo.Service.extractors.check(ctx);
 		});
 	},
 	
@@ -47,7 +47,7 @@ Tombloo.Service = {
 	share : function(ctx, ext, showForm){
 		// エラー処理をまとめるためDeferredの中に入れる
 		return succeed().addCallback(function(){
-			return Tombloo.Service.extracters.extract(ctx, ext);
+			return Tombloo.Service.extractors.extract(ctx, ext);
 		}).addCallback(function(ps){
 			log(ps);
 			

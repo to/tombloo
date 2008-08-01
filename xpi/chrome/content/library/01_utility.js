@@ -1066,7 +1066,8 @@ Repository.prototype = {
 // ----[DOM]-------------------------------------------------
 function getSelectionString(win){
 	var sel = win.getSelection();
-	return sel.anchorNode == sel.focusNode? sel.anchorNode.textContent : ''+sel;
+	return (sel.isCollapsed)? '' : 
+		(sel.anchorNode == sel.focusNode)? sel.anchorNode.textContent : ''+sel;
 }
 
 function unescapeHTML(s){

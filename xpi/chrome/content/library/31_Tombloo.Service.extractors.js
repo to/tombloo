@@ -565,6 +565,27 @@ Tombloo.Service.extractors = new Repository([
 		},
 	},
 	
+	{
+		name : 'Photo - Share-image.com',
+		ICON : 'http://www.share-image.com/favicon.ico',
+		
+		check : function(ctx){
+			return ctx.href.match(/share-image\.com\/gallery\//) && this.getImage();
+		},
+		extract : function(ctx){
+			return doXHR(this.getImage()).addCallback(function(res){
+				return {
+					type    : 'photo',
+					item    : ctx.title,
+					itemUrl : res.channel.URI.spec, 
+				}
+			});
+		},
+		getImage : function(){
+			return $x('//img[starts-with(@src, "http://www.share-image.com/pictures/big/")]/@src');
+		},
+	},
+	
 	// [FIXME] firefox 3
 	/*
 	{

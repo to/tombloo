@@ -1,24 +1,22 @@
-<?xml version="1.0" encoding="utf-8"?>
-<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
-     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
-	<Description about="urn:mozilla:extension:tombloo@brasil.to">
-		<em:updates>
-			<Seq>
-				<li>
-					<Description>
-						<em:version>0.3.9.2</em:version>
-						<em:targetApplication>
-							<Description>
-								<em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
-								<em:minVersion>2.0</em:minVersion>
-								<em:maxVersion>3.0.*</em:maxVersion>
-								<em:updateLink>http://github.com/to/tombloo/tree/master/tombloo.xpi?raw=true</em:updateLink>
-								<em:updateHash>sha512:06616e2c1094535d2b797a994915868d61abe6b06be49713c9d8d74c6114ccf03c600e0464b76d2930ba3c6e7110e4d1a055e7a1ca2ceab77c1c51143e1e37a5</em:updateHash>
-							</Description>
-						</em:targetApplication>
-					</Description>
-				</li>
-			</Seq>
-		</em:updates>
-	</Description>
-</RDF>
+<?xml version="1.0"?>
+<RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
+         xmlns:NC="http://home.netscape.com/NC-rdf#"
+         xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <RDF:Description RDF:about="rdf:#$6ul2u3"
+                   em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+                   em:minVersion="2.0"
+                   em:maxVersion="3.0.*"
+                   em:updateLink="http://github.com/to/tombloo/tree/master/tombloo.xpi?raw=true"
+                   em:updateHash="sha512:8108d190bf408031b58ec0ec35bcbbb7059d6877be0184c744aec93f95a250e19daa4056099ff5451a294e256e3f058b9e9838e686e0a712fcf354e2a4f348c3" />
+  <RDF:Seq RDF:about="rdf:#$2ul2u3">
+    <RDF:li RDF:resource="rdf:#$3ul2u3"/>
+  </RDF:Seq>
+  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAK+pgqI+h/NM2sVpNbAE3cn4bB+KyMLuzbUcCHLQ5SYo5t4Byi6bwZQWbWclMJ5iUOiA03Rv13q3YReRgcrLSryO9OQrFUM1RNYA4PcjiCVPcScDzreD6OQIsS1YZmEyDovCFxACnGiWNMx2gdNstWlDVavjPIs6M8KKof2oXHnE">
+    <em:updates RDF:resource="rdf:#$2ul2u3"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$3ul2u3"
+                   em:version="0.3.9.2">
+    <em:targetApplication RDF:resource="rdf:#$6ul2u3"/>
+  </RDF:Description>
+</RDF:RDF>

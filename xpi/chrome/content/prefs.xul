@@ -17,28 +17,37 @@ tabpanel {
 }
 checkbox, radio, button, tab {
 	cursor: pointer;
+	-moz-outline: none !important;
 }
 
-checkbox:focus > .checkbox-label-box {
-  border: none !important;
+checkbox:focus .checkbox-label-box {
+	border: none !important;
+	-moz-outline:  none !important;
+}
+
+#postConfig checkbox hbox{
+	-moz-appearance: none;
+	-moz-outline:  none !important;
+	border: none !important;
+	background: transparent !important;
 }
 
 #postConfig .checkbox-check{
-  -moz-appearance: none;
+	-moz-appearance: none;
 	border: none !important;
 	background: url('chrome://tombloo/skin/disabled.png') no-repeat !important;
-  min-width: 16px;
-  min-height: 16px;
+	min-width: 16px;
+	min-height: 16px;
 	-moz-opacity: .3;
 }
 
-#postConfig checkbox[checked='true'] > .checkbox-check{
+#postConfig checkbox[checked='true'] .checkbox-check{
 	background: url('chrome://tombloo/skin/tick.png') no-repeat !important;
 	list-style-image: none !important;
 	-moz-opacity: 1;
 }
 
-#postConfig checkbox[disabled='true'] > .checkbox-check{
+#postConfig checkbox[disabled='true'] .checkbox-check{
 	background: url('chrome://tombloo/skin/cross.png') no-repeat !important;
 	-moz-opacity: .5;
 }

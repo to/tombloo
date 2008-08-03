@@ -22,12 +22,12 @@ checkbox, radio, button, tab {
 
 checkbox:focus .checkbox-label-box {
 	border: none !important;
-	-moz-outline:  none !important;
+	-moz-outline: none !important;
 }
 
 #postConfig checkbox hbox{
 	-moz-appearance: none;
-	-moz-outline:  none !important;
+	-moz-outline: none !important;
 	border: none !important;
 	background: transparent !important;
 }
@@ -75,6 +75,10 @@ Windows Firefox 2にてpngをマウスカーソルにすると透過できなか
 	xmlns:html="http://www.w3.org/1999/xhtml" 
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
 	title="&label.tomblooOptions;" >
+	
+	<hbox flex="1" pack="end">
+		<resizer dir="bottomright" style="cursor: se-resize;" />
+	</hbox>
 	
 	<prefpane flex="1" id="main">
 		<preferences>

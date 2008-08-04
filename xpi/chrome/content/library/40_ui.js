@@ -186,7 +186,7 @@ QuickPostForm.prototype = {
 		this.elmTags = this.prepareTags();
 		
 		setTimeout(function(){
-			$x('.//xul:textbox', notification).focus();
+			$x('.//*[@tabindex="0"]', notification).focus();
 		}, 50);
 		
 		this.elmDescription = $x('.//xul:textbox[@name="description"]', this.notification);
@@ -290,7 +290,7 @@ QuickPostForm.prototype = {
 								<spacer style="margin-top: 1em;"/>
 								<row>
 									<label value="Description"/>
-									<textbox name="description" multiline="true" rows="6" value={ps.description}/>
+									<textbox name="description" tabindex="0" multiline="true" rows="6" value={ps.description}/>
 								</row>
 							</rows>
 							
@@ -302,16 +302,16 @@ QuickPostForm.prototype = {
 								</row>
 								<row>
 									<label value="Title"/>
-									<label value={ps.item} crop="end" />
+									<textbox name="item" value={ps.item}/>
 								</row>
 								<row>
 									<label value="URL"/>
-									<label value={ps.itemUrl} crop="end" />
+									<textbox name="itemUrl" value={ps.itemUrl}/>
 								</row>
 								<spacer style="margin-top: 1em;"/>
 								<row>
 									<label value="Tag"/>
-									<textbox name="tags" flex="1" value={tags} style="-moz-binding: url(chrome://tombloo/content/library/completion.xml#container);"/>
+									<textbox name="tags" tabindex="0" flex="1" value={tags} style="-moz-binding: url(chrome://tombloo/content/library/completion.xml#container);"/>
 								</row>
 								<row>
 									<label value="Description"/>
@@ -327,12 +327,12 @@ QuickPostForm.prototype = {
 								</row>
 								<row>
 									<label value="Title"/>
-									<label value={ps.item} crop="end" />
+									<textbox name="item" value={ps.item}/>
 								</row>
 								<spacer style="margin-top: 1em;"/>
 								<row>
 									<label value="Tag"/>
-									<textbox name="tags" flex="1" value={tags} style="-moz-binding: url(chrome://tombloo/content/library/completion.xml#container)"/>
+									<textbox name="tags" tabindex="0" flex="1" value={tags} style="-moz-binding: url(chrome://tombloo/content/library/completion.xml#container)"/>
 								</row>
 								<row>
 									<label value="Quote"/>
@@ -352,7 +352,7 @@ QuickPostForm.prototype = {
 								</row>
 								<row>
 									<label value="Title"/>
-									<label value={ps.item} crop="end" />
+									<textbox name="item" value={ps.item}/>
 								</row>
 								<row>
 									<label value="Photo"/>
@@ -363,7 +363,7 @@ QuickPostForm.prototype = {
 								<spacer style="margin-top: 1em;"/>
 								<row>
 									<label value="Tag"/>
-									<textbox name="tags" flex="1" value={tags} style="-moz-binding: url(chrome://tombloo/content/library/completion.xml#container)"/>
+									<textbox name="tags" tabindex="0" flex="1" value={tags} style="-moz-binding: url(chrome://tombloo/content/library/completion.xml#container)"/>
 								</row>
 								<row>
 									<label value="Description"/>
@@ -379,12 +379,12 @@ QuickPostForm.prototype = {
 								</row>
 								<row>
 									<label value="Title"/>
-									<label value={ps.item} crop="end" />
+									<textbox name="item" value={ps.item}/>
 								</row>
 								<spacer style="margin-top: 1em;"/>
 								<row>
 									<label value="Tag"/>
-									<textbox name="tags" flex="1" value={tags} style="-moz-binding: url(chrome://tombloo/content/library/completion.xml#container)"/>
+									<textbox name="tags" tabindex="0" flex="1" value={tags} style="-moz-binding: url(chrome://tombloo/content/library/completion.xml#container)"/>
 								</row>
 								<row>
 									<label value="Description"/>

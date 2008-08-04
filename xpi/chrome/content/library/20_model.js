@@ -8,14 +8,23 @@ models.register({
 		return ps.type != 'regular' && !ps.file;
 	},
 	
+	getAuthCookie : function(){
+		return getCookieString('friendfeed.com', 'U');
+	},
+	
+	getToken : function(){
+		return getCookieString('friendfeed.com', 'AT').split('=').pop();
+	},
+	
 	post : function(ps){
-		var token = getCookies('friendfeed.com', 'AT')[0];
-		if(!token)
+		if(!this.getAuthCookie())
 			throw new Error('AUTH_FAILD');
 		
+		var self = this;
 		return doXHR('https://friendfeed.com/share/publish', {
+			redirectionLimit : 0,
 			sendContent : {
-				at  : token.value,
+				at  : self.getToken(),
 				url : ps.pageUrl,
 				title : ps.page,
 				image0 : ps.type == 'photo'? ps.itemUrl : '',
@@ -393,6 +402,7 @@ models.register({
 			return;
 		
 		return doXHR(this.URL + 'user/manage/do_register', {
+			redirectionLimit : 0,
 			referrer : ps.pageUrl,
 			queryString : {
 				src : ps.id,
@@ -537,6 +547,7 @@ models.register({
 		return Twitter.getToken().addCallback(function(token){
 			token.status = joinText([ps.item, ps.itemUrl, ps.body, ps.description], ' ', true);
 			return doXHR('http://twitter.com/status/update', update({
+				redirectionLimit : 0,
 				sendContent : token,
 			}));
 		});
@@ -546,6 +557,7 @@ models.register({
 		return Twitter.getToken().addCallback(function(ps){
 			ps._method = 'delete';
 			return doXHR('http://twitter.com/status/destroy/' + id, {
+				redirectionLimit : 0,
 				referrer : 'http://twitter.com/home',
 				sendContent : ps,
 			});
@@ -555,6 +567,7 @@ models.register({
 	addFavorite : function(id){
 		return Twitter.getToken().addCallback(function(ps){
 			return doXHR('http://twitter.com/favourings/create/' + id, {
+				redirectionLimit : 0,
 				referrer : 'http://twitter.com/home',
 				sendContent : ps,
 			});
@@ -586,6 +599,7 @@ models.register({
 		return doXHR(Jaiku.URL).addCallback(function(res){
 			var form =  formContents(convertToHTMLDocument(res.responseText));
 			return doXHR(Jaiku.URL, {
+				redirectionLimit : 0,
 				sendContent : {
 					_nonce : form._nonce,
 					message : joinText([ps.item, ps.itemUrl, ps.body, ps.description], ' ', true),
@@ -664,6 +678,7 @@ models.register({
 			
 			var fs = formContents(doc);
 			return doXHR('http://www.google.com'+$x('//form[@name="add_bkmk_form"]/@action', doc), {
+				redirectionLimit : 0,
 				sendContent  : {
 					title      : ps.item,
 					bkmk       : ps.itemUrl,
@@ -718,6 +733,7 @@ models.register({
 				throw new Error('AUTH_FAILD');
 			
 			return doXHR('http://delicious.com'+$x('id("saveitem")/@action', doc), {
+				redirectionLimit : 0,
 				sendContent : update(formContents(doc), {
 					description : ps.item,
 					jump        : 'no',
@@ -837,6 +853,7 @@ models.register({
 	
 	post : function(ps){
 		return doXHR('http://www.instapaper.com/edit', {
+			redirectionLimit : 0,
 			sendContent : {
 				'bookmark[title]' : ps.item, 
 				'bookmark[url]' : ps.itemUrl,
@@ -921,6 +938,7 @@ models.register({
 			return formContents($x('(id("addbookmark")//form)[1]', convertToHTMLDocument(res.responseText)));
 		}).addCallback(function(fs){
 			return doXHR('http://bookmarks.yahoo.co.jp/action/post/done', {
+				redirectionLimit : 0,
 				sendContent  : {
 					title      : ps.item,
 					url        : ps.itemUrl,
@@ -1076,6 +1094,7 @@ models.register({
 			return Hatena.getCurrentUser();
 		}).addCallback(function(user){
 			return doXHR('http://f.hatena.ne.jp/'+user+'/up', {
+				redirectionLimit : 0,
 				sendContent : update({
 					mode : 'enter',
 				}, ps),
@@ -1102,6 +1121,7 @@ models.register({
 	addBookmark : function(url, title, tags, description){
 		return Hatena.getToken().addCallback(function(token){
 			return doXHR(HatenaBookmark.POST_URL, {
+				redirectionLimit : 0,
 				sendContent : {
 					mode    : 'enter',
 					rkm     : token,
@@ -1167,6 +1187,7 @@ models.register( {
 		}).addCallback(function(id){
 			var endpoint = [self.POST_URL, id, ''].join('/');
 			return doXHR( endpoint, {
+				redirectionLimit : 0,
 				referrer    : endpoint,
 				sendContent : content
 			});
@@ -1193,6 +1214,7 @@ models.register({
 	post : function(ps){
 		return HatenaStar.getToken().addCallback(function(token){
 			return doXHR('http://s.hatena.ne.jp/star.add.json', {
+				redirectionLimit : 0,
 				queryString :	{
 					rks      : token,
 					title    : ps.item,
@@ -1207,6 +1229,7 @@ models.register({
 	remove : function(ps){
 		return HatenaStar.getToken().addCallback(function(token){
 			return doXHR('http://s.hatena.ne.jp/star.delete.json', {
+				redirectionLimit : 0,
 				queryString :	{
 					rks   : token,
 					uri   : ps.itemUrl,
@@ -1238,6 +1261,7 @@ models.register(update({
 				public  : ps.private? 'off' : 'on',
 			};
 			return doXHR(LivedoorClip.POST_URL, {
+				redirectionLimit : 0,
 				sendContent : content,
 			});
 		});
@@ -1295,6 +1319,7 @@ models.register({
 	post : function(ps){
 		return doXHR('http://wassr.jp/my/').addCallback(function(res){
 			return doXHR('http://wassr.jp/my/status/add', {
+				redirectionLimit : 0,
 				sendContent : update(formContents(convertToHTMLDocument(res.responseText)), {
 					message : joinText([ps.item, ps.itemUrl, ps.body, ps.description], ' ', true),
 				}),

@@ -309,7 +309,7 @@ Tombloo.Service.extractors = new Repository([
 	{
 		name : 'Photo - Flickr',
 		ICON : models.Flickr.ICON,
-		ICON : Flickr.ICON,
+		
 		RE : new RegExp('^http://(?:.+?.)?static.flickr.com/\\d+?/(\\d+?)_.*'),
 		getImageId : function(img){
 			if(img.src.match('spaceball.gif'))

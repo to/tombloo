@@ -10,6 +10,7 @@
 <pre id="test">
 </pre>
 <script type="text/javascript" src="../library/00_Components.js"></script>
+<script type="text/javascript" src="../library/00_MochiKit.js"></script>
 <script type="text/javascript" src="../library/01_utility.js"></script>
 <script type="text/javascript" src="../library/10_Progress.js"></script>
 <script type="text/javascript" src="../library/10_Database.js"></script>
@@ -92,6 +93,7 @@ try {
 			token : 'Vm1AnAen',
 			id    : '31573890',
 		});
+	
 	/*
 	TEST OK
 	d.addCallback(doXHR, 'http://to.tumblr.com/post/34424030');
@@ -250,17 +252,13 @@ try {
 	
 	
 } catch (err) {
-	var s = 'test suite failure!\n';
-	var o = {};
-	var k = null;
-	for (k in err) {
-		// ensure unique keys?!
-		if (!o[k]) {
-			s +=  k + ': ' + err[k] + '\n';
-			o[k] = err[k];
-		}
-	}
-	ok ( false, s );
+	var s = [];
+	s.push('TEST SUITE FAILURE!');
+	for(var prop in err)
+		s.push(prop + ':  ' + err[prop]);
+	ok(false, s.join('\n'));
+	
+	SimpleTest.finish()
 }
 </script>
 

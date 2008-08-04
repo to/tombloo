@@ -167,8 +167,8 @@ function createMock(sample, proto){
 }
 
 function createQueryInterface(ifcNames){
-	var ifcs = ['nsISupports'].concat(ifcNames).map(function(ifcNames){
-		return Ci[''+ifcNames];
+	var ifcs = ['nsISupports'].concat(ifcNames).map(function(ifcName){
+		return Ci[''+ifcName];
 	});
 	
 	return function(iid){

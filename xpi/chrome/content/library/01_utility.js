@@ -302,6 +302,14 @@ function doXHR(url, opts){
 function sendByChannel(url, opts){
 	var d = new Deferred();
 	
+	function setCookie(channel){
+		// サードパーティのクッキーを送信するか?
+		if(getPrefValue('network.cookie.cookieBehavior') != 1)
+			return;
+		
+		channel.setRequestHeader('Cookie', getCookieString(channel.originalURI.host), true);
+	}
+	
 	opts = opts || {};
 	
 	var uri = createURI(url + queryString(opts.queryString, true));
@@ -309,6 +317,8 @@ function sendByChannel(url, opts){
 	
 	if(opts.referrer)
 		channel.referrer = createURI(opts.referrer);
+	
+	setCookie(channel);
 	
 	if(opts.sendContent){
 		var contents = opts.sendContent;
@@ -370,16 +380,73 @@ function sendByChannel(url, opts){
 		}
 	}
 	
-	channel.requestMethod = opts.sendContent? 'POST' : 'GET';
-	channel.asyncOpen({
-		QueryInterface : createQueryInterface(IStreamListener),
+	var redirectionCount = 0;
+	var listner = {
+		QueryInterface : createQueryInterface([
+			'nsIProgressEventSink', 
+			'nsIStreamListener', 
+			'nsIInterfaceRequestor', 
+			'nsIHttpEventSink', 
+			'nsIChannelEventSink',
+			'nsIWebProgress']),
+		
+		// nsIWebProgress
+		// Firefox 2のFirebugで大量にエラーが発生するのを回避
+		addProgressListener : function(listener, notifyMask){},
+		removeProgressListener : function(listener){},
+		
+		// nsIProgressEventSink
+		onProgress : function(req, ctx, progress, progressMax){},
+		onStatus : function(req, ctx, status, statusArg){},
+		
+		// nsIInterfaceRequestor
+		getInterface : function(iid){
+			try {
+				return this.QueryInterface(iid);
+			} catch (e) {
+				throw Components.results.NS_NOINTERFACE;
+			}
+		},
+		
+		// nsIHttpEventSink
+		onRedirect : function(oldChannel, newChannel){},
+		
+		// nsIChannelEventSink
+		onChannelRedirect : function(oldChannel, newChannel, flags){
+			// channel.redirectionLimitを使うとリダイレクト後のアドレスが取得できない
+			redirectionCount++;
+			
+			if(opts.redirectionLimit!=null && redirectionCount>opts.redirectionLimit){
+				// NS_ERROR_REDIRECT_LOOP
+				newChannel.cancel(2152398879);
+				
+				var res = {
+					channel : newChannel,
+					responseText : '',
+					status : oldChannel.responseStatus,
+					statusText : oldChannel.responseStatusText,
+				};
+				d.callback(res);
+				
+				return;
+			}
+			
+			// パフォーマンスを考慮しbroadを使わない
+			setCookie(newChannel.QueryInterface(Ci.nsIHttpChannel));
+		},
+		
+		// nsIStreamListener
 		onStartRequest: function(req, ctx){
 			this.data = [];
 		},
-		onDataAvailable: function(req, ctx, stream, sourceOffset, length) {
+		onDataAvailable: function(req, ctx, stream, sourceOffset, length){
 			this.data.push(new InputStream(stream).read(length));
 		},
-		onStopRequest: function (req, ctx, status) {
+		onStopRequest: function (req, ctx, status){
+			// Firefox 3ではcancelするとonStopRequestは呼ばれない
+			if(opts.redirectionLimit!=null && redirectionCount>opts.redirectionLimit)
+				return;
+			
 			broad(req);
 			
 			var text = this.data.join('');
@@ -397,17 +464,20 @@ function sendByChannel(url, opts){
 				channel : req,
 				responseText : text,
 				status : req.responseStatus,
+				statusText : req.responseStatusText,
 			};
+			
 			if(Components.isSuccessCode(status) && res.status < 400){
 				d.callback(res);
 			}else{
 				res.message = getMessage('error.http.' + res.status);
 				d.errback(res);
 			}
-			
-			channel = null;
 		},
-	}, null);
+	};
+	channel.requestMethod = opts.sendContent? 'POST' : 'GET';
+	channel.notificationCallbacks = listner;
+	channel.asyncOpen(listner, null);
 	
 	return d;
 }

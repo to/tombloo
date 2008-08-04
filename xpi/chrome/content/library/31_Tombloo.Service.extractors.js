@@ -586,6 +586,22 @@ Tombloo.Service.extractors = new Repository([
 		},
 	},
 	
+	{
+		name : 'Photo - Frostdesign.net',
+		ICON : 'http://mfrost.typepad.com/favicon.ico',
+		
+		check : function(ctx){
+			return ctx.host == 'mfrost.typepad.com' && (ctx.onLink && ctx.link.href.match('http://mfrost.typepad.com/.shared/image.html'));
+		},
+		extract : function(ctx){
+			return {
+				type    : 'photo',
+				item    : ctx.title,
+				itemUrl : 'http://mfrost.typepad.com' + ctx.link.href.split('?').pop(), 
+			}
+		},
+	},
+	
 	// [FIXME] firefox 3
 	/*
 	{

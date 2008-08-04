@@ -5,6 +5,8 @@
 	<target name="build">
 		<xmlproperty file="./xpi/install.rdf" collapseAttributes="true" />
 		<delete dir="dest/build" />
+		<delete file="dest/${project}.xpi" />
+		
 		<mkdir dir="dest/build" />
 		
 		<copy todir="dest/build">
@@ -17,8 +19,16 @@
 		</copy>
 		
 		<zip destfile="dest/${project}.xpi" basedir="dest/build" />
+		
+		<delete dir="dest/build" />
+	</target>
+	
+	<target name="release" depends="build" >
+		<delete file="${project}.xpi" />
+		<delete file="update.rdf" />
+		
 		<checksum file="dest/${project}.xpi" algorithm="SHA-512" property="hash" />
-		<echo file="dest/update.rdf" ><![CDATA[<?xml version="1.0" encoding="utf-8"?>
+		<echo file="update.rdf" ><![CDATA[<?xml version="1.0" encoding="utf-8"?>
 <RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" 
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
 	<Description about="urn:mozilla:extension:${RDF.Description.em:id}">
@@ -42,13 +52,9 @@
 		</em:updates>
 	</Description>
 </RDF>]]></echo>
-		<replace file="dest/update.rdf" token="update.rdf" value="${project}.xpi" />
+		<replace file="update.rdf" token="update.rdf" value="${project}.xpi" />
 		
-		<delete dir="dest/build" />
-	</target>
-	
-	<target name="release" depends="build" >
-		<property name="update.rdf" location="dest/update.rdf"/>
+		<property name="update.rdf" location="update.rdf"/>
 		<exec executable="${mccoy}">
 			<arg value="-command"/>
 			<arg value="update"/>
@@ -58,11 +64,6 @@
 			<arg value="${update.rdf}"/>
 		</exec>
 		
-		<copy todir=".">
-			<fileset dir="dest">
-				<include name="update.rdf" />
-				<include name="*.xpi" />
-			</fileset>
-		</copy>
+		<copy file="dest/${project}.xpi" todir="." />
 	</target>
 </project>

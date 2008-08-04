@@ -688,7 +688,7 @@ String.prototype = update(String.prototype, {
 		return '<a href="' + href + '">' + this + '</a>';
 	},
 	trim : function(){
-		return this.replace(/^[\t\s\n\r]+|[\t\s\n\r]+$/g, '');
+		return this.replace(/^\s+|\s+$/g, '');
 	},
 	repeat : function(n){
 		return new Array(n+1).join(this);
@@ -1134,12 +1134,6 @@ Repository.prototype = {
 }
 
 // ----[DOM]-------------------------------------------------
-function getSelectionString(win){
-	var sel = win.getSelection();
-	return (sel.isCollapsed)? '' : 
-		(sel.anchorNode == sel.focusNode)? sel.anchorNode.textContent : ''+sel;
-}
-
 function unescapeHTML(s){
 	return s.replace(
 		/&amp;/g, '&').replace(

@@ -461,7 +461,7 @@ forEach({
 			document  : doc,
 			window    : win,
 			title     : doc.title,
-			selection : getSelectionString(win),
+			selection : ''+win.getSelection(),
 			event     : e,
 			target    : e.originalTarget,
 			mouse     : {
@@ -557,7 +557,7 @@ connect(grobal, 'browser-load', function(e){
 			document  : doc,
 			window    : win,
 			title     : ''+doc.title || '',
-			selection : getSelectionString(win),
+			selection : ''+win.getSelection(),
 			event     : e,
 			mouse     : {
 				x : e.pageX,

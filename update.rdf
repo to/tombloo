@@ -2,21 +2,21 @@
 <RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
          xmlns:NC="http://home.netscape.com/NC-rdf#"
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Seq RDF:about="rdf:#$Zghmm1">
-    <RDF:li RDF:resource="rdf:#$.ghmm1"/>
-  </RDF:Seq>
-  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
-                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBABT4x4XbBVLuSJrPZMpEH0VGhj34AYQ7+Z1BeZtQhC0evcecjub+REDlylK1io6nhVaWUuaffYuFMVU5CAM5ea88vWxiDCxpMU28KW3LyWqe+Gg2YFRYrEElV7rXIbU2Ehr5hNR1qNjIZBM0hbvldnkVZ+77JwPF3KHWvPBeEXtp">
-    <em:updates RDF:resource="rdf:#$Zghmm1"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$.ghmm1"
-                   em:version="0.3.10">
-    <em:targetApplication RDF:resource="rdf:#$1hhmm1"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$1hhmm1"
+  <RDF:Description RDF:about="rdf:#$qKXZi1"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="2.0"
                    em:maxVersion="3.0.*"
                    em:updateLink="http://github.com/to/tombloo/tree/master/tombloo.xpi?raw=true"
-                   em:updateHash="sha512:0ad1e3c21cd6421e7966f2228e206a0cf6cc287a75a6b0c8d13c279bdff8e43a9a261af50646b257510cfa9bce6cf6ee742f9ec87156241a35babe7e764dd8ce" />
+                   em:updateHash="sha512:8d288c00d415926fe9252ef46d6b419acf758e711e00855820cd6bbd62c924ea91d899a7201ec2b8f2528500178dff3cb25925cee60ee644b92ba01fe8dda05b" />
+  <RDF:Seq RDF:about="rdf:#$mKXZi1">
+    <RDF:li RDF:resource="rdf:#$nKXZi1"/>
+  </RDF:Seq>
+  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAEeB/PCV3Y3yqzsxT3GzdAnsMNY/1sw1kshTKbf+eiLmQ7WqTqqirsmbcwV+7G+gwbSdjfOYqGZn8LXBsS7PeWCS2rtCndpP1WfXWmmvIaRooD6fbvE2QFNvyhdRY4tHCQdwJGv7hQz48J8Z7NbobKVDQCGPKjST3eHVmJ7Bu3LZ">
+    <em:updates RDF:resource="rdf:#$mKXZi1"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$nKXZi1"
+                   em:version="0.3.11">
+    <em:targetApplication RDF:resource="rdf:#$qKXZi1"/>
+  </RDF:Description>
 </RDF:RDF>

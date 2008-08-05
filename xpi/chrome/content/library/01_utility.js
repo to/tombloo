@@ -383,17 +383,11 @@ function sendByChannel(url, opts){
 	var redirectionCount = 0;
 	var listner = {
 		QueryInterface : createQueryInterface([
-			'nsIProgressEventSink', 
 			'nsIStreamListener', 
-			'nsIInterfaceRequestor', 
+			'nsIProgressEventSink', 
 			'nsIHttpEventSink', 
-			'nsIChannelEventSink',
-			'nsIWebProgress']),
-		
-		// nsIWebProgress
-		// Firefox 2のFirebugで大量にエラーが発生するのを回避
-		addProgressListener : function(listener, notifyMask){},
-		removeProgressListener : function(listener){},
+			'nsIInterfaceRequestor', 
+			'nsIChannelEventSink']),
 		
 		// nsIProgressEventSink
 		onProgress : function(req, ctx, progress, progressMax){},
@@ -401,6 +395,10 @@ function sendByChannel(url, opts){
 		
 		// nsIInterfaceRequestor
 		getInterface : function(iid){
+			// Firefox 2でnsIPromptを要求されエラーになるため判定処理を外す
+			// インターフェースにないメソッドを呼ばれる可能性があるが確認範囲で発生しなかった
+			return this;
+			
 			try {
 				return this.QueryInterface(iid);
 			} catch (e) {

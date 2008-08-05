@@ -545,9 +545,9 @@ models.register({
 	
 	post : function(ps){
 		return Twitter.getToken().addCallback(function(token){
+			// FIXME: 403が発生することがあったため redirectionLimit:0 を外す
 			token.status = joinText([ps.item, ps.itemUrl, ps.body, ps.description], ' ', true);
 			return doXHR('http://twitter.com/status/update', update({
-				redirectionLimit : 0,
 				sendContent : token,
 			}));
 		});
@@ -695,8 +695,12 @@ models.register({
 models.register({
 	name : 'Delicious',
 	ICON : 'http://delicious.com/favicon.ico',
+	
 	getUserTags : function(user){
-		return doXHR('http://feeds.delicious.com/feeds/json/tags/' + (user || Delicious.getCurrentUser())).addCallback(function(res){
+		// 同期でエラーが起きないようにする
+		return succeed().addCallback(function(){
+			return doXHR('http://feeds.delicious.com/feeds/json/tags/' + (user || Delicious.getCurrentUser()));
+		}).addCallback(function(res){
 			var tags = Components.utils.evalInSandbox(
 				res.responseText, 
 				Components.utils.Sandbox('http://feeds.delicious.com/'));
@@ -1273,7 +1277,7 @@ models.register(update({
 	
 	getUserTags : function(){
 		if(!this.getAuthCookie())
-			throw new Error('AUTH_FAILD');
+			return fail(new Error('AUTH_FAILD'));
 		
 		return doXHR(LivedoorClip.POST_URL+'?link=http%3A%2F%2Ftombloo/').addCallback(function(res){
 			var doc = convertToHTMLDocument(res.responseText);

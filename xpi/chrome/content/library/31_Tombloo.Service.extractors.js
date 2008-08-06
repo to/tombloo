@@ -248,7 +248,7 @@ Tombloo.Service.extractors = new Repository([
 		ICON : 'chrome://tombloo/skin/reblog.ico',
 		check : function(ctx){},
 		extract : function(ctx){
-			return doXHR(ctx.href).addCallback(function(res){
+			return request(ctx.href).addCallback(function(res){
 				var doc = convertToHTMLDocument(res.responseText);
 				ctx.title = $x('//title/text()', doc) || '';
 				
@@ -419,7 +419,7 @@ Tombloo.Service.extractors = new Repository([
 			return (ctx.onLink && ctx.link.href.match('http://lh..(google.ca|ggpht.com)/.*(png|gif|jpe?g)$'));
 		},
 		extract : function(ctx){
-			return doXHR(ctx.link.href).addCallback(function(res){
+			return request(ctx.link.href).addCallback(function(res){
 				return {
 					type    : 'photo',
 					item    : ctx.title,
@@ -511,7 +511,7 @@ Tombloo.Service.extractors = new Repository([
 			if(ctx.href.match('http://ffffound.com/image/') && (/^asset/).test(ctx.target.id)){
 				var d = succeed(currentDocument());
 			} else {
-				var d = doXHR(ctx.link.href).addCallback(function(res){
+				var d = request(ctx.link.href).addCallback(function(res){
 					// 相対パスを処理するためdocumentを渡す
 					var doc =  convertToHTMLDocument(res.responseText, ctx.document);
 					
@@ -551,7 +551,7 @@ Tombloo.Service.extractors = new Repository([
 			var itemUrl = decodeURIComponent(link.match(/imgurl=([^&]+)/)[1]);
 			ctx.href = decodeURIComponent(link.match(/imgrefurl=([^&]+)/)[1]);
 			
-			return doXHR(ctx.href).addCallback(function(res){
+			return request(ctx.href).addCallback(function(res){
 				ctx.title = 
 					res.responseText.extract(/<title.*?>([\s\S]*?)<\/title>/im).replace(/[\n\r]/g, '').trim() || 
 					broad(createURI(itemUrl)).fileName;
@@ -573,7 +573,7 @@ Tombloo.Service.extractors = new Repository([
 			return ctx.href.match(/share-image\.com\/gallery\//) && this.getImage();
 		},
 		extract : function(ctx){
-			return doXHR(this.getImage()).addCallback(function(res){
+			return request(this.getImage()).addCallback(function(res){
 				return {
 					type    : 'photo',
 					item    : ctx.title,
@@ -783,7 +783,7 @@ Tombloo.Service.extractors = new Repository([
 			
 			return {
 				type      : 'video',
-				item      : ctx.title.extract(/Video (.*?) -/),
+				item      : ctx.title.extract(/Dailymotion - (.*?), a video from/),
 				itemUrl   : ctx.href,
 				author    : author.extract(/>([^><]+?)</),
 				authorUrl : author.extract(/href="(.+?)"/),

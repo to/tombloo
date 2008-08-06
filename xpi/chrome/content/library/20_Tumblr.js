@@ -46,7 +46,7 @@ var Tumblr = update({}, AbstractSessionService, {
 			num   : 0,
 		}); 
 		
-		return doXHR(url).addCallback(function(res){
+		return request(url).addCallback(function(res){
 			return Tumblr.createInfo(convertToXML(res.responseText));
 		});
 	},
@@ -72,7 +72,7 @@ var Tumblr = update({}, AbstractSessionService, {
 				num : page[1],
 			});
 			
-			return doXHR(url).addCallback(function(res){
+			return request(url).addCallback(function(res){
 				var xml = convertToXML(res.responseText);
 				return deferredForEach(xml.posts.post, function(post, rowNum){
 					var postInfo = Tumblr.getPostInfo(user, post);
@@ -96,7 +96,7 @@ var Tumblr = update({}, AbstractSessionService, {
 	remove : function(id){
 		var self = this;
 		return this.getToken().addCallback(function(token){
-			return doXHR(self.TUMBLR_URL+'delete', {
+			return request(self.TUMBLR_URL+'delete', {
 				referrer    : Tumblr.TUMBLR_URL,
 				sendContent : {
 					id          : id,
@@ -158,13 +158,13 @@ var Tumblr = update({}, AbstractSessionService, {
 	reblog : function(id, token){
 		var url = Tumblr.TUMBLR_URL + 'reblog/' + id + '/' + token;
 		
-		return doXHR(url).addCallback(function(res){
+		return request(url).addCallback(function(res){
 			var fields = formContents(res.responseText);
 			Tumblr.trimReblogInfo(fields);
 			fields.redirect_to = Tumblr.TUMBLR_URL+'dashboard';
 			delete fields.preview_post;
 			
-			return doXHR(url, {
+			return request(url, {
 				sendContent : fields,
 			});
 		}).addCallback(function(res){
@@ -188,10 +188,10 @@ var Tumblr = update({}, AbstractSessionService, {
 			return Tumblr.reblog(ps.token.id, ps.token.token);
 		
 		var url = Tumblr.TUMBLR_URL + 'new/' + ps.type;
-		return doXHR(url).addCallback(function(res){
+		return request(url).addCallback(function(res){
 			var form = formContents(res.responseText);
 			delete form.preview_post;
-			return doXHR(url, {
+			return request(url, {
 				sendContent : update(
 					form, 
 					Tumblr[capitalize(ps.type)].convertToForm(ps), {
@@ -252,7 +252,7 @@ var Tumblr = update({}, AbstractSessionService, {
 	
 	login : function(user, password){
 		var self = this;
-		return doXHR(this.TUMBLR_URL+'login', {
+		return request(this.TUMBLR_URL+'login', {
 			sendContent : {
 				email : user,
 				password : password,
@@ -264,7 +264,7 @@ var Tumblr = update({}, AbstractSessionService, {
 	},
 	
 	logout : function(){
-		return doXHR(this.TUMBLR_URL+'logout');
+		return request(this.TUMBLR_URL+'logout');
 	},
 	
 	getAuthCookie : function(){
@@ -282,7 +282,7 @@ var Tumblr = update({}, AbstractSessionService, {
 			
 		case 'changed':
 			var self = this;
-			return doXHR(this.TUMBLR_URL+'preferences').addCallback(function(res){
+			return request(this.TUMBLR_URL+'preferences').addCallback(function(res){
 				var doc = convertToHTMLDocument(res.responseText);
 				return self.user = $x('id("user_email")/@value', doc);
 			});
@@ -300,7 +300,7 @@ var Tumblr = update({}, AbstractSessionService, {
 			
 		case 'changed':
 			var self = this;
-			return doXHR(this.TUMBLR_URL+'customize').addCallback(function(res){
+			return request(this.TUMBLR_URL+'customize').addCallback(function(res){
 				var doc = convertToHTMLDocument(res.responseText);
 				return self.id = $x('id("edit_tumblelog_name")/@value', doc);
 			});
@@ -318,7 +318,7 @@ var Tumblr = update({}, AbstractSessionService, {
 			
 		case 'changed':
 			var self = this;
-			return doXHR(this.TUMBLR_URL+'new/text').addCallback(function(res){
+			return request(this.TUMBLR_URL+'new/text').addCallback(function(res){
 				var doc = convertToHTMLDocument(res.responseText);
 				return self.token = $x('id("form_key")/@value', doc);
 			});

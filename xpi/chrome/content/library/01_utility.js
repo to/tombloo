@@ -279,27 +279,34 @@ function queryString(params, question){
 	var qeries = [];
 	for(var key in params){
 		var value = params[key];
-		if(value==null) continue;
+		if(value==null)
+			continue;
 		qeries.push(encodeURIComponent(key) + '='+ encodeURIComponent(value));
 	}
 	return (question? '?' : '') + qeries.join('&');
 }
 
+// FIXME: 互換のため
 function doXHR(url, opts){
-	return sendByChannel(url, opts);
+	error('deprecated: doXHR');
+	return request(url, opts);
 }
 
-/*
-	mimeType
-	charset
-	referrer
-	queryString
-	sendContent
-		file
-		fileName
-		contentType
-*/
-function sendByChannel(url, opts){
+/**
+ * POST/GETの通信を行う。
+ * マルチパートを使ったアップロードも行える。
+ *
+ * @url {String} リクエストURL。
+ * @opts {Object} リクエストオプション。
+ *  @referrer {String} リファラURL。
+ *  @charset {String} 文字セット。指定されない場合、レスポンスヘッダの文字セットが使われる。
+ *  @queryString {String || Object} クエリ。
+ *  @sendContent {String || Object} コンテント。これが設定されているとPOSTメソッドになる。値に直接ファイルをセットしてもよい。
+ *   @KEY.file {nsIInputStream || nsIFile} アップロードファイル。
+ *   @KEY.fileName {String} サーバーへ送信するファイル名。指定されない場合、元のファイル名が使われる。
+ *   @KEY.contentType {String} コンテントタイプ。指定されない場合、application/octet-streamになる。
+ */
+function request(url, opts){
 	var d = new Deferred();
 	
 	function setCookie(channel){
@@ -347,7 +354,7 @@ function sendByChannel(url, opts){
 			for(var name in contents){
 				var value = contents[name];
 				if(value==null)
-					value = '';
+					continue;
 				
 				if(!value.file){
 					streams.push([
@@ -476,6 +483,10 @@ function sendByChannel(url, opts){
 	channel.requestMethod = opts.sendContent? 'POST' : 'GET';
 	channel.notificationCallbacks = listner;
 	channel.asyncOpen(listner, null);
+	
+	// 念のため解放する
+	listner = null;
+	channel = null;
 	
 	return d;
 }

@@ -21,7 +21,7 @@ models.register({
 			throw new Error('AUTH_FAILD');
 		
 		var self = this;
-		return doXHR('https://friendfeed.com/share/publish', {
+		return request('https://friendfeed.com/share/publish', {
 			redirectionLimit : 0,
 			sendContent : {
 				at  : self.getToken(),
@@ -41,7 +41,7 @@ models.register({
 	URL : 'http://FFFFOUND.com/',
 	
 	getToken : function(){
-		return doXHR(FFFFOUND.URL + 'bookmarklet.js').addCallback(function(res){
+		return request(FFFFOUND.URL + 'bookmarklet.js').addCallback(function(res){
 			return res.responseText.match(/token='(.*?)'/)[1];
 		});
 	},
@@ -57,7 +57,7 @@ models.register({
 		}
 		
 		return this.getToken().addCallback(function(token){
-			return doXHR(FFFFOUND.URL + 'add_asset', {
+			return request(FFFFOUND.URL + 'add_asset', {
 				referrer : ps.pageUrl,
 				queryString : {
 					token   : token,
@@ -77,7 +77,7 @@ models.register({
 
 	remove : function(id){
 		// 200 {"success":false}
-		return doXHR(FFFFOUND.URL + 'gateway/in/api/remove_asset', {
+		return request(FFFFOUND.URL + 'gateway/in/api/remove_asset', {
 			referrer : FFFFOUND.URL,
 			sendContent : {
 				collection_id : id,
@@ -86,7 +86,7 @@ models.register({
 	},
 	
 	iLoveThis : function(id){
-		return doXHR(FFFFOUND.URL + 'gateway/in/api/add_asset', {
+		return request(FFFFOUND.URL + 'gateway/in/api/add_asset', {
 			referrer : FFFFOUND.URL,
 			sendContent : {
 				collection_id : 'i'+id,
@@ -104,7 +104,7 @@ models.register({
 	name : 'Amazon',
 	ICON : 'http://www.amazon.co.jp/favicon.ico',
 	getItem : function(asin){
-		return doXHR('http://webservices.amazon.co.jp/onca/xml', {
+		return request('http://webservices.amazon.co.jp/onca/xml', {
 			queryString : {
 				Service        : 'AWSECommerceService',
 				SubscriptionId : '0DCQFXHRBNT9GN9Z64R2',
@@ -212,7 +212,7 @@ models.register(update({
 	},
 	
 	callMethod : function(ps){
-		return doXHR('http://flickr.com/services/rest/', {
+		return request('http://flickr.com/services/rest/', {
 			queryString : update({
 				api_key        : this.API_KEY,
 				nojsoncallback : 1,
@@ -240,7 +240,7 @@ models.register(update({
 				return key + ps[key]
 			}).join('')).md5();
 			
-			return doXHR('http://flickr.com/services/' + (ps.method? 'rest/' : 'upload/'), {
+			return request('http://flickr.com/services/' + (ps.method? 'rest/' : 'upload/'), {
 				sendContent : ps,
 			});
 		}).addCallback(function(res){
@@ -263,7 +263,7 @@ models.register(update({
 			
 		case 'changed':
 			var self = this;
-			return doXHR('http://www.flickr.com/').addCallback(function(res){
+			return request('http://www.flickr.com/').addCallback(function(res){
 				var html = res.responseText;
 				return self.token = {
 					secret : html.extract(/global_flickr_secret[ =]+'(.*?)'/),
@@ -339,7 +339,7 @@ models.register({
 		if(ps.pageUrl.match('^http://weheartit.com/'))
 			return this.iHeartIt(ps.source.split('/').pop());
 		
-		return doXHR(WeHeartIt.URL + 'add.php', {
+		return request(WeHeartIt.URL + 'add.php', {
 			referrer : ps.pageUrl,
 			queryString : {
 				via   : ps.pageUrl,
@@ -353,7 +353,7 @@ models.register({
 	},
 	
 	iHeartIt : function(id){
-		return doXHR(WeHeartIt.URL + 'inc_heartedby.php', {
+		return request(WeHeartIt.URL + 'inc_heartedby.php', {
 			referrer : ps.pageUrl,
 			queryString : {
 				do    : 'heart',
@@ -380,7 +380,7 @@ models.register({
 		if(ps.pageUrl.match('^http://4u.straightline.jp/image/'))
 			return this.iLoveHer(ps);
 		
-		return doXHR(this.URL + 'power/manage/register', {
+		return request(this.URL + 'power/manage/register', {
 			referrer : ps.pageUrl,
 			queryString : {
 				site_title  : ps.page,
@@ -396,12 +396,12 @@ models.register({
 	},
 
 	iLoveHer : function(ps){
-		// doXHR(ps.pageUrl)
+		// request(ps.pageUrl)
 		// FIXME: id
 		if(!ps.id)
 			return;
 		
-		return doXHR(this.URL + 'user/manage/do_register', {
+		return request(this.URL + 'user/manage/do_register', {
 			redirectionLimit : 0,
 			referrer : ps.pageUrl,
 			queryString : {
@@ -437,7 +437,7 @@ models.register({
 	},
 	
 	post : function(ps){
-		return doXHR('http://gyazo.com/upload.cgi', {
+		return request('http://gyazo.com/upload.cgi', {
 			sendContent : {
 				id        : this.getId(),
 				imagedata : ps.file,
@@ -531,7 +531,7 @@ models.register({
 	},
 	
 	getToken : function(){
-		return doXHR('http://twitter.com/account/settings').addCallback(function(res){
+		return request('http://twitter.com/account/settings').addCallback(function(res){
 			var html = res.responseText;
 			if(html.indexOf('signin')!=-1)
 				throw new Error('AUTH_FAILD');
@@ -547,7 +547,7 @@ models.register({
 		return Twitter.getToken().addCallback(function(token){
 			// FIXME: 403が発生することがあったため redirectionLimit:0 を外す
 			token.status = joinText([ps.item, ps.itemUrl, ps.body, ps.description], ' ', true);
-			return doXHR('http://twitter.com/status/update', update({
+			return request('http://twitter.com/status/update', update({
 				sendContent : token,
 			}));
 		});
@@ -556,7 +556,7 @@ models.register({
 	remove : function(id){
 		return Twitter.getToken().addCallback(function(ps){
 			ps._method = 'delete';
-			return doXHR('http://twitter.com/status/destroy/' + id, {
+			return request('http://twitter.com/status/destroy/' + id, {
 				redirectionLimit : 0,
 				referrer : 'http://twitter.com/home',
 				sendContent : ps,
@@ -566,7 +566,7 @@ models.register({
 	
 	addFavorite : function(id){
 		return Twitter.getToken().addCallback(function(ps){
-			return doXHR('http://twitter.com/favourings/create/' + id, {
+			return request('http://twitter.com/favourings/create/' + id, {
 				redirectionLimit : 0,
 				referrer : 'http://twitter.com/home',
 				sendContent : ps,
@@ -596,9 +596,9 @@ models.register({
 	post : function(ps){
 		this.getCurrentUser();
 		
-		return doXHR(Jaiku.URL).addCallback(function(res){
+		return request(Jaiku.URL).addCallback(function(res){
 			var form =  formContents(convertToHTMLDocument(res.responseText));
-			return doXHR(Jaiku.URL, {
+			return request(Jaiku.URL, {
 				redirectionLimit : 0,
 				sendContent : {
 					_nonce : form._nonce,
@@ -654,7 +654,7 @@ models.register({
 	},
 	
 	post : function(url){
-		return doXHR('http://www.google.com/search?client=navclient-auto&ch=' + GoogleWebHistory.getCh(url) + '&features=Rank&q=info:' + escape(url));
+		return request('http://www.google.com/search?client=navclient-auto&ch=' + GoogleWebHistory.getCh(url) + '&features=Rank&q=info:' + escape(url));
 	},
 });
 
@@ -667,7 +667,7 @@ models.register({
 	},
 	
 	post : function(ps){
-		return doXHR('http://www.google.com/bookmarks/mark', {
+		return request('http://www.google.com/bookmarks/mark', {
 			queryString :	{
 				op : 'add',
 			},
@@ -677,7 +677,7 @@ models.register({
 				throw new Error('AUTH_FAILD');
 			
 			var fs = formContents(doc);
-			return doXHR('http://www.google.com'+$x('//form[@name="add_bkmk_form"]/@action', doc), {
+			return request('http://www.google.com'+$x('//form[@name="add_bkmk_form"]/@action', doc), {
 				redirectionLimit : 0,
 				sendContent  : {
 					title      : ps.item,
@@ -699,7 +699,7 @@ models.register({
 	getUserTags : function(user){
 		// 同期でエラーが起きないようにする
 		return succeed().addCallback(function(){
-			return doXHR('http://feeds.delicious.com/feeds/json/tags/' + (user || Delicious.getCurrentUser()));
+			return request('http://feeds.delicious.com/feeds/json/tags/' + (user || Delicious.getCurrentUser()));
 		}).addCallback(function(res){
 			var tags = Components.utils.evalInSandbox(
 				res.responseText, 
@@ -726,7 +726,7 @@ models.register({
 	},
 	
 	post : function(ps){
-		return doXHR('http://delicious.com/post/', {
+		return request('http://delicious.com/post/', {
 			queryString :	{
 				title : ps.item,
 				url   : ps.itemUrl,
@@ -736,7 +736,7 @@ models.register({
 			if(!doc.getElementById('saveitem'))
 				throw new Error('AUTH_FAILD');
 			
-			return doXHR('http://delicious.com'+$x('id("saveitem")/@action', doc), {
+			return request('http://delicious.com'+$x('id("saveitem")/@action', doc), {
 				redirectionLimit : 0,
 				sendContent : update(formContents(doc), {
 					description : ps.item,
@@ -856,7 +856,7 @@ models.register({
 	},
 	
 	post : function(ps){
-		return doXHR('http://www.instapaper.com/edit', {
+		return request('http://www.instapaper.com/edit', {
 			redirectionLimit : 0,
 			sendContent : {
 				'bookmark[title]' : ps.item, 
@@ -877,7 +877,7 @@ models.register({
 	name : 'Kawa',
 	
 	getRomaReadings : function(text){
-		return doXHR('http://www.kawa.net/works/ajax/romanize/romanize.cgi', {
+		return request('http://www.kawa.net/works/ajax/romanize/romanize.cgi', {
 			queryString : {
 				// mecab-utf8
 				// japanese
@@ -901,7 +901,7 @@ models.register({
 	
 	parse : function(ps){
 		ps.appid = this.APP_ID;
-		return doXHR('http://api.jlp.yahoo.co.jp/MAService/V1/parse', {
+		return request('http://api.jlp.yahoo.co.jp/MAService/V1/parse', {
 			charset     : 'utf-8',
 			sendContent : ps
 		}).addCallback(function(res){
@@ -935,13 +935,13 @@ models.register({
 	},
 	
 	post : function(ps){
-		return doXHR('http://bookmarks.yahoo.co.jp/action/post').addCallback(function(res){
+		return request('http://bookmarks.yahoo.co.jp/action/post').addCallback(function(res){
 			if(res.responseText.indexOf('login_form')!=-1)
 				throw new Error('AUTH_FAILD');
 			
 			return formContents($x('(id("addbookmark")//form)[1]', convertToHTMLDocument(res.responseText)));
 		}).addCallback(function(fs){
-			return doXHR('http://bookmarks.yahoo.co.jp/action/post/done', {
+			return request('http://bookmarks.yahoo.co.jp/action/post/done', {
 				redirectionLimit : 0,
 				sendContent  : {
 					title      : ps.item,
@@ -956,7 +956,7 @@ models.register({
 	},
 	
 	getUserTags : function(){
-		return doXHR('http://bookmarks.yahoo.co.jp/bookmarklet/showpopup').addCallback(function(res){
+		return request('http://bookmarks.yahoo.co.jp/bookmarklet/showpopup').addCallback(function(res){
 			if(res.responseText.match(/yourtags =(.*)(;|$)/)[1]){
 				return reduce(function(memo, tag){
 					memo.push({
@@ -981,7 +981,7 @@ models.register({
 	},
 	
 	post : function(ps){
-		return doXHR('http://services.snipshot.com/', {
+		return request('http://services.snipshot.com/', {
 			sendContent : {
 				snipshot_input : ps.file || ps.itemUrl,
 			},
@@ -1007,7 +1007,7 @@ models.register(update({
 	login : function(user, password){
 		var self = this;
 		return (this.getAuthCookie()? this.logout() : succeed()).addCallback(function(){
-			return doXHR('https://www.hatena.ne.jp/login', {
+			return request('https://www.hatena.ne.jp/login', {
 				sendContent : {
 					name : user,
 					password : password,
@@ -1022,7 +1022,7 @@ models.register(update({
 	},
 	
 	logout : function(){
-		return doXHR('http://www.hatena.ne.jp/logout');
+		return request('http://www.hatena.ne.jp/logout');
 	},
 	
 	getAuthCookie : function(){
@@ -1041,7 +1041,7 @@ models.register(update({
 		case 'changed':
 			// 画面要素やDBアクセスが少なそうなためブックマーク入力画面から取得する
 			var self = this;
-			return doXHR(HatenaBookmark.POST_URL).addCallback(function(res){
+			return request(HatenaBookmark.POST_URL).addCallback(function(res){
 				if(res.responseText.match(/Hatena\.rkm\s*=\s*['"](.+?)['"]/))
 					return self.token = RegExp.$1;
 			});
@@ -1059,7 +1059,7 @@ models.register(update({
 			
 		case 'changed':
 			var self = this;
-			return doXHR('http://www.hatena.ne.jp/my').addCallback(function(res){
+			return request('http://www.hatena.ne.jp/my').addCallback(function(res){
 				return self.user = $x(
 					'(//*[@class="username"]//strong)[1]/text()', 
 					convertToHTMLDocument(res.responseText));
@@ -1097,7 +1097,7 @@ models.register({
 			
 			return Hatena.getCurrentUser();
 		}).addCallback(function(user){
-			return doXHR('http://f.hatena.ne.jp/'+user+'/up', {
+			return request('http://f.hatena.ne.jp/'+user+'/up', {
 				redirectionLimit : 0,
 				sendContent : update({
 					mode : 'enter',
@@ -1124,7 +1124,7 @@ models.register({
 	
 	addBookmark : function(url, title, tags, description){
 		return Hatena.getToken().addCallback(function(token){
-			return doXHR(HatenaBookmark.POST_URL, {
+			return request(HatenaBookmark.POST_URL, {
 				redirectionLimit : 0,
 				sendContent : {
 					mode    : 'enter',
@@ -1138,7 +1138,7 @@ models.register({
 	},
 	
 	getUserTags : function(){
-		return doXHR(HatenaBookmark.POST_URL+'?mode=confirm').addCallback(function(res){
+		return request(HatenaBookmark.POST_URL+'?mode=confirm').addCallback(function(res){
 			if(!res.responseText.match(/var tags ?=(.*);/))
 				throw new Error('AUTH_FAILD');
 			
@@ -1190,7 +1190,7 @@ models.register( {
 			return models.Hatena.getCurrentUser();
 		}).addCallback(function(id){
 			var endpoint = [self.POST_URL, id, ''].join('/');
-			return doXHR( endpoint, {
+			return request( endpoint, {
 				redirectionLimit : 0,
 				referrer    : endpoint,
 				sendContent : content
@@ -1204,7 +1204,7 @@ models.register({
 	ICON : 'http://s.hatena.ne.jp/favicon.ico',
 	
 	getToken : function(){
-		return doXHR('http://s.hatena.ne.jp/entries.json').addCallback(function(res){
+		return request('http://s.hatena.ne.jp/entries.json').addCallback(function(res){
 			if(!res.responseText.match(/"rks":"(.*?)"/))
 				throw new Error('AUTH_FAILD');
 			return RegExp.$1;
@@ -1217,7 +1217,7 @@ models.register({
 	
 	post : function(ps){
 		return HatenaStar.getToken().addCallback(function(token){
-			return doXHR('http://s.hatena.ne.jp/star.add.json', {
+			return request('http://s.hatena.ne.jp/star.add.json', {
 				redirectionLimit : 0,
 				queryString :	{
 					rks      : token,
@@ -1232,7 +1232,7 @@ models.register({
 	
 	remove : function(ps){
 		return HatenaStar.getToken().addCallback(function(token){
-			return doXHR('http://s.hatena.ne.jp/star.delete.json', {
+			return request('http://s.hatena.ne.jp/star.delete.json', {
 				redirectionLimit : 0,
 				queryString :	{
 					rks   : token,
@@ -1264,7 +1264,7 @@ models.register(update({
 				notes   : joinText([ps.body, ps.description], ' ', true),
 				public  : ps.private? 'off' : 'on',
 			};
-			return doXHR(LivedoorClip.POST_URL, {
+			return request(LivedoorClip.POST_URL, {
 				redirectionLimit : 0,
 				sendContent : content,
 			});
@@ -1279,7 +1279,7 @@ models.register(update({
 		if(!this.getAuthCookie())
 			return fail(new Error('AUTH_FAILD'));
 		
-		return doXHR(LivedoorClip.POST_URL+'?link=http%3A%2F%2Ftombloo/').addCallback(function(res){
+		return request(LivedoorClip.POST_URL+'?link=http%3A%2F%2Ftombloo/').addCallback(function(res){
 			var doc = convertToHTMLDocument(res.responseText);
 			return $x('id("tag_list")/span/text()', doc, true).map(function(tag){
 				return {
@@ -1301,7 +1301,7 @@ models.register(update({
 		
 		case 'changed':
 			var self = this;
-				return doXHR(LivedoorClip.POST_URL+'?link=http%3A%2F%2Ftombloo/').addCallback(function(res){
+				return request(LivedoorClip.POST_URL+'?link=http%3A%2F%2Ftombloo/').addCallback(function(res){
 					if(res.responseText.match(/"postkey" value="(.*)"/)){
 						self.token = RegExp.$1;
 						return self.token;
@@ -1321,8 +1321,8 @@ models.register({
 	},
 	
 	post : function(ps){
-		return doXHR('http://wassr.jp/my/').addCallback(function(res){
-			return doXHR('http://wassr.jp/my/status/add', {
+		return request('http://wassr.jp/my/').addCallback(function(res){
+			return request('http://wassr.jp/my/status/add', {
 				redirectionLimit : 0,
 				sendContent : update(formContents(convertToHTMLDocument(res.responseText)), {
 					message : joinText([ps.item, ps.itemUrl, ps.body, ps.description], ' ', true),

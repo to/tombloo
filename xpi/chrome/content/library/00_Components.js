@@ -209,7 +209,7 @@ function createConstructor(pid, ifc, init){
  * インターフェースが指定されない場合、利用できる全てのインターフェースに拡げられる。
  *
  * @clsName {String} クラス名(@mozilla.org以降を指定する)
- * @ifc {} インターフェイス
+ * @ifc {nsIJSID} インターフェイス
  */
 function getService(clsName, ifc){
 	try{

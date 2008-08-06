@@ -10,6 +10,7 @@
 <pre id="test">
 </pre>
 <script type="text/javascript" src="../library/00_Components.js"></script>
+<script type="text/javascript" src="../library/00_MochiKit.js"></script>
 <script type="text/javascript" src="../library/01_utility.js"></script>
 <script type="text/javascript" src="../library/10_Progress.js"></script>
 <script type="text/javascript" src="../library/10_Database.js"></script>
@@ -42,7 +43,7 @@ try {
 		var ctx = {href : url};
 		var doc;
 		if(url)
-			d.addCallback(doXHR, ctx.href);
+			d.addCallback(request, url);
 		d.addCallback(function(res){
 			log('Test: ' + name);
 			
@@ -72,25 +73,6 @@ try {
 	
 	//	href  : 'http://www.tumblr.com/dashboard/iframe?src=http%3A%2F%2Fto.tumblr.com%2Fpost%2F38249621&pid=38249621&rk=exgZK6NR', 
 	/*	
-	basicExtractorTest(
-		'Photo - Flickr', 
-		null, 
-		function(ext, ctx, doc){
-			ctx.onImage = true;
-			ctx.target = {src:'http://farm4.static.flickr.com/3151/2569321947_04353b1f27_s.jpg'};
-			
-			return {
-				type      : 'photo',
-				page      : 'awkwardfeet on Flickr',
-				pageUrl   : 'http://www.flickr.com/photos/le_carabinier/2569321947/',
-				item      : 'awkwardfeet',
-				itemUrl   : 'http://farm4.static.flickr.com/3151/2569321947_a245340e65_o.jpg', 
-				author    : 'Sean Marc Lee',
-				authorUrl : 'http://www.flickr.com/photos/le_carabinier/',
-			}
-		});
-	
-	
 	basicExtractorTest('Quote - Twitter', 'http://twitter.com/ku/statuses/833768036', {
 		type    : 'quote',
 		page    : 'Twitter / ku: http://getfirebug.com/ does...',
@@ -210,10 +192,9 @@ try {
 		body    : /^<object.*object>$/,
 	});
 	
-	
 	basicExtractorTest('Video - Dailymotion', 'http://www.dailymotion.com/cluster/animals/featured/video/x5oeer_last-of-the-scottish-wildcats-dvd-p_animals', {
 		type      : 'video',
-		page      : /Video Last of the Scottish Wildcats DVD preview trailer - cat, chat, chats, animal, endangered - Dailymotion.+/,
+		page      : 'Dailymotion - Last of the Scottish Wildcats DVD preview trailer, a video from coffeefilms. cat, chat, chats, animal, endangered',
 		pageUrl   : 'http://www.dailymotion.com/video/x5oeer_last-of-the-scottish-wildcats-dvd-p_animals',
 		item      : 'Last of the Scottish Wildcats DVD preview trailer',
 		itemUrl   : 'http://www.dailymotion.com/video/x5oeer_last-of-the-scottish-wildcats-dvd-p_animals',
@@ -233,7 +214,7 @@ try {
 	
 	basicExtractorTest('Video - Rimo', 'http://rimo.tv/channel/show?url=http%3A%2F%2Fdocopenhagen.blogspot.com%2F2006%2F12%2Ftop-50-music-videos-of-2006.html', {
 		type    : 'video',
-		// page    : '日本語文字化け - 未テスト',
+		page    : '「DoCopenhagen: Top 50 Music Videos Of 2006」の動画をまとめてRimoで見る - Rimo',
 		pageUrl : 'http://rimo.tv/channel/show?url=http%3A%2F%2Fdocopenhagen.blogspot.com%2F2006%2F12%2Ftop-50-music-videos-of-2006.html',
 		item    : 'DoCopenhagen: Top 50 Music Videos Of 2006',
 		itemUrl : 'http://rimo.tv/channel/show?url=http%3A%2F%2Fdocopenhagen.blogspot.com%2F2006%2F12%2Ftop-50-music-videos-of-2006.html',
@@ -271,14 +252,28 @@ try {
 				},
 			}
 		});
-	*/
 	
+	basicExtractorTest(
+		'Photo - Flickr', 
+		null, 
+		function(ext, ctx, doc){
+			ctx.onImage = true;
+			ctx.target = {src:'http://farm4.static.flickr.com/3151/2569321947_04353b1f27_s.jpg'};
+			
+			return {
+				type      : 'photo',
+				page      : 'awkwardfeet on Flickr',
+				pageUrl   : 'http://www.flickr.com/photos/le_carabinier/2569321947/',
+				item      : 'awkwardfeet',
+				itemUrl   : 'http://farm4.static.flickr.com/3151/2569321947_a245340e65_o.jpg', 
+				author    : 'Sean Marc Lee 李荆山',
+				authorUrl : 'http://www.flickr.com/photos/le_carabinier/',
+			}
+		});
 	
-	/*
-	エラー
-	chrome://tombloo/content/library/00_Components.js :: findCacheFile :: line 369
 	basicExtractorTest('Photo - Upload from Cache', 'http://www.sqlite.org/', 
 		function(ext, ctx, doc){
+			ctx.onImage = true;
 			ctx.document = document;
 			ctx.target = {
 				tagName : 'img',
@@ -287,9 +282,11 @@ try {
 			
 			return {
 				type    : 'photo',
-				title   : 'SQLite Home Page',
-				href    : 'http://www.sqlite.org/',
-				// source : file,
+				page    : 'SQLite Home Page',
+				pageUrl : 'http://www.sqlite.org/',
+				item    : 'SQLite Home Page',
+				itemUrl : 'http://www.sqlite.org/images/SQLite.gif',
+				file    : ILocalFile,
 			}
 		});
 	*/
@@ -308,6 +305,8 @@ try {
 	for(var prop in err)
 		s.push(prop + ':  ' + err[prop]);
 	ok(false, s.join('\n'));
+	
+	SimpleTest.finish()
 }
 </script>
 

@@ -3,7 +3,7 @@ function withXHR(process, exp, responseText){
 	var org = XMLHttpRequest;
 	try{
 		XMLHttpRequest = function(){
-			// getContents‚©‚ç‚ÌŒÄ‚Ño‚µ‚É‚Íƒ‚ƒbƒN‚ğ“K—p‚µ‚È‚¢
+			// getContentsã‹ã‚‰ã®å‘¼ã³å‡ºã—ã«ã¯ãƒ¢ãƒƒã‚¯ã‚’é©ç”¨ã—ãªã„
 			for(var stack = Components.stack ; stack ; stack = stack.caller)
 				if(stack.name == 'getContents')
 					return new org();
@@ -47,8 +47,11 @@ function sameObject(act, exp, msg){
 		var acv = act[p];
 		var m = msg + ': ' + p;
 		
+		// æ­£è¦è¡¨ç¾ã‹
 		if(exv.test) {
 			ok(exv.test(acv), m);
+		} else if(exv.QueryInterface) {
+			ok(acv instanceof exv, m);
 		} else if(typeof(exv) == 'function') {
 			exv(acv, m);
 		} else if(typeof(exv) == 'object') {

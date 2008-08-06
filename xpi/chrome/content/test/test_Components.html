@@ -8,6 +8,7 @@
 
 <pre id="test">
 </pre>
+<script type="text/javascript" src="../library/00_MochiKit.js"></script>
 <script type="text/javascript" src="../library/00_Components.js"></script>
 <script type="text/javascript">
 try {
@@ -15,7 +16,7 @@ try {
 	
 	/* convertFromUnplaceableHTML / 文字化けテスト(日本Googleへ接続)
 	SimpleTest.waitForExplicitFinish();
-	doXHR('http://www.google.co.jp/', {
+	request('http://www.google.co.jp/', {
 		mimeType : 'text/plain; charset=x-user-defined',
 	}).addCallback(function(res){
 		ok(convertFromUnplaceableHTML(res.responseText).match(/検索/));

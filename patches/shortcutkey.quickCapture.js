@@ -25,7 +25,7 @@ shortcutkeys['PAUSE'] = {
 		}).addCallback(function(){
 			
 			// Capture!!
-			var exts = Tombloo.Service.extracters;
+			var exts = Tombloo.Service.extractors;
 			return exts.extract(ctx, exts['Photo - Capture']);
 			
 		}).addCallback(function(ps){

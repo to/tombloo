@@ -2,7 +2,9 @@
 <head>
 	<script type="text/javascript" src="library/MochiKit.js"></script>
 	<script type="text/javascript" src="library/SimpleTest.js"></script>
+	<script type="text/javascript" src="test.js"></script>
 	<link rel="stylesheet" type="text/css" href="library/test.css">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 </head>
 <body>
 
@@ -55,17 +57,11 @@ try {
 	// Tombloo.Service.Photo.download('youpy.tumblr.com', 500, p);
 	
 } catch (err) {
-	var s = 'test suite failure!\n';
-	var o = {};
-	var k = null;
-	for (k in err) {
-		// ensure unique keys?!
-		if (!o[k]) {
-			s +=  k + ': ' + err[k] + '\n';
-			o[k] = err[k];
-		}
-	}
-	ok ( false, s );
+	var s = [];
+	s.push('TEST SUITE FAILURE!');
+	for(var prop in err)
+		s.push(prop + ':  ' + err[prop]);
+	ok(false, s.join('\n'));
 }
 </script>
 

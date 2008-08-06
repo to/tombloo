@@ -195,7 +195,7 @@ function openProgressDialog(progress, max, value){
 function openDialog(url, w, h, features, value){
 	var x = (screen.width - w) / 2;
 	var y = (screen.height - h) / 2;
-	window.openDialog(url, '_blank', (features? features + ',' : '') + openParamString({
+	getMostRecentWindow().openDialog(url, '_blank', (features? features + ',' : '') + openParamString({
 		width : w,
 		height : h,
 		left : x,

@@ -497,12 +497,14 @@ forEach({
 		});
 		setElementPosition(tip, {x: e.clientX - 24, y: e.clientY - 24});
 		doc.body.appendChild(tip);
-		fade(tip, {
-			duration : 0.8,
-			afterFinish : function(){
-				removeElement(tip);
-			},
-		});
+		setTimeout(function(){
+			fade(tip, {
+				duration : 0.8,
+				afterFinish : function(){
+					removeElement(tip);
+				},
+			});
+		}, 250);
 		
 		Tombloo.Service.share(ctx, ext, ext.name.match(/^Link/));
 	},

@@ -14,7 +14,11 @@ Tombloo.Service.actions.register(	{
 		d.addCallback(bind('getInfo', Tumblr));
 		d.addCallback(function(info){
 			p.max = info.total;
-			return Tumblr.read(info.name, null, info.total, function(post, index){
+			
+			return Tumblr.read(info.name, null, info.total);
+		});
+		d.addCallback(function(posts){
+			return deferredForEach(posts, function(post){
 				if(p.canceled)
 					throw StopProcess;
 				

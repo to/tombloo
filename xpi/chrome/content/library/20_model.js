@@ -245,8 +245,12 @@ models.register(update({
 			});
 		}).addCallback(function(res){
 			res = convertToXML(res.responseText);
-			if(res.@stat!='ok')
-				throw new Error(''+res.err.@msg);
+			if(res.@stat!='ok'){
+				var err = new Error(''+res.err.@msg)
+				err.code = res.err.@code;
+				
+				throw err;
+			}
 			return res;
 		});
 	},
@@ -281,6 +285,13 @@ models.register(update({
 		return this.callAuthMethod({
 			method   : 'flickr.favorites.add',
 			photo_id : id,
+		}).addErrback(function(err){
+			switch(err.message){
+			case 'Photo is already in favorites': // code = 3
+				return;
+			}
+			
+			throw err;
 		});
 	},
 	

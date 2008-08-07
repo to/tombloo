@@ -132,7 +132,8 @@ Tombloo.Service = {
 				return;
 			
 			// FIXME: トランザクションを設け高速化する
-			return Tumblr.read(user, type, p.max, function(post){
+			return Tumblr.read(user, type, info.total, function(post){
+				// 件数分処理したら終了しAPIの読み込みを止める
 				if(p.ended)
 					throw StopProcess;
 				
@@ -140,7 +141,7 @@ Tombloo.Service = {
 					Tombloo.Post.insert(post);
 					p.value++;
 				} catch(e if e instanceof Database.DuplicateKeyException) {
-					// 重複エラーを無視し読み飛ばす
+					// 前回の処理を途中で終了したときに発生する重複エラーを無視する
 				}
 			});
 		});

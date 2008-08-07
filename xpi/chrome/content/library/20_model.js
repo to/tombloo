@@ -743,7 +743,7 @@ models.register({
 					jump        : 'no',
 					notes       : joinText([ps.body, ps.description], ' ', true),
 					tags        : ps.tags? ps.tags.join(' ') : '',
-					private     : ps.private? 'on' : '',
+					share       : ps.private? 'no' : '',
 				}),
 			});
 		});

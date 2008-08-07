@@ -13,6 +13,7 @@ Tombloo.Service.actions = new Repository([
 			if(!users)
 				return;
 			
+			// FIXME: アクション用のprefに
 			setPref('updateUsers', users);
 			users = users.split(/[\s,]+/);
 			

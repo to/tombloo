@@ -296,15 +296,15 @@ function doXHR(url, opts){
  * POST/GETの通信を行う。
  * マルチパートを使ったアップロードも行える。
  *
- * @url {String} リクエストURL。
- * @opts {Object} リクエストオプション。
- *  @referrer {String} リファラURL。
- *  @charset {String} 文字セット。指定されない場合、レスポンスヘッダの文字セットが使われる。
- *  @queryString {String || Object} クエリ。
- *  @sendContent {String || Object} コンテント。これが設定されているとPOSTメソッドになる。値に直接ファイルをセットしてもよい。
- *   @KEY.file {nsIInputStream || nsIFile} アップロードファイル。
- *   @KEY.fileName {String} サーバーへ送信するファイル名。指定されない場合、元のファイル名が使われる。
- *   @KEY.contentType {String} コンテントタイプ。指定されない場合、application/octet-streamになる。
+ * @param {String} url リクエストURL。
+ * @param {Object} opts リクエストオプション。
+ * @param {String} opts.referrer リファラURL。
+ * @param {String} opts.charset 文字セット。指定されない場合、レスポンスヘッダの文字セットが使われる。
+ * @param {String || Object} opts.queryString クエリ。
+ * @param {String || Object} opts.sendContent コンテント。これが設定されているとPOSTメソッドになる。値に直接ファイルをセットしてもよい。
+ * @param {nsIInputStream || nsIFile} opts.KEY.file アップロードファイル。
+ * @param {String} opts.KEY.fileName サーバーへ送信するファイル名。指定されない場合、元のファイル名が使われる。
+ * @param {String} opts.KEY.contentType コンテントタイプ。指定されない場合、application/octet-streamになる。
  */
 function request(url, opts){
 	var d = new Deferred();
@@ -404,13 +404,8 @@ function request(url, opts){
 		getInterface : function(iid){
 			// Firefox 2でnsIPromptを要求されエラーになるため判定処理を外す
 			// インターフェースにないメソッドを呼ばれる可能性があるが確認範囲で発生しなかった
+			// http://developer.mozilla.org/ja/docs/Creating_Sandboxed_HTTP_Connections
 			return this;
-			
-			try {
-				return this.QueryInterface(iid);
-			} catch (e) {
-				throw Components.results.NS_NOINTERFACE;
-			}
 		},
 		
 		// nsIHttpEventSink
@@ -484,7 +479,7 @@ function request(url, opts){
 	channel.notificationCallbacks = listner;
 	channel.asyncOpen(listner, null);
 	
-	// 念のため解放する
+	// 確実にガベージコレクトされるように解放する
 	listner = null;
 	channel = null;
 	
@@ -610,9 +605,15 @@ function deferredForEach(it, func, index){
 function deferredForEach(it, func){
 	var d = new Deferred();
 	var index = 0
-	forEach(it, function(item, a){
+	forEach(it, function(item){
 		d.addCallback(func, item, index);
 		++index;
+	});
+	d.addErrback(function(err){
+		if(err.message==StopIteration)
+			return;
+		
+		throw err;
 	});
 	d.callback();
 	

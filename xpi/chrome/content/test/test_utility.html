@@ -152,17 +152,17 @@ try {
 	// deferredForEach
 	var flag = false;
 	deferredForEach([], function(){
-		ok(false);
+		ok(false, 'deferredForEach: 空リストで一度も呼び出されないこと');
 	}).
 	addCallback(function(){
 		flag=true;
 	});
-	ok(flag);
+	ok(flag, 'deferredForEach: 全リストが処理されコールバックされるか(同期前提)');
 	
 	var flag = false;
 	deferredForEach([1], function(item, index){
-		is(item, 1);
-		is(index, 0);
+		is(item, 1, 'deferredForEach: アイテムが渡されるか');
+		is(index, 0, 'deferredForEach: 0からはじまるインデックスが渡されているか');
 	}).
 	addCallback(function(){
 		flag=true;
@@ -182,8 +182,11 @@ try {
 		result = item;
 		if(result == 3)
 			throw StopIteration;
+	}).
+	addErrback(function(){
+		ok(false, 'deferredForEach: 途中終了時にエラーが起きないこと');
 	});
-	is(result, 3, '途中キャンセル');
+	is(result, 3, 'deferredForEach: 途中終了されているか');
 	
 	var result;
 	deferredForEach(range(10), function(item, index){
@@ -192,7 +195,7 @@ try {
 	addErrback(function(e){
 		result = e.message;
 	});
-	is(result, 'ERROR', 'エラー等をキャッチできるか')
+	is(result, 'ERROR', 'deferredForEach: エラー等をキャッチできるか')
 	
 	// DeferredHash
 	var l = new DeferredHash({
@@ -357,7 +360,6 @@ try {
 	
 	disconnectAll(obj);
 	ok(!connected(obj, 'load'));
-	
 } catch (err) {
 	var s = [];
 	s.push('TEST SUITE FAILURE!');

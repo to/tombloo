@@ -29,6 +29,7 @@
 		var elmStatus = document.getElementById('status');
 		elmStatus.value = trigger;
 	}
+	
 	function onCancel(){
 		p.cancel();
 	}

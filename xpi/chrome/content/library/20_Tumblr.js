@@ -1,6 +1,6 @@
 var Tumblr = update({}, AbstractSessionService, {
 	name : 'Tumblr',
-	ICON : "data:image/gif,GIF89a%10%00%10%00%91%00%00%13%14%17Y%5C_-08%F0%F0%F0!%F9%04%00%00%00%00%00%2C%00%00%00%00%10%00%10%00%00%02%40%94%8F%08%20%E1%0F!%0B)%AD0M%7C7%8B%01%86%A0%00%60M%03%02c0%60%26%C5.c%E9z%8B%3A%90%F7%7B%C8%F9%5D%F2%E8f%3B%9BO%D79%DDD%C8%17%10%D2%9C%00%A7E%DAfC%CD%02%0B%00%3B",
+	ICON : 'http://www.tumblr.com/images/favicon.gif',
 	DATA_URL : 'http://data.tumblr.com/',
 	TUMBLR_URL : 'http://www.tumblr.com/',
 	PAGE_LIMIT : 50,
@@ -61,42 +61,60 @@ var Tumblr = update({}, AbstractSessionService, {
 		};
 	},
 	
+	/**
+	 * Tumblr APIからポストデータを取得する。
+	 *
+	 * @param {String} user ユーザー名。
+	 * @param {optional String} type ポストタイプ。未指定の場合、全タイプとなる。
+	 * @param {String} count 先頭から何件を取得するか。
+	 * @param {Function} handler 各エントリー個別処理関数。段階的に処理を行う場合に指定する。
+	 * @return {Deferred} 取得した全ポストが渡される。
+	 */
 	read : function(user, type, count, handler){
-		handler = handler || function(){};
 		var pages = Tumblr.splitRequests(count);
 		var rval = [];
-		return deferredForEach(pages, function(page, pageNum){
-			var url = Tumblr.buildURL(user, {
-				type : type,
-				start : page[0],
-				num : page[1],
-			});
-			
-			return request(url).addCallback(function(res){
-				var xml = convertToXML(res.responseText);
-				return deferredForEach(xml.posts.post, function(post, rowNum){
-					var postInfo = Tumblr.getPostInfo(user, post);
-					var post = Tumblr[capitalize(postInfo.type)].convertToModel(post, postInfo);
-					
-					var res = handler(post, (pageNum * Tumblr.PAGE_LIMIT) + rowNum);
-					rval.push(post);
-					return res;
+		
+		var d = succeed();
+		d.addCallback(function(){
+			// 全ページを繰り返す
+			return deferredForEach(pages, function(page, pageNum){
+				var url = Tumblr.buildURL(user, {
+					type : type,
+					start : page[0],
+					num : page[1],
 				});
-			}).addCallback(wait, 0.5);
-		}).
-		addErrback(function(e){
-			if(e.message!=StopProcess)
-				throw e;
-		}).
-		addCallback(function(){
+				
+				// ページを取得する
+				return request(url).addCallback(function(res){
+					var xml = convertToXML(res.responseText);
+					
+					// 全ポストを繰り返す
+					return deferredForEach(xml.posts.post, function(post, rowNum){
+						var postInfo = Tumblr.getPostInfo(user, post);
+						var post = Tumblr[capitalize(postInfo.type)].convertToModel(post, postInfo);
+						rval.push(post);
+						
+						return handler && handler(post, (pageNum * Tumblr.PAGE_LIMIT) + rowNum);
+					});
+				}).addCallback(wait, 0.5); // ウェイト
+			});
+		});
+		d.addErrback(function(err){
+			if(err.message!=StopProcess)
+				throw err;
+		})
+		d.addCallback(function(){
 			return rval;
 		});
+		
+		return d;
 	},
 	
 	remove : function(id){
 		var self = this;
 		return this.getToken().addCallback(function(token){
 			return request(self.TUMBLR_URL+'delete', {
+				redirectionLimit : 0,
 				referrer    : Tumblr.TUMBLR_URL,
 				sendContent : {
 					id          : id,

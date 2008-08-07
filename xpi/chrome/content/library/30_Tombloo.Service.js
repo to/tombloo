@@ -109,31 +109,30 @@ Tombloo.Service = {
 		});
 	},
 	
+	/**
+	 * 全てのポストデータをデータベースに追加する。
+	 * 取得済みのデータの続きから最新のポストまでが対象となる。
+	 *
+	 * @param {String} user ユーザー名。
+	 * @param {String} type ポストタイプ。
+	 * @param {optional Progress} p 処理進捗。
+	 */
 	update : function(user, type, p){
 		p = p || new Progress();
 		if(p.ended)
 			return;
 		
-debug('update : ---');
-debug('update : START');
-debug('update : user = ' + user);
-debug('update : type = ' + type);
-	return succeed().
-		addCallback(bind('getInfo', Tumblr), user, type).
-		addCallback(function(info){
+		var d = succeed();
+		d.addCallback(bind('getInfo', Tumblr), user, type);
+		d.addCallback(function(info){
+			// 取得済みのデータがウェブで削除されている場合、その件数分隙間となり取得されない
 			p.max = info.total - Tombloo[type? capitalize(type) : 'Post'].countByUser(user);
-debug('update : ---');
-debug('update : p.max = ' + p.max);
-debug('update : p.ended = ' + p.ended);
 			
 			if(p.ended)
 				return;
 			
-			return Tumblr.read(user, type, info.total, function(post){
-// debug('update : ---');
-// debug('update : UPDATE : ' + type);
-// debug('update : ' + p.value + '/' + p.max);
-// debug('update : p.ended = ' + p.ended);
+			// FIXME: トランザクションを設け高速化する
+			return Tumblr.read(user, type, p.max, function(post){
 				if(p.ended)
 					throw StopProcess;
 				
@@ -141,46 +140,41 @@ debug('update : p.ended = ' + p.ended);
 					Tombloo.Post.insert(post);
 					p.value++;
 				} catch(e if e instanceof Database.DuplicateKeyException) {
-// debug('update : DuplicateKeyException!!!!!!!!!!!!!!!!!!!!!!!!!!');
 					// 重複エラーを無視し読み飛ばす
 				}
 			});
-		}).
-		addBoth(function(res){
-debug('update : ---');
-debug('update : END');
-debug('update : user = ' + user);
-debug('update : type = ' + type);
-// debug(res);
-			}).
-			addCallback(bind('complete', p));
+		});
+		d.addCallback(bind('complete', p));
+		
+		return d;
 	},
 }
 
 
 Tombloo.Service.Photo = {
+	/**
+	 * 未取得の画像ファイルを全てダウンロードする。
+	 *
+	 * @param {String} user ユーザー名。
+	 * @param {Number} size 画像サイズ。75や500などピクセル数を指定する。
+	 * @param {optional Progress} p 処理進捗。
+	 */
 	download : function(user, size, p){
 		p = p || new Progress();
 		if(p.ended)
 			return;
-debug('download : ---');
-debug('download : user = ' + user);
-debug('download : size = ' + size);
-	
-	return Tombloo.Service.Photo.getByFileExists(user, size, false).
-		addCallback(function(photos){
+		
+		var d = succeed();
+		d.addCallback(function(){
+			return Tombloo.Service.Photo.getByFileExists(user, size, false);
+		});
+		d.addCallback(function(photos){
 			p.max = photos.length;
-debug('download : ---');
-debug('download : p.max = ' + p.max);
 			
 			if(p.ended)
 				return;
 			
 			return deferredForEach(photos, function(photo){
-// debug('download : ---');
-// debug('download : ' + p.value + '/' + p.max);
-// debug('download : ' + p.ended);
-// debug('download : ' + photo.getFile(size).leafName);
 				if(p.ended)
 					throw StopIteration;
 				
@@ -188,31 +182,43 @@ debug('download : p.max = ' + p.max);
 				
 				return Tumblr.Photo.download(photo.getFile(size));
 			});
-		}).
-		addBoth(function(res){
-debug('download : ---');
-debug('download : END');
-// debug(res);
-			}).
-			addBoth(bind('complete', p));
+		});
+		d.addBoth(bind('complete', p));
+		
+		return d;
 	},
+	
+	/**
+	 * 画像ファイルの有無を条件にphotoポストを取得する。
+	 *
+	 * @param {String} user ユーザー名。
+	 * @param {Number} size 画像サイズ。75や500などピクセル数を指定する。
+	 * @param {Boolean} exists trueの場合、画像ファイルが存在するポストだけが返される。falseは、この逆。
+	 * @return {Deferred} 取得した全ポストが渡される。
+	 */
 	getByFileExists : function(user, size, exists){
 		exists = exists==null? true : exists;
 		
-debug('getByFileExists : START');
-debug('getByFileExists : user = ' + user);
 		var all = [];
 		var photoAll = Tombloo.Photo.findByUser(user);
-var c = counter();
-debug('getByFileExists : photoAll.length = ' + photoAll.length);
-// 		return deferredForEach(Tombloo.Photo.findByUser(user).split(100), function(photos){
-		return deferredForEach(photoAll.split(100), function(photos){
-debug('getByFileExists : ' + (c() * 100));
-			forEach(photos, function(photo){
-				if(photo.checkFile(size) == exists)
-					all.push(photo);
+		var d = succeed();
+		d.addCallback(function(){
+			
+			// 全てのポストを繰り返す(100件ごと)
+			return deferredForEach(photoAll.split(100), function(photos){
+				forEach(photos, function(photo){
+					if(photo.checkFile(size) == exists)
+						all.push(photo);
+				})
+				
+				// 未応答のエラーが起きないようにウェイトを入れる
+				return wait(0);
 			})
-			return wait(0);
-		}).addCallback(function(){return all});
+		});
+		d.addCallback(function(){
+			return all;
+		});
+		
+		return d;
 	},
 }

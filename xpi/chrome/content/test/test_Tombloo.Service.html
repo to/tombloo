@@ -22,40 +22,6 @@
 <script type="text/javascript">
 try {
 	// chrome://tombloo/content/test/test_Tombloo.Service.html
-	
-	const Photo = Tombloo.Service.Photo;
-	
-	Photo.getByFileExists('pootee', 500, false).addCallback(function(photos){
-		log(photos.length);
-	});
-	
-	/*
-	console.time(1);
-	Photo.getByFileExists('to', 500, true).addCallback(function(photos){
-		console.timeEnd(1);
-		ok(photos.length > 13000);
-	});
-	
-	var p = new Progress('Update Photo');
-	var d = succeed();
-	d.addCallback(
-		Tombloo.Service.Photo.update, 
-		'youpy.tumblr.com', 
-		p.addChild(new Progress('updating...'), 30));
-	d.addCallback(
-		Tombloo.Service.Photo.download, 
-		'youpy.tumblr.com', 
-		500,
-		p.addChild(new Progress('downloading...')));
-	d.addBoth(function(){
-		p.complete();
-		alert('FINISH');
-	});
-	openProgressDialog(p);
-	 */
-	// Tombloo.Service.Photo.download('to.tumblr.com', 500, p);
-	// Tombloo.Service.Photo.download('youpy.tumblr.com', 500, p);
-	
 } catch (err) {
 	var s = [];
 	s.push('TEST SUITE FAILURE!');

@@ -1010,21 +1010,26 @@ function capitalize(str){
 	return str.substr(0, 1).toUpperCase() + str.substr(1);
 }
 
-// FIXME: __lookupGetter__ を使う
-// http://d.hatena.ne.jp/brazil/20070719/1184838243
+/**
+ * オブジェクトのプロパティをコピーする。
+ * ゲッター/セッターの関数も対象に含まれる。
+ * 
+ * @param {Object} target コピー先。
+ * @param {Object} source コピー元。
+ * @return {Object} コピー先。
+ */
 function extend(target, source){
 	for(var p in source){
-		if(p.match(/get_(.*)/)){
-			target.__defineGetter__(RegExp.$1, source[p]);
-			continue;
-		}
+		var getter = source.__lookupGetter__(p);
+		if(getter)
+			target.__defineGetter__(p, getter);
 		
-		if(p.match(/set_(.*)/)){
-			target.__defineSetter__(RegExp.$1, source[p]);
-			continue;
-		}
+		var setter = source.__lookupSetter__(p);
+		if(setter)
+			target.__defineSetter__(p, setter);
 		
-		target[p] = source[p];
+		if(!getter && !setter)
+			target[p] = source[p];
 	}
 	
 	return target;

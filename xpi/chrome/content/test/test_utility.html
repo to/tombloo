@@ -370,6 +370,21 @@ try {
 	});
 	*/
 	
+	
+	// extend
+	var src = {
+		_name : '',
+		get name(){
+			return this._name
+		},
+		set name(val){
+			return this._name = val;
+		},
+	}
+	var target = extend({}, src);
+	is(target.name = 'NAME', 'NAME');
+	is(target.name, 'NAME');
+	
 } catch (err) {
 	var s = [];
 	s.push('TEST SUITE FAILURE!');

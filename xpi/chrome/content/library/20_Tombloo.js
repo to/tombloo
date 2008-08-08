@@ -34,7 +34,7 @@ var Tombloo = {
 	Entity : function(def){
 		var Clazz = Entity(def);
 		extend(Clazz, {
-			get_db : function(){
+			get db(){
 				return Tombloo.db;
 			},
 		})
@@ -120,10 +120,10 @@ Tombloo.Quote = Tombloo.Entity({
 
 
 extend(Tombloo.Photo.prototype, {
-	get_url : function(){
+	get url(){
 		return 'http://' + this.user + '.tumblr.com/post/' + this.id;
 	},
-	set_url : function(){
+	set url(){
 	},
 	checkFile : function(size){
 		return this.getFile(size).exists();

@@ -34,6 +34,7 @@ extend(Database, {
 		for(var i=0, len=statement.parameterCount ; i<len ; i++)
 			statement.bindUTF8StringParameter(i, params[i]);
 	},
+	
 	getParamNames : function(wrapper) {
 		var paramNames = [];
 		var statement = wrapper.statement;
@@ -42,6 +43,7 @@ extend(Database, {
 		
 		return paramNames;
 	},
+	
 	getColumnNames : function(wrapper) {
 		var columnNames=[];
 		statement = wrapper.statement;
@@ -50,6 +52,7 @@ extend(Database, {
 		
 		return columnNames;
 	},
+	
 	getRow : function(row, columnNames){
 		var result = {};
 		for(var i=0,len=columnNames.length ; i<len ; i++){
@@ -62,9 +65,40 @@ extend(Database, {
 })
 
 extend(Database.prototype, {
+	
+	/**
+	 * データベースのバージョンを取得する。
+	 * PRAGMAのuser_versionに相当する(schema_versionではない)。
+	 * 
+	 * @return {Number} データベースバージョン。
+	 */
+	get version(){
+		return db.execute('PRAGMA user_version')[0].user_version;
+	},
+	
+	/**
+	 * データベースのバージョンを設定する。
+	 */
+	set version(ver){
+		// パラメタライズクエリーにするとSQL分異常のエラーが発生した
+		return db.execute('PRAGMA user_version=' + ver);
+	},
+	
+	/**
+	 * ステートメントを生成する。
+	 * 
+	 * @param {String} SQL。
+	 */
 	createStatement : function(sql) {
 		return new StorageStatementWrapper(this.connection.createStatement(sql));
 	},
+	
+	/**
+	 * SQLを実行する。
+	 * DDL/DML共に利用できる。
+	 * 
+	 * @param {String} SQL。
+	 */
 	execute : function(sql, params) {
 		sql+='';
 		
@@ -84,7 +118,10 @@ extend(Database.prototype, {
 			
 			var columnNames;
 			var result = [];
-			while (statement.step()) {
+			
+			// 全ての行を繰り返す
+			while (statement.step()){
+				// 列名はパフォーマンスを考慮しキャッシュする
 				if (!columnNames)
 					columnNames = Database.getColumnNames(statement);
 				
@@ -95,10 +132,23 @@ extend(Database.prototype, {
 		} catch(e) {
 			this.throwException(e);
 		} finally {
-			if(statement)
+			// ステートメントを終了させる
+			// これを怠ると、データベースをクローズできなくなる
+			if(statement){
 				statement.reset();
+				statement.statement.finalize();
+			}
 		}
 	},
+	
+	/**
+	 * トランザクション内で処理を実行する。
+	 * パフォーマンスを考慮する必要のある一括追加部分などで用いる。
+	 * エラーが発生した場合は、トランザクションがロールバックされる。
+	 * それ以外は、自動的にコミットされる。
+	 *
+	 * @param {Function} handler 処理。
+	 */
 	transaction : function(handler) {
 		var connection = this.connection;
 		var error = false;
@@ -114,6 +164,13 @@ extend(Database.prototype, {
 				connection.rollbackTransaction();
 		}
 	},
+	
+	/**
+	 * 例外を解釈し再発生させる。
+	 *
+	 * @param {Exception} e データベース例外。
+	 * @throws エラー内容に即した例外。未定義のものは汎用的な例外となる。
+	 */
 	throwException : function(e){
 		var code = this.connection.lastError;
 		var message = this.connection.lastErrorString;
@@ -128,6 +185,14 @@ extend(Database.prototype, {
 		default:
 			throw new Database.DatabaseException(this, e);
 		}
+	},
+	
+	/**
+	 * データベースをクローズする。
+	 * クローズしない場合、ファイルがロックされ削除できない。
+	 */
+	close : function(){
+		this.connection.close();
 	},
 });
 
@@ -177,6 +242,7 @@ function Entity(def){
 				Model.update(this);
 			}
 		},
+		
 		remove : function(){
 			Model.deleteById(this.id);
 			this.temporary = true;
@@ -205,19 +271,23 @@ function Entity(def){
 		initialize : function(){
 			Model.db.execute(INITIALIZE_SQL);
 		},
+		
 		deinitialize : function(){
 			return Model.db.execute(<>
 				DROP TABLE {def.name} 
 			</>);
 		},
+		
 		insert : function(model){
 			if(!(model instanceof Model))
 				model = new Model(model);
 			Model.db.execute(INSERT_SQL, model);
 		},
+		
 		update : function(model){
 			Model.db.execute(UPDATE_SQL, model);
 		},
+		
 		deleteById : function(id){
 			return Model.db.execute(<>
 				DELETE FROM {def.name} 
@@ -225,28 +295,33 @@ function Entity(def){
 					id = :id
 			</>, id);
 		},
+		
 		deleteAll : function(){
 			return Model.db.execute(<>
 				DELETE FROM {def.name} 
 			</>);
 		},
+		
 		countAll : function(){
 			return Model.db.execute(<>
 				SELECT count(*) AS count
 				FROM {def.name} 
 			</>)[0].count;
 		},
+		
 		findAll : function(){
 			return this.find(<>
 				SELECT * 
 				FROM {def.name} 
 			</>);
 		},
+		
 		rowToObject : function(obj){
 			var model = new Model(obj);
 			model.temporary = false;
 			return model;
 		},
+		
 		find : function(sql, params){
 			return Model.db.execute(sql, params).map(Model.rowToObject);
 		},
@@ -321,6 +396,7 @@ extend(Entity, {
 			)
 		</>);
 	},
+	
 	createInitializeSQL : function(def){
 		var fields = [];
 		for(var p in def.fields){
@@ -334,6 +410,7 @@ extend(Entity, {
 			)
 		</>);
 	},
+	
 	createUpdateSQL : function(def){
 		var fields =  keys(def.fields).
 			filter(function(p){return p!='id'}).
@@ -349,6 +426,7 @@ extend(Entity, {
 				id = :id
 		</>);
 	},
+	
 	compactSQL: function(sql){
 		sql+='';
 		return sql.

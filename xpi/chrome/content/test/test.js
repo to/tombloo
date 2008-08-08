@@ -99,3 +99,27 @@ function autoReload(paths){
 		});
 	}, 1000)
 }
+
+function getTestFile(path){
+	var file = getContentDir();
+	file.append('test');
+	
+	if(path)
+		file.setRelativeDescriptor(file, path);
+	
+	return file;
+}
+
+function copy(src, target){
+	if(!src.exists())
+		return;
+	
+	remove(target);
+	src.copyTo(target.parent, target.leafName);
+	
+	return target;
+}
+
+function remove(file){
+	file.exists() && file.remove(false);
+}

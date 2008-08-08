@@ -23,6 +23,16 @@
 try {
 	// chrome://tombloo/content/test/test_Database.html
 	
+	var file = copy(
+		getTestFile('tombloo_test.sqlite'), 
+		getTestFile('tombloo_test.temp.sqlite'));
+	
+	// PRAGMA user_version
+	var db = new Database(file);
+	is(db.version, 0);
+	db.version = 1;
+	is(db.version, 1);
+	
 	var def = {
 		name : 'video',
 		fields : {
@@ -50,12 +60,6 @@ try {
 			player  : 'TEXT',
 		}
 	}
-	
-	var file = getContentDir();
-	file.append('test');
-	file.append('tombloo_test.sqlite');
-	
-	var db = new Database(file);
 	
 	var Video = Entity(def);
 	Video.db = db;
@@ -105,6 +109,9 @@ try {
 	for(var prop in err)
 		s.push(prop + ':  ' + err[prop]);
 	ok(false, s.join('\n'));
+	
+} finally{
+	db && db.close && db.close();
 }
 </script>
 

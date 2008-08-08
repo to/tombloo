@@ -121,6 +121,7 @@ addAround(QuickPostForm.prototype, 'createForm', function(proceed, args, target,
   })
   .addErrback(function(e){
     log(e);
+    loading.setAttribute('value', 'This page has been already bookmarked.');
   });
 
   return result;

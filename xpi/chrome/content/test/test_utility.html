@@ -360,6 +360,16 @@ try {
 	
 	disconnectAll(obj);
 	ok(!connected(obj, 'load'));
+
+	/* 文字化けテスト(日本Googleへ接続)
+	SimpleTest.waitForExplicitFinish();
+	request('http://www.google.co.jp/').addCallback(function(res){
+		ok(res.responseText.match(/検索/), '文字化けしないか');
+	}).addBoth(function(){
+		SimpleTest.finish()
+	});
+	*/
+	
 } catch (err) {
 	var s = [];
 	s.push('TEST SUITE FAILURE!');

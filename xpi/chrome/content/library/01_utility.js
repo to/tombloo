@@ -203,93 +203,49 @@ function openDialog(url, w, h, features, value){
 	}), value);
 }
 
+/**
+ * ブラウザウィンドウのリストを取得する。
+ */
+function getWindows(){
+	return list(WindowMediator.getEnumerator('navigator:browser'));
+}
 
-// ----[MochiKit]-------------------------------------------------
-var StopProcess = {};
+function addTab(url, background){
+	var d = new Deferred();
+	var tabbrowser = getMostRecentWindow().getBrowser();
+	var tab = tabbrowser.addTab(url);
+	var browser = tab.linkedBrowser;
+	if(!background)
+		tabbrowser.selectedTab = tab;
+	
+	browser.addEventListener('DOMContentLoaded', function(event){
+		browser.removeEventListener('DOMContentLoaded', arguments.callee, true);
+		
+		var win = event.originalTarget.defaultView;
+		d.callback(win.wrappedJSObject || win);
+	}, true);
+	
+	return d;
+}
 
-function connected(src, sig){
-	return MochiKit.Signal._observers.some(function(o){
-		return o.source === src && o.signal === sig && o.connected;
+function getContents(file, charset){
+	try{
+		return withStream(new FileInputStream(file, -1, 0, false), function(fis){
+			return withStream(new ConverterInputStream(fis, charset), function(cis){
+				var out = {};
+				cis.readString(fis.available(), out);
+				return out.value;
+			});
+		});
+	} catch(e){}
+}
+
+function putContents(file, text, charset){
+	withStream(new FileOutputStream(file, 
+		FileOutputStream.PR_WRONLY | FileOutputStream.PR_CREATE_FILE | FileOutputStream.PR_TRUNCATE, 420, -1), function(stream){
+		text = text.convertFromUnicode(charset);
+		stream.write(text, text.length);
 	});
-}
-
-function maybeDeferred(d) {
-	return typeof(d) == 'function'? 
-		MochiKit.Async.maybeDeferred(d) : 
-		(d==null || !d.addCallback)? 
-			succeed(d) : 
-			d;
-}
-
-MochiKit.Base.update(MochiKit.Signal.Event.prototype, {
-	// [FIXME] mouse.wheel.yを利用
-	wheelDelta : function(){
-		return 	this.event().detail;
-	},
-	isStopped : function(){
-		var evt = this.event();
-		
-		return evt.getPreventDefault ?
-			evt.getPreventDefault() :
-			evt.cancelBubble;
-	},
-	
-	// FIXME: 統合、現在Stroboで利用
-	keyString : function(){
-		var keys = [];
-		
-		var mod = this.modifier();
-		mod.ctrl && keys.push('CTRL');
-		mod.shift && keys.push('SHIFT');
-		mod.alt && keys.push('ALT');
-		
-		var key = this.key();
-		if(key){
-			key = key.string.replace(/^KEY_/, '');
-			if(!keys.some(function(i){return i==key}))
-				keys.push(key);
-		}
-		
-		return keys.join('+');
-	},
-})
-
-MochiKit.Base.update(MochiKit.Signal._specialKeys, {
-	61:  'KEY_SEMICOLON',
-	226: 'KEY_HORIZONTAL_BAR'
-});
-
-function formContents(elm){
-	if(typeof(elm)=='string')
-		elm = convertToHTMLDocument(elm);
-	
-	return reduce(function(p, a){
-		p[a[0]]=a[1];
-		return p;
-	}, zip.apply(null, MochiKit.DOM.formContents(elm)), {});
-}
-
-function queryString(params, question){
-	if(isEmpty(params))
-		return '';
-	
-	if(typeof(params)=='string')
-		return params;
-	
-	var qeries = [];
-	for(var key in params){
-		var value = params[key];
-		if(value==null)
-			continue;
-		qeries.push(encodeURIComponent(key) + '='+ encodeURIComponent(value));
-	}
-	return (question? '?' : '') + qeries.join('&');
-}
-
-// FIXME: 互換のため
-function doXHR(url, opts){
-	error('deprecated: doXHR');
-	return request(url, opts);
 }
 
 /**
@@ -301,10 +257,13 @@ function doXHR(url, opts){
  * @param {String} opts.referrer リファラURL。
  * @param {String} opts.charset 文字セット。指定されない場合、レスポンスヘッダの文字セットが使われる。
  * @param {String || Object} opts.queryString クエリ。
- * @param {String || Object} opts.sendContent コンテント。これが設定されているとPOSTメソッドになる。値に直接ファイルをセットしてもよい。
+ * @param {String || Object} opts.sendContent 
+ *        コンテント。設定されているとPOSTメソッドになる。値に直接ファイルをセットしてもよい。
  * @param {nsIInputStream || nsIFile} opts.KEY.file アップロードファイル。
- * @param {String} opts.KEY.fileName サーバーへ送信するファイル名。指定されない場合、元のファイル名が使われる。
- * @param {String} opts.KEY.contentType コンテントタイプ。指定されない場合、application/octet-streamになる。
+ * @param {String} opts.KEY.fileName 
+ *        サーバーへ送信するファイル名。指定されない場合、元のファイル名が使われる。
+ * @param {String} opts.KEY.contentType 
+ *        コンテントタイプ。指定されない場合、application/octet-streamになる。
  */
 function request(url, opts){
 	var d = new Deferred();
@@ -453,7 +412,7 @@ function request(url, opts){
 			var charset = opts.charset || req.contentCharset;
 			
 			try{
-				text = charset? convertToUnicode(text, charset) : text;
+				text = charset? text.convertToUnicode(charset) : text;
 			} catch(err){
 				// [FIXME] 調査中
 				error(err);
@@ -486,21 +445,93 @@ function request(url, opts){
 	return d;
 }
 
-function addTab(url, background){
-	var d = new Deferred();
-	var tabbrowser = getMostRecentWindow().getBrowser();
-	var tab = tabbrowser.addTab(url);
-	var browser = tab.linkedBrowser;
-	if(!background)
-		tabbrowser.selectedTab = tab;
-	
-	browser.addEventListener('DOMContentLoaded', function(event){
-		browser.removeEventListener('DOMContentLoaded', arguments.callee, true);
+
+// ----[MochiKit]-------------------------------------------------
+var StopProcess = {};
+
+function connected(src, sig){
+	return MochiKit.Signal._observers.some(function(o){
+		return o.source === src && o.signal === sig && o.connected;
+	});
+}
+
+function maybeDeferred(d) {
+	return typeof(d) == 'function'? 
+		MochiKit.Async.maybeDeferred(d) : 
+		(d==null || !d.addCallback)? 
+			succeed(d) : 
+			d;
+}
+
+MochiKit.Base.update(MochiKit.Signal.Event.prototype, {
+	// [FIXME] mouse.wheel.yを利用
+	wheelDelta : function(){
+		return 	this.event().detail;
+	},
+	isStopped : function(){
+		var evt = this.event();
 		
-		var win = event.originalTarget.defaultView;
-		d.callback(win.wrappedJSObject || win);
-	}, true);
-	return d;
+		return evt.getPreventDefault ?
+			evt.getPreventDefault() :
+			evt.cancelBubble;
+	},
+	
+	// FIXME: 統合、現在Stroboで利用
+	keyString : function(){
+		var keys = [];
+		
+		var mod = this.modifier();
+		mod.ctrl && keys.push('CTRL');
+		mod.shift && keys.push('SHIFT');
+		mod.alt && keys.push('ALT');
+		
+		var key = this.key();
+		if(key){
+			key = key.string.replace(/^KEY_/, '');
+			if(!keys.some(function(i){return i==key}))
+				keys.push(key);
+		}
+		
+		return keys.join('+');
+	},
+})
+
+MochiKit.Base.update(MochiKit.Signal._specialKeys, {
+	61:  'KEY_SEMICOLON',
+	226: 'KEY_HORIZONTAL_BAR'
+});
+
+function formContents(elm){
+	if(typeof(elm)=='string')
+		elm = convertToHTMLDocument(elm);
+	
+	return reduce(function(p, a){
+		p[a[0]]=a[1];
+		return p;
+	}, zip.apply(null, MochiKit.DOM.formContents(elm)), {});
+}
+
+function queryString(params, question){
+	if(isEmpty(params))
+		return '';
+	
+	if(typeof(params)=='string')
+		return params;
+	
+	var qeries = [];
+	for(var key in params){
+		var value = params[key];
+		if(value==null)
+			continue;
+		qeries.push(encodeURIComponent(key) + '='+ encodeURIComponent(value));
+	}
+	return (question? '?' : '') + qeries.join('&');
+}
+
+// FIXME: 互換のため
+function doXHR(url, opts){
+	error('deprecated: doXHR');
+	return request(url, opts);
 }
 
 registerIteratorFactory(
@@ -790,7 +821,7 @@ String.prototype = update(String.prototype, {
 	},
 });
 
-
+// FIXME: UTF-8でスクリプトをロードするように
 function isCorruptedScript(){
 	try{
 		'ウァ'.convertToUnicode();
@@ -894,7 +925,7 @@ function error(err){
 
 function warn(msg){
 	firebug('warn', arguments) || 
-		ConsoleService.logMessage(new ScriptError(msg, null, null, null, null, IScriptError.warningFlag, null));
+		ConsoleService.logMessage(new ScriptError(msg, null, null, null, null, ScriptError.warningFlag, null));
 	
 	return msg;
 }
@@ -969,15 +1000,17 @@ function absolutePath(path){
   return e.firstChild.href;
 }
 
+// FIXME: String.prototypeを使う
 function decapitalize(str){
 	return str.substr(0, 1).toLowerCase() + str.substr(1);
 }
 
+// FIXME: String.prototypeを使う
 function capitalize(str){
 	return str.substr(0, 1).toUpperCase() + str.substr(1);
 }
 
-// [FIXME] __lookupGetter__ を使う
+// FIXME: __lookupGetter__ を使う
 // http://d.hatena.ne.jp/brazil/20070719/1184838243
 function extend(target, source){
 	for(var p in source){
@@ -1069,6 +1102,7 @@ function validateFileName(fileName){
 }
 
 
+// ----[Repository]-------------------------------------------------
 function Repository(){
 	this.register.apply(this, arguments);
 }
@@ -1373,8 +1407,8 @@ function convertToDataURL(src){
  * マウスダウンにより1セッションがはじまり、全てのボタンのマウスアップで終わる。
  * 2重実行を防ぐため、そのセッションで一度でも処理が行われると以降は実行されない。
  *
- * @target {Element} 監視対象のエレメント
- * @check {Function} イベント処理関数(未処理の場合はtrueを返す)
+ * @param {Element} target 監視対象のエレメント
+ * @param {Function} check イベント処理関数(未処理の場合はtrueを返す)
  */
 function observeMouseShortcut(target, check){
 	var BUTTONS = ['LEFT_DOWN', 'CENTER_DOWN', 'RIGHT_DOWN'];

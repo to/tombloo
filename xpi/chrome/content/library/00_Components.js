@@ -13,15 +13,10 @@ var IWebProgressListener = Ci.nsIWebProgressListener;
 var IFile                = Ci.nsIFile;
 var ILocalFile           = Ci.nsILocalFile;
 var IURI                 = Ci.nsIURI;
-var IFileProtocolHandler = Ci.nsIFileProtocolHandler;
-var IAccessNode          = Ci.nsIAccessNode;
-var IHttpChannel         = Ci.nsIHttpChannel;
-var IUploadChannel       = Ci.nsIUploadChannel;
-var IScriptError         = Ci.nsIScriptError;
-var IStreamListener      = Ci.nsIStreamListener;
 var IInputStream         = Ci.nsIInputStream;
 var ICache               = Ci.nsICache;
 var ISelectionListener   = Ci.nsISelectionListener;
+// var IAccessNode          = Ci.nsIAccessNode;
 
 
 // const AccessibilityService = getService('/accessibilityService;1', Ci.nsIAccessibilityService);
@@ -56,47 +51,61 @@ var FaviconService      = getService('/browser/favicon-service;1', Ci.nsIFavicon
 
 
 var PrefBranch = 
-	Components.Constructor('@mozilla.org/preferences;1', 'nsIPrefBranch');
+	createConstructor('/preferences;1', 'nsIPrefBranch');
+
 var LocalFile = 
-	Components.Constructor('@mozilla.org/file/local;1', 'nsILocalFile', 'initWithPath');
+	createConstructor('/file/local;1', 'nsILocalFile', 'initWithPath');
+
 var WebBrowserPersist = 
-	Components.Constructor('@mozilla.org/embedding/browser/nsWebBrowserPersist;1', 'nsIWebBrowserPersist');
+	createConstructor('/embedding/browser/nsWebBrowserPersist;1', 'nsIWebBrowserPersist');
+
 var StorageStatementWrapper = 
-	Components.Constructor('@mozilla.org/storage/statement-wrapper;1', 'mozIStorageStatementWrapper', 'initialize');
+	createConstructor('/storage/statement-wrapper;1', 'mozIStorageStatementWrapper', 'initialize');
+
 var ScriptError = 
-	Components.Constructor('@mozilla.org/scripterror;1', 'nsIScriptError', 'init');
+	createConstructor('/scripterror;1', 'nsIScriptError', 'init');
+
 var Process = 
 	createConstructor('/process/util;1', 'nsIProcess', 'init');
+
 var FilePicker = 
 	createConstructor('/filepicker;1', 'nsIFilePicker', 'init');
 
 var InputStream = 
-	Components.Constructor('@mozilla.org/scriptableinputstream;1', 'nsIScriptableInputStream', 'init');
+	createConstructor('/scriptableinputstream;1', 'nsIScriptableInputStream', 'init');
+
 var BinaryInputStream = 
-	Components.Constructor('@mozilla.org/binaryinputstream;1', 'nsIBinaryInputStream', 'setInputStream');
+	createConstructor('/binaryinputstream;1', 'nsIBinaryInputStream', 'setInputStream');
+
 var FileInputStream = 
 	createConstructor('/network/file-input-stream;1', 'nsIFileInputStream', 'init');
+
 var ConverterInputStream = 
 	createConstructor('/intl/converter-input-stream;1', 'nsIConverterInputStream', function(stream, charset, bufferSize){
 		this.init(stream, charset || 'UTF-8', bufferSize || 4096, ConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
 	});
+
 var MIMEInputStream = 
 	createConstructor('/network/mime-input-stream;1', 'nsIMIMEInputStream', function(stream){
 		this.addContentLength = true;
 		this.setData(stream);
 	});
+
 var BufferedInputStream = 
 	createConstructor('/network/buffered-input-stream;1', 'nsIBufferedInputStream', function(stream, bufferSize){
 		this.init(stream, bufferSize || 4096);
 	});
+
 var StringInputStream = 
 	createConstructor('/io/string-input-stream;1', 'nsIStringInputStream', function(str){
 		this.setData(str, str.length);
 	});
+
 var UnicodeConverter = 
 	createConstructor('/intl/scriptableunicodeconverter', 'nsIScriptableUnicodeConverter', function(charset){
 		this.charset = charset || 'UTF-8';
 	});
+
 var MultiplexInputStream = 
 	createConstructor('/io/multiplex-input-stream;1', 'nsIMultiplexInputStream', function(streams){
 		var self = this;
@@ -111,8 +120,10 @@ var MultiplexInputStream =
 			self.appendStream(stream);
 		});
 	});
+
 var CryptoHash = 
 	createConstructor('/security/hash;1', 'nsICryptoHash', 'init');
+
 var FileOutputStream = 
 	update(createConstructor('/network/file-output-stream;1', 'nsIFileOutputStream', 'init'), {
 		PR_RDONLY : 0x01,
@@ -131,7 +142,6 @@ function update(t, s){
 		t[p] = s[p];
 	return t;
 }
-
 
 function createMock(sample, proto){
 	var non = function(){};
@@ -182,8 +192,19 @@ function createQueryInterface(ifcNames){
 	}
 }
 
-function createConstructor(pid, ifc, init){
-	var cls = Components.classes['@mozilla.org' + pid];
+/**
+ * XPCOMのコンストラクタを生成する。
+ * コンストラクタは指定されたインターフェースの定数を全て持つ。
+ *
+ * @param {String} clsName クラス名(@mozilla.org以降を指定する)。
+ * @param {String || nsIJSID} ifc インターフェイス。
+ * @param {String || Function} init 
+ *        初期化関数。
+ *        文字列の場合、該当するメソッドが呼び出される。
+ *        関数の場合、生成されたインスタンスをthisとして呼び出される。
+ */
+function createConstructor(clsName, ifc, init){
+	var cls = Components.classes['@mozilla.org' + clsName];
 	ifc = typeof(ifc)=='string'? Components.interfaces[ifc] : ifc;
 	
 	var cons = function(){
@@ -198,6 +219,10 @@ function createConstructor(pid, ifc, init){
 		return obj;
 	};
 	
+	cons.instanceOf = function(obj){
+		return (obj instanceof ifc);
+	};
+	
 	for(var prop in ifc)
 		cons[prop] = ifc[prop];
 	
@@ -205,11 +230,11 @@ function createConstructor(pid, ifc, init){
 }
 
 /**
- * XPCOMサービスを取得する
+ * XPCOMサービスを取得する。
  * インターフェースが指定されない場合、利用できる全てのインターフェースに拡げられる。
  *
- * @clsName {String} クラス名(@mozilla.org以降を指定する)
- * @ifc {nsIJSID} インターフェイス
+ * @param {String} clsName クラス名(@mozilla.org以降を指定する)。
+ * @param {nsIJSID} ifc インターフェイス。
  */
 function getService(clsName, ifc){
 	try{
@@ -221,6 +246,12 @@ function getService(clsName, ifc){
 	}
 }
 
+/**
+ * XPCOMインスタンスの実装しているインターフェース一覧を取得する。
+ *
+ * @param {Object} obj XPCOMインスタンス。
+ * @return {Array} インターフェースのリスト。
+ */
 function getInterfaces(obj){
 	var result = [];
 	
@@ -233,6 +264,13 @@ function getInterfaces(obj){
 	return result;
 }
 
+/**
+ * XPCOMインスタンスの実装しているインターフェースを全て利用できるようにする。
+ * パフォーマンスに注意する箇所では、インターフェースのリストを渡し検査範囲を限定して使う。
+ *
+ * @param {Object} obj XPCOMインスタンス。
+ * @param {optional Array} ifcs インターフェースのリスト。指定されない場合、全インターフェイスが検査される。
+ */
 function broad(obj, ifcs){
 	ifcs = ifcs || INTERFACES;
 	for(var i=0,len=ifcs.length ; i<len ; i++)
@@ -240,6 +278,15 @@ function broad(obj, ifcs){
 	return obj;
 };
 
+/**
+ * 通知バブルを表示する。
+ * 処理完了やエラーなどを通知するために用いる。
+ * MacのFirefox 3ではGrowlになる。
+ *
+ * @param {String} title タイトル。
+ * @param {String} msg メッセージ。
+ * @param {String} icon アイコン種類。定数の中から選択するか、独自のURLを渡す。
+ */
 function notify(title, msg, icon){
 	AlertsService && AlertsService.showAlertNotification(
 		icon, title, msg, 
@@ -271,15 +318,11 @@ function convertFromByteArray(arr, charset){
 	return new UnicodeConverter(charset).convertFromByteArray(text);
 }
 
-function convertToUnicode(text, charset){
-	return new UnicodeConverter(charset).ConvertToUnicode(text);
-}
-
-function convertFromUnicode(text, charset){
-	return new UnicodeConverter(charset).ConvertFromUnicode(text);
-}
-
-
+/**
+ * URIを生成する。
+ *
+ * @param {String || nsIFile || nsIURI} path URLまたはファイル。nsIURIの場合、そのまま返す。
+ */
 function createURI(path){
 	if(path instanceof IURI)
 		return path;
@@ -291,8 +334,18 @@ function createURI(path){
 	return IOService.newURI(path, null, null);
 }
 
+/**
+ * ファイルを取得する。
+ *
+ * @param {String || nsIFile || nsIURI} uri 
+ *        URI。file:またはchrome:から始まるアドレスを指定する。
+ *        nsIFileの場合、そのまま返す。
+ */
 function getLocalFile(uri){
-	var uri = (uri instanceof IURI) ? uri : IOService.newURI(uri, null, null);
+	if(uri instanceof ILocalFile)
+		return uri;
+	
+	uri = createURI(uri);
 	if(uri.scheme=='chrome')
 		uri = ChromeRegistry.convertChromeURL(uri);
 	
@@ -300,11 +353,16 @@ function getLocalFile(uri){
 		return;
 	
 	return IOService.getProtocolHandler('file').
-		QueryInterface(IFileProtocolHandler).
+		QueryInterface(Ci.nsIFileProtocolHandler).
 		getFileFromURLSpec(uri.spec).
 		QueryInterface(ILocalFile);
 }
 
+/**
+ * 拡張のインストールされているディレクトリを取得する。
+ *
+ * @param {String} id 拡張ID。 
+ */
 function getExtensionDir(id){
 	return ExtensionManager.
 		getInstallLocation(id).
@@ -358,7 +416,10 @@ function getPrefValue(){
 	}
 }
 
-	
+/**
+ * ユーザが通常利用しているダウンロードディレクトリを取得する。
+ * Firefoxオプションで指定したディレクトリ、または、最後にダウンロードしたディレクトリになる。
+ */
 function getDownloadDir(){
 	try {
 		var dir = new LocalFile(getPrefValue('browser.download.dir') || getPrefValue('browser.download.lastDir'));
@@ -369,14 +430,26 @@ function getDownloadDir(){
 	return DownloadManager.userDownloadsDirectory;
 }
 
+/**
+ * 現在利用しているプロファイルディレクトリを取得する。
+ */
 function getProfileDir(){
 	return DirectoryService.get('ProfD', IFile);
 }
 
+/**
+ * テンポラリディレクトリを取得する。
+ */
 function getTempDir(){
 	return DirectoryService.get('TmpD', IFile);
 }
 
+/**
+ * 外部エディタでファイルを開く。
+ * Greasemonkeyで設定されているエディタ、または、ブラウザでソースを開く時に使われるエディタが呼び出される。
+ *
+ * @param {nsIFile} file 対象ファイル。 
+ */
 function openInEditor(file){
 	function getFile(path){
 		return path && LocalFile(path);
@@ -398,10 +471,6 @@ function openInEditor(file){
 
 function getMostRecentWindow(){
 	return WindowMediator.getMostRecentWindow('navigator:browser');
-}
-
-function getWindows(){
-	return list(WindowMediator.getEnumerator('navigator:browser'));
 }
 
 function findCacheFile(url){
@@ -445,36 +514,13 @@ function findCacheFile(url){
 	}
 }
 
-function md5(str, charset){
-	var crypto = new CryptoHash(CryptoHash.MD5);
-	var data = new UnicodeConverter(charset).convertToByteArray(str, {});
-	crypto.update(data, data.length);
-	
-	return crypto.finish(false).split('').map(function(char){
-		return char.charCodeAt().toHexString();
-	}).join('');
-}
-
-function getContents(file, charset){
-	try{
-		return withStream(new FileInputStream(file, -1, 0, false), function(fis){
-			return withStream(new ConverterInputStream(fis, charset), function(cis){
-				var out = {};
-				cis.readString(fis.available(), out);
-				return out.value;
-			});
-		});
-	} catch(e){}
-}
-
-function putContents(file, text, charset){
-	withStream(new FileOutputStream(file, 
-		FileOutputStream.PR_WRONLY | FileOutputStream.PR_CREATE_FILE | FileOutputStream.PR_TRUNCATE, 420, -1), function(stream){
-		text = convertFromUnicode(text, charset);
-		stream.write(text, text.length);
-	});
-}
-
+/**
+ * ストリームを処理する。
+ * 実行後に必ずストリームが閉じられる。
+ *
+ * @param {Object} stream ストリーム。 
+ * @param {Function} func ストリームを利用する処理。ストリームが渡される。 
+ */
 function withStream(stream, func){
 	try{
 		return func(stream);
@@ -483,6 +529,14 @@ function withStream(stream, func){
 	}
 }
 
+/**
+ * HTML文字列からobject/script/body/styleなどの要素を取り除く。
+ * また不完全なタグなどを整形し正しいHTMLへ変換する。
+ * Firefox 3では、JavaScriptプロトコルの除去が行われない。
+ *
+ * @param {String} html HTML。 
+ * @return {String} 整形されたHTML。
+ */
 function sanitizeHTML(html){
 	var doc = document.implementation.createDocument('', '', null);
 	var root = doc.appendChild(doc.createElement('root'));

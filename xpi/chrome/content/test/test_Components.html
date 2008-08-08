@@ -16,16 +16,6 @@
 try {
 	// chrome://tombloo/content/test/test_Components.html
 	
-	/* convertFromUnplaceableHTML / 文字化けテスト(日本Googleへ接続)
-	SimpleTest.waitForExplicitFinish();
-	request('http://www.google.co.jp/', {
-		mimeType : 'text/plain; charset=x-user-defined',
-	}).addCallback(function(res){
-		ok(convertFromUnplaceableHTML(res.responseText).match(/検索/));
-	}).addBoth(function(){
-		SimpleTest.finish()
-	});
-	*/
 	
 	// createMock
 	var BaseWebProgressListener = createMock('@mozilla.org/appshell/component/browser-status-filter;1');
@@ -38,8 +28,8 @@ try {
 	ok(! (listner instanceof Ci.nsIWebProgressListener), 'createMockで生成したオブジェクトはinstanceofが通らない');
 	
 	// createQueryInterface
-	var mock = {QueryInterface : createQueryInterface([IScriptError])};
-	is(mock.QueryInterface(IScriptError), mock);
+	var mock = {QueryInterface : createQueryInterface([Ci.nsIScriptError])};
+	is(mock.QueryInterface(Ci.nsIScriptError), mock);
 	try{
 		mock.QueryInterface(ILocalFile);
 	} catch (e){
@@ -50,6 +40,7 @@ try {
 	var str = 'ABCD';
 	is(new InputStream(new StringInputStream(str)).read(str.length), 'ABCD');
 	
+	ok(PrefBranch.instanceOf(new PrefBranch()), 'createConstructor: instanceOf');
 	
 	// getService
 	is(typeof(Components.classes['not_found']), 'undefined');
@@ -62,7 +53,6 @@ try {
 	var uri = createURI('http://google.com');
 	var ifcs = getInterfaces(uri);
 	ok(ifcs.length >= 6, 'getInterfaces: インタフェース数(Firefox 2/3で違う)');
-	is(ifcs[0], Ci.nsIStandardURL);
 	
 	
 	// broad
@@ -120,6 +110,9 @@ try {
 	
 	is(sanitizeHTML(
 		'<body><style>body{color:red}</style></body>'), 
+		'');
+	is(sanitizeHTML(
+		'<object></object><script>alert(3)<\/script><embed></embed>'), 
 		'');
 	is(sanitizeHTML(
 		'<input<script src="alert(3)"<\/script>'), 

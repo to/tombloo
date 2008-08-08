@@ -64,7 +64,7 @@ try {
 	Video.initialize();
 	
 	Video.deleteAll();
-	is(Video.findAll().length, 0);
+	is(Video.findAll().length, 0, '全削除されたか');
 	
 	var video = new Video({
 		id : 1,
@@ -73,7 +73,7 @@ try {
 		capTion : 'CAPTION',
 	});
 	video.save();
-	is(Video.findAll().length, 1);
+	is(Video.findAll().length, 1, 'save');
 	
 	var video = new Video({
 		id : 2,
@@ -82,9 +82,8 @@ try {
 		capTion : 'CAPTION',
 	});
 	video.save();
-	is(Video.findAll().length, 2);
+	is(Video.findAll().length, 2, 'save');
 	
-	is(Video.findByHost('HOST_1').length, 1);
 	is(Video.findByHost('HOST_1').length, 1);
 	is(Video.findByHostAndCapTion(['HOST_1', 'CAPTION']).length, 1);
 	

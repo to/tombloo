@@ -41,7 +41,6 @@ try {
 		}
 	}
 	
-	
 	is(Entity.createInsertSQL(def), 
 		'INSERT INTO video ( id, host ) VALUES ( :id, :host )');
 	is(Entity.createUpdateSQL(def),
@@ -66,6 +65,9 @@ try {
 	Video.initialize();
 	Video.deinitialize();
 	Video.initialize();
+	
+	ok( db.tableExists('video'));
+	ok(!db.tableExists('no_such_table'));
 	
 	Video.deleteAll();
 	is(Video.findAll().length, 0, '全削除されたか');
@@ -111,7 +113,7 @@ try {
 	ok(false, s.join('\n'));
 	
 } finally{
-	db && db.close && db.close();
+	db.close();
 }
 </script>
 

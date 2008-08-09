@@ -67,40 +67,66 @@ extend(Database, {
 extend(Database.prototype, {
 	
 	/**
-	 * ƒf[ƒ^ƒx[ƒX‚Ìƒo[ƒWƒ‡ƒ“‚ğæ“¾‚·‚éB
-	 * PRAGMA‚Ìuser_version‚É‘Š“–‚·‚é(schema_version‚Å‚Í‚È‚¢)B
+	 * ãƒ‡ãƒ¼ã‚¿ãƒ™ãƒ¼ã‚¹ã®ãƒãƒ¼ã‚¸ãƒ§ãƒ³ã‚’å–å¾—ã™ã‚‹ã€‚
+	 * PRAGMAã®user_versionã«ç›¸å½“ã™ã‚‹(schema_versionã§ã¯ãªã„)ã€‚
 	 * 
-	 * @return {Number} ƒf[ƒ^ƒx[ƒXƒo[ƒWƒ‡ƒ“B
+	 * @return {Number} ãƒ‡ãƒ¼ã‚¿ãƒ™ãƒ¼ã‚¹ãƒãƒ¼ã‚¸ãƒ§ãƒ³ã€‚
 	 */
 	get version(){
-		return db.execute('PRAGMA user_version')[0].user_version;
+		return this.pragma('user_version');
 	},
 	
 	/**
-	 * ƒf[ƒ^ƒx[ƒX‚Ìƒo[ƒWƒ‡ƒ“‚ğİ’è‚·‚éB
+	 * ãƒ‡ãƒ¼ã‚¿ãƒ™ãƒ¼ã‚¹ã®ãƒãƒ¼ã‚¸ãƒ§ãƒ³ã‚’è¨­å®šã™ã‚‹ã€‚
 	 */
 	set version(ver){
-		// ƒpƒ‰ƒƒ^ƒ‰ƒCƒYƒNƒGƒŠ[‚É‚·‚é‚ÆSQL•ªˆÙí‚ÌƒGƒ‰[‚ª”­¶‚µ‚½
-		return db.execute('PRAGMA user_version=' + ver);
+		return this.pragma('user_version', ver);
+	},
+	
+	// Firefox 2ã§PRAGMA user_versionã‚’ä½¿ã†ã‚¹ãƒ†ãƒ¼ãƒˆãƒ¡ãƒ³ãƒˆã‚’
+	// StorageStatementWrapperã«æ¸¡ã™ã¨ä¸æ­£çµ‚äº†ã—ãŸãŸã‚æš«å®šçš„ã«å°‚ç”¨ã®ãƒ¡ã‚½ãƒƒãƒ‰ã‚’è¨­ã‘ã‚‹
+	pragma : function(name, val){
+		try {
+			var sql = 'PRAGMA ' + name + (val==null? '' : '='+val);
+			var statement = this.connection.createStatement(sql);
+			if(statement.executeStep())
+				return statement.getInt32(0);
+		} finally {
+			if(statement){
+				statement.reset();
+				statement.finalize && statement.finalize();
+			}
+		}
 	},
 	
 	/**
-	 * ƒXƒe[ƒgƒƒ“ƒg‚ğ¶¬‚·‚éB
+	 * ã‚¹ãƒ†ãƒ¼ãƒˆãƒ¡ãƒ³ãƒˆã‚’ç”Ÿæˆã™ã‚‹ã€‚
 	 * 
-	 * @param {String} SQLB
+	 * @param {String} SQLã€‚
 	 */
 	createStatement : function(sql) {
 		return new StorageStatementWrapper(this.connection.createStatement(sql));
 	},
 	
 	/**
-	 * SQL‚ğÀs‚·‚éB
-	 * DDL/DML‹¤‚É—˜—p‚Å‚«‚éB
+	 * SQLã‚’å®Ÿè¡Œã™ã‚‹ã€‚
+	 * DDL/DMLå…±ã«åˆ©ç”¨ã§ãã‚‹ã€‚
 	 * 
-	 * @param {String} SQLB
+	 * @param {String || mozIStorageStatementWrapper} sql SQLã€‚
+	 * @param {Object || Array || String} paramsã€‚
 	 */
 	execute : function(sql, params) {
 		sql+='';
+		var sqls = sql.split(';').map(Entity.compactSQL).filter(operator.truth);
+		if(sqls.length > 1){
+			var self = this;
+			return this.transaction(function(){
+				sqls.forEach(function(sql){
+					self.execute(sql, params);
+				});
+			});
+		}
+		sql = sqls[0];
 		
 		if(params && params.order){
 			sql += ' ORDER BY ' + params.order;
@@ -119,9 +145,9 @@ extend(Database.prototype, {
 			var columnNames;
 			var result = [];
 			
-			// ‘S‚Ä‚Ìs‚ğŒJ‚è•Ô‚·
+			// å…¨ã¦ã®è¡Œã‚’ç¹°ã‚Šè¿”ã™
 			while (statement.step()){
-				// —ñ–¼‚ÍƒpƒtƒH[ƒ}ƒ“ƒX‚ğl—¶‚µƒLƒƒƒbƒVƒ…‚·‚é
+				// åˆ—åã¯ãƒ‘ãƒ•ã‚©ãƒ¼ãƒãƒ³ã‚¹ã‚’è€ƒæ…®ã—ã‚­ãƒ£ãƒƒã‚·ãƒ¥ã™ã‚‹
 				if (!columnNames)
 					columnNames = Database.getColumnNames(statement);
 				
@@ -132,22 +158,22 @@ extend(Database.prototype, {
 		} catch(e) {
 			this.throwException(e);
 		} finally {
-			// ƒXƒe[ƒgƒƒ“ƒg‚ğI—¹‚³‚¹‚é
-			// ‚±‚ê‚ğ‘Ó‚é‚ÆAƒf[ƒ^ƒx[ƒX‚ğƒNƒ[ƒY‚Å‚«‚È‚­‚È‚é
+			// ã‚¹ãƒ†ãƒ¼ãƒˆãƒ¡ãƒ³ãƒˆã‚’çµ‚äº†ã•ã›ã‚‹
+			// ã“ã‚Œã‚’æ€ ã‚‹ã¨ã€ãƒ‡ãƒ¼ã‚¿ãƒ™ãƒ¼ã‚¹ã‚’ã‚¯ãƒ­ãƒ¼ã‚ºã§ããªããªã‚‹
 			if(statement){
 				statement.reset();
-				statement.statement.finalize();
+				statement.statement.finalize && statement.statement.finalize();
 			}
 		}
 	},
 	
 	/**
-	 * ƒgƒ‰ƒ“ƒUƒNƒVƒ‡ƒ““à‚Åˆ—‚ğÀs‚·‚éB
-	 * ƒpƒtƒH[ƒ}ƒ“ƒX‚ğl—¶‚·‚é•K—v‚Ì‚ ‚éˆêŠ‡’Ç‰Á•”•ª‚È‚Ç‚Å—p‚¢‚éB
-	 * ƒGƒ‰[‚ª”­¶‚µ‚½ê‡‚ÍAƒgƒ‰ƒ“ƒUƒNƒVƒ‡ƒ“‚ªƒ[ƒ‹ƒoƒbƒN‚³‚ê‚éB
-	 * ‚»‚êˆÈŠO‚ÍA©“®“I‚ÉƒRƒ~ƒbƒg‚³‚ê‚éB
+	 * ãƒˆãƒ©ãƒ³ã‚¶ã‚¯ã‚·ãƒ§ãƒ³å†…ã§å‡¦ç†ã‚’å®Ÿè¡Œã™ã‚‹ã€‚
+	 * ãƒ‘ãƒ•ã‚©ãƒ¼ãƒãƒ³ã‚¹ã‚’è€ƒæ…®ã™ã‚‹å¿…è¦ã®ã‚ã‚‹ä¸€æ‹¬è¿½åŠ éƒ¨åˆ†ãªã©ã§ç”¨ã„ã‚‹ã€‚
+	 * ã‚¨ãƒ©ãƒ¼ãŒç™ºç”Ÿã—ãŸå ´åˆã¯ã€ãƒˆãƒ©ãƒ³ã‚¶ã‚¯ã‚·ãƒ§ãƒ³ãŒãƒ­ãƒ¼ãƒ«ãƒãƒƒã‚¯ã•ã‚Œã‚‹ã€‚
+	 * ãã‚Œä»¥å¤–ã¯ã€è‡ªå‹•çš„ã«ã‚³ãƒŸãƒƒãƒˆã•ã‚Œã‚‹ã€‚
 	 *
-	 * @param {Function} handler ˆ—B
+	 * @param {Function} handler å‡¦ç†ã€‚
 	 */
 	transaction : function(handler) {
 		var connection = this.connection;
@@ -166,10 +192,10 @@ extend(Database.prototype, {
 	},
 	
 	/**
-	 * —áŠO‚ğ‰ğß‚µÄ”­¶‚³‚¹‚éB
+	 * ä¾‹å¤–ã‚’è§£é‡ˆã—å†ç™ºç”Ÿã•ã›ã‚‹ã€‚
 	 *
-	 * @param {Exception} e ƒf[ƒ^ƒx[ƒX—áŠOB
-	 * @throws ƒGƒ‰[“à—e‚É‘¦‚µ‚½—áŠOB–¢’è‹`‚Ì‚à‚Ì‚Í”Ä—p“I‚È—áŠO‚Æ‚È‚éB
+	 * @param {Exception} e ãƒ‡ãƒ¼ã‚¿ãƒ™ãƒ¼ã‚¹ä¾‹å¤–ã€‚
+	 * @throws ã‚¨ãƒ©ãƒ¼å†…å®¹ã«å³ã—ãŸä¾‹å¤–ã€‚æœªå®šç¾©ã®ã‚‚ã®ã¯æ±ç”¨çš„ãªä¾‹å¤–ã¨ãªã‚‹ã€‚
 	 */
 	throwException : function(e){
 		var code = this.connection.lastError;
@@ -188,11 +214,19 @@ extend(Database.prototype, {
 	},
 	
 	/**
-	 * ƒf[ƒ^ƒx[ƒX‚ğƒNƒ[ƒY‚·‚éB
-	 * ƒNƒ[ƒY‚µ‚È‚¢ê‡Aƒtƒ@ƒCƒ‹‚ªƒƒbƒN‚³‚êíœ‚Å‚«‚È‚¢B
+	 * ãƒ‡ãƒ¼ã‚¿ãƒ™ãƒ¼ã‚¹ã‚’ã‚¯ãƒ­ãƒ¼ã‚ºã™ã‚‹ã€‚
+	 * ã‚¯ãƒ­ãƒ¼ã‚ºã—ãªã„å ´åˆã€ãƒ•ã‚¡ã‚¤ãƒ«ãŒãƒ­ãƒƒã‚¯ã•ã‚Œå‰Šé™¤ã§ããªã„ã€‚
 	 */
 	close : function(){
-		this.connection.close();
+		// Firefox 2ã§ã¯closeã¯å­˜åœ¨ã—ãªã„
+		this.connection.close && this.connection.close();
+	},
+	
+	tableExists : function(name){
+		// Firefox 2ã§ã¯tableExistsã¯å­˜åœ¨ã—ãªã„
+		return this.connection.tableExists?
+			this.connection.tableExists(name) :
+			!!this.execute('PRAGMA table_info('+name+')').length;
 	},
 });
 

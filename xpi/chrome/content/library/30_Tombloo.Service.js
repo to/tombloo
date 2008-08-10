@@ -152,7 +152,7 @@ Tombloo.Service = {
 	 * 取得済みのデータの続きから最新のポストまでが対象となる。
 	 *
 	 * @param {String} user ユーザー名。
-	 * @param {String} type ポストタイプ。
+	 * @param {String} type ポストタイプ。未指定の場合、全タイプが対象となる。
 	 * @param {optional Progress} p 処理進捗。
 	 */
 	update : function(user, type, p){

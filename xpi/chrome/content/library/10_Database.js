@@ -364,6 +364,8 @@ function Entity(def){
 	var sqlCache = {};
 	
 	extend(Model, {
+		definitions : def,
+		
 		initialize : function(){
 			var sql = Entity.createInitializeSQL(def);
 			Model.db.execute(sql);

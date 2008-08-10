@@ -22,7 +22,9 @@ try {
 	// Instance Methods
 	// var tombloo = new Tombloo();
 	
+	var Tag = Tombloo.Tag;
 	var Photo = Tombloo.Photo;
+	
 	var info = Photo.getImageInfo('1358142_500.jpg');
 	is(info.id, 1358142);
 	is(info.revision, null);
@@ -74,6 +76,7 @@ try {
 		body : 'ABCDEFG',
 		imageId : '12126918_r1',
 		extension : 'jpg',
+		tags : ['test', 'beautiful'],
 		
 		url : 'http://', // 不要プロパティ
 	});
@@ -83,11 +86,22 @@ try {
 	ok(photo.checkFile(500), 'ファイルが存在するか');
 	is(photo.getFile(500).exists(), true, 'ファイルが存在するか');
 	
+	var tags = Tag.findById(1);
+	is(tags.length, 2, 'タグが保存されているか');
+	is(tags[0].tag, 'test');
+	
+	
 	var photos = Photo.findByUser('to');
 	is(photos.length, 1, '検索にヒットするか');
+	
+	var photos = Photo.findByUser('to');
+	is(photos.length, 1, '検索にヒットするか');
+	
 	is(photos[0].id, 1);
 	is(photos[0].date.getDate(), 20, '日付型で取得できるか');
 	is(photos[0].user, 'to');
+	is(photos[0].tags.length, 2, '関連エンティティ(タグ)が取得できるか');
+	is(photos[0].tags[0].tag, 'test');
 	
 	photo.body = 'あいうえお';
 	photo.save();
@@ -107,6 +121,8 @@ try {
 	is(Photo.findUsers().length, 2);
 	is(Photo.findUsers()[0], '02');
 	is(Photo.findUsers()[1], 'to');
+	
+	
 	
 	// 更新
 	var photo = Photo.findByUser('02')[0];
@@ -130,7 +146,26 @@ try {
 	ok(!photo.checkFile(500), 'ファイルが存在しないこと');
 	
 	
-	// VIEWのテスト
+	// Tombloo.Post.insert
+	Tombloo.Post.insert({
+		id : 3, 
+		type : 'photo',
+		tags : ['tag1', 'tag2'],
+	});
+	var photo = Tombloo.Photo.findById(3)[0];
+	is(photo.id, 3);
+	is(photo.tags[1].tag, 'tag2');
+	
+	Tombloo.Post.insert({
+		id : 4, 
+		type : 'photo',
+		tags : [],
+	});
+	var photo = Tombloo.Photo.findById(4)[0];
+	is(photo.tags.length, 0, '空タグの保存と復元ができるか');
+	
+	
+	// VIEW
 	is(Tombloo.Post.countByUser('02'), 1, 'VIEWのカウント、Photoタイプのみ');
 	
 	Tombloo.Video.insert({id : 2, user : '02'});
@@ -148,15 +183,6 @@ try {
 	Tombloo.Conversation.insert({id : 2, user : '02'});
 	is(Tombloo.Post.countByUser('02'), 6);
 	
-	Tombloo.Post.findByUser('02').forEach(function(row){
-		row.date = new Date(2000, 1, 1);
-		row.save();
-	});
-	is(Tombloo.Post.countByUser('02'), 6, '追加されずに更新されているか');
-	
-	Tombloo.Photo.findByUser('02').forEach(function(photo){
-		is(photo.date.getDate(), 1, '更新されているか');
-	});
 	
 } catch (err) {
 	var s = [];

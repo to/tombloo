@@ -30,6 +30,7 @@ var Tombloo = {
 	
 	initialize : function(){
 		with(this){
+			Tag.initialize();
 			Regular.initialize();
 			Photo.initialize();
 			Video.initialize();
@@ -46,23 +47,21 @@ var Tombloo = {
 	migration : function(){
 		with(this){
 			if(db.version!=0)
-				return false;
+				return;
+			
+			Post.deinitialize();
+			Post.initialize();
+			
+			Tag.initialize();
 			
 			db.execute(<>
-				ALTER TABLE links         ADD tags TEXT;
-				ALTER TABLE quotes        ADD tags TEXT;
-				ALTER TABLE regulars      ADD tags TEXT;
-				ALTER TABLE videos        ADD tags TEXT;
-				ALTER TABLE conversations ADD tags TEXT;
-				
 				CREATE TABLE temp (
-					id INTEGER PRIMARY KEY, 
+					id        INTEGER PRIMARY KEY, 
 					user      TEXT, 
 					date      INTEGER, 
 					body      TEXT, 
 					imageId   TEXT, 
 					extension TEXT, 
-					tags      TEXT, 
 					file75    INTEGER NOT NULL, 
 					file100   INTEGER NOT NULL, 
 					file250   INTEGER NOT NULL, 
@@ -80,13 +79,8 @@ var Tombloo = {
 				ALTER TABLE temp RENAME TO photos;
 			</>);
 			
-			Post.deinitialize();
-			Post.initialize();
-			
 			db.version = SCHEMA_VERSION;
 			db.vacuum();
-			
-			return true;
 		}
 	},
 	
@@ -97,10 +91,51 @@ var Tombloo = {
 			},
 		});
 		
+		addBefore(Class, 'insert', function(model){
+			if(!(model instanceof Class))
+				model = new Class(model);
+			
+			if(!model._tags || !model._tags.length)
+				return;
+			
+			var type = Class.definitions.name.slice(0, -1);
+			model._tags.forEach(function(tag){
+				Tombloo.Tag.insert({
+					id   : model.id,
+					type : type,
+					tag  : tag,
+				});
+			});
+		});
+		
+		Class.prototype.__defineGetter__('tags', function(){
+			if(this._tags)
+				return this._tags;
+			
+			return this._tags = Tombloo.Tag.findById(this.id);
+		});
+		
+		Class.prototype.__defineSetter__('tags', function(tags){
+			return this._tags = tags;
+		});
+		
 		return Class;
 	},
 }
 
+
+Tombloo.Tag = Tombloo.Entity({
+	name : 'tags',
+	fields : {
+		id   : 'INTEGER',
+		type : 'TEXT',
+		tag  : 'TEXT',
+	}
+});
+addAround(Tombloo.Tag, 'initialize', function(proceed, args, target){
+	proceed(args);
+	target.db.connection.executeSimpleSQL('CREATE INDEX idx_tags_id ON tags(id ASC)');
+});
 
 Tombloo.Regular = Tombloo.Entity({
 	name : 'regulars',
@@ -245,16 +280,8 @@ extend(Tombloo.Photo.prototype, {
 
 Tombloo.Post = Tombloo.Entity({name : 'posts'});
 extend(Tombloo.Post, {
-	// FIXME: 未設定のデータが消去される
 	insert : function(post){
 		Tombloo[capitalize(post.type)].insert(post);
-	},
-	
-	rowToObject : function(obj){
-		var Clazz = Tombloo[capitalize(obj.type)];
-		var model = new Clazz(obj);
-		model.temporary = false;
-		return model;
 	},
 	
 	initialize : function(){
@@ -262,7 +289,6 @@ extend(Tombloo.Post, {
 			return this.db.execute(<>
 				CREATE VIEW posts AS 
 				SELECT "regular" AS type, id, user, date, 
-					tags,
 					title, 
 					body, 
 					"" AS source, 
@@ -271,7 +297,6 @@ extend(Tombloo.Post, {
 				FROM regulars 
 				UNION ALL 
 				SELECT "photo" AS type, id, user, date, 
-					tags,
 					"" AS title, 
 					body, 
 					"" AS source, 
@@ -280,7 +305,6 @@ extend(Tombloo.Post, {
 				FROM photos 
 				UNION ALL 
 				SELECT "video" AS type, id, user, date, 
-					tags,
 					"" AS title, 
 					body, 
 					source, 
@@ -289,7 +313,6 @@ extend(Tombloo.Post, {
 				FROM videos 
 				UNION ALL 
 				SELECT "link" AS type, id, user, date, 
-					tags,
 					title, 
 					body, 
 					source, 
@@ -298,7 +321,6 @@ extend(Tombloo.Post, {
 				FROM links 
 				UNION ALL 
 				SELECT "conversation" AS type, id, user, date, 
-					tags,
 					title, 
 					body, 
 					"" AS source, 
@@ -307,7 +329,6 @@ extend(Tombloo.Post, {
 				FROM conversations 
 				UNION ALL 
 				SELECT "quote" AS type, id, user, date, 
-					tags,
 					"" AS title, 
 					body, 
 					source, 

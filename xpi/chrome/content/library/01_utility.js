@@ -1042,6 +1042,15 @@ function openParamString(obj){
 	return params.join(',');
 }
 
+/**
+ * メソッドが呼ばれる前に処理を追加する。
+ * より詳細なコントロールが必要な場合はaddAroundを使うこと。
+ * 
+ * @param {Object} target 対象オブジェクト。
+ * @param {String} name メソッド名。
+ * @param {Function} before 前処理。
+ *        対象オブジェクトをthisとして、オリジナルの引数が全て渡されて呼び出される。
+ */
 function addBefore(target, name, before) {
 	var original = target[name];
 	target[name] = function() {
@@ -1050,6 +1059,18 @@ function addBefore(target, name, before) {
 	}
 }
 
+/**
+ * メソッドへアラウンドアドバイスを追加する。
+ * 処理を置きかえ、引数の変形や、返り値の加工をできるようにする。
+ * 
+ * @param {Object} target 対象オブジェクト。
+ * @param {String || Array} methodNames 
+ *        メソッド名。複数指定することもできる。
+ *        set*のようにワイルドカートを使ってもよい。
+ * @param {Function} advice 
+ *        アドバイス。proceed、args、target、methodNameの4つの引数が渡される。
+ *        proceedは対象オブジェクトにバインド済みのオリジナルのメソッド。
+ */
 function addAround(target, methodNames, advice){
 	methodNames = [].concat(methodNames);
 	

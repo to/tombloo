@@ -60,6 +60,7 @@ try {
 			capTion : 'TEXT',
 			source  : 'TEXT',
 			player  : 'TEXT',
+			tags    : 'LIST',
 		}
 	}
 	
@@ -77,12 +78,18 @@ try {
 	
 	var video = new Video({
 		id : 1,
-		host : 'HOST_1',
-		date : new Date(2007, 6, 20),
+		host    : 'HOST_1',
+		date    : new Date(2007, 6, 20),
 		capTion : 'CAPTION',
+		tags    : [1,2,3],
 	});
 	video.save();
 	is(Video.findAll().length, 1, 'save');
+	
+	var video = Video.findByHost('HOST_1')[0];
+	is(video.date.getDate(), 20, '日付の保存と復元が行えるか');
+	is(video.tags[2], 3, 'リストの保存と復元が行えるか');
+	
 	
 	var video = new Video({
 		id : 2,
@@ -105,9 +112,6 @@ try {
 	
 	is(Video.countByHost('HOST_1'), 1);
 	is(Video.countByHost({host:'HOST_1'}), 1);
-	
-	var videos = Video.findByHost('HOST_1');
-	is(videos[0].date.getDate(), 20);
 	
 } catch (err) {
 	var s = [];

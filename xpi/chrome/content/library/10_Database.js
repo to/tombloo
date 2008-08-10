@@ -3,6 +3,8 @@ function Database(file) {
 }
 
 extend(Database, {
+	LIST_DELIMITER : ',',
+	
 	/**
 	 * クエリにパラメーターをバインドする。
 	 * 
@@ -19,7 +21,7 @@ extend(Database, {
 		if(params==null)
 			return wrapper;
 		
-		// Hash
+		// Object
 		if(typeof(params)=='object' && params.length==null){
 			var paramNames = this.getParamNames(wrapper);
 			for(var i=0,len=paramNames.length ; i<len ; i++){
@@ -28,8 +30,15 @@ extend(Database, {
 				if(typeof(param)=='undefined')
 					continue;
 				
+				// 日付型の場合、数値をバインドする
 				if(param instanceof Date){
 					wrapper.params[name] = param.getTime();
+					continue;
+				}
+				
+				// 配列型の場合、結合し文字列をバインドする
+				if(param instanceof Array){
+					wrapper.params[name] = this.LIST_DELIMITER + param.join(this.LIST_DELIMITER) + this.LIST_DELIMITER;
 					continue;
 				}
 				
@@ -38,10 +47,10 @@ extend(Database, {
 			return wrapper;
 		}
 		
-		// Array
 		if(typeof(params)=='string' || params.length==null)
 			params = [].concat(params);
 		
+		// Array
 		var statement = wrapper.statement;
 		for(var i=0, len=statement.parameterCount ; i<len ; i++)
 			statement.bindUTF8StringParameter(i, params[i]);
@@ -331,12 +340,21 @@ function Entity(def){
 	var fields = [];
 	for(var field in def.fields){
 		var type = def.fields[field];
-		if(type=='TIMESTAMP'){
-			var proto = Model.prototype;
+		var proto = Model.prototype;
+		switch(type){
+		case 'TIMESTAMP':
 			proto.__defineGetter__(field, new Function('return this._'+field));
 			proto.__defineSetter__(field, new Function('val', 
-				'this._'+field+' = typeof(val)!="object"? new Date(val) : val'
+				'this._'+field+' = typeof(val)=="object"? val : new Date(val)'
 			));
+			break;
+			
+		case 'LIST':
+			proto.__defineGetter__(field, new Function('return this._'+field));
+			proto.__defineSetter__(field, new Function('val', 
+				'this._'+field+' = typeof(val)=="object"? val : val.split(Database.LIST_DELIMITER).filter(function(i){return i!=""})'
+			));
+			break;
 		}
 	}
 	
@@ -465,7 +483,7 @@ extend(Entity, {
 	createInitializeSQL : function(def){
 		var fields = [];
 		for(var p in def.fields)
-			fields.push(p + ' ' + def.fields[p].replace('TIMESTAMP', 'INTEGER'));
+			fields.push(p + ' ' + def.fields[p].replace('TIMESTAMP', 'INTEGER').replace('LIST', 'TEXT'));
 		
 		return Entity.compactSQL(<>
 			CREATE TABLE IF NOT EXISTS {def.name} (

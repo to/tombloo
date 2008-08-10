@@ -25,8 +25,8 @@ Progress.prototype = {
 	},
 	
 	set max(max){
-		this._max = max;
-		if(max!=0)
+		this._max = Math.max(max, 0);
+		if(this.max!=0)
 			this.closed = false;
 		
 		this.value = this.value;
@@ -54,7 +54,7 @@ Progress.prototype = {
 		if(this.closed || this._canceled || (this.max!=0 && this.value == value))
 			return;
 		
-		this._value = Math.min(value, this.max);
+		this._value = Math.max(Math.min(value, this.max), 0);
 		
 		if(this.max==0)
 			this.closed = true;

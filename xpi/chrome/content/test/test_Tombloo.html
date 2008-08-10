@@ -29,31 +29,27 @@ try {
 	is(info.size, 500);
 	is(info.extension, 'jpg');
 	
-	var info = Photo.getImageInfo('1767102_r1_500.jpg');
-	is(info.id, 1767102);
-	is(info.revision, 'r1');
+	var info = Photo.getImageInfo('1767102_r1_500.gif');
+	is(info.id, '1767102_r1');
 	is(info.size, 500);
-	is(info.extension, 'jpg');
+	is(info.extension, 'gif');
 	
-	var info = Photo.getImageInfo('http://data.tumblr.com/3821653_100.jpg');
+	var info = Photo.getImageInfo('http://data.tumblr.com/3821653_100.gif');
 	is(info.id, 3821653);
-	is(info.revision, null);
 	is(info.size, 100);
 	
 	var info = Photo.getImageInfo('0ddGiMjzE1f0l8cm8jhW75xR_250.jpg');
 	is(info.id, '0ddGiMjzE1f0l8cm8jhW75xR');
-	is(info.revision, null);
 	is(info.size, 250);
 	
+	
 	// データベーステスト
-	var file = getContentDir();
-	file.append('test');
-	file.append('tombloo_test.sqlite');
+	var file = copy(
+		getTestFile('tombloo_test.sqlite'), 
+		getTestFile('tombloo_test.temp.sqlite'));
 	
 	Tombloo.db = new Database(file);
-	
-	ok(Tombloo.db.execute);
-	ok(Tombloo.root.exists());
+	is(Tombloo.root.path, getTestFile().path, 'Tomblooのデータディレクトリがテストディレクトリに設定されたか');
 	
 	ok(Photo.db, 'エンティティのdbも初期化されているか');
 	
@@ -76,19 +72,16 @@ try {
 		user : 'to',
 		date : new Date(2007, 6, 20),
 		body : 'ABCDEFG',
-		imageId : 1764123,
-		revision : 'r1',
+		imageId : '12126918_r1',
+		extension : 'jpg',
 		
 		url : 'http://', // 不要プロパティ
 	});
 	photo.save();
 	is(Photo.countByUser('to'), 1, '保存され行が増えるか');
 	
-	// ok(photo.checkFile(500), '[環境依存]ファイルが存在するか');
-	// is(photo.getFile(500).exists(), true, '[環境依存]ファイルが存在するか');
-	
-	// 時間がかかるためスキップ
-	// ok(Photo.getFiles(500).length > 100 , '[環境依存]画像ファイルを取得できるか');
+	ok(photo.checkFile(500), 'ファイルが存在するか');
+	is(photo.getFile(500).exists(), true, 'ファイルが存在するか');
 	
 	var photos = Photo.findByUser('to');
 	is(photos.length, 1, '検索にヒットするか');
@@ -106,7 +99,7 @@ try {
 	var photo = new Photo({
 		id : 2, 
 		user : '02',
-		imageId : 'ABCDEFG', // 数値フィールドに文字書き込み
+		file75 : 'ABCDEFG', // 数値フィールドに文字書き込み
 	});
 	photo.save();
 	
@@ -118,14 +111,14 @@ try {
 	// 更新
 	var photo = Photo.findByUser('02')[0];
 	is(photo.id, 2);
-	is(photo.imageId, 'ABCDEFG', '数値フィードから文字を取得できるか');
+	is(photo.file75, 'ABCDEFG', '数値フィードから文字を取得できるか');
 	is(photo.temporary, false);
-	photo.revision = 'r1';
+	photo.file500 = 900;
 	photo.save(); // update
 	
 	var photo = Photo.findByUser('02')[0];
 	is(photo.id, 2);
-	is(photo.revision, 'r1', 'updateされているか');
+	is(photo.file500, 900, 'updateされているか');
 	
 	// 削除
 	photo.remove();
@@ -135,6 +128,7 @@ try {
 	is(Tombloo.Photo.countByUser('02'), 1);
 	
 	ok(!photo.checkFile(500), 'ファイルが存在しないこと');
+	
 	
 	// VIEWのテスト
 	is(Tombloo.Post.countByUser('02'), 1, 'VIEWのカウント、Photoタイプのみ');
@@ -157,12 +151,12 @@ try {
 	Tombloo.Post.findByUser('02').forEach(function(row){
 		row.date = new Date(2000, 1, 1);
 		row.save();
-	})
+	});
 	is(Tombloo.Post.countByUser('02'), 6, '追加されずに更新されているか');
 	
-	Tombloo.Post.findByUser('02').forEach(function(row){
-		is(row.date.getDate(), 1, '更新されているか');
-	})
+	Tombloo.Photo.findByUser('02').forEach(function(photo){
+		is(photo.date.getDate(), 1, '更新されているか');
+	});
 	
 } catch (err) {
 	var s = [];
@@ -170,6 +164,9 @@ try {
 	for(var prop in err)
 		s.push(prop + ':  ' + err[prop]);
 	ok(false, s.join('\n'));
+	
+} finally{
+	Tombloo.db && Tombloo.db.close();
 }
 </script>
 </pre>

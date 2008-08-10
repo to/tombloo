@@ -33,6 +33,9 @@ try {
 	db.version = 1;
 	is(db.version, 1);
 	
+	// vacuum
+	db.vacuum();
+	
 	var def = {
 		name : 'video',
 		fields : {
@@ -89,6 +92,7 @@ try {
 	});
 	video.save();
 	is(Video.findAll().length, 2, 'save');
+	
 	
 	is(Video.findByHost('HOST_1').length, 1);
 	is(Video.findByHostAndCapTion(['HOST_1', 'CAPTION']).length, 1);

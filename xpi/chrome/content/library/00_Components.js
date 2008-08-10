@@ -8,6 +8,13 @@ var INTERFACES = [];
 for(var i in Ci)
 	INTERFACES.push(Ci[i]);
 
+if(typeof(update)=='undefined'){
+	function update(t, s){
+		for(var p in s)
+			t[p] = s[p];
+		return t;
+	}
+}
 
 var IWebProgressListener = Ci.nsIWebProgressListener;
 var IFile                = Ci.nsIFile;
@@ -137,12 +144,6 @@ var FileOutputStream =
 	});
 
 // ----[Utility]-------------------------------------------------
-function update(t, s){
-	for(var p in s)
-		t[p] = s[p];
-	return t;
-}
-
 function createMock(sample, proto){
 	var non = function(){};
 	sample = typeof(sample)=='object'? sample : Cc[sample].createInstance();

@@ -1,7 +1,7 @@
 var Tumblr = update({}, AbstractSessionService, {
 	name : 'Tumblr',
 	ICON : 'http://www.tumblr.com/images/favicon.gif',
-	DATA_URL : 'http://data.tumblr.com/',
+	MEDIA_URL : 'http://media.tumblr.com/',
 	TUMBLR_URL : 'http://www.tumblr.com/',
 	PAGE_LIMIT : 50,
 	
@@ -89,14 +89,13 @@ var Tumblr = update({}, AbstractSessionService, {
 					var xml = convertToXML(res.responseText);
 					
 					// 全ポストを繰り返す
-					return deferredForEach(xml.posts.post, function(post, rowNum){
+					var posts = map(function(post){
 						var postInfo = Tumblr.getPostInfo(user, post);
-						var post = Tumblr[capitalize(postInfo.type)].convertToModel(post, postInfo);
-						rval.push(post);
-						
-						return handler && handler(post, (pageNum * Tumblr.PAGE_LIMIT) + rowNum);
-					});
-				}).addCallback(wait, 0.5); // ウェイト
+						return Tumblr[capitalize(postInfo.type)].convertToModel(post, postInfo);
+					}, xml.posts.post);
+					
+					return handler && handler(posts, (pageNum * Tumblr.PAGE_LIMIT));
+				}).addCallback(wait, 1); // ウェイト
 			});
 		});
 		d.addErrback(function(err){
@@ -376,7 +375,7 @@ Tumblr.Photo = {
 			
 			body          : ''+ post['photo-caption'],
 			imageId       : image.id,
-			revision      : image.revision,
+			extension     : image.extension,
 		});
 	},
 	
@@ -396,7 +395,7 @@ Tumblr.Photo = {
 	},
 	
 	download : function(file){
-		return download(Tumblr.DATA_URL + file.leafName, file);
+		return download(Tumblr.MEDIA_URL + file.leafName, file);
 	},
 }
 

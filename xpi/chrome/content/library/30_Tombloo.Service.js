@@ -1,4 +1,11 @@
 Tombloo.Service = {
+	/**
+	 * コンテキストからどのような情報が抽出できるのかチェックする。
+	 * 処理は同期で行われる。
+	 *
+	 * @param {Object} ctx 抽出コンテキスト。
+	 * @return {Array} extractorのリスト。
+	 */
 	check : function(ctx){
 		return withWindow(ctx.window, function(){
 			if(!ctx.menu && ctx.target){
@@ -11,39 +18,16 @@ Tombloo.Service = {
 		});
 	},
 	
-	reprError : function(err){
-		if(err.name && err.name.match('GenericError'))
-			err = err.message;
-		
-		if(err.status)
-			err = err.message + '(' + err.status + ')';
-		
-		if(!err.lineNumber)
-			return '' + err;
-		
-		var msg = [];
-		for(var p in err){
-			var val = err[p];
-			if(val == null || p == 'stack' || typeof(val)=='function')
-				continue;
-			
-			if(p.toLowerCase() == 'filename' || p == 'location')
-				val = ('' + val).replace(/file:[^ ]+\/(.+?)( |$)/g, '$1');
-			
-			msg.push(p + ' : ' + val);
-		}
-		
-		return '\n'+msg.join('\n');
-	},
-	
-	alertError : function(msg, page, pageUrl){
-		error(msg);
-		
-		if(confirm(getMessage('error.post', this.reprError(msg).indent(8), page, pageUrl))){
-			addTab(pageUrl);
-		}
-	},
-	
+	/**
+	 * コンテキストから情報を抽出しポストする。
+	 * 設定画面で指定されたサービスが、ポスト先の対象となる。
+	 * フォームを表示した場合、ポストは行われない。
+	 *
+	 * @param {Object} ctx 抽出コンテキスト。
+	 * @param {Object} ext extractor。抽出方法。
+	 * @param {Boolean} showForm クイックポストフォームを表示するか。
+	 * @return {Deferred} ポスト完了後に呼び出される。
+	 */
 	share : function(ctx, ext, showForm){
 		// エラー処理をまとめるためDeferredの中に入れる
 		return succeed().addCallback(function(){
@@ -72,8 +56,16 @@ Tombloo.Service = {
 		});
 	},
 	
+	/**
+	 * 対象のポスト先に一括でポストする。
+	 *
+	 * @param {Object} ps ポスト内容。
+	 * @param {Array} posters ポスト対象サービスのリスト。
+	 * @return {Deferred} ポスト完了後に呼び出される。
+	 */
 	post : function(ps, posters){
 		log(posters);
+		
 		var self = this;
 		var ds = {};
 		posters = [].concat(posters);
@@ -110,6 +102,52 @@ Tombloo.Service = {
 	},
 	
 	/**
+	 * 詳細なエラー情報を表す文字列を生成する。
+	 *
+	 * @param {Error} err 。
+	 * @return {String} 。
+	 */
+	reprError : function(err){
+		if(err.name && err.name.match('GenericError'))
+			err = err.message;
+		
+		if(err.status)
+			err = err.message + '(' + err.status + ')';
+		
+		if(!err.lineNumber)
+			return '' + err;
+		
+		var msg = [];
+		for(var p in err){
+			var val = err[p];
+			if(val == null || p == 'stack' || typeof(val)=='function')
+				continue;
+			
+			if(p.toLowerCase() == 'filename' || p == 'location')
+				val = ('' + val).replace(/file:[^ ]+\/(.+?)( |$)/g, '$1');
+			
+			msg.push(p + ' : ' + val);
+		}
+		
+		return '\n'+msg.join('\n');
+	},
+	
+	/**
+	 * 元ページを開きなおせるエラーダイアログを表示する。
+	 *
+	 * @param {String || Error} msg エラー、または、エラーメッセージ。
+	 * @param {String} page エラー発生ページタイトル。
+	 * @param {String} pageUrl エラー発生ページURL。
+	 */
+	alertError : function(msg, page, pageUrl){
+		error(msg);
+		
+		if(confirm(getMessage('error.post', this.reprError(msg).indent(8), page, pageUrl))){
+			addTab(pageUrl);
+		}
+	},
+	
+	/**
 	 * 全てのポストデータをデータベースに追加する。
 	 * 取得済みのデータの続きから最新のポストまでが対象となる。
 	 *
@@ -131,18 +169,22 @@ Tombloo.Service = {
 			if(p.ended)
 				return;
 			
-			// FIXME: トランザクションを設け高速化する
-			return Tumblr.read(user, type, info.total, function(post){
+			return Tumblr.read(user, type, info.total, function(posts){
 				// 件数分処理したら終了しAPIの読み込みを止める
 				if(p.ended)
 					throw StopProcess;
 				
-				try{
-					Tombloo.Post.insert(post);
-					p.value++;
-				} catch(e if e instanceof Database.DuplicateKeyException) {
-					// 前回の処理を途中で終了したときに発生する重複エラーを無視する
-				}
+				Tombloo.db.transaction(function(){
+					posts.forEach(function(post){
+						p.value++;
+						
+						try{
+							Tombloo.Post.insert(post);
+						} catch(e if e instanceof Database.DuplicateKeyException) {
+							// 前回の処理を途中で終了したときに発生する重複エラーを無視する
+						}
+					});
+				});
 			});
 		});
 		d.addCallback(bind('complete', p));
@@ -191,30 +233,43 @@ Tombloo.Service.Photo = {
 	
 	/**
 	 * 画像ファイルの有無を条件にphotoポストを取得する。
+	 * まずデータベースに記録された有無で情報を取得した後、
+	 * 実際のファイルの存在を再度確認する。
 	 *
 	 * @param {String} user ユーザー名。
 	 * @param {Number} size 画像サイズ。75や500などピクセル数を指定する。
-	 * @param {Boolean} exists trueの場合、画像ファイルが存在するポストだけが返される。falseは、この逆。
+	 * @param {Boolean} exists 
+	 *        trueの場合、画像ファイルが存在するポストだけが返される。falseは、この逆。
+	 *        省略された場合は、trueになる。
 	 * @return {Deferred} 取得した全ポストが渡される。
 	 */
 	getByFileExists : function(user, size, exists){
 		exists = exists==null? true : exists;
 		
 		var all = [];
-		var photoAll = Tombloo.Photo.findByUser(user);
+		var photoAll = Tombloo.Photo['findByUserAndFile' + size]([user, Number(exists)]);
+		
 		var d = succeed();
 		d.addCallback(function(){
-			
-			// 全てのポストを繰り返す(100件ごと)
-			return deferredForEach(photoAll.split(100), function(photos){
-				forEach(photos, function(photo){
-					if(photo.checkFile(size) == exists)
-						all.push(photo);
-				})
+			// 全てのポストを繰り返す(200件ごと)
+			return deferredForEach(photoAll.split(200), function(photos){
+				Tombloo.db.transaction(function(){
+					forEach(photos, function(photo){
+						var actual = photo.checkFile(size);
+						if(actual == exists)
+							all.push(photo);
+						
+						// ファイル存在がデータベースと違っていたら更新する
+						if(actual != photo['file' + size]){
+							photo['file' + size] = Number(actual);
+							photo.save();
+						}
+					});
+				});
 				
 				// 未応答のエラーが起きないようにウェイトを入れる
 				return wait(0);
-			})
+			});
 		});
 		d.addCallback(function(){
 			return all;

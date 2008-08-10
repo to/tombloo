@@ -73,21 +73,31 @@ extend(Database.prototype, {
 	 * @return {Number} データベースバージョン。
 	 */
 	get version(){
-		return this.pragma('user_version');
+		return this.getPragma('user_version');
 	},
 	
 	/**
 	 * データベースのバージョンを設定する。
 	 */
 	set version(ver){
-		return this.pragma('user_version', ver);
+		return this.setPragma('user_version', ver);
 	},
 	
-	// Firefox 2でPRAGMA user_versionを使うステートメントを
-	// StorageStatementWrapperに渡すと不正終了したため暫定的に専用のメソッドを設ける
-	pragma : function(name, val){
+	/**
+	 * PRAGMAの値を取得する。
+	 * Firefox 2でPRAGMA user_versionを使うステートメントを
+	 * StorageStatementWrapperに渡すと不正終了したため暫定的に設けられた。
+	 */
+	setPragma : function(name, val){
+		this.connection.executeSimpleSQL('PRAGMA ' + name + '=' + val);
+	},
+	
+	/**
+	 * PRAGMAの値を取得する。
+	 */
+	getPragma : function(name){
 		try {
-			var sql = 'PRAGMA ' + name + (val==null? '' : '='+val);
+			var sql = 'PRAGMA ' + name;
 			var statement = this.connection.createStatement(sql);
 			if(statement.executeStep())
 				return statement.getInt32(0);
@@ -172,11 +182,15 @@ extend(Database.prototype, {
 	 * パフォーマンスを考慮する必要のある一括追加部分などで用いる。
 	 * エラーが発生した場合は、トランザクションがロールバックされる。
 	 * それ以外は、自動的にコミットされる。
+	 * 既にトランザクションが始まっていたら新たなトランザクションは開始されない。
 	 *
 	 * @param {Function} handler 処理。
 	 */
 	transaction : function(handler) {
 		var connection = this.connection;
+		if(connection.transactionInProgress)
+			return handler();
+		
 		var error = false;
 		connection.beginTransaction();
 		try {
@@ -222,41 +236,38 @@ extend(Database.prototype, {
 		this.connection.close && this.connection.close();
 	},
 	
+	/**
+	 * テーブルが存在するかを確認する。
+	 *
+	 * @param {String} name テーブル名。
+	 */
 	tableExists : function(name){
 		// Firefox 2ではtableExistsは存在しない
 		return this.connection.tableExists?
 			this.connection.tableExists(name) :
 			!!this.execute('PRAGMA table_info('+name+')').length;
 	},
+	
+	/**
+	 * データベースの無駄な領域を除去する。
+	 */
+	vacuum : function(){
+		this.connection.executeSimpleSQL('vacuum');
+	},
 });
 
 
-
-/*
-ConstraintViolationException
-DataException
-ConnectionException
-LockAcquisitionException
-SQLGrammarException
-TableDoesNotExistException
-TooManyRowsAffectedException
-PropertyValueException
-TransactionException
-*/
-[
-	'DatabaseException', 
-	'DuplicateKeyException', 
-	'TypeMismatchException', 
-	'AlreadyExistsException'].forEach(function(name){
-		Database[name] = function(db, e){
-			this.lastError = db.connection.lastError;
-			this.lastErrorString = db.connection.lastErrorString;
-			update(this, e);
-			this.toString = function(){
-				return this.lastErrorString;
-			}
+['Database', 'DuplicateKey', 'TypeMismatch', 'AlreadyExists'].forEach(function(name){
+	name += 'Exception';
+	Database[name] = function(db, e){
+		this.lastError = db.connection.lastError;
+		this.lastErrorString = db.connection.lastErrorString;
+		update(this, e);
+		this.toString = function(){
+			return this.lastErrorString;
 		}
-	});
+	}
+});
 
 
 function Entity(def){
@@ -295,15 +306,15 @@ function Entity(def){
 		}
 	}
 	
-	var INITIALIZE_SQL = Entity.createInitializeSQL(def);
-	var INSERT_SQL     = Entity.createInsertSQL(def);
-	var UPDATE_SQL     = Entity.createUpdateSQL(def);
+	var INSERT_SQL = Entity.createInsertSQL(def);
+	var UPDATE_SQL = Entity.createUpdateSQL(def);
 	
 	var sqlCache = {};
 	
 	extend(Model, {
 		initialize : function(){
-			Model.db.execute(INITIALIZE_SQL);
+			var sql = Entity.createInitializeSQL(def);
+			Model.db.execute(sql);
 		},
 		
 		deinitialize : function(){
@@ -417,6 +428,18 @@ extend(Entity, {
 		</>);
 	},
 	
+	createInitializeSQL : function(def){
+		var fields = [];
+		for(var p in def.fields)
+			fields.push(p + ' ' + def.fields[p].replace('TIMESTAMP', 'INTEGER'));
+		
+		return Entity.compactSQL(<>
+			CREATE TABLE IF NOT EXISTS {def.name} (
+				{fields.join(', ')} 
+			)
+		</>);
+	},
+	
 	createInsertSQL : function(def){
 		var fields = keys(def.fields);
 		var params = fields.map(function(p){
@@ -427,20 +450,6 @@ extend(Entity, {
 				{fields.join(', ')}
 			) VALUES (
 				{params.join(', ')}
-			)
-		</>);
-	},
-	
-	createInitializeSQL : function(def){
-		var fields = [];
-		for(var p in def.fields){
-			var type = def.fields[p];
-			fields.push(p + ' ' + (type=='TIMESTAMP'? 'INTEGER' : type));
-		}
-		
-		return Entity.compactSQL(<>
-			CREATE TABLE IF NOT EXISTS {def.name} (
-				{fields.join(', ')} 
 			)
 		</>);
 	},

@@ -51,6 +51,13 @@ var Tumblr = update({}, AbstractSessionService, {
 		});
 	},
 	
+	/**
+	 * 各ポストタイプ共通の情報をポストから取得する。
+	 *
+	 * @param {String} user ユーザー名。
+	 * @param {XML} post ポストノード。
+	 * @return {Object} ポスト共通情報。ポストID、タイプ、タグなどを含む。
+	 */
 	getPostInfo : function(user, post){
 		return {
 				user : user,
@@ -58,6 +65,7 @@ var Tumblr = update({}, AbstractSessionService, {
 				url  : ''+ post.@url, 
 				date : ''+ post.@date, 
 				type : ''+ post.@type, 
+				tags : map(function(tag){return ''+tag}, post.tag), 
 		};
 	},
 	
@@ -67,10 +75,13 @@ var Tumblr = update({}, AbstractSessionService, {
 	 * @param {String} user ユーザー名。
 	 * @param {optional String} type ポストタイプ。未指定の場合、全タイプとなる。
 	 * @param {String} count 先頭から何件を取得するか。
-	 * @param {Function} handler 各エントリー個別処理関数。段階的に処理を行う場合に指定する。
+	 * @param {Function} handler 
+	 *        各ページ個別処理関数。段階的に処理を行う場合に指定する。
+	 *        ページ内の全ポストが渡される。
 	 * @return {Deferred} 取得した全ポストが渡される。
 	 */
 	read : function(user, type, count, handler){
+		// FIXME: ストリームにする
 		var pages = Tumblr.splitRequests(count);
 		var rval = [];
 		

@@ -91,13 +91,13 @@ var Tombloo = {
 	},
 	
 	Entity : function(def){
-		var Clazz = Entity(def);
-		extend(Clazz, {
+		var Class = extend(Entity(def), {
 			get db(){
 				return Tombloo.db;
 			},
-		})
-		return Clazz;
+		});
+		
+		return Class;
 	},
 }
 
@@ -184,35 +184,6 @@ Tombloo.Quote = Tombloo.Entity({
 });
 
 
-extend(Tombloo.Photo.prototype, {
-	file75  : 0, 
-	file100 : 0,
-	file250 : 0,
-	file400 : 0, 
-	file500 : 0, 
-	
-	get url(){
-		return 'http://' + this.user + '.tumblr.com/post/' + this.id;
-	},
-	
-	set url(){
-	},
-	
-	checkFile : function(size){
-		return this.getFile(size).exists();
-	},
-	
-	getFile : function(size){
-		var file = Tombloo.Photo.getPhotoDir(size);
-		file.append(this.getFileName(size));
-		return file;
-	},
-	
-	getFileName : function(size){
-		return this.imageId + '_' + size + (size==75? 'sq' : '') + '.' + this.extension;
-	},
-});
-
 extend(Tombloo.Photo, {
 	findUsers : function(){
 		return Tombloo.Photo.find('SELECT user FROM photos GROUP BY user ORDER BY user').map(itemgetter('user'));
@@ -240,6 +211,35 @@ extend(Tombloo.Photo, {
 			size : ts[2],
 			extension : ts[3],
 		}
+	},
+});
+
+extend(Tombloo.Photo.prototype, {
+	file75  : 0, 
+	file100 : 0,
+	file250 : 0,
+	file400 : 0, 
+	file500 : 0, 
+	
+	get url(){
+		return 'http://' + this.user + '.tumblr.com/post/' + this.id;
+	},
+	
+	set url(){
+	},
+	
+	checkFile : function(size){
+		return this.getFile(size).exists();
+	},
+	
+	getFile : function(size){
+		var file = Tombloo.Photo.getPhotoDir(size);
+		file.append(this.getFileName(size));
+		return file;
+	},
+	
+	getFileName : function(size){
+		return this.imageId + '_' + size + (size==75? 'sq' : '') + '.' + this.extension;
 	},
 });
 

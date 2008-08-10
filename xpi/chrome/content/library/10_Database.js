@@ -3,9 +3,21 @@ function Database(file) {
 }
 
 extend(Database, {
+	/**
+	 * クエリにパラメーターをバインドする。
+	 * 
+	 * @param {mozIStorageStatementWrapper} wrapper クエリ。
+	 * @param {Object || Array || String || Number} params 
+	 *        パラメーター。
+	 *        Objectの場合、名前付きパラメーターとみなされる。
+	 *        Arrayの場合、出現順に先頭からバインドされる。
+	 *        単値の場合、先頭のパラメーターにバインドされる。
+	 *        この値がnullの場合、処理は行われない。
+	 * @return {mozIStorageStatementWrapper} バインド済みのクエリ。
+	 */
 	bindParams : function(wrapper, params) {
 		if(params==null)
-			return;
+			return wrapper;
 		
 		// Hash
 		if(typeof(params)=='object' && params.length==null){
@@ -23,7 +35,7 @@ extend(Database, {
 				
 				wrapper.params[name] = param;
 			}
-			return;
+			return wrapper;
 		}
 		
 		// Array
@@ -33,8 +45,16 @@ extend(Database, {
 		var statement = wrapper.statement;
 		for(var i=0, len=statement.parameterCount ; i<len ; i++)
 			statement.bindUTF8StringParameter(i, params[i]);
+		
+		return wrapper;
 	},
 	
+	/**
+	 * クエリ内に含まれる名前付きパラメーターのリストを取得する。
+	 * 
+	 * @param {mozIStorageStatementWrapper} wrapper クエリ。
+	 * @return {Array} パラメーター名のリスト。
+	 */
 	getParamNames : function(wrapper) {
 		var paramNames = [];
 		var statement = wrapper.statement;
@@ -44,15 +64,29 @@ extend(Database, {
 		return paramNames;
 	},
 	
-	getColumnNames : function(wrapper) {
+	/**
+	 * クエリ結果値の列名のリストを取得する。
+	 * 
+	 * @param {mozIStorageStatement || mozIStorageStatementWrapper} statement クエリ。
+	 * @return {Array} 列名のリスト。
+	 */
+	getColumnNames : function(statement) {
+		statement = statement.statement || statement;
+		
 		var columnNames=[];
-		statement = wrapper.statement;
 		for(var i=0, len=statement.columnCount ; i<len ; i++)
 			columnNames.push(statement.getColumnName(i));
 		
 		return columnNames;
 	},
 	
+	/**
+	 * テーブル行をオブジェクトに変換する。
+	 * 
+	 * @param {mozIStorageStatementRow} row テーブル行。
+	 * @param {Array} columnNames 列名のリスト。
+	 * @return {Object} 列名をプロパティとして値を格納したオブジェクト。
+	 */
 	getRow : function(row, columnNames){
 		var result = {};
 		for(var i=0,len=columnNames.length ; i<len ; i++){

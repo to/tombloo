@@ -52,11 +52,11 @@ var Tumblr = update({}, AbstractSessionService, {
 	},
 	
 	/**
-	 * Šeƒ|ƒXƒgƒ^ƒCƒv‹¤’Ê‚Ìî•ñ‚ğƒ|ƒXƒg‚©‚çæ“¾‚·‚éB
+	 * å„ãƒã‚¹ãƒˆã‚¿ã‚¤ãƒ—å…±é€šã®æƒ…å ±ã‚’ãƒã‚¹ãƒˆã‹ã‚‰å–å¾—ã™ã‚‹ã€‚
 	 *
-	 * @param {String} user ƒ†[ƒU[–¼B
-	 * @param {XML} post ƒ|ƒXƒgƒm[ƒhB
-	 * @return {Object} ƒ|ƒXƒg‹¤’Êî•ñBƒ|ƒXƒgIDAƒ^ƒCƒvAƒ^ƒO‚È‚Ç‚ğŠÜ‚ŞB
+	 * @param {String} user ãƒ¦ãƒ¼ã‚¶ãƒ¼åã€‚
+	 * @param {XML} post ãƒã‚¹ãƒˆãƒãƒ¼ãƒ‰ã€‚
+	 * @return {Object} ãƒã‚¹ãƒˆå…±é€šæƒ…å ±ã€‚ãƒã‚¹ãƒˆIDã€ã‚¿ã‚¤ãƒ—ã€ã‚¿ã‚°ãªã©ã‚’å«ã‚€ã€‚
 	 */
 	getPostInfo : function(user, post){
 		return {
@@ -70,24 +70,24 @@ var Tumblr = update({}, AbstractSessionService, {
 	},
 	
 	/**
-	 * Tumblr API‚©‚çƒ|ƒXƒgƒf[ƒ^‚ğæ“¾‚·‚éB
+	 * Tumblr APIã‹ã‚‰ãƒã‚¹ãƒˆãƒ‡ãƒ¼ã‚¿ã‚’å–å¾—ã™ã‚‹ã€‚
 	 *
-	 * @param {String} user ƒ†[ƒU[–¼B
-	 * @param {optional String} type ƒ|ƒXƒgƒ^ƒCƒvB–¢w’è‚Ìê‡A‘Sƒ^ƒCƒv‚Æ‚È‚éB
-	 * @param {String} count æ“ª‚©‚ç‰½Œ‚ğæ“¾‚·‚é‚©B
+	 * @param {String} user ãƒ¦ãƒ¼ã‚¶ãƒ¼åã€‚
+	 * @param {optional String} type ãƒã‚¹ãƒˆã‚¿ã‚¤ãƒ—ã€‚æœªæŒ‡å®šã®å ´åˆã€å…¨ã‚¿ã‚¤ãƒ—ã¨ãªã‚‹ã€‚
+	 * @param {String} count å…ˆé ­ã‹ã‚‰ä½•ä»¶ã‚’å–å¾—ã™ã‚‹ã‹ã€‚
 	 * @param {Function} handler 
-	 *        Šeƒy[ƒWŒÂ•Êˆ—ŠÖ”B’iŠK“I‚Éˆ—‚ğs‚¤ê‡‚Éw’è‚·‚éB
-	 *        ƒy[ƒW“à‚Ì‘Sƒ|ƒXƒg‚ª“n‚³‚ê‚éB
-	 * @return {Deferred} æ“¾‚µ‚½‘Sƒ|ƒXƒg‚ª“n‚³‚ê‚éB
+	 *        å„ãƒšãƒ¼ã‚¸å€‹åˆ¥å‡¦ç†é–¢æ•°ã€‚æ®µéšçš„ã«å‡¦ç†ã‚’è¡Œã†å ´åˆã«æŒ‡å®šã™ã‚‹ã€‚
+	 *        ãƒšãƒ¼ã‚¸å†…ã®å…¨ãƒã‚¹ãƒˆãŒæ¸¡ã•ã‚Œã‚‹ã€‚
+	 * @return {Deferred} å–å¾—ã—ãŸå…¨ãƒã‚¹ãƒˆãŒæ¸¡ã•ã‚Œã‚‹ã€‚
 	 */
 	read : function(user, type, count, handler){
-		// FIXME: ƒXƒgƒŠ[ƒ€‚É‚·‚é
+		// FIXME: ã‚¹ãƒˆãƒªãƒ¼ãƒ ã«ã™ã‚‹
 		var pages = Tumblr.splitRequests(count);
 		var rval = [];
 		
 		var d = succeed();
 		d.addCallback(function(){
-			// ‘Sƒy[ƒW‚ğŒJ‚è•Ô‚·
+			// å…¨ãƒšãƒ¼ã‚¸ã‚’ç¹°ã‚Šè¿”ã™
 			return deferredForEach(pages, function(page, pageNum){
 				var url = Tumblr.buildURL(user, {
 					type : type,
@@ -95,18 +95,18 @@ var Tumblr = update({}, AbstractSessionService, {
 					num : page[1],
 				});
 				
-				// ƒy[ƒW‚ğæ“¾‚·‚é
+				// ãƒšãƒ¼ã‚¸ã‚’å–å¾—ã™ã‚‹
 				return request(url).addCallback(function(res){
 					var xml = convertToXML(res.responseText);
 					
-					// ‘Sƒ|ƒXƒg‚ğŒJ‚è•Ô‚·
+					// å…¨ãƒã‚¹ãƒˆã‚’ç¹°ã‚Šè¿”ã™
 					var posts = map(function(post){
 						var postInfo = Tumblr.getPostInfo(user, post);
 						return Tumblr[capitalize(postInfo.type)].convertToModel(post, postInfo);
 					}, xml.posts.post);
 					
 					return handler && handler(posts, (pageNum * Tumblr.PAGE_LIMIT));
-				}).addCallback(wait, 1); // ƒEƒFƒCƒg
+				}).addCallback(wait, 1); // ã‚¦ã‚§ã‚¤ãƒˆ
 			});
 		});
 		d.addErrback(function(err){
@@ -120,6 +120,12 @@ var Tumblr = update({}, AbstractSessionService, {
 		return d;
 	},
 	
+	/**
+	 * ãƒã‚¹ãƒˆã‚’å‰Šé™¤ã™ã‚‹ã€‚
+	 *
+	 * @param {Number || String} id ãƒã‚¹ãƒˆIDã€‚
+	 * @return {Deferred}
+	 */
 	remove : function(id){
 		var self = this;
 		return this.getToken().addCallback(function(token){
@@ -405,6 +411,12 @@ Tumblr.Photo = {
 		return form;
 	},
 	
+	/**
+	 * ç”»åƒã‚’ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰ã™ã‚‹ã€‚
+	 *
+	 * @param {nsIFile} file ä¿å­˜å…ˆã®ãƒ­ãƒ¼ã‚«ãƒ«ãƒ•ã‚¡ã‚¤ãƒ«ã€‚ã“ã®ãƒ•ã‚¡ã‚¤ãƒ«åãŒå–å¾—å…ˆã®URLã«ã‚‚ä½¿ã‚ã‚Œã‚‹ã€‚
+	 * @return {Deferred}
+	 */
 	download : function(file){
 		return download(Tumblr.MEDIA_URL + file.leafName, file);
 	},

@@ -160,36 +160,39 @@ Tombloo.Service = {
 		if(p.ended)
 			return;
 		
-		var d = succeed();
-		d.addCallback(bind('getInfo', Tumblr), user, type);
-		d.addCallback(function(info){
-			// 取得済みのデータがウェブで削除されている場合、その件数分隙間となり取得されない
-			p.max = info.total - Tombloo[type? capitalize(type) : 'Post'].countByUser(user);
-			
-			if(p.ended)
-				return;
-			
-			return Tumblr.read(user, type, info.total, function(posts){
-				// 件数分処理したら終了しAPIの読み込みを止める
-				if(p.ended)
-					throw StopProcess;
+		return Tombloo.db.transaction(function(){
+			var d = succeed();
+			d.addCallback(bind('getInfo', Tumblr), user, type);
+			d.addCallback(function(info){
+				// 取得済みのデータがウェブで削除されている場合、その件数分隙間となり取得されない
+				// 但し、ページ単位で処理が行われ、件数を超えて処理が行われるため、そこで補正される可能性が高い
+				p.max = info.total - Tombloo[type? capitalize(type) : 'Post'].countByUser(user);
 				
-				Tombloo.db.transaction(function(){
+				if(p.ended)
+					return;
+				
+				// 全ポストを繰り返す
+				return Tumblr.read(user, type, info.total, function(posts){
+					
+					// ページ内のポストを繰り返す
 					posts.forEach(function(post){
-						p.value++;
-						
 						try{
 							Tombloo.Post.insert(post);
+							p.value++;
 						} catch(e if e instanceof Database.DuplicateKeyException) {
 							// 前回の処理を途中で終了したときに発生する重複エラーを無視する
 						}
 					});
+					
+					// 件数分処理したら終了しAPIの読み込みを止める
+					if(p.ended)
+						throw StopProcess;
 				});
 			});
+			d.addCallback(bind('complete', p));
+			
+			return d;
 		});
-		d.addCallback(bind('complete', p));
-		
-		return d;
 	},
 }
 
@@ -217,16 +220,39 @@ Tombloo.Service.Photo = {
 			if(p.ended)
 				return;
 			
-			return deferredForEach(photos, function(photo){
-				if(p.ended)
-					throw StopIteration;
-				
-				p.value++;
-				
-				return Tumblr.Photo.download(photo.getFile(size));
+			return Tombloo.db.transaction(function(){
+				// 全ての未取得のphotoを繰り返す
+				return deferredForEach(photos, function(photo){
+					if(p.ended)
+						throw StopIteration;
+					
+					p.value++;
+					
+					// ダウンロードを試行する拡張子の順序を決定する
+					var exts = ['gif', 'png', 'jpg'];
+					if(photo.extension)
+						exts.unshift(exts.splice(exts.indexOf(photo.extension), 1)[0]);
+					
+					return (function(){
+						if(!exts.length)
+							return;
+						
+						var me = arguments.callee;
+						photo.extension = exts.shift();
+						return Tumblr.Photo.download(photo.getFile(size)).addCallback(function(){
+							// ダウンロードが失敗した場合、拡張子を変えて再試行する
+							if(!photo.checkFile(size))
+								return succeed().addCallback(me);
+							
+							// 正しい拡張子とファイル存在を保存する
+							photo['file' + size] = 1;
+							photo.save();
+						});
+					})();
+				});
 			});
 		});
-		d.addBoth(bind('complete', p));
+		d.addCallback(bind('complete', p));
 		
 		return d;
 	},
@@ -246,25 +272,22 @@ Tombloo.Service.Photo = {
 	getByFileExists : function(user, size, exists){
 		exists = exists==null? true : exists;
 		
-		var all = [];
+		var result = [];
 		var photoAll = Tombloo.Photo['findByUserAndFile' + size]([user, Number(exists)]);
 		
-		var d = succeed();
-		d.addCallback(function(){
-			// 全てのポストを繰り返す(200件ごと)
-			return deferredForEach(photoAll.split(200), function(photos){
-				Tombloo.db.transaction(function(){
-					forEach(photos, function(photo){
-						var actual = photo.checkFile(size);
-						if(actual == exists)
-							all.push(photo);
-						
-						// ファイル存在がデータベースと違っていたら更新する
-						if(actual != photo['file' + size]){
-							photo['file' + size] = Number(actual);
-							photo.save();
-						}
-					});
+		var d = Tombloo.db.transaction(function(){
+			// 全てのポストを繰り返す(150件ごと)
+			return deferredForEach(photoAll.split(150), function(photos){
+				forEach(photos, function(photo){
+					var actual = photo.checkFile(size);
+					if(actual == exists)
+						result.push(photo);
+					
+					// ファイル存在がデータベースと違っていたら更新する
+					if(actual != photo['file' + size]){
+						photo['file' + size] = Number(actual);
+						photo.save();
+					}
 				});
 				
 				// 未応答のエラーが起きないようにウェイトを入れる
@@ -272,7 +295,7 @@ Tombloo.Service.Photo = {
 			});
 		});
 		d.addCallback(function(){
-			return all;
+			return result;
 		});
 		
 		return d;

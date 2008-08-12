@@ -129,12 +129,12 @@ try {
 	is(photo.id, 2);
 	is(photo.file75, 'ABCDEFG', '数値フィードから文字を取得できるか');
 	is(photo.temporary, false);
-	photo.file500 = 900;
+	photo.file500 = 1;
 	photo.save(); // update
 	
 	var photo = Photo.findByUser('02')[0];
 	is(photo.id, 2);
-	is(photo.file500, 900, 'updateされているか');
+	is(photo.file500, 1, 'updateされているか');
 	
 	// 削除
 	photo.remove();

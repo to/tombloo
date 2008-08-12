@@ -230,26 +230,59 @@ extend(Database.prototype, {
 	 * @param {Function} handler 処理。
 	 */
 	transaction : function(handler) {
-		var connection = this.connection;
-		if(connection.transactionInProgress)
-			return handler();
+		var d = succeed();
 		
-		var error = false;
-		connection.beginTransaction();
-		try {
-			handler();
-			connection.commitTransaction();
-		} catch(e) {
-			error = true;
-			this.throwException(e);
-		} finally {
-			if(error)
-				connection.rollbackTransaction();
+		if(this.connection.transactionInProgress){
+			d.addCallback(handler);
+			return d;
 		}
+		
+		var self = this;
+		d.addCallback(bind('beginTransaction', this));
+		d.addCallback(handler);
+		d.addCallback(function(res){
+			self.commitTransaction();
+			
+			return res;
+		});
+		d.addErrback(function(err){
+			self.rollbackTransaction();
+			
+			throw err;
+		});
+		
+		return d;
 	},
 	
 	/**
-	 * 例外を解釈し再発生させる。
+	 * トランザクションを開始する。
+	 * トランザクションが既に開始されていた場合でも、エラーを発生させない。
+	 */
+	beginTransaction : function(){
+		with(this.connection)
+			transactionInProgress || beginTransaction();
+	},
+	
+	/**
+	 * トランザクションをコミットする。
+	 * トランザクションが開始されていない場合でも、エラーを発生させない。
+	 */
+	commitTransaction : function(){
+		with(this.connection)
+			transactionInProgress && commitTransaction();
+	},
+	
+	/**
+	 * トランザクションをロールバックする。
+	 * トランザクションが開始されていない場合でも、エラーを発生させない。
+	 */
+	rollbackTransaction : function(){
+		with(this.connection)
+			transactionInProgress && rollbackTransaction();
+	},
+	
+	/**
+	 * データベース例外を解釈し再発生させる。
 	 *
 	 * @param {Exception} e データベース例外。
 	 * @throws エラー内容に即した例外。未定義のものは汎用的な例外となる。
@@ -524,6 +557,13 @@ extend(Entity, {
 		</>);
 	},
 	
+	/**
+	 * SQL文から不要な空白などを取り除き短く整形する。
+	 * 表記のぶれを無くし、解析後の文のキャッシュヒットを増やす目的がある。
+	 *
+	 * @param {String} sql SQL文。
+	 * @return {String} 整形されたSQL文。
+	 */
 	compactSQL: function(sql){
 		sql+='';
 		return sql.

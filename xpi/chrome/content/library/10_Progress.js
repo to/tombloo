@@ -16,6 +16,9 @@ Progress.prototype = {
 		return this.name + ': ' + (this.max && this.value? this.value + ' / ' + this.max : '');
 	},
 	
+	/**
+	 * 進捗割合を取得する。
+	 */
 	get percentage(){
 		return this.max? Math.min(Math.floor(this.value / this.max * 100), 100) : 100;
 	},
@@ -24,6 +27,9 @@ Progress.prototype = {
 		return this._max;
 	},
 	
+	/**
+	 * タスク最大値を設定する。
+	 */
 	set max(max){
 		this._max = Math.max(max, 0);
 		if(this.max!=0)
@@ -63,12 +69,26 @@ Progress.prototype = {
 		this.notify(this.progressListeners, this, this);
 	},
 	
+	/**
+	 * 終了しているか。
+	 * キャンセルか完了かによらない。
+	 */
 	get ended(){
 		return this.completed || this.canceled;
 	},
 	
+	/**
+	 * 完了しているか。
+	 */
 	get completed(){
 		return this.percentage==100;
+	},
+	
+	/**
+	 * キャンセルされたか。
+	 */
+	get canceled(){
+		return this._canceled || this.children.some(function(p){return p.canceled});
 	},
 	
 	notify : function(listeners, target, trigger){
@@ -77,10 +97,11 @@ Progress.prototype = {
 		})
 	},
 	
-	get canceled(){
-		return this._canceled || this.children.some(function(p){return p.canceled});
-	},
-	
+	/**
+	 * キャンセルする。
+	 * 入れ子になっている場合、親子全てのプログレスもキャンセルする。
+	 * キャンセルリスナがいる場合は通知する。
+	 */
 	cancel : function(){
 		if(this._canceled)
 			return;
@@ -98,8 +119,17 @@ Progress.prototype = {
 		this.value = this.max;
 	},
 	
+	/**
+	 * 子プログレスを追加する。
+	 * 
+	 * @param {Progress} progress 子プログレス。
+	 * @param {Number} scale 
+	 *        プログレスの重さの比率。未指定の場合、100。
+	 *        長く時間がかかる処理は、数値を大きくする。
+	 * @return {Progress} 子プログレス。
+	 */
 	addChild : function(progress, scale){
-		progress.scale = scale==null? 100 : scale;
+		progress.scale = (scale==null)? 100 : scale;
 		progress.parent = this;
 		this.children.push(progress);
 		return progress;

@@ -113,6 +113,42 @@ try {
 	is(Video.countByHost('HOST_1'), 1);
 	is(Video.countByHost({host:'HOST_1'}), 1);
 	
+	
+	// トランザクション
+	db.transaction(function(){
+		var video = new Video({id : 3});
+		video.save();
+		
+		// エラーを起こしロールバックさせる
+		throw 'ERROR';
+	}).addErrback(function(err){
+		is(err.message, 'ERROR');
+	});
+	is(Video.findById(3).length, 0, 'ロールバックされたか');
+
+	db.transaction(function(){
+		var video = new Video({id : 3});
+		video.save();
+		
+		return 'OK';
+	}).addCallback(function(res){
+		is(res, 'OK', 'トランザクション結果値が返されるか');
+	});
+	is(Video.findById(3).length, 1, 'コミットされたか');
+	
+	
+	// トランザクション(個別メソッド)
+	db.beginTransaction();
+	db.beginTransaction();
+	ok(true, 'beginTransaction: トランザクション内で呼び出してもエラーが起きないか');
+	
+	db.commitTransaction();
+	db.commitTransaction();
+	ok(true, 'commitTransaction: トランザクション外で呼び出してもエラーが起きないか');
+	
+	db.rollbackTransaction();
+	ok(true, 'rollbackTransaction: トランザクション外で呼び出してもエラーが起きないか');
+	
 } catch (err) {
 	var s = [];
 	s.push('TEST SUITE FAILURE!');

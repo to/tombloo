@@ -71,7 +71,7 @@ var Tombloo = {
 					id, user, date, body, imageId, extension,
 					file75, file100, file250, file400, file500) 
 				SELECT 
-					id, user, date, body, (CASE WHEN revision IS NULL THEN imageId ELSE imageId || '_' || revision END), 'jpg',
+					id, user, date, body, (CASE WHEN (revision IS NULL OR revision = "") THEN imageId ELSE imageId || '_' || revision END), 'jpg',
 					0, 0, 0, 0, 0 
 				FROM 
 					photos;
@@ -264,7 +264,21 @@ extend(Tombloo.Photo.prototype, {
 	},
 	
 	checkFile : function(size){
-		return this.getFile(size).exists();
+		var file = this.getFile(size);
+		
+		// 通信エラーファイルなら削除する(MIGRATION 0->1)
+		if(file.exists() && 
+			(220 < file.fileSize && file.fileSize < 240) && 
+			getContents(file).indexOf('xml') != -1){
+			
+			file.remove(false);
+			
+			// 拡張子を空にし再ダウンロードを促す
+			this.extension = '';
+			this.save();
+		}
+		
+		return file.exists();
 	},
 	
 	getFile : function(size){

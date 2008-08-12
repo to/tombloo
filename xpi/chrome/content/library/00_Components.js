@@ -165,7 +165,7 @@ function createMock(sample, proto){
 				continue;
 			}
 		} catch(e){
-			// �R���|�[�l���g�����ɂ�蔭������v���p�e�B�擾�G���[�𖳎�����
+			// コンポーネント実装により発生するプロパティ取得エラーを無視する
 		}
 	}
 	
@@ -194,15 +194,15 @@ function createQueryInterface(ifcNames){
 }
 
 /**
- * XPCOM�̃R���X�g���N�^�𐶐�����B
- * �R���X�g���N�^�͎w�肳�ꂽ�C���^�[�t�F�[�X�̒萔��S�Ď��B
+ * XPCOMのコンストラクタを生成する。
+ * コンストラクタは指定されたインターフェースの定数を全て持つ。
  *
- * @param {String} clsName �N���X��(@mozilla.org�ȍ~���w�肷��)�B
- * @param {String || nsIJSID} ifc �C���^�[�t�F�C�X�B
+ * @param {String} clsName クラス名(@mozilla.org以降を指定する)。
+ * @param {String || nsIJSID} ifc インターフェイス。
  * @param {String || Function} init 
- *        �������֐��B
- *        ������̏ꍇ�A�Y�����郁�\�b�h���Ăяo�����B
- *        �֐��̏ꍇ�A�������ꂽ�C���X�^���X��this�Ƃ��ČĂяo�����B
+ *        初期化関数。
+ *        文字列の場合、該当するメソッドが呼び出される。
+ *        関数の場合、生成されたインスタンスをthisとして呼び出される。
  */
 function createConstructor(clsName, ifc, init){
 	var cls = Components.classes['@mozilla.org' + clsName];
@@ -231,11 +231,11 @@ function createConstructor(clsName, ifc, init){
 }
 
 /**
- * XPCOM�T�[�r�X���擾����B
- * �C���^�[�t�F�[�X���w�肳��Ȃ��ꍇ�A���p�ł���S�ẴC���^�[�t�F�[�X�Ɋg������B
+ * XPCOMサービスを取得する。
+ * インターフェースが指定されない場合、利用できる全てのインターフェースに拡げられる。
  *
- * @param {String} clsName �N���X��(@mozilla.org�ȍ~���w�肷��)�B
- * @param {nsIJSID} ifc �C���^�[�t�F�C�X�B
+ * @param {String} clsName クラス名(@mozilla.org以降を指定する)。
+ * @param {nsIJSID} ifc インターフェイス。
  */
 function getService(clsName, ifc){
 	try{
@@ -248,10 +248,10 @@ function getService(clsName, ifc){
 }
 
 /**
- * XPCOM�C���X�^���X�̎������Ă���C���^�[�t�F�[�X�ꗗ���擾����B
+ * XPCOMインスタンスの実装しているインターフェース一覧を取得する。
  *
- * @param {Object} obj XPCOM�C���X�^���X�B
- * @return {Array} �C���^�[�t�F�[�X�̃��X�g�B
+ * @param {Object} obj XPCOMインスタンス。
+ * @return {Array} インターフェースのリスト。
  */
 function getInterfaces(obj){
 	var result = [];
@@ -266,11 +266,11 @@ function getInterfaces(obj){
 }
 
 /**
- * XPCOM�C���X�^���X�̎������Ă���C���^�[�t�F�[�X��S�ė��p�ł���悤�ɂ���B
- * �p�t�H�[�}���X�ɒ��ӂ���ӏ��ł́A�C���^�[�t�F�[�X�̃��X�g��n�������͈͂����肵�Ďg���B
+ * XPCOMインスタンスの実装しているインターフェースを全て利用できるようにする。
+ * パフォーマンスに注意する箇所では、インターフェースのリストを渡し検査範囲を限定して使う。
  *
- * @param {Object} obj XPCOM�C���X�^���X�B
- * @param {optional Array} ifcs �C���^�[�t�F�[�X�̃��X�g�B�w�肳��Ȃ��ꍇ�A�S�C���^�[�t�F�C�X�����������B
+ * @param {Object} obj XPCOMインスタンス。
+ * @param {optional Array} ifcs インターフェースのリスト。指定されない場合、全インターフェイスが検査される。
  */
 function broad(obj, ifcs){
 	ifcs = ifcs || INTERFACES;
@@ -280,13 +280,13 @@ function broad(obj, ifcs){
 };
 
 /**
- * �ʒm�o�u����\������B
- * ����������G���[�Ȃǂ�ʒm���邽�߂ɗp����B
- * Mac��Firefox 3�ł�Growl�ɂȂ�B
+ * 通知バブルを表示する。
+ * 処理完了やエラーなどを通知するために用いる。
+ * MacのFirefox 3ではGrowlになる。
  *
- * @param {String} title �^�C�g���B
- * @param {String} msg ���b�Z�[�W�B
- * @param {String} icon �A�C�R����ށB�萔�̒�����I�����邩�A�Ǝ���URL��n���B
+ * @param {String} title タイトル。
+ * @param {String} msg メッセージ。
+ * @param {String} icon アイコン種類。定数の中から選択するか、独自のURLを渡す。
  */
 function notify(title, msg, icon){
 	AlertsService && AlertsService.showAlertNotification(
@@ -320,9 +320,9 @@ function convertFromByteArray(arr, charset){
 }
 
 /**
- * URI�𐶐�����B
+ * URIを生成する。
  *
- * @param {String || nsIFile || nsIURI} path URL�܂��̓t�@�C���BnsIURI�̏ꍇ�A���̂܂ܕԂ��B
+ * @param {String || nsIFile || nsIURI} path URLまたはファイル。nsIURIの場合、そのまま返す。
  */
 function createURI(path){
 	if(path instanceof IURI)
@@ -336,11 +336,11 @@ function createURI(path){
 }
 
 /**
- * �t�@�C�����擾����B
+ * ファイルを取得する。
  *
  * @param {String || nsIFile || nsIURI} uri 
- *        URI�Bfile:�܂���chrome:����n�܂�A�h���X���w�肷��B
- *        nsIFile�̏ꍇ�A���̂܂ܕԂ��B
+ *        URI。file:またはchrome:から始まるアドレスを指定する。
+ *        nsIFileの場合、そのまま返す。
  */
 function getLocalFile(uri){
 	if(uri instanceof ILocalFile)
@@ -360,9 +360,9 @@ function getLocalFile(uri){
 }
 
 /**
- * �g���̃C���X�g�[������Ă���f�B���N�g�����擾����B
+ * 拡張のインストールされているディレクトリを取得する。
  *
- * @param {String} id �g��ID�B 
+ * @param {String} id 拡張ID。 
  */
 function getExtensionDir(id){
 	return ExtensionManager.
@@ -418,8 +418,8 @@ function getPrefValue(){
 }
 
 /**
- * ���[�U���ʏ험�p���Ă���_�E�����[�h�f�B���N�g�����擾����B
- * Firefox�I�v�V�����Ŏw�肵���f�B���N�g���A�܂��́A�Ō�Ƀ_�E�����[�h�����f�B���N�g���ɂȂ�B
+ * ユーザが通常利用しているダウンロードディレクトリを取得する。
+ * Firefoxオプションで指定したディレクトリ、または、最後にダウンロードしたディレクトリになる。
  */
 function getDownloadDir(){
 	try {
@@ -432,24 +432,24 @@ function getDownloadDir(){
 }
 
 /**
- * ���ݗ��p���Ă���v���t�@�C���f�B���N�g�����擾����B
+ * 現在利用しているプロファイルディレクトリを取得する。
  */
 function getProfileDir(){
 	return DirectoryService.get('ProfD', IFile);
 }
 
 /**
- * �e���|�����f�B���N�g�����擾����B
+ * テンポラリディレクトリを取得する。
  */
 function getTempDir(){
 	return DirectoryService.get('TmpD', IFile);
 }
 
 /**
- * �O���G�f�B�^�Ńt�@�C�����J���B
- * Greasemonkey�Őݒ肳��Ă���G�f�B�^�A�܂��́A�u���E�U�Ń\�[�X���J�����Ɏg����G�f�B�^���Ăяo�����B
+ * 外部エディタでファイルを開く。
+ * Greasemonkeyで設定されているエディタ、または、ブラウザでソースを開く時に使われるエディタが呼び出される。
  *
- * @param {nsIFile} file �Ώۃt�@�C���B 
+ * @param {nsIFile} file 対象ファイル。 
  */
 function openInEditor(file){
 	function getFile(path){
@@ -516,11 +516,11 @@ function findCacheFile(url){
 }
 
 /**
- * �X�g���[������������B
- * ���s��ɕK���X�g���[����������B
+ * ストリームを処理する。
+ * 実行後に必ずストリームが閉じられる。
  *
- * @param {Object} stream �X�g���[���B 
- * @param {Function} func �X�g���[���𗘗p���鏈���B�X�g���[�����n�����B 
+ * @param {Object} stream ストリーム。 
+ * @param {Function} func ストリームを利用する処理。ストリームが渡される。 
  */
 function withStream(stream, func){
 	try{
@@ -531,12 +531,12 @@ function withStream(stream, func){
 }
 
 /**
- * HTML�����񂩂�object/script/body/style�Ȃǂ̗v�f����菜���B
- * �܂��s���S�ȃ^�O�Ȃǂ𐮌`��������HTML�֕ϊ�����B
- * Firefox 3�ł́AJavaScript�v���g�R���̏������s���Ȃ��B
+ * HTML文字列からobject/script/body/styleなどの要素を取り除く。
+ * また不完全なタグなどを整形し正しいHTMLへ変換する。
+ * Firefox 3では、JavaScriptプロトコルの除去が行われない。
  *
- * @param {String} html HTML�B 
- * @return {String} ���`���ꂽHTML�B
+ * @param {String} html HTML。 
+ * @return {String} 整形されたHTML。
  */
 function sanitizeHTML(html){
 	var doc = document.implementation.createDocument('', '', null);

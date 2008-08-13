@@ -473,7 +473,7 @@ Tombloo.Service.extractors = new Repository([
 		check : function(ctx){
 			return ctx.onLink && 
 				(''+ctx.link).match(/(png|gif|jpe?g)$/i) &&
-				(''+ctx.link).match(/blogger.com\/.*\/s\d{2,}-h\//);
+				(''+ctx.link).match(/(blogger|blogspot)\.com\/.*\/s\d{2,}-h\//);
 		},
 		extract : function(ctx){
 			return {

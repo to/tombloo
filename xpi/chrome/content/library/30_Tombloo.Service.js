@@ -33,31 +33,23 @@ Tombloo.Service = {
 		return succeed().addCallback(function(){
 			return Tombloo.Service.extractors.extract(ctx, ext);
 		}).addCallback(function(ps){
-			log(ps);
+			debug(ps);
 			
 			if(!ps)
-				return;
+				return succeed({});
 			
 			if(showForm){
-				new QuickPostForm(ps).show();
+				(models.getEnables(ps).length)?
+					new QuickPostForm(ps).show() :
+					Tombloo.Service.alertPreference(ps.type);
 				
+				// FIXME: クイックポストフォームのポスト結果を伝えるように
 				return succeed({});
 			}
 			
-			var config = eval(getPref('postConfig'));
-			var posters = models.check(ps).filter(function(p){
-				return config[p.name] && config[p.name][ps.type];
-			});
-			
+			var posters = models.getDefaults(ps);
 			if(!posters.length){
-				var win = openDialog('chrome://tombloo/content/prefs.xul', 600, 500, 'resizable');
-				win.addEventListener('load', function(){
-					// load時は、まだダイアログが表示されていない
-					setTimeout(function(){
-						win.alert(getMessage('error.noPoster', ps.type.capitalize()));
-					}, 0);
-				}, false);
-				
+				Tombloo.Service.alertPreference(ps.type);
 				return succeed({});
 			}
 			
@@ -70,6 +62,16 @@ Tombloo.Service = {
 		});
 	},
 	
+	alertPreference : function(type){
+		var win = openDialog('chrome://tombloo/content/prefs.xul', 600, 500, 'resizable');
+		win.addEventListener('load', function(){
+			// load時は、まだダイアログが表示されていない
+			setTimeout(function(){
+				win.alert(getMessage('error.noPoster', type.capitalize()));
+			}, 0);
+		}, false);
+	},
+	
 	/**
 	 * 対象のポスト先に一括でポストする。
 	 *
@@ -78,7 +80,7 @@ Tombloo.Service = {
 	 * @return {Deferred} ポスト完了後に呼び出される。
 	 */
 	post : function(ps, posters){
-		log(posters);
+		debug(posters);
 		
 		var self = this;
 		var ds = {};
@@ -92,7 +94,7 @@ Tombloo.Service = {
 		});
 		
 		return new DeferredHash(ds).addCallback(function(ress){
-			log(ress);
+			debug(ress);
 			
 			var errs = [];
 			var ignoreError = getPref('ignoreError');

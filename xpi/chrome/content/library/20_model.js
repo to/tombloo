@@ -1343,4 +1343,46 @@ models.register({
 	},
 });
 
+// 全てのサービスをグローバルコンテキストに置く(後方互換)
 models.copyTo(this);
+
+/**
+ * デフォルトのサービスのリストを取得する。
+ * ユーザーの設定が適用される。
+ *
+ * @return {Array}
+ */
+models.getDefaults = function(ps){
+	var config = eval(getPref('postConfig'));
+	return this.check(ps).filter(function(m){
+		return config[m.name] && config[m.name][ps.type];
+	});
+}
+
+/**
+ * 利用可能なサービスのリストを取得する。
+ * ユーザーの設定が適用される。
+ *
+ * @return {Array}
+ */
+models.getEnables = function(ps){
+	var config = eval(getPref('postConfig'));
+	function getPostConfigValue(name, type){
+		switch((config[name] || {})[type]){
+		case true:  return 'default';
+		case false: return 'enable';
+		case '':    return 'disable';
+		default:    return 'undefined';
+		}
+	}
+	
+	return this.check(ps).filter(function(m){
+		m.config = (m.config || {});
+		
+		// クイックポストフォームにて、取得後にデフォルトなのか利用可能なのかを
+		// 判定する必要があったため、サービスに設定値を保存し返す
+		var val = m.config[ps.type] = getPostConfigValue(m.name, ps.type);
+		return (/(default|enable)/).test(val);
+	});
+}
+

@@ -103,12 +103,18 @@ function Pagebar(opt){
 
 function QuickPostForm(ps){
 	this.params = ps;
-	this.posters = new Repository(models.check(ps));
+	this.posters = new Repository(models.getEnables(ps));
 }
 
 QuickPostForm.refreshCache = true;
 QuickPostForm.candidates = [];
 QuickPostForm.prototype = {
+	
+	/**
+	 * 選択されているサービスのリストを取得する。
+	 *
+	 * @return {Array}
+	 */
 	get checked(){
 		var checked = [];
 		var posters = this.posters;
@@ -119,16 +125,20 @@ QuickPostForm.prototype = {
 		return checked;
 	},
 	
+	/**
+	 * ポストする。
+	 */
 	post : function(){
 		var ps = this.params;
 		$x('.//*[@name]', this.notification, true).forEach(function(elm){
 			ps[elm.getAttribute('name')] = elm.values || elm.value;
 		});
 		
-		if(!this.checked.length)
+		var checked = this.checked;
+		if(!checked.length)
 			return;
 		
-		Tombloo.Service.post(ps, this.checked);
+		Tombloo.Service.post(ps, checked);
 		if(this.elmTags)
 			QuickPostForm.refreshCache = this.elmTags.includesNewTag;
 		this.notification.close();
@@ -148,8 +158,12 @@ QuickPostForm.prototype = {
 		}
 	},
 	
+	/**
+	 * ポスト可能かをチェックする。
+	 * サービスが選択されていなければポストボタンを利用不能にする。
+	 */
 	checkPostable : function(){
-		this.elmPost.disabled = !this.checked.length;
+		return !(this.elmPost.disabled = !this.checked.length);
 	},
 	
 	show : function(){
@@ -270,8 +284,6 @@ QuickPostForm.prototype = {
 			description : '',
 		}, this.params);
 		var tags = joinText(ps.tags, ' ');
-		var config = eval(getPref('postConfig'));
-		
 		var form = convertToXULElement(<vbox style="margin-bottom: 4px; padding: 7px 1px"  flex="1000">
 			<hbox>
 				<grid flex="1" >
@@ -397,13 +409,10 @@ QuickPostForm.prototype = {
 				<separator orient="vertical" class="groove-thin" width="1" style="margin: 0 5px 0 9px;" />
 				<vbox>
 					{
-						reduce(function(memo, name){
-							var c = config[name] || {};
-							if(c[ps.type] !== ''){
-								memo.checkbox += <checkbox label={name} src={models[name].ICON} checked={!!c[ps.type]} />
-							}
+						reduce(function(memo, [name, poster]){
+							memo.checkbox += <checkbox label={poster.name} src={poster.ICON} checked={(poster.config[ps.type] == 'default')} />
 							return memo;
-						}, this.posters.names, <vbox/>)
+						}, this.posters, <vbox/>)
 					}
 					<spacer flex="1" style="margin-top: 7px;" />
 					<button label="Post" disabled="true"/>

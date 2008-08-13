@@ -45,9 +45,23 @@ Tombloo.Service = {
 			}
 			
 			var config = eval(getPref('postConfig'));
-			return Tombloo.Service.post(ps, models.check(ps).filter(function(p){
+			var posters = models.check(ps).filter(function(p){
 				return config[p.name] && config[p.name][ps.type];
-			}));
+			});
+			
+			if(!posters.length){
+				var win = openDialog('chrome://tombloo/content/prefs.xul', 600, 500, 'resizable');
+				win.addEventListener('load', function(){
+					// load時は、まだダイアログが表示されていない
+					setTimeout(function(){
+						win.alert(getMessage('error.noPoster', ps.type.capitalize()));
+					}, 0);
+				}, false);
+				
+				return succeed({});
+			}
+			
+			return Tombloo.Service.post(ps, posters);
 		}).addErrback(function(err){
 			if(err instanceof CancelledError)
 				return;

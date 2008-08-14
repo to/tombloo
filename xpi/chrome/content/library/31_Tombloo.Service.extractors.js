@@ -266,7 +266,7 @@ Tombloo.Service.extractors = new Repository([
 		name : 'ReBlog - Dashboard',
 		ICON : 'chrome://tombloo/skin/reblog.ico',
 		check : function(ctx){
-			return ctx.href.match(Tumblr.TUMBLR_URL) && this.getLink(ctx);
+			return (/(tumblr-beta\.com|tumblr\.com)\//).test(ctx.href) && this.getLink(ctx);
 		},
 		extract : function(ctx){
 			ctx.href = this.getLink(ctx);

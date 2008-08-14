@@ -311,20 +311,27 @@ Tombloo.Service.extractors = new Repository([
 		ICON : models.Flickr.ICON,
 		
 		RE : new RegExp('^http://(?:.+?.)?static.flickr.com/\\d+?/(\\d+?)_.*'),
-		getImageId : function(img){
-			if(img.src.match('spaceball.gif'))
-				img = img.previousSibling;
+		getImageId : function(ctx){
+			if(ctx.host == 'flickr.com' && ctx.target.src.match('spaceball.gif')){
+				removeElement(ctx.target);
+				
+				if(currentDocument().elementFromPoint){
+					ctx.target = currentDocument().elementFromPoint(ctx.mouse.x, ctx.mouse.y);
+				} else {
+					ctx.target = ctx.target.previousSibling;
+				}
+			}
 			
-			if(!img || !img.src.match(this.RE))
+			if(!ctx.target || !ctx.target.src.match(this.RE))
 				return;
 			
 			return RegExp.$1;
 		},
 		check : function(ctx){
-			return ctx.onImage && this.getImageId(ctx.target);
+			return ctx.onImage && this.getImageId(ctx);
 		},
 		extract : function(ctx){
-			var id = this.getImageId(ctx.target);
+			var id = this.getImageId(ctx);
 			return new DeferredHash({
 				'info'  : Flickr.getInfo(id),
 				'sizes' : Flickr.getSizes(id),

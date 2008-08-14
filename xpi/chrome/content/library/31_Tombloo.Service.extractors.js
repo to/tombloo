@@ -602,23 +602,41 @@ Tombloo.Service.extractors = new Repository([
 		},
 	},
 	
-	// [FIXME] firefox 3
-	/*
+	{
+		name : 'Photo - coverd',
+		ICON : 'chrome://tombloo/skin/photo.png',
+		check : function(ctx){
+			if(!currentDocument().elementFromPoint || !ctx.onImage)
+				return;
+			
+			// 1px四方の画像の上でクリックされたか?
+			var img = IMG({src : ctx.target.src});
+			return (img.width==1 && img.height==1);
+		},
+		extract : function(ctx){
+			removeElement(ctx.target);
+			
+			return Tombloo.Service.extractors[ctx.bgImageURL? 
+				'Photo - background image' : 
+				'Photo - area element'].extract(ctx);
+		},
+	},
+	
 	{
 		name : 'Photo - area element',
+		ICON : 'chrome://tombloo/skin/photo.png',
 		check : function(ctx){
-			if(tagName(ctx.target)=='area')
-				return getElementByPosition(ctx.mouse.x, ctx.mouse.y).src;
+			if(currentDocument().elementFromPoint && tagName(ctx.target)=='area')
+				return true;
 		},
 		extract : function(ctx){
 			return {
 				type    : 'photo',
 				item    : ctx.title,
-				itemUrl : getElementByPosition(ctx.mouse.x, ctx.mouse.y).src, 
+				itemUrl : currentDocument().elementFromPoint(ctx.mouse.x, ctx.mouse.y).src, 
 			}
 		},
 	},
-	*/
 	
 	{
 		name : 'Photo - image link',

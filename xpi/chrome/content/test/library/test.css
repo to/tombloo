@@ -1,12 +1,12 @@
 body{
-	padding : 2em 5em;
-	font-size : 200%;
 	font-family : 'Arial Black', Arial, sans-serif;
+	font-size : 150%;
+	color : #999;
 }
 
 a{
+	color : #666;
 	text-decoration : none;
-	color : grey;
 	border-bottom : 3px solid;
 }
 
@@ -40,6 +40,32 @@ a{
 	background-color : red;
 }
 
-.tests_report {
-	width : 20em;
+.tests_report{
+	width : 100%;
+}
+
+table.tests_report iframe{
+	width : 100%;
+	height : 16em;
+	border : none;
+}
+
+table.tests_report td,
+table.tests_report th{
+	padding : 0.3em 0.5em;
+	color : white;
+}
+
+table.tests_report th{
+	background-color : #CCC;
+}
+
+table.tests_report td.passed{
+	background-color : lime;
+	cursor : pointer;
+}
+
+table.tests_report td.failed{
+	background-color : red;
+	cursor : pointer;
 }

@@ -643,6 +643,8 @@ connect(grobal, 'browser-load', function(e){
 });
 
 function reload(){
+	signal(grobal, 'context-reload');
+	
 	loadAllSubScripts();
 	getWindows().forEach(connectToBrowser);
 }

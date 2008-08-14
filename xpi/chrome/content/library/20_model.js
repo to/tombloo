@@ -18,7 +18,7 @@ models.register({
 	
 	post : function(ps){
 		if(!this.getAuthCookie())
-			throw new Error('AUTH_FAILD');
+			throw new Error(getMessage('error.notLoggedin'));
 		
 		var self = this;
 		return request('https://friendfeed.com/share/publish', {
@@ -70,7 +70,7 @@ models.register({
 					throw RegExp.$2;
 				
 				if(res.responseText.match('login'))
-					throw new Error('AUTH_FAILD');
+					throw new Error(getMessage('error.notLoggedin'));
 			});
 		});
 	},
@@ -259,7 +259,7 @@ models.register(update({
 		var status = this.updateSession();
 		switch (status){
 		case 'none':
-			throw new Error('AUTH_FAILD');
+			throw new Error(getMessage('error.notLoggedin'));
 			
 		case 'same':
 			if(this.token)
@@ -359,7 +359,7 @@ models.register({
 			},
 		}).addCallback(function(res){
 			if(!res.responseText.match('logout'))
-				throw new Error('AUTH_FAILD');
+				throw new Error(getMessage('error.notLoggedin'));
 		});
 	},
 	
@@ -372,7 +372,7 @@ models.register({
 			},
 		}).addCallback(function(res){
 			if(!res.responseText.match('logout'))
-				throw new Error('AUTH_FAILD');
+				throw new Error(getMessage('error.notLoggedin'));
 		});
 	},
 });
@@ -402,7 +402,7 @@ models.register({
 			},
 		}).addCallback(function(res){
 			if(!res.responseText.match('logout'))
-				throw new Error('AUTH_FAILD');
+				throw new Error(getMessage('error.notLoggedin'));
 		});
 	},
 
@@ -420,7 +420,7 @@ models.register({
 			},
 		}).addCallback(function(res){
 			if(res.channel.URI.asciiSpec.match('login')){
-				throw new Error('AUTH_FAILD');
+				throw new Error(getMessage('error.notLoggedin'));
 			}
 		});
 	},
@@ -545,7 +545,7 @@ models.register({
 		return request('http://twitter.com/account/settings').addCallback(function(res){
 			var html = res.responseText;
 			if(html.indexOf('signin')!=-1)
-				throw new Error('AUTH_FAILD');
+				throw new Error(getMessage('error.notLoggedin'));
 			
 			return {
 				authenticity_token : html.extract(/authenticity_token.+value="(.+?)"/),
@@ -601,7 +601,7 @@ models.register({
 		if(getCookieString('jaiku.com').match(/jaikuuser_.+?=(.+?);/))
 			return RegExp.$1;
 		
-		throw new Error('AUTH_FAILD');
+		throw new Error(getMessage('error.notLoggedin'));
 	},
 	
 	post : function(ps){
@@ -685,7 +685,7 @@ models.register({
 		}).addCallback(function(res){
 			var doc = convertToHTMLDocument(res.responseText);
 			if(doc.getElementById('gaia_loginform'))
-				throw new Error('AUTH_FAILD');
+				throw new Error(getMessage('error.notLoggedin'));
 			
 			var fs = formContents(doc);
 			return request('http://www.google.com'+$x('//form[@name="add_bkmk_form"]/@action', doc), {
@@ -729,7 +729,7 @@ models.register({
 		if(decodeURIComponent(getCookieString('delicious.com', '_user')).match(/user=(.*?) /))
 			return RegExp.$1;
 		
-		throw new Error('AUTH_FAILD');
+		throw new Error(getMessage('error.notLoggedin'));
 	},
 	
 	check : function(ps){
@@ -745,7 +745,7 @@ models.register({
 		}).addCallback(function(res){
 			var doc = convertToHTMLDocument(res.responseText);
 			if(!doc.getElementById('saveitem'))
-				throw new Error('AUTH_FAILD');
+				throw new Error(getMessage('error.notLoggedin'));
 			
 			return request('http://delicious.com'+$x('id("saveitem")/@action', doc), {
 				redirectionLimit : 0,
@@ -875,9 +875,8 @@ models.register({
 				'bookmark[selection]' : joinText([ps.body, ps.description], '\n', true),
 			},
 		}).addCallback(function(res){
-			if(res.channel.URI.asciiSpec.match('login')){
-				throw new Error('AUTH_FAILD');
-			}
+			if(res.channel.URI.asciiSpec.match('login'))
+				throw new Error(getMessage('error.notLoggedin'));
 		});
 	},
 });
@@ -948,7 +947,7 @@ models.register({
 	post : function(ps){
 		return request('http://bookmarks.yahoo.co.jp/action/post').addCallback(function(res){
 			if(res.responseText.indexOf('login_form')!=-1)
-				throw new Error('AUTH_FAILD');
+				throw new Error(getMessage('error.notLoggedin'));
 			
 			return formContents($x('(id("addbookmark")//form)[1]', convertToHTMLDocument(res.responseText)));
 		}).addCallback(function(fs){
@@ -978,7 +977,7 @@ models.register({
 				}, Components.utils.evalInSandbox(RegExp.$1, Components.utils.Sandbox('http://bookmarks.yahoo.co.jp/')), []);
 			}
 			
-			throw new Error('AUTH_FAILD');
+			throw new Error(getMessage('error.notLoggedin'));
 		});
 	},
 });
@@ -1043,7 +1042,7 @@ models.register(update({
 	getToken : function(){
 		switch (this.updateSession()){
 		case 'none':
-			throw new Error('AUTH_FAILD');
+			throw new Error(getMessage('error.notLoggedin'));
 			
 		case 'same':
 			if(this.token)
@@ -1151,7 +1150,7 @@ models.register({
 	getUserTags : function(){
 		return request(HatenaBookmark.POST_URL+'?mode=confirm').addCallback(function(res){
 			if(!res.responseText.match(/var tags ?=(.*);/))
-				throw new Error('AUTH_FAILD');
+				throw new Error(getMessage('error.notLoggedin'));
 			
 			return reduce(function(memo, tag){
 				memo.push({
@@ -1217,7 +1216,7 @@ models.register({
 	getToken : function(){
 		return request('http://s.hatena.ne.jp/entries.json').addCallback(function(res){
 			if(!res.responseText.match(/"rks":"(.*?)"/))
-				throw new Error('AUTH_FAILD');
+				throw new Error(getMessage('error.notLoggedin'));
 			return RegExp.$1;
 		})
 	},
@@ -1288,7 +1287,7 @@ models.register(update({
 	
 	getUserTags : function(){
 		if(!this.getAuthCookie())
-			return fail(new Error('AUTH_FAILD'));
+			return fail(new Error(getMessage('error.notLoggedin')));
 		
 		return request(LivedoorClip.POST_URL+'?link=http%3A%2F%2Ftombloo/').addCallback(function(res){
 			var doc = convertToHTMLDocument(res.responseText);
@@ -1304,7 +1303,7 @@ models.register(update({
 	getToken : function(){
 		switch (this.updateSession()){
 		case 'none':
-			throw new Error('AUTH_FAILD');
+			throw new Error(getMessage('error.notLoggedin'));
 		
 		case 'same':
 			if(this.token)
@@ -1317,7 +1316,7 @@ models.register(update({
 						self.token = RegExp.$1;
 						return self.token;
 					}
-					throw new Error('AUTH_FAILD');
+					throw new Error(getMessage('error.notLoggedin'));
 				});
 		}
 	},

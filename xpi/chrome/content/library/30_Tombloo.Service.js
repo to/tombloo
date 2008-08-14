@@ -62,16 +62,6 @@ Tombloo.Service = {
 		});
 	},
 	
-	alertPreference : function(type){
-		var win = openDialog('chrome://tombloo/content/prefs.xul', 600, 500, 'resizable');
-		win.addEventListener('load', function(){
-			// load時は、まだダイアログが表示されていない
-			setTimeout(function(){
-				win.alert(getMessage('error.noPoster', type.capitalize()));
-			}, 0);
-		}, false);
-	},
-	
 	/**
 	 * 対象のポスト先に一括でポストする。
 	 *
@@ -161,6 +151,21 @@ Tombloo.Service = {
 		if(confirm(getMessage('error.post', this.reprError(msg).indent(8), page, pageUrl))){
 			addTab(pageUrl);
 		}
+	},
+	
+	/**
+	 * 設定画面を開き指定を促す。
+	 *
+	 * @param {String} type ポストタイプ。
+	 */
+	alertPreference : function(type){
+		var win = openDialog('chrome://tombloo/content/prefs.xul', 600, 500, 'resizable');
+		win.addEventListener('load', function(){
+			// load時は、まだダイアログが表示されていない
+			setTimeout(function(){
+				win.alert(getMessage('error.noPoster', type.capitalize()));
+			}, 0);
+		}, false);
 	},
 	
 	/**

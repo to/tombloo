@@ -250,7 +250,7 @@ Tombloo.Service.extractors = new Repository([
 		extract : function(ctx){
 			return request(ctx.href).addCallback(function(res){
 				var doc = convertToHTMLDocument(res.responseText);
-				ctx.title = $x('//title/text()', doc) || '';
+				ctx.title = $x('//title/text()', doc).replace(/[\n\r]/g, '') || '';
 				
 				return {
 					type    : 'reblog',

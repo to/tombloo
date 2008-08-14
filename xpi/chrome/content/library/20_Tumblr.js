@@ -206,13 +206,13 @@ var Tumblr = update({}, AbstractSessionService, {
 			case Tumblr.TUMBLR_URL+'dashboard':
 				return;
 			case Tumblr.TUMBLR_URL+'login':
-				throw 'Not loggedin.';
+				throw new Error(getMessage('error.notLoggedin'));
 			case url:
 				if(res.responseText.match(/(exceeded|tomorrow)/))
-					throw "You've exceeded your daily post limit.";
+					throw new Error("You've exceeded your daily post limit.");
 			default:
 				error(res);
-				throw 'Error posting entry.';
+				throw new Error('Error posting entry.');
 			}
 		});
 	},
@@ -239,7 +239,7 @@ var Tumblr = update({}, AbstractSessionService, {
 			case Tumblr.TUMBLR_URL+'dashboard':
 				return;
 			case Tumblr.TUMBLR_URL+'login':
-				throw new Error('Not loggedin.');
+				throw new Error(getMessage('error.notLoggedin'));
 			case Tumblr.TUMBLR_URL+'new/photo':
 				if(res.responseText.match(/(exceeded|tomorrow)/))
 					throw new Error("You've exceeded your daily post limit.");

@@ -78,23 +78,6 @@ try {
 	is(Tumblr.trimReblogInfo(fields)['post[two]'], '<a href="http://www.tumblr.com/dashboard">Tumblr</a>');
 	
 	
-	// getReblogToken
-	sameObject(
-		Tumblr.getReblogToken('http://www.tumblr.com/dashboard/iframe?src=http%3A%2F%2Fpootee.tumblr.com%2Fpost%2F31573890&amp;pid=31573890&amp;rk=Vm1AnAen'), {
-			token : 'Vm1AnAen',
-			id    : '31573890',
-		});
-	sameObject(
-		Tumblr.getReblogToken('http://www.tumblr.com/reblog/31573890/Vm1AnAen?redirect_to=%2Fdashboard'), {
-			token : 'Vm1AnAen',
-			id    : '31573890',
-		});
-	sameObject(
-		Tumblr.getReblogToken('http://www.tumblr.com/reblog/31573890/Vm1AnAen'), {
-			token : 'Vm1AnAen',
-			id    : '31573890',
-		});
-	
 	/*
 	TEST OK
 	d.addCallback(request, 'http://to.tumblr.com/post/34424030');
@@ -107,12 +90,10 @@ try {
 	})
 	*/
 	
-	
 	/* 
 	// remove
 	d.addCallback(bind('remove', Tumblr), 18344636);
 	
-	// 現在Tumblr不調のため通らない可能性あり
 	d.addCallback(bind('getInfo', Tumblr), 'to', 'photo');
 	d.addCallback(function(info){
 		is(info.type, 'photo');
@@ -231,7 +212,6 @@ try {
 	}).addCallback(function(user){
 		ok(user.length > 0, 'ログインユーザー名を取得できるか?');
 	});
-	
 	
 	d.addCallback(function(){
 		return Tumblr.logout();

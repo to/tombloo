@@ -53,7 +53,7 @@ Tombloo.Service.extractors = new Repository([
 		extract : function(ctx){
 			with(Tombloo.Service.extractors){
 				LDR.getItem(ctx);
-				return ReBlog.extract(ctx);
+				return ReBlog.extractByLink(ctx, ctx.href);
 			}
 		},
 	},
@@ -228,37 +228,102 @@ Tombloo.Service.extractors = new Repository([
 	},
 	
 	{
-		name : 'ReBlog - Tumblr',
-		ICON : 'chrome://tombloo/skin/reblog.ico',
-		check : function(ctx){
-			return Tumblr.getReblogToken(currentDocument());
+		name : 'ReBlog',
+		extractByLink : function(ctx, link){
+			var self = this;
+			return request(link).addCallback(function(res){
+				var doc = convertToHTMLDocument(res.responseText);
+				ctx.href = link;
+				ctx.title = $x('//title/text()', doc).replace(/[\n\r]/g, '') || '';
+				
+				return self.extractByPage(ctx, doc);
+			});
 		},
-		extract : function(ctx){
-			return {
-				type    : 'reblog',
-				item    : ctx.title,
-				itemUrl : ctx.href,
-				token   : Tumblr.getReblogToken(currentDocument()),
+		
+		extractByPage : function(ctx, doc){
+			return this.extractByEndpoint(ctx, 
+				unescapeHTML(this.getFrameUrl(doc)).replace(/.+&pid=(.*)&rk=(.*)/, Tumblr.TUMBLR_URL+'reblog/$1/$2'));
+		},
+		
+		extractByEndpoint : function(ctx, endpoint){
+			var self = this;
+			return request(endpoint).addCallback(function(res){
+				var doc = convertToHTMLDocument(res.responseText);
+				
+				// フォーム値の取得と整形
+				var fields = formContents(doc);
+				Tumblr.trimReblogInfo(fields);
+				fields.redirect_to = Tumblr.TUMBLR_URL+'dashboard';
+				delete fields.preview_post;
+				
+				return update({
+					type    : fields['post[type]'],
+					item    : ctx.title,
+					itemUrl : ctx.href,
+					
+					reblog : {
+						endpoint : endpoint,
+						fields   : fields,
+					},
+				}, self.convertToParams(fields, doc));
+			})
+		},
+		
+		getFrameUrl : function(doc){
+			return $x('//iframe[starts-with(@src, "http://www.tumblr.com/dashboard/iframe")]/@src', doc);
+		},
+		
+		convertToParams	: function(fields, doc){
+			switch(fields['post[type]']){
+			case 'regular':
+				return {
+					type    : 'quote',
+					item    : fields['post[one]'],
+					body    : fields['post[two]'],
+				}
+				
+			case 'photo':
+				return {
+					itemUrl : $x('id("edit_post")//img[starts-with(@src, "http://media.tumblr.com/")]/@src', doc),
+					body    : fields['post[two]'],
+				}
+				
+			case 'link':
+				return {
+					item    : fields['post[one]'],
+					itemUrl : fields['post[two]'],
+					body    : fields['post[three]'],
+				};
+				
+			case 'quote':
+				// FIXME: post[two]検討
+				return {
+					body    : fields['post[one]'],
+				};
+				
+			case 'video':
+				// FIXME: post[one]検討
+				return {
+					body    : fields['post[two]'],
+				};
+				
+			case 'conversation':
+				return {
+					item : fields['post[one]'],
+					body : fields['post[two]'],
+				};
 			}
 		},
 	},
 	
 	{
-		name : 'ReBlog',
+		name : 'ReBlog - Tumblr',
 		ICON : 'chrome://tombloo/skin/reblog.ico',
-		check : function(ctx){},
+		check : function(ctx){
+			return Tombloo.Service.extractors.ReBlog.getFrameUrl(currentDocument());
+		},
 		extract : function(ctx){
-			return request(ctx.href).addCallback(function(res){
-				var doc = convertToHTMLDocument(res.responseText);
-				ctx.title = $x('//title/text()', doc).replace(/[\n\r]/g, '') || '';
-				
-				return {
-					type    : 'reblog',
-					item    : ctx.title,
-					itemUrl : ctx.href,
-					token   : Tumblr.getReblogToken(doc),
-				}
-			});
+			return Tombloo.Service.extractors.ReBlog.extractByPage(ctx, currentDocument());
 		},
 	},
 	
@@ -269,16 +334,11 @@ Tombloo.Service.extractors = new Repository([
 			return (/(tumblr-beta\.com|tumblr\.com)\//).test(ctx.href) && this.getLink(ctx);
 		},
 		extract : function(ctx){
-			ctx.href = this.getLink(ctx);
-			return Tombloo.Service.extractors.ReBlog.extract(ctx);
+			return Tombloo.Service.extractors.ReBlog.extractByEndpoint(ctx, this.getLink(ctx));
 		},
 		getLink : function(ctx){
-			var target = ctx.target;
-			var parent = tagName(target)=='li' ? target : $x('ancestor::li', target);
-			if(!parent)
-				return;
-			
-			return $x('.//a[@title="Permalink"]/@href', parent);
+			var link = $x('ancestor-or-self::li[starts-with(@class, "post")]//a[@class="reblog_link"]', ctx.target);
+			return link && link.href;
 		},
 	},
 	
@@ -289,8 +349,7 @@ Tombloo.Service.extractors = new Repository([
 			return ctx.href.match(/mosaic.html/i) && ctx.target.photo;
 		},
 		extract : function(ctx){
-			ctx.href = ctx.target.photo.url;
-			return Tombloo.Service.extractors.ReBlog.extract(ctx);
+			return Tombloo.Service.extractors.ReBlog.extractByLink(ctx, ctx.target.photo.url);
 		},
 	},
 	
@@ -301,8 +360,7 @@ Tombloo.Service.extractors = new Repository([
 			return ctx.link && ctx.link.href.match(/^http:\/\/[^.]+.tumblr\.com\/post\/\d+/);
 		},
 		extract : function(ctx){
-			ctx.href = ctx.link.href;
-			return Tombloo.Service.extractors.ReBlog.extract(ctx);
+			return Tombloo.Service.extractors.ReBlog.extractByLink(ctx, ctx.link.href);
 		},
 	},
 	

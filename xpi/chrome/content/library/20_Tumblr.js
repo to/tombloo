@@ -141,6 +141,12 @@ var Tumblr = update({}, AbstractSessionService, {
 		});
 	},
 	
+	/**
+	 * reblog情報を取り除く。
+	 *
+	 * @param {Array} fields reblogポストフォームのフィールドリスト。
+	 * @return {Deferred}
+	 */
 	trimReblogInfo : function(fields){
 		if(! getPref('trimReblogInfo'))
 		 return;
@@ -170,91 +176,66 @@ var Tumblr = update({}, AbstractSessionService, {
 		return fields;
 	},
 	
-	// document
-	// http://www.tumblr.com/reblog/34424030/z514XaLi?redirect_to=%2Fdashboard
-	// http://www.tumblr.com/dashboard/iframe?src=http%3A%2F%2Fto.tumblr.com%2Fpost%2F34424030&amp;pid=34424030&amp;rk=z514XaLi
-	getReblogToken : function(url){
-		if(url.getElementById)
-			url = $x('//iframe[starts-with(@src, "http://www.tumblr.com/dashboard/iframe")]/@src', url);
-		
-		if(!url)
-			return;
-		
-		url = unescapeHTML(url);
-		if(url.match(/&pid=(.*)&rk=(.*)/) || url.match('/reblog/(.*?)/([^\\?]*)')){
-			return {
-				id    : RegExp.$1,
-				token : RegExp.$2,
-			};
-		}
-	},
-	
-	reblog : function(id, token){
-		var url = Tumblr.TUMBLR_URL + 'reblog/' + id + '/' + token;
-		
-		return request(url).addCallback(function(res){
-			var fields = formContents(res.responseText);
-			Tumblr.trimReblogInfo(fields);
-			fields.redirect_to = Tumblr.TUMBLR_URL+'dashboard';
-			delete fields.preview_post;
-			
-			return request(url, {
-				sendContent : fields,
-			});
-		}).addCallback(function(res){
-			switch(res.channel.URI.asciiSpec.replace(/\?.*/,'')){
-			case Tumblr.TUMBLR_URL+'dashboard':
-				return;
-			case Tumblr.TUMBLR_URL+'login':
-				throw new Error(getMessage('error.notLoggedin'));
-			case url:
-				if(res.responseText.match(/(exceeded|tomorrow)/))
-					throw new Error("You've exceeded your daily post limit.");
-			default:
-				error(res);
-				throw new Error('Error posting entry.');
-			}
-		});
-	},
-	
+	/**
+	 * 新しいエントリー、または、reblogをポストする。
+	 * Tombloo.Service.extractors.ReBlogの各抽出メソッドを使いreblog情報を抽出できる。
+	 *
+	 * @param {Object} ps
+	 * @return {Deferred}
+	 */
 	post : function(ps){
-		if(ps.type == 'reblog')
-			return Tumblr.reblog(ps.token.id, ps.token.token);
-		
-		var url = Tumblr.TUMBLR_URL + 'new/' + ps.type;
-		return request(url).addCallback(function(res){
-			var form = formContents(res.responseText);
-			delete form.preview_post;
-			return request(url, {
-				sendContent : update(
-					form, 
-					Tumblr[capitalize(ps.type)].convertToForm(ps), {
-						'post[tags]' : (ps.tags && ps.tags.length)? joinText(ps.tags, ',') : '',
-						'post[is_private]' : ps.private==null? form['post[is_private]'] : (ps.private? 1 : 0),
-					}
-				),
+		var d = succeed();
+		if(ps.reblog){
+			var endpoint = ps.reblog.endpoint;
+			d.addCallback(request, endpoint, {
+				sendContent : ps.reblog.fields,
 			});
-		}).addCallback(function(res){
-			switch(res.channel.URI.asciiSpec.replace(/\?.*/,'')){
-			case Tumblr.TUMBLR_URL+'dashboard':
+		} else {
+			var endpoint = Tumblr.TUMBLR_URL + 'new/' + ps.type;
+			d.addCallback(request, endpoint);
+			d.addCallback(function(res){
+				var form = formContents(res.responseText);
+				delete form.preview_post;
+				return request(endpoint, {
+					sendContent : update(
+						form, 
+						Tumblr[ps.type.capitalize()].convertToForm(ps), {
+							'post[tags]' : (ps.tags && ps.tags.length)? joinText(ps.tags, ',') : '',
+							'post[is_private]' : ps.private==null? form['post[is_private]'] : (ps.private? 1 : 0),
+						}
+					),
+				});
+			});
+		}
+		
+		d.addCallback(function(res){
+			var url = res.channel.URI.asciiSpec.replace(/\?.*/,'');
+			switch(true){
+			case RegExp(Tumblr.TUMBLR_URL+'dashboard').test(url):
 				return;
-			case Tumblr.TUMBLR_URL+'login':
+			
+			case url == Tumblr.TUMBLR_URL+'login':
 				throw new Error(getMessage('error.notLoggedin'));
-			case Tumblr.TUMBLR_URL+'new/photo':
+			
+			case url == endpoint:
+				// このチェックをするためリダイレクトを追う必要がある
 				if(res.responseText.match(/(exceeded|tomorrow)/))
 					throw new Error("You've exceeded your daily post limit.");
+			
 			default:
 				error(res);
 				throw new Error('Error posting entry.');
 			}
 		});
+		
+		return d;
 	},
 	
 	openTab : function(ps){
 		if(ps.type == 'reblog')
 			return addTab(Tumblr.TUMBLR_URL + 'reblog/' + ps.token.id + '/' + ps.token.token +'?redirect_to='+encodeURIComponent(ps.pageUrl));
 		
-		var form = Tumblr[capitalize(ps.type)].convertToForm(ps);
+		var form = Tumblr[ps.type.capitalize()].convertToForm(ps);
 		return addTab(Tumblr.TUMBLR_URL+'new/' + ps.type).addCallback(function(win){
 			withDocument(win.document, function(){
 				populateForm(currentDocument().getElementById('edit_post'), form);
@@ -368,6 +349,7 @@ Tumblr.Regular = {
 			title : ''+ post['regular-title'],
 		});
 	},
+	
 	convertToForm : function(ps){
 		return {
 			'post[type]' : 'regular',
@@ -435,7 +417,7 @@ Tumblr.Video = {
 		return {
 			'post[type]' : 'video',
 			'post[one]'  : ps.body || ps.itemUrl,
-			'post[two]'   : joinText([
+			'post[two]'  : joinText([
 				ps.item.link(ps.pageUrl) + (ps.author? ' (via ' + ps.author.link(ps.authorUrl) + ')' : ''), 
 				ps.description], '\n\n'),
 		};

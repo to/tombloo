@@ -15,8 +15,11 @@ disconnectAll(grobal);
 if(typeof(constant)=='undefined')
 	constant = {};
 
-
 // ----[XPCOM]-------------------------------------------------
+function wrappedObject(obj){
+	return obj.wrappedJSObject || obj;
+}
+
 function getCookies(host, name){
 	var re = new RegExp(host + '$');
 	return filter(function(c){

@@ -545,10 +545,8 @@ connect(grobal, 'browser-load', function(e){
 		if(e.eventPhase != Event.AT_TARGET || (context && context.target == cwin.gContextMenu.target))
 			return;
 		
-		var doc = cwin.gContextMenu.target.ownerDocument;
-		var win = doc.defaultView;
-		win = win.wrappedJSObject || win;
-		
+		var doc = wrappedObject(cwin.gContextMenu.target.ownerDocument);
+		var win = wrappedObject(doc.defaultView);
 		try{
 			// about:config などで無効にする
 			win.location.host;
@@ -564,18 +562,19 @@ connect(grobal, 'browser-load', function(e){
 		
 		// [FIXME] selection文字列化再検討
 		// command時にはクリック箇所などの情報が失われるためコンテキストを保持しておく
-		context = update({
+		context = update({}, cwin.gContextMenu, win.location, {
 			document  : doc,
 			window    : win,
 			title     : ''+doc.title || '',
 			selection : ''+win.getSelection(),
+			target    : wrappedObject(cwin.gContextMenu.target),
 			event     : e,
 			mouse     : {
 				x : e.pageX,
 				y : e.pageY,
 			},
 			menu      : cwin.gContextMenu,
-		}, cwin.gContextMenu, win.location);
+		});
 		
 		var exts = Tombloo.Service.check(context);
 		menuShare.label = 'Share - ' + exts[0].name;

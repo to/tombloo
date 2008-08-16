@@ -1348,7 +1348,7 @@ models.copyTo(this);
 models.getDefaults = function(ps){
 	var config = eval(getPref('postConfig'));
 	return this.check(ps).filter(function(m){
-		return config[m.name] && config[m.name][ps.type];
+		return models.getPostConfig(config, m.name, ps) == 'default';
 	});
 }
 
@@ -1360,22 +1360,30 @@ models.getDefaults = function(ps){
  */
 models.getEnables = function(ps){
 	var config = eval(getPref('postConfig'));
-	function getPostConfigValue(name, type){
-		switch((config[name] || {})[type]){
-		case true:  return 'default';
-		case false: return 'enable';
-		case '':    return 'disable';
-		default:    return 'undefined';
-		}
-	}
-	
 	return this.check(ps).filter(function(m){
 		m.config = (m.config || {});
 		
 		// クイックポストフォームにて、取得後にデフォルトなのか利用可能なのかを
 		// 判定する必要があったため、サービスに設定値を保存し返す
-		var val = m.config[ps.type] = getPostConfigValue(m.name, ps.type);
+		var val = m.config[ps.type] = models.getPostConfig(config, m.name, ps);
 		return (/(default|enable)/).test(val);
 	});
 }
 
+/**
+ * ポスト設定値を文字列で取得する。
+ * 
+ * @param {Object} config ポスト設定。
+ * @param {String} name サービス名。
+ * @param {Object} ps ポスト情報。
+ * @return {String}
+ */
+models.getPostConfig = function(config, name, ps){
+	var c = config[name] || {};
+	switch((ps.favorite && ps.favorite.name==name)? c.favorite : c[ps.type]){
+	case true:  return 'default';
+	case false: return 'enable';
+	case '':    return 'disable';
+	default:    return 'undefined';
+	}
+}

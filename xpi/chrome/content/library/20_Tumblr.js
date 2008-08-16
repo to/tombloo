@@ -183,37 +183,53 @@ var Tumblr = update({}, AbstractSessionService, {
 	},
 	
 	/**
-	 * 新しいエントリー、または、reblogをポストする。
+	 * 新規エントリー、または、reblogをポストする。
 	 * Tombloo.Service.extractors.ReBlogの各抽出メソッドを使いreblog情報を抽出できる。
 	 *
 	 * @param {Object} ps
 	 * @return {Deferred}
 	 */
 	post : function(ps){
-		var d = succeed();
-		if(ps.favorite && ps.favorite.name == this.name){
-			var endpoint = ps.favorite.endpoint;
-			d.addCallback(request, endpoint, {
-				sendContent : ps.favorite.fields,
-			});
-		} else {
-			var endpoint = Tumblr.TUMBLR_URL + 'new/' + ps.type;
-			d.addCallback(request, endpoint);
-			d.addCallback(function(res){
+		var endpoint = Tumblr.TUMBLR_URL + 'new/' + ps.type;
+		return this.postForm(function(){
+			return request(endpoint).addCallback(function(res){
 				var form = formContents(res.responseText);
 				delete form.preview_post;
-				return request(endpoint, {
-					sendContent : update(
-						form, 
-						Tumblr[ps.type.capitalize()].convertToForm(ps), {
-							'post[tags]' : (ps.tags && ps.tags.length)? joinText(ps.tags, ',') : '',
-							'post[is_private]' : ps.private==null? form['post[is_private]'] : (ps.private? 1 : 0),
-						}
-					),
+				
+				update(form, Tumblr[ps.type.capitalize()].convertToForm(ps), {
+					'post[tags]' : (ps.tags && ps.tags.length)? joinText(ps.tags, ',') : '',
+					'post[is_private]' : ps.private==null? form['post[is_private]'] : (ps.private? 1 : 0),
 				});
+				
+				return request(endpoint, {sendContent : form});
 			});
-		}
-		
+		});
+	},
+	
+	/**
+	 * reblogする。
+	 *
+	 * @param {Object} ps
+	 * @return {Deferred}
+	 */
+	favor : function(ps){
+		return this.postForm(function(){
+			return request(ps.favorite.endpoint, {
+				sendContent : ps.favorite.fields,
+			})
+		});
+	},
+	
+	/**
+	 * フォームをポストする。
+	 * 新規エントリーとreblogのエラー処理をまとめる。
+	 *
+	 * @param {Function} fn
+	 * @return {Deferred}
+	 */
+	postForm : function(fn){
+		var d = succeed();
+		d.addCallback(fn);
 		d.addCallback(function(res){
 			var url = res.channel.URI.asciiSpec.replace(/\?.*/,'');
 			switch(true){
@@ -223,17 +239,15 @@ var Tumblr = update({}, AbstractSessionService, {
 			case url == Tumblr.TUMBLR_URL+'login':
 				throw new Error(getMessage('error.notLoggedin'));
 			
-			case url == endpoint:
+			default:
 				// このチェックをするためリダイレクトを追う必要がある
 				if(res.responseText.match(/(exceeded|tomorrow)/))
 					throw new Error("You've exceeded your daily post limit.");
-			
-			default:
+				
 				error(res);
 				throw new Error('Error posting entry.');
 			}
 		});
-		
 		return d;
 	},
 	

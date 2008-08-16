@@ -333,6 +333,7 @@ Windows Firefox 2にてpngをマウスカーソルにすると透過できなか
 		var models = document.getElementById('posters');
 		var config = eval(env.getPref('postConfig'));
 		env.values(env.models).forEach(function(model){
+			// インターフェースが実装されているポスト対象のサービスでない場合は処理しない
 			if(!model.check)
 				return;
 			
@@ -347,19 +348,19 @@ Windows Firefox 2にてpngをマウスカーソルにすると透過できなか
 			</row>;
 			
 			env.reduce(function(memo, type){
-				var elm = memo.appendChild(model.check({
+				var postable = (type=='favorite')? !!model.favor : model.check({
 					type : type,
 					pageUrl : {
-						match: function(){
-							return true
-						}
+						match: function(){return true}
 					},
-				})? <checkbox 
-					type={type} model={model.name} 
-					checked={conf[type] === true} disabled={conf[type] === ''}/> : <spacer/>);
+				});
+				var elm = memo.appendChild(!postable? <spacer/> : 
+					<checkbox 
+						type={type} model={model.name} 
+						checked={conf[type] === true} disabled={conf[type] === ''}/>);
 				
 				return memo;
-			}, ['regular', 'photo', 'quote', 'link', 'video', 'conversation', 'reblog'], row);
+			}, 'regular photo quote link video conversation favorite'.split(' '), row);
 			models.appendChild(env.convertToXULElement(row));
 		});
 		

@@ -5,7 +5,7 @@ models.register({
 	name : 'FriendFeed',
 	ICON : 'http://friendfeed.com/favicon.ico',
 	check : function(ps){
-		return ps.type != 'regular' && !ps.file;
+		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
 	
 	getAuthCookie : function(){
@@ -467,13 +467,7 @@ models.register({
 	ICON : 'chrome://tombloo/skin/local.ico',
 	
 	check : function(ps){
-		switch (ps.type){
-		case 'photo':
-		case 'regular':
-		case 'quote':
-		case 'link':
-			return true;
-		}
+		return (/(regular|photo|quote|link)/).test(ps.type);
 	},
 	
 	post : function(ps){
@@ -538,7 +532,7 @@ models.register({
 	ICON : 'http://twitter.com/favicon.ico',
 	
 	check : function(ps){
-		return !ps.file;
+		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
 	
 	getToken : function(){
@@ -594,7 +588,7 @@ models.register({
 	URL : 'http://jaiku.com/',
 	
 	check : function(ps){
-		return !ps.file;
+		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
 	
 	getCurrentUser : function(){
@@ -674,7 +668,7 @@ models.register({
 	ICON : models.Google.ICON,
 	
 	check : function(ps){
-		return ps.type!='regular' && !ps.file;
+		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
 	
 	post : function(ps){
@@ -733,7 +727,7 @@ models.register({
 	},
 	
 	check : function(ps){
-		return ps.type!='regular' && !ps.file;
+		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
 	
 	post : function(ps){
@@ -863,7 +857,7 @@ models.register({
 	ICON : 'chrome://tombloo/skin/instapaper.ico',
 	
 	check : function(ps){
-		return ps.type == 'link' || ps.type == 'quote';
+		return (/(quote|link)/).test(ps.type) && !ps.file;
 	},
 	
 	post : function(ps){
@@ -941,7 +935,7 @@ models.register({
 	ICON : 'http://bookmarks.yahoo.co.jp/favicon.ico',
 	
 	check : function(ps){
-		return ps.type!='regular' && !ps.file;
+		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
 	
 	post : function(ps){
@@ -1124,7 +1118,7 @@ models.register({
 	POST_URL : 'http://b.hatena.ne.jp/add',
 	
 	check : function(ps){
-		return ps.type!='regular' && !ps.file;
+		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
 	
 	post : function(ps){
@@ -1170,7 +1164,7 @@ models.register( {
 	
 	/*
 	check : function(ps){
-		return ps.type.match(/^(regular|photo|link|quote)$/);
+		return (/(regular|photo|quote|link)/).test(ps.type) && !ps.file;
 	},
 	*/
 	converters: {
@@ -1222,7 +1216,7 @@ models.register({
 	},
 	
 	check : function(ps){
-		return ps.type!='regular' && !ps.file;
+		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
 	
 	post : function(ps){
@@ -1260,7 +1254,7 @@ models.register(update({
 	POST_URL : 'http://clip.livedoor.com/clip/add',
 
 	check : function(ps){
-		return ps.type!='regular' && !ps.file;
+		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
 	
 	post : function(ps){
@@ -1327,7 +1321,7 @@ models.register({
 	ICON : 'http://wassr.jp/favicon.ico',
 	
 	check : function(ps){
-		return !ps.file;
+		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
 	
 	post : function(ps){

@@ -5,10 +5,6 @@ var Tumblr = update({}, AbstractSessionService, {
 	TUMBLR_URL : 'http://www.tumblr.com/',
 	PAGE_LIMIT : 50,
 	
-	check : function(ps){
-		return true;
-	},
-	
 	splitRequests : function(count){
 		var res = [];
 		var limit = Tumblr.PAGE_LIMIT;
@@ -174,6 +170,10 @@ var Tumblr = update({}, AbstractSessionService, {
 		}
 		
 		return fields;
+	},
+	
+	check : function(ps){
+		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type);
 	},
 	
 	/**

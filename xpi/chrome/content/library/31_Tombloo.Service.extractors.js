@@ -124,10 +124,14 @@ Tombloo.Service.extractors = new Repository([
 			}
 			
 			return {
-				type    : 'quote',
-				item    : ctx.title.substring(0, ctx.title.indexOf(': ')),
-				itemUrl : ctx.href,
-				body    : body.trim(),
+				type     : 'quote',
+				item     : ctx.title.substring(0, ctx.title.indexOf(': ')),
+				itemUrl  : ctx.href,
+				body     : body.trim(),
+				favorite : {
+					name : 'Twitter',
+					id   : ctx.href.match(/statuses\/(\d+)/)[1],
+				},
 			}
 		},
 	},

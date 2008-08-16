@@ -535,6 +535,21 @@ models.register({
 		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
 	
+	post : function(ps){
+		return Twitter.getToken().addCallback(function(token){
+			// FIXME: 403が発生することがあったため redirectionLimit:0 を外す
+			token.status = joinText([ps.item, ps.itemUrl, ps.body, ps.description], ' ', true);
+			return request('http://twitter.com/status/update', update({
+				sendContent : token,
+			}));
+		});
+	},
+	
+	favor : function(ps){
+		return this.addFavorite(ps.favorite.id);
+	},
+	
+	
 	getToken : function(){
 		return request('http://twitter.com/account/settings').addCallback(function(res){
 			var html = res.responseText;
@@ -545,16 +560,6 @@ models.register({
 				authenticity_token : html.extract(/authenticity_token.+value="(.+?)"/),
 				siv                : html.extract(/logout\?siv=(.+?)"/),
 			}
-		});
-	},
-	
-	post : function(ps){
-		return Twitter.getToken().addCallback(function(token){
-			// FIXME: 403が発生することがあったため redirectionLimit:0 を外す
-			token.status = joinText([ps.item, ps.itemUrl, ps.body, ps.description], ' ', true);
-			return request('http://twitter.com/status/update', update({
-				sendContent : token,
-			}));
 		});
 	},
 	

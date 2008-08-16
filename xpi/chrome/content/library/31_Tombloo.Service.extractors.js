@@ -77,6 +77,10 @@ Tombloo.Service.extractors = new Repository([
 				itemUrl   : ctx.target.src.replace(/_m(\..{3})/, '$1'),
 				author    : item.author,
 				authorUrl : 'http://ffffound.com/home/' + item.author + '/found/',
+				favorite : {
+					name : 'FFFFOUND',
+					id   : ctx.href.split('/').pop(),
+				},
 			};
 		},
 	},
@@ -614,7 +618,7 @@ Tombloo.Service.extractors = new Repository([
 			} else {
 				var d = request(ctx.link.href).addCallback(function(res){
 					// 相対パスを処理するためdocumentを渡す
-					var doc =  convertToHTMLDocument(res.responseText, ctx.document);
+					var doc = convertToHTMLDocument(res.responseText, ctx.document);
 					
 					ctx.href = ctx.link.href;
 					ctx.target = $x('(//img[starts-with(@id, "asset")])', doc);
@@ -627,12 +631,19 @@ Tombloo.Service.extractors = new Repository([
 				var author = $x('//div[@class="saved_by"]/a[1]', doc);
 				ctx.title = $x('//title/text()', doc) || '';
 				
+				var uri = createURI(ctx.href);
+				ctx.href = uri.prePath + uri.filePath;
+				
 				return {
 					type      : 'photo',
 					item      : $x('//div[@class="title"]/a/text()', doc).trim(),
 					itemUrl   : ctx.target.src.replace(/_m(\..{3})$/, '$1'),
 					author    : author.textContent,
 					authorUrl : author.href,
+					favorite : {
+						name : 'FFFFOUND',
+						id   : ctx.href.split('/').pop(),
+					},
 				}
 			});
 			

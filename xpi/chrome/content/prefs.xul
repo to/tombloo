@@ -136,37 +136,35 @@ Windows Firefox 2にてpngをマウスカーソルにすると透過できなか
 			</tabs>
 			<tabpanels flex="1">
 				<tabpanel id="postConfig">
-					<vbox flex="1" style="overflow:auto">
-						<grid flex="1">
-							<columns>
-								<column/>
-								<column/>
-								<column/>
-								<column/>
-								<column/>
-								<column/>
-								<column/>
-								<column/>
-								<column/>
-							</columns>
-							<rows id="posters">
-								<row align="center">
-									<spacer />
-									<spacer />
-									<label value="Text"/>
-									<label value="Photo"/>
-									<label value="Quote"/>
-									<label value="Link"/>
-									<label value="Video"/>
-									<label value="Chat"/>
-									<vbox align="center">
-										<label value="Reblog"/>
-										<label value="Favorite"/>
-									</vbox>
-								</row>
-							</rows>
-						</grid>
-					</vbox>
+					<grid flex="1" style="overflow:auto">
+						<columns>
+							<column/>
+							<column/>
+							<column/>
+							<column/>
+							<column/>
+							<column/>
+							<column/>
+							<column/>
+							<column/>
+						</columns>
+						<rows id="posters">
+							<row align="center">
+								<spacer />
+								<spacer />
+								<label value="Text"/>
+								<label value="Photo"/>
+								<label value="Quote"/>
+								<label value="Link"/>
+								<label value="Video"/>
+								<label value="Chat"/>
+								<vbox align="center">
+									<label value="Reblog"/>
+									<label value="Favorite"/>
+								</vbox>
+							</row>
+						</rows>
+					</grid>
 				</tabpanel>
 				<tabpanel>
 					<grid flex="1">

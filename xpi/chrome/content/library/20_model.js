@@ -51,11 +51,6 @@ models.register({
 	},
 	
 	post : function(ps){
-		if(ps.pageUrl.match('^http://ffffound.com/')){
-			var id = ps.itemUrl.split('/').pop().replace(/[_\.].+/, '');
-			return this.iLoveThis(id)
-		}
-		
 		return this.getToken().addCallback(function(token){
 			return request(FFFFOUND.URL + 'add_asset', {
 				referrer : ps.pageUrl,
@@ -74,7 +69,11 @@ models.register({
 			});
 		});
 	},
-
+	
+	favor : function(ps){
+		return this.iLoveThis(ps.favorite.id)
+	},
+	
 	remove : function(id){
 		// 200 {"success":false}
 		return request(FFFFOUND.URL + 'gateway/in/api/remove_asset', {

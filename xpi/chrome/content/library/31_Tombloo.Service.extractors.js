@@ -261,7 +261,8 @@ Tombloo.Service.extractors = new Repository([
 					item    : ctx.title,
 					itemUrl : ctx.href,
 					
-					reblog : {
+					favorite : {
+						name     : 'Tumblr',
 						endpoint : endpoint,
 						fields   : fields,
 					},

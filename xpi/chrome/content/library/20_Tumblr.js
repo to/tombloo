@@ -172,6 +172,12 @@ var Tumblr = update({}, AbstractSessionService, {
 		return fields;
 	},
 	
+	/**
+	 * ポスト可能かをチェックする。
+	 *
+	 * @param {Object} ps
+	 * @return {Boolean}
+	 */
 	check : function(ps){
 		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type);
 	},
@@ -185,10 +191,10 @@ var Tumblr = update({}, AbstractSessionService, {
 	 */
 	post : function(ps){
 		var d = succeed();
-		if(ps.reblog){
-			var endpoint = ps.reblog.endpoint;
+		if(ps.favorite && ps.favorite.name == this.name){
+			var endpoint = ps.favorite.endpoint;
 			d.addCallback(request, endpoint, {
-				sendContent : ps.reblog.fields,
+				sendContent : ps.favorite.fields,
 			});
 		} else {
 			var endpoint = Tumblr.TUMBLR_URL + 'new/' + ps.type;

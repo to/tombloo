@@ -186,10 +186,6 @@ models.register(update({
 	ICON : 'http://www.flickr.com/favicon.ico',
 	API_KEY : 'ecf21e55123e4b31afa8dd344def5cc5',
 	
-	getAuthCookie : function(){
-		return getCookieString('flickr.com', 'cookie_accid');
-	},
-	
 	check : function(ps){
 		// Favoriteまたはキャプチャか
 		// itemUrlをチェックしPhoto - Upload from Cacheを避ける
@@ -198,17 +194,19 @@ models.register(update({
 	},
 	
 	post : function(ps){
-		if(ps.file){
-			return this.upload({
-				photo       : ps.file,
-				title       : ps.page || '',
-				description : ps.description || '',
-				is_public   : ps.private? 0 : 1,
-				tags        : joinText(ps.tags, ' '),
-			});
-		} else {
-			return this.addFavorite(ps.pageUrl.replace(/\/$/, '').split('/').pop());
-		}
+		if(!ps.file)
+			return;
+		return this.upload({
+			photo       : ps.file,
+			title       : ps.page || '',
+			description : ps.description || '',
+			is_public   : ps.private? 0 : 1,
+			tags        : joinText(ps.tags, ' '),
+		});
+	},
+	
+	favor : function(ps){
+		return this.addFavorite(ps.favorite.id);
 	},
 	
 	callMethod : function(ps){
@@ -334,6 +332,10 @@ models.register(update({
 		}, ps)).addCallback(function(res){
 			return ''+res.photoid;
 		});
+	},
+	
+	getAuthCookie : function(){
+		return getCookieString('flickr.com', 'cookie_accid');
 	},
 }, AbstractSessionService));
 

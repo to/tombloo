@@ -415,6 +415,10 @@ Tombloo.Service.extractors = new Repository([
 					itemUrl   : sizes.pop().source,
 					author    : info.owner.username,
 					authorUrl : ctx.href.extract('^(http://.*?flickr.com/photos/.+?/)'),
+					favorite  : {
+						name : 'Flickr',
+						id   : id,
+					},
 				}
 			});
 		},

@@ -439,7 +439,10 @@ Tombloo.Service.extractors = new Repository([
 				itemUrl   : ctx.target.src,
 				author    : author.textContent.trim(),
 				authorUrl : author.href,
-				id        : iLoveHer && decodeURIComponent(iLoveHer.extract('src=([^&]*)')),
+				favorite : {
+					name : '4u',
+					id : iLoveHer && decodeURIComponent(iLoveHer.extract('src=([^&]*)')),
+				}
 			};
 		},
 	},

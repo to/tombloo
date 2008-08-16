@@ -395,9 +395,6 @@ models.register({
 	},
 	
 	post : function(ps){
-		if(ps.pageUrl.match('^http://4u.straightline.jp/image/'))
-			return this.iLoveHer(ps);
-		
 		return request(this.URL + 'power/manage/register', {
 			referrer : ps.pageUrl,
 			queryString : {
@@ -408,27 +405,25 @@ models.register({
 				bookmarklet : 1,
 			},
 		}).addCallback(function(res){
-			if(!res.responseText.match('logout'))
+			if(res.channel.URI.asciiSpec.match('login'))
 				throw new Error(getMessage('error.notLoggedin'));
 		});
 	},
 	
-	iLoveHer : function(ps){
-		// request(ps.pageUrl)
-		// FIXME: id
-		if(!ps.id)
-			return;
-		
+	favor : function(ps){
+		return this.iLoveHer(ps.favorite.id);
+	},
+	
+	iLoveHer : function(id){
 		return request(this.URL + 'user/manage/do_register', {
 			redirectionLimit : 0,
-			referrer : ps.pageUrl,
+			referrer : this.URL,
 			queryString : {
-				src : ps.id,
+				src : id,
 			},
 		}).addCallback(function(res){
-			if(res.channel.URI.asciiSpec.match('login')){
+			if(res.channel.URI.asciiSpec.match('login'))
 				throw new Error(getMessage('error.notLoggedin'));
-			}
 		});
 	},
 });

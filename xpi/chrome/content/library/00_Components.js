@@ -332,7 +332,7 @@ function createURI(path){
 		var path = (path instanceof IFile) ? path : new LocalFile(path);
 		return IOService.newFileURI(path)	;
 	}catch(e if e.name=='NS_ERROR_FILE_UNRECOGNIZED_PATH'){	}
-	return IOService.newURI(path, null, null);
+	return IOService.newURI(path, null, null).QueryInterface(Ci.nsIURL);
 }
 
 /**

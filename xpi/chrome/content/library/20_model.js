@@ -1095,13 +1095,16 @@ models.register({
 	ICON : 'http://f.hatena.ne.jp/favicon.ico',
 	
 	check : function(ps){
-		return ps.type=='photo' && ps.file;
+		return ps.type=='photo';
 	},
 	
 	post : function(ps){
-		return this.upload({
-			image1     : ps.file,
-			fototitle1 : ps.page,
+		// 拡張子を指定しないとアップロードに失敗する(エラーは起きない)
+		return (ps.file? succeed(ps.file) : download(ps.itemUrl, getTempFile(createURI(ps.itemUrl).fileExtension))).addCallback(function(file){
+			return models.HatenaFotolife.upload({
+				fototitle1 : ps.item || ps.page,
+				image1     : file,
+			});
 		});
 	},
 	

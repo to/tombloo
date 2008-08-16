@@ -187,21 +187,18 @@ models.register(update({
 	API_KEY : 'ecf21e55123e4b31afa8dd344def5cc5',
 	
 	check : function(ps){
-		// Favoriteまたはキャプチャか
-		// itemUrlをチェックしPhoto - Upload from Cacheを避ける
-		return ps.type == 'photo' && 
-			(ps.pageUrl.match('^http://www.flickr.com/photos/') || (!ps.itemUrl && ps.file));
+		return ps.type == 'photo';
 	},
 	
 	post : function(ps){
-		if(!ps.file)
-			return;
-		return this.upload({
-			photo       : ps.file,
-			title       : ps.page || '',
-			description : ps.description || '',
-			is_public   : ps.private? 0 : 1,
-			tags        : joinText(ps.tags, ' '),
+		return (ps.file? succeed(ps.file) : download(ps.itemUrl, getTempFile())).addCallback(function(file){
+			return models.Flickr.upload({
+				photo       : file,
+				title       : ps.item || ps.page || '',
+				description : ps.description || '',
+				is_public   : ps.private? 0 : 1,
+				tags        : joinText(ps.tags, ' '),
+			});
 		});
 	},
 	
@@ -382,6 +379,7 @@ models.register({
 	},
 	
 	getAuthCookie : function(){
+		// クッキーの動作が不安定なため2つをチェックし真偽値を返す
 		return getCookieString('weheartit.com', 'password') && getCookieString('weheartit.com', 'name');
 	},
 });
@@ -414,7 +412,7 @@ models.register({
 				throw new Error(getMessage('error.notLoggedin'));
 		});
 	},
-
+	
 	iLoveHer : function(ps){
 		// request(ps.pageUrl)
 		// FIXME: id

@@ -349,33 +349,40 @@ models.register({
 	},
 	
 	post : function(ps){
-		if(ps.pageUrl.match('^http://weheartit.com/'))
-			return this.iHeartIt(ps.source.split('/').pop());
+		if(!this.getAuthCookie())
+			return fail(new Error(getMessage('error.notLoggedin')));
 		
-		return request(WeHeartIt.URL + 'add.php', {
+		return request(this.URL + 'add.php', {
+			redirectionLimit : 0,
 			referrer : ps.pageUrl,
 			queryString : {
 				via   : ps.pageUrl,
 				title : ps.item,
 				img   : ps.itemUrl,
 			},
-		}).addCallback(function(res){
-			if(!res.responseText.match('logout'))
-				throw new Error(getMessage('error.notLoggedin'));
 		});
 	},
 	
+	favor : function(ps){
+		return this.iHeartIt(ps.favorite.id);
+	},
+	
 	iHeartIt : function(id){
-		return request(WeHeartIt.URL + 'inc_heartedby.php', {
-			referrer : ps.pageUrl,
+		if(!this.getAuthCookie())
+			return fail(new Error(getMessage('error.notLoggedin')));
+		
+		return request(this.URL + 'inc_heartedby.php', {
+			redirectionLimit : 0,
+			referrer : this.URL,
 			queryString : {
 				do    : 'heart',
 				entry : id,
 			},
-		}).addCallback(function(res){
-			if(!res.responseText.match('logout'))
-				throw new Error(getMessage('error.notLoggedin'));
 		});
+	},
+	
+	getAuthCookie : function(){
+		return getCookieString('weheartit.com', 'password') && getCookieString('weheartit.com', 'name');
 	},
 });
 

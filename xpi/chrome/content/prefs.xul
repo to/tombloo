@@ -150,7 +150,7 @@ Windows Firefox 2にてpngをマウスカーソルにすると透過できなか
 								<column/>
 							</columns>
 							<rows id="posters">
-								<row>
+								<row align="center">
 									<spacer />
 									<spacer />
 									<label value="Text"/>
@@ -159,7 +159,10 @@ Windows Firefox 2にてpngをマウスカーソルにすると透過できなか
 									<label value="Link"/>
 									<label value="Video"/>
 									<label value="Chat"/>
-									<label value="Reblog"/>
+									<vbox align="center">
+										<label value="Reblog"/>
+										<label value="Favorite"/>
+									</vbox>
 								</row>
 							</rows>
 						</grid>

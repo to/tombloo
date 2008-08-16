@@ -159,7 +159,7 @@ QuickPostForm.prototype = {
 	},
 	
 	/**
-	 * ポスト可能かをチェックする。
+	 * ポスト可能かを調べる。
 	 * サービスが選択されていなければポストボタンを利用不能にする。
 	 */
 	checkPostable : function(){
@@ -167,10 +167,6 @@ QuickPostForm.prototype = {
 	},
 	
 	show : function(){
-		// FIXME: 暫定処理(reblog/favorites/starの整理)
-		if(this.params.type == 'reblog')
-			return Tumblr.openTab(this.params);
-		
 		var self = this;
 		var contentWindow = getMostRecentWindow().getBrowser().contentWindow;
 		var selection = broad(contentWindow.getSelection());

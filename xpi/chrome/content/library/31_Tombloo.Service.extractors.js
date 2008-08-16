@@ -445,6 +445,30 @@ Tombloo.Service.extractors = new Repository([
 	},
 	
 	{
+		name : 'Photo - We Heart It',
+		ICON : models.WeHeartIt.ICON,
+		check : function(ctx){
+			return ctx.onImage && 
+				ctx.href.match('^http://weheartit.com/entry/') && 
+				ctx.target.src.match('^http://weheartit.com/images/');
+		},
+		extract : function(ctx){
+			var author = $x('(//p[@class="hearters"]/a[@class="user"])[1]');
+			return {
+				type      : 'photo',	
+				item      : $x('id("content")//h3/text()'),
+				itemUrl   : ctx.target.src,
+				author    : author.textContent.trim(),
+				authorUrl : author.href,
+				favorite  : {
+					name : 'WeHeartIt',
+					id   : ctx.href.split('/').pop(),
+				},
+			};
+		},
+	},
+	
+	{
 		name : 'Photo - Snipshot',
 		ICON : models.Snipshot.ICON,
 		check : function(ctx){

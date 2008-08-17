@@ -358,7 +358,7 @@ Windows Firefox 2にてpngをマウスカーソルにすると透過できなか
 				var elm = memo.appendChild(!postable? <spacer/> : 
 					<checkbox 
 						type={type} model={model.name} 
-						checked={conf[type] === true} disabled={conf[type] === ''}/>);
+						checked={conf[type] == 'default'} disabled={conf[type] == 'disabled'}/>);
 				
 				return memo;
 			}, 'regular photo quote link video conversation favorite'.split(' '), row);
@@ -447,7 +447,8 @@ Windows Firefox 2にてpngをマウスカーソルにすると透過できなか
 				if(!posters[name])
 					posters[name] = {};
 				posters[name][checkbox.getAttribute('type')] = 
-					checkbox.disabled? '' : checkbox.checked;
+					(checkbox.disabled)? 'disabled' : 
+					(checkbox.checked)? 'default' : 'enabled';
 			});
 			
 			env.setPref('postConfig', uneval(posters));

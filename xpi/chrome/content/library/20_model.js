@@ -1385,10 +1385,5 @@ models.getEnables = function(ps){
  */
 models.getPostConfig = function(config, name, ps){
 	var c = config[name] || {};
-	switch((ps.favorite && ps.favorite.name==name)? c.favorite : c[ps.type]){
-	case true:  return 'default';
-	case false: return 'enable';
-	case '':    return 'disable';
-	default:    return 'undefined';
-	}
+	return (ps.favorite && ps.favorite.name==name)? c.favorite : c[ps.type];
 }

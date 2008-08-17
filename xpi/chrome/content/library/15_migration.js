@@ -24,5 +24,9 @@
 			config.favorite = 'enabled';
 	});
 	
+	// 0.3.11Ç≈ÇÕfavoriteÇÃà”ñ°ÇµÇ©Ç»Ç©Ç¡ÇΩÇΩÇﬂÇªÇÃÇ‹Ç‹à⁄çsÇµÇ»Ç¢
+	if(configs.Flickr.photo == 'default')
+		configs.Flickr.photo = 'enabled';
+	
 	setPref('postConfig', uneval(configs));
 })()

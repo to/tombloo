@@ -255,26 +255,17 @@ Tombloo.Service.extractors = new Repository([
 		
 		extractByEndpoint : function(ctx, endpoint){
 			var self = this;
-			return request(endpoint).addCallback(function(res){
-				var doc = convertToHTMLDocument(res.responseText);
-				
-				// フォーム値の取得と整形
-				var fields = formContents(doc);
-				Tumblr.trimReblogInfo(fields);
-				fields.redirect_to = Tumblr.TUMBLR_URL+'dashboard';
-				delete fields.preview_post;
-				
+			return Tumblr.getForm(endpoint).addCallback(function(form){
 				return update({
-					type    : fields['post[type]'],
-					item    : ctx.title,
-					itemUrl : ctx.href,
-					
+					type     : form['post[type]'],
+					item     : ctx.title,
+					itemUrl  : ctx.href,
 					favorite : {
 						name     : 'Tumblr',
 						endpoint : endpoint,
-						fields   : fields,
+						form     : form,
 					},
-				}, self.convertToParams(fields, doc));
+				}, self.convertToParams(form));
 			})
 		},
 		
@@ -282,44 +273,44 @@ Tombloo.Service.extractors = new Repository([
 			return $x('//iframe[starts-with(@src, "http://www.tumblr.com/dashboard/iframe")]/@src', doc);
 		},
 		
-		convertToParams	: function(fields, doc){
-			switch(fields['post[type]']){
+		convertToParams	: function(form){
+			switch(form['post[type]']){
 			case 'regular':
 				return {
 					type    : 'quote',
-					item    : fields['post[one]'],
-					body    : fields['post[two]'],
+					item    : form['post[one]'],
+					body    : form['post[two]'],
 				}
 				
 			case 'photo':
 				return {
-					itemUrl : $x('id("edit_post")//img[starts-with(@src, "http://media.tumblr.com/")]/@src', doc),
-					body    : fields['post[two]'],
+					itemUrl : form.image,
+					body    : form['post[two]'],
 				}
 				
 			case 'link':
 				return {
-					item    : fields['post[one]'],
-					itemUrl : fields['post[two]'],
-					body    : fields['post[three]'],
+					item    : form['post[one]'],
+					itemUrl : form['post[two]'],
+					body    : form['post[three]'],
 				};
 				
 			case 'quote':
 				// FIXME: post[two]検討
 				return {
-					body    : fields['post[one]'],
+					body    : form['post[one]'],
 				};
 				
 			case 'video':
 				// FIXME: post[one]検討
 				return {
-					body    : fields['post[two]'],
+					body    : form['post[two]'],
 				};
 				
 			case 'conversation':
 				return {
-					item : fields['post[one]'],
-					body : fields['post[two]'],
+					item : form['post[one]'],
+					body : form['post[two]'],
 				};
 			}
 		},
@@ -346,7 +337,7 @@ Tombloo.Service.extractors = new Repository([
 			return Tombloo.Service.extractors.ReBlog.extractByEndpoint(ctx, this.getLink(ctx));
 		},
 		getLink : function(ctx){
-			var link = $x('ancestor-or-self::li[starts-with(@class, "post")]//a[@class="reblog_link"]', ctx.target);
+			var link = $x('./ancestor-or-self::li[starts-with(@class, "post")]//a[@class="reblog_link"]', ctx.target);
 			return link && link.href;
 		},
 	},

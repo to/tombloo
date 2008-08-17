@@ -5,64 +5,31 @@ var Tumblr = update({}, AbstractSessionService, {
 	TUMBLR_URL : 'http://www.tumblr.com/',
 	PAGE_LIMIT : 50,
 	
-	splitRequests : function(count){
-		var res = [];
-		var limit = Tumblr.PAGE_LIMIT;
-		for(var i=0,len=Math.ceil(count/limit) ; i<len ; i++){
-			res.push([i*limit, limit]);
-		}
-		count%limit && (res[res.length-1][1] = count%limit);
-		return res;
-	},
-	
-	normalizeHost : function(host){
-		return host.indexOf('.')!=-1 ? host : host+'.tumblr.com';
-	},
-	
-	buildURL : function(host, params){
-		host = Tumblr.normalizeHost(host);
-		return 'http://' + host + '/api/read?' + queryString(params);
-	},
-	
-	createInfo : function(xml){
-		return {
-			type     : ''+xml.posts.@type,
-			start    :  1*xml.posts.@start,
-			total    :  1*xml.posts.@total,
-			name     : ''+xml.tumblelog.@name,
-			title    : ''+xml.tumblelog.@title,
-			timezone : ''+xml.tumblelog.@timezone,
-		};
-	},
-	
-	getInfo : function(user, type){
-		var url = Tumblr.buildURL(user, {
-			type  : type,
-			start : 0,
-			num   : 0,
-		}); 
-		
-		return request(url).addCallback(function(res){
-			return Tumblr.createInfo(convertToXML(res.responseText));
-		});
-	},
-	
 	/**
-	 * 各ポストタイプ共通の情報をポストから取得する。
+	 * 各Tumblrの基本情報(総件数/タイトル/タイムゾーン/名前)を取得する。
 	 *
 	 * @param {String} user ユーザー名。
 	 * @param {XML} post ポストノード。
 	 * @return {Object} ポスト共通情報。ポストID、タイプ、タグなどを含む。
 	 */
-	getPostInfo : function(user, post){
-		return {
-				user : user,
-				id   : ''+ post.@id, 
-				url  : ''+ post.@url, 
-				date : ''+ post.@date, 
-				type : ''+ post.@type, 
-				tags : map(function(tag){return ''+tag}, post.tag), 
-		};
+	getInfo : function(user, type){
+		return request('http://'+user+'.tumblr.com/api/read', {
+			queryString : {
+				type  : type,
+				start : 0,
+				num   : 0,
+			}
+		}).addCallback(function(res){
+			var xml = convertToXML(res.responseText);
+			return {
+				type     : ''+xml.posts.@type,
+				start    :  1*xml.posts.@start,
+				total    :  1*xml.posts.@total,
+				name     : ''+xml.tumblelog.@name,
+				title    : ''+xml.tumblelog.@title,
+				timezone : ''+xml.tumblelog.@timezone,
+			};
+		});
 	},
 	
 	/**
@@ -78,28 +45,38 @@ var Tumblr = update({}, AbstractSessionService, {
 	 */
 	read : function(user, type, count, handler){
 		// FIXME: ストリームにする
-		var pages = Tumblr.splitRequests(count);
-		var rval = [];
+		var pages = Tumblr._splitRequests(count);
+		var result = [];
 		
 		var d = succeed();
 		d.addCallback(function(){
 			// 全ページを繰り返す
 			return deferredForEach(pages, function(page, pageNum){
-				var url = Tumblr.buildURL(user, {
-					type : type,
-					start : page[0],
-					num : page[1],
-				});
-				
 				// ページを取得する
-				return request(url).addCallback(function(res){
+				return request('http://'+user+'.tumblr.com/api/read', {
+					queryString : {
+						type  : type,
+						start : page[0],
+						num   : page[1],
+					},
+				}).addCallback(function(res){
 					var xml = convertToXML(res.responseText);
 					
 					// 全ポストを繰り返す
 					var posts = map(function(post){
-						var postInfo = Tumblr.getPostInfo(user, post);
-						return Tumblr[capitalize(postInfo.type)].convertToModel(post, postInfo);
+						var info = {
+							user : user,
+							id   : ''+ post.@id, 
+							url  : ''+ post.@url, 
+							date : ''+ post.@date, 
+							type : ''+ post.@type, 
+							tags : map(function(tag){return ''+tag}, post.tag), 
+						};
+						
+						return Tumblr[info.type.capitalize()].convertToModel(post, info);
 					}, xml.posts.post);
+					
+					result = result.concat(posts);
 					
 					return handler && handler(posts, (pageNum * Tumblr.PAGE_LIMIT));
 				}).addCallback(wait, 1); // ウェイト
@@ -110,10 +87,20 @@ var Tumblr = update({}, AbstractSessionService, {
 				throw err;
 		})
 		d.addCallback(function(){
-			return rval;
+			return result;
 		});
 		
 		return d;
+	},
+	
+	_splitRequests : function(count){
+		var res = [];
+		var limit = Tumblr.PAGE_LIMIT;
+		for(var i=0,len=Math.ceil(count/limit) ; i<len ; i++){
+			res.push([i*limit, limit]);
+		}
+		count%limit && (res[res.length-1][1] = count%limit);
+		return res;
 	},
 	
 	/**
@@ -140,11 +127,11 @@ var Tumblr = update({}, AbstractSessionService, {
 	/**
 	 * reblog情報を取り除く。
 	 *
-	 * @param {Array} fields reblogポストフォームのフィールドリスト。
+	 * @param {Array} form reblogフォーム。
 	 * @return {Deferred}
 	 */
-	trimReblogInfo : function(fields){
-		if(! getPref('trimReblogInfo'))
+	trimReblogInfo : function(form){
+		if(!getPref('trimReblogInfo'))
 		 return;
 		 
 		function trimQuote(entry){
@@ -155,21 +142,21 @@ var Tumblr = update({}, AbstractSessionService, {
 			return entry.trim();
 		}
 		
-		switch(fields['post[type]']){
+		switch(form['post[type]']){
 		case 'link':
-			fields['post[three]'] = trimQuote(fields['post[three]']);
+			form['post[three]'] = trimQuote(form['post[three]']);
 			break;
 		case 'regular':
 		case 'photo':
 		case 'video':
-			fields['post[two]'] = trimQuote(fields['post[two]']);
+			form['post[two]'] = trimQuote(form['post[two]']);
 			break;
 		case 'quote':
-			fields['post[two]'] = fields['post[two]'].replace(/ \(via <a.*?<\/a>\)/g, '').trim();
+			form['post[two]'] = form['post[two]'].replace(/ \(via <a.*?<\/a>\)/g, '').trim();
 			break;
 		}
 		
-		return fields;
+		return form;
 	},
 	
 	/**
@@ -183,8 +170,7 @@ var Tumblr = update({}, AbstractSessionService, {
 	},
 	
 	/**
-	 * 新規エントリー、または、reblogをポストする。
-	 * Tombloo.Service.extractors.ReBlogの各抽出メソッドを使いreblog情報を抽出できる。
+	 * 新規エントリーをポストする。
 	 *
 	 * @param {Object} ps
 	 * @return {Deferred}
@@ -192,14 +178,10 @@ var Tumblr = update({}, AbstractSessionService, {
 	post : function(ps){
 		var endpoint = Tumblr.TUMBLR_URL + 'new/' + ps.type;
 		return this.postForm(function(){
-			return request(endpoint).addCallback(function(res){
-				var form = formContents(res.responseText);
-				delete form.preview_post;
+			return Tumblr.getForm(endpoint).addCallback(function(form){
+				update(form, Tumblr[ps.type.capitalize()].convertToForm(ps));
 				
-				update(form, Tumblr[ps.type.capitalize()].convertToForm(ps), {
-					'post[tags]' : (ps.tags && ps.tags.length)? joinText(ps.tags, ',') : '',
-					'post[is_private]' : ps.private==null? form['post[is_private]'] : (ps.private? 1 : 0),
-				});
+				Tumblr.appendTags(form, ps);
 				
 				return request(endpoint, {sendContent : form});
 			});
@@ -207,16 +189,67 @@ var Tumblr = update({}, AbstractSessionService, {
 	},
 	
 	/**
+	 * ポストフォームを取得する。
+	 * reblogおよび新規エントリーのどちらでも利用できる。
+	 *
+	 * @param {Object} url フォームURL。
+	 * @return {Deferred}
+	 */
+	getForm : function(url){
+		return request(url).addCallback(function(res){
+			var doc = convertToHTMLDocument(res.responseText);
+			var form = formContents(doc);
+			delete form.preview_post;
+			form.redirect_to = Tumblr.TUMBLR_URL+'dashboard';
+			
+			if(form.reblog_post_id){
+				Tumblr.trimReblogInfo(form);
+				
+				// Tumblrから他サービスへポストするため画像URLを取得しておく
+				if(form['post[type]']=='photo')
+					form.image = $x('id("edit_post")//img[starts-with(@src, "http://media.tumblr.com/")]/@src', doc);
+			}
+			
+			return form;
+		});
+	},
+	
+	/**
+	 * フォームへタグとプライベートを追加する。
+	 *
+	 * @param {Object} url フォームURL。
+	 * @return {Deferred}
+	 */
+	appendTags : function(form, ps){
+		return update(form, {
+			'post[tags]' : (ps.tags && ps.tags.length)? joinText(ps.tags, ',') : '',
+			'post[is_private]' : ps.private==null? form['post[is_private]'] : (ps.private? 1 : 0),
+		});
+	},
+	
+	/**
 	 * reblogする。
+	 * Tombloo.Service.extractors.ReBlogの各抽出メソッドを使いreblog情報を抽出できる。
 	 *
 	 * @param {Object} ps
 	 * @return {Deferred}
 	 */
 	favor : function(ps){
+		// メモをreblogフォームの適切なフィールドの末尾に追加する
+		var form = ps.favorite.form;
+		items(Tumblr[ps.type.capitalize()].convertToForm({
+			description : ps.description,
+		})).forEach(function([name, value]){
+			if(!value)
+				return;
+			
+			form[name] += '\n\n' + value;
+		});
+		
+		Tumblr.appendTags(form, ps);
+		
 		return this.postForm(function(){
-			return request(ps.favorite.endpoint, {
-				sendContent : ps.favorite.fields,
-			})
+			return request(ps.favorite.endpoint, {sendContent : form})
 		});
 	},
 	
@@ -345,7 +378,7 @@ var Tumblr = update({}, AbstractSessionService, {
 	getToken : function(){
 		switch (this.updateSession()){
 		case 'none':
-			throw new Error('AUTH_FAILD');
+			throw new Error(getMessage('error.notLoggedin'));
 			
 		case 'same':
 			if(this.token)
@@ -363,8 +396,8 @@ var Tumblr = update({}, AbstractSessionService, {
 
 
 Tumblr.Regular = {
-	convertToModel : function(post, postInfo){
-		return update(postInfo, {
+	convertToModel : function(post, info){
+		return update(info, {
 			body  : ''+ post['regular-body'],
 			title : ''+ post['regular-title'],
 		});
@@ -372,7 +405,7 @@ Tumblr.Regular = {
 	
 	convertToForm : function(ps){
 		return {
-			'post[type]' : 'regular',
+			'post[type]' : ps.type,
 			'post[one]'  : ps.item,
 			'post[two]'  : joinText([ps.body, ps.description], '\n\n'),
 		};
@@ -380,12 +413,12 @@ Tumblr.Regular = {
 }
 
 Tumblr.Photo = {
-	convertToModel : function(post, postInfo){
+	convertToModel : function(post, info){
 		var photoUrl = post['photo-url'];
 		var photoUrl500 = ''+photoUrl.(@['max-width'] == 500);
 		var image = Tombloo.Photo.getImageInfo(photoUrl500);
 		
-		return update(postInfo, {
+		return update(info, {
 			photoUrl500   : photoUrl500,
 			photoUrl400   : ''+ photoUrl.(@['max-width'] == 400),
 			photoUrl250   : ''+ photoUrl.(@['max-width'] == 250),
@@ -400,11 +433,11 @@ Tumblr.Photo = {
 	
 	convertToForm : function(ps){
 		var form = {
-			'post[type]'  : 'photo',
+			'post[type]'  : ps.type,
 			't'           : ps.item,
 			'u'           : ps.pageUrl,
 			'post[two]'   : joinText([
-				ps.item.link(ps.pageUrl) + (ps.author? ' (via ' + ps.author.link(ps.authorUrl) + ')' : ''), 
+				(ps.item? ps.item.link(ps.pageUrl) : '') + (ps.author? ' (via ' + ps.author.link(ps.authorUrl) + ')' : ''), 
 				ps.description], '\n\n'),
 			'post[three]' : ps.pageUrl,
 		};
@@ -425,8 +458,8 @@ Tumblr.Photo = {
 }
 
 Tumblr.Video = {
-	convertToModel : function(post, postInfo){
-		return update(postInfo, {
+	convertToModel : function(post, info){
+		return update(info, {
 			body    : ''+ post['video-caption'],
 			source  : ''+ post['video-source'],
 			player  : ''+ post['video-player'],
@@ -435,7 +468,7 @@ Tumblr.Video = {
 	
 	convertToForm : function(ps){
 		return {
-			'post[type]' : 'video',
+			'post[type]' : ps.type,
 			'post[one]'  : ps.body || ps.itemUrl,
 			'post[two]'  : joinText([
 				ps.item.link(ps.pageUrl) + (ps.author? ' (via ' + ps.author.link(ps.authorUrl) + ')' : ''), 
@@ -445,8 +478,8 @@ Tumblr.Video = {
 }
 
 Tumblr.Link = {
-	convertToModel : function(post, postInfo){
-		return update(postInfo, {
+	convertToModel : function(post, info){
+		return update(info, {
 			title  : ''+ post['link-text'],
 			source : ''+ post['link-url'],
 			body   : ''+ post['link-description'],
@@ -456,7 +489,7 @@ Tumblr.Link = {
 	convertToForm : function(ps){
 		var thumb = getPref('thumbnailTemplate').replace('{url}', ps.pageUrl);
 		return {
-			'post[type]'  : 'link',
+			'post[type]'  : ps.type,
 			'post[one]'   : ps.item,
 			'post[two]'   : ps.itemUrl,
 			'post[three]' : joinText([thumb, ps.body, ps.description], '\n\n'),
@@ -465,8 +498,8 @@ Tumblr.Link = {
 }
 
 Tumblr.Conversation = {
-	convertToModel : function(post, postInfo){
-		return update(postInfo, {
+	convertToModel : function(post, info){
+		return update(info, {
 			title : ''+ post['conversation-title'],
 			body  : ''+ post['conversation-text'],
 		});
@@ -474,7 +507,7 @@ Tumblr.Conversation = {
 	
 	convertToForm : function(ps){
 		return {
-			'post[type]' : 'chat',
+			'post[type]' : ps.type,
 			'post[one]'  : ps.item,
 			'post[two]'  : joinText([ps.body, ps.description], '\n\n'),
 		};
@@ -482,8 +515,8 @@ Tumblr.Conversation = {
 }
 
 Tumblr.Quote = {
-	convertToModel : function(post, postInfo){
-		return update(postInfo, {
+	convertToModel : function(post, info){
+		return update(info, {
 			body   : ''+ post['quote-text'],
 			source : ''+ post['quote-source'],
 		});
@@ -491,7 +524,7 @@ Tumblr.Quote = {
 	
 	convertToForm : function(ps){
 		return {
-			'post[type]' : 'quote',
+			'post[type]' : ps.type,
 			'post[one]'  : ps.body,
 			'post[two]'  : joinText([ps.item.link(ps.pageUrl), ps.description], '\n\n'),
 		};

@@ -26,10 +26,7 @@ try {
 	
 	// chrome://tombloo/content/test/test_Tumblr.html
 	
-	is(Tumblr.normalizeHost('to.tumblr.com'), 'to.tumblr.com');
-	is(Tumblr.normalizeHost('to'), 'to.tumblr.com');
-	
-	var reqs = Tumblr.splitRequests(130);
+	var reqs = Tumblr._splitRequests(130);
 	is(reqs.length, 3);
 	is(reqs[0][0], 0);
 	is(reqs[0][1], 50);
@@ -38,7 +35,7 @@ try {
 	is(reqs[2][0], 100);
 	is(reqs[2][1], 30);
 	
-	var reqs = Tumblr.splitRequests(35);
+	var reqs = Tumblr._splitRequests(35);
 	is(reqs.length, 1);
 	is(reqs[0][0], 0);
 	is(reqs[0][1], 35);
@@ -80,17 +77,46 @@ try {
 	
 	/*
 	TEST OK
-	d.addCallback(request, 'http://to.tumblr.com/post/34424030');
-	d.addCallback(function(res){
-		sameObject(
-			Tumblr.getReblogToken(convertToHTMLDocument(res.responseText)), {
-				token : 'z514XaLi',
-				id    : '34424030',
-			});
-	})
-	*/
-	
 	/* 
+	// read
+	d.addCallback(bind('read', Tumblr), 'to', 'photo', 25);
+	d.addCallback(function(res){
+		is(res.length, 25);
+	});
+	
+	// read / 2ページ取得
+	d.addCallback(bind('read', Tumblr), 'to', 'photo', 70);
+	d.addCallback(function(res){
+		is(res.length, 70);
+		is(res[0].type, 'photo');
+		is(res[0].user, 'to');
+		ok(res[0].date);
+		ok(res[0].imageId);
+	});
+	
+	// 途中終了 / ポストNo / ウェイト
+	d.addCallback(bind('read', Tumblr), 'to', 'photo', 150, function(posts, postNum){
+		if(postNum>=25)
+			throw StopProcess;
+		
+		ok(posts[0].date);
+	});
+	d.addCallback(function(res){
+		is(res.length, 100, '途中で停止できるか');
+	});
+	
+	
+	// getInfo
+	d.addCallback(bind('getInfo', Tumblr), 'to');
+	d.addCallback(function(info){
+		is(info.type, '');
+		is(info.name, 'to');
+		is(info.title, 'to');
+		is(info.timezone, 'Asia/Tokyo');
+		ok(info.total > 15000);
+	});
+	
+	
 	// remove
 	d.addCallback(bind('remove', Tumblr), 18344636);
 	
@@ -105,43 +131,6 @@ try {
 		alert(info.total);
 	});
 	
-	d.addCallback(bind('getInfo', Tumblr), 'to');
-	d.addCallback(function(info){
-		is(info.type, '');
-		is(info.name, 'to');
-		is(info.title, 'to');
-		is(info.timezone, 'Asia/Tokyo');
-		ok(info.total > 15000);
-	});
-	
-	// 2ページ取得
-	d.addCallback(bind('read', Tumblr), 'to', 'photo', 70);
-	d.addCallback(function(res){
-		is(res.length, 70);
-		is(res[0].type, 'photo');
-		is(res[0].user, 'to');
-		ok(res[0].date);
-		ok(res[0].imageId);
-	});
-	
-	// 1ページ取得
-	d.addCallback(bind('read', Tumblr), 'to', 'photo', 25);
-	d.addCallback(function(res){
-		is(res.length, 25);
-	});
-	
-	// 途中終了 / ポストNo / ウェイト
-	d.addCallback(bind('read', Tumblr), 'to', 'photo', 70, function(post, postNum){
-		if(postNum>=5)
-			throw StopProcess;
-		ok(post.date);
-		log(post.date);
-		
-		return wait(0.2)
-	});
-	d.addCallback(function(res){
-		is(res.length, 5);
-	});
 	
 	// getLoggedInUser
 	var info = {};
@@ -152,59 +141,6 @@ try {
 	});
 	d.addErrback(function(e){
 		is(e.message, 'Not loggedin.', '未ログイン');
-	});
-	
-	
-	// getInfo
-	d.addCallback(function(){
-		return Tumblr.getInfo(info.name);
-	});
-	d.addCallback(function(i){
-		is(i.type, '');
-		is(i.name, 'too');
-		is(i.title, 'too');
-		is(i.timezone, 'Asia/Tokyo');
-		
-		info = i;
-	});
-	
-	// reblog
-	d.addCallback(bind('reblog', Tumblr), 18865379);
-	d.addCallback(function(){
-		return Tumblr.getInfo(info.name);
-	});
-	d.addCallback(function(i){
-		is(i.total, info.total+1, 'reblogが成功し件数が増えているか');
-		
-		info = i;
-	});
-	
-	Tumblr.Photo.post({
-		title : 'SQLite home page',
-		url : 'http://www.sqlite.org/',
-		body : '<a href="http://www.sqlite.org/">SQLite home page</a>',
-		source : 'http://www.sqlite.org/sqlite.gif',
-	});
-	Tumblr.Quote.post({
-		body : 'Database',
-		source : '<a href="http://www.sqlite.org/">SQLite home page</a>',
-	});
-	Tumblr.Link.post({
-		title : 'SQLite home page',
-		source : 'http://www.sqlite.org/',
-		body : 'あいうえお',
-	});
-	Tumblr.Video.post({
-		source : 'http://jp.youtube.com/watch?v=4wZGsYzegi4',
-		body : '<a href="http://jp.youtube.com/watch?v=4wZGsYzegi4">YouTube - あいうえお</a>',
-	});
-	Tumblr.Regular.post({
-		title : 'TITLE',
-		body : 'あいうえお',
-	});
-	Tumblr.Conversation.post({
-		title : 'TITLE',
-		body : 'Z:1\nX:2',
 	});
 	
 	d.addCallback(function(){

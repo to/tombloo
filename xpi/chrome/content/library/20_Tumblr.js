@@ -93,6 +93,14 @@ var Tumblr = update({}, AbstractSessionService, {
 		return d;
 	},
 	
+	/**
+	 * API読み込みページリストを作成する。
+	 * TumblrのAPIは120件データがあるとき、100件目から50件を読もうとすると、
+	 * 差し引かれ70件目から50件が返ってくる。
+	 *
+	 * @param {Number} count 読み込み件数。
+	 * @return {Array}
+	 */
 	_splitRequests : function(count){
 		var res = [];
 		var limit = Tumblr.PAGE_LIMIT;
@@ -100,6 +108,7 @@ var Tumblr = update({}, AbstractSessionService, {
 			res.push([i*limit, limit]);
 		}
 		count%limit && (res[res.length-1][1] = count%limit);
+		
 		return res;
 	},
 	
@@ -339,6 +348,13 @@ var Tumblr = update({}, AbstractSessionService, {
 		return getCookieString('www.tumblr.com');
 	},
 	
+	/**
+	 * ログイン中のユーザーを取得する。
+	 * 結果はキャッシュされ、再ログインまで再取得は行われない。
+	 * アカウント切り替えのためのインターフェースメソッド。
+	 *
+	 * @return {Deferred} ログインに使われるメールアドレスが返される。
+	 */
 	getCurrentUser : function(){
 		switch (this.updateSession()){
 		case 'none':
@@ -357,6 +373,11 @@ var Tumblr = update({}, AbstractSessionService, {
 		}
 	},
 	
+	/**
+	 * ログイン中のユーザーIDを取得する。
+	 *
+	 * @return {Deferred} ユーザーIDが返される。
+	 */
 	getCurrentId : function(){
 		switch (this.updateSession()){
 		case 'none':
@@ -375,6 +396,12 @@ var Tumblr = update({}, AbstractSessionService, {
 		}
 	},
 	
+	/**
+	 * ポストや削除に使われるトークン(form_key)を取得する。
+	 * 結果はキャッシュされ、再ログインまで再取得は行われない。
+	 *
+	 * @return {Deferred} トークン(form_key)が返される。
+	 */
 	getToken : function(){
 		switch (this.updateSession()){
 		case 'none':

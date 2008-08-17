@@ -657,7 +657,7 @@ Tombloo.Service.extractors = new Repository([
 			return request(ctx.href).addCallback(function(res){
 				ctx.title = 
 					res.responseText.extract(/<title.*?>([\s\S]*?)<\/title>/im).replace(/[\n\r]/g, '').trim() || 
-					broad(createURI(itemUrl)).fileName;
+					createURI(itemUrl).fileName;
 				
 				return {
 					type    : 'photo',
@@ -802,7 +802,7 @@ Tombloo.Service.extractors = new Repository([
 			var target = ctx.target;
 			var itemUrl = tagName(target)=='object'? target.data : target.src;
 			
-			var uri = broad(createURI(itemUrl));
+			var uri = createURI(itemUrl);
 			var file = getTempDir();
 			file.append(validateFileName(uri.fileName));
 			

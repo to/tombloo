@@ -462,9 +462,6 @@ models.register({
 
 models.register({
 	name : 'Local',
-	
-	// Mark James
-	// http://www.famfamfam.com/lab/icons/silk/
 	ICON : 'chrome://tombloo/skin/local.ico',
 	
 	check : function(ps){
@@ -496,7 +493,7 @@ models.register({
 			if(ps.file){
 				file.append(ps.file.leafName);
 			} else {
-				var uri = broad(createURI(ps.itemUrl));
+				var uri = createURI(ps.itemUrl);
 				var fileName = validateFileName(uri.fileName);
 				file.append(fileName);
 			}
@@ -510,8 +507,7 @@ models.register({
 				}
 			}).addCallback(function(file){
 				if(AppInfo.OS == 'Darwin'){
-					var script = getTempDir();
-					script.append('setcomment.scpt');
+					var script = getTempDir('setcomment.scpt');
 					
 					putContents(script, [
 						'set aFile to POSIX file ("' + file.path + '" as Unicode text)',

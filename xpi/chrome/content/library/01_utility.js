@@ -137,7 +137,7 @@ function createDir(dir){
 }
 
 function uriToFileName(uri){
-	uri = broad(createURI(uri));
+	uri = createURI(uri);
 	uri = (uri.host+uri.filePath).replace(/\/$/, '');
 	return validateFileName(uri);
 }

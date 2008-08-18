@@ -498,7 +498,7 @@ Tumblr.Video = {
 			'post[type]' : ps.type,
 			'post[one]'  : ps.body || ps.itemUrl,
 			'post[two]'  : joinText([
-				ps.item.link(ps.pageUrl) + (ps.author? ' (via ' + ps.author.link(ps.authorUrl) + ')' : ''), 
+				(ps.item? ps.item.link(ps.pageUrl) : '') + (ps.author? ' (via ' + ps.author.link(ps.authorUrl) + ')' : ''), 
 				ps.description], '\n\n'),
 		};
 	},
@@ -553,7 +553,7 @@ Tumblr.Quote = {
 		return {
 			'post[type]' : ps.type,
 			'post[one]'  : ps.body,
-			'post[two]'  : joinText([ps.item.link(ps.pageUrl), ps.description], '\n\n'),
+			'post[two]'  : joinText([(ps.item? ps.item.link(ps.pageUrl) : ''), ps.description], '\n\n'),
 		};
 	},
 }

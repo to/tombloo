@@ -1,6 +1,4 @@
 connect(grobal, 'content-ready', function(window){with(window){
-	log('ijk.start');
-		
 	// ----[Application]-------------------------------------------------
 	function standBy(){
 		keyTapper('CTRL+J', function(){

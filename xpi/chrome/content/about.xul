@@ -41,7 +41,7 @@
 			
 		<label class="sectionTitle">&contributors.label;</label>
 		<vbox class="boxIndent">
-			<label value="ku"/>
+			<label value="ku" class="text-link" onclick="openURL('http://ido.nu/kuma/')" />
 			<label value="mattn"/>
 			<label value="youpy" class="text-link" onclick="openURL('http://github.com/youpy')" />
 			<label value="cxx"/>

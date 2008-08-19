@@ -1167,11 +1167,9 @@ models.register( {
 	ICON: 'http://d.hatena.ne.jp/favicon.ico',
 	POST_URL : 'http://d.hatena.ne.jp',
 	
-	/*
 	check : function(ps){
 		return (/(regular|photo|quote|link)/).test(ps.type) && !ps.file;
 	},
-	*/
 	converters: {
 		getTitle: function(ps){
 			return Hatena.reprTags(ps.tags) + (ps.page || '')

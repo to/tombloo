@@ -263,6 +263,7 @@ Windows Firefox 2にてpngをマウスカーソルにすると透過できなか
 		<script><![CDATA[
 		// chrome://tombloo/content/prefs.xul
 		var env = Components.classes['@brasil.to/tombloo-service;1'].getService().wrappedJSObject;
+		env.extend(this, env, false);
 		
 		var prefpane = document.getElementsByTagName('prefpane')[0];
 		function getField(name){
@@ -272,7 +273,7 @@ Windows Firefox 2にてpngをマウスカーソルにすると透過できなか
 		function keyStringField(name, meta){
 			var elm = getField(name);
 			elm.addEventListener('keydown', function(e){
-				var key = env.keyString(e);
+				var key = keyString(e);
 				switch(key) {
 				case 'TAB':
 				case 'SHIFT + TAB':
@@ -280,7 +281,7 @@ Windows Firefox 2にてpngをマウスカーソルにすると透過できなか
 					
 				}
 				
-				env.cancel(e);
+				cancel(e);
 				elm.value = (key=='ESCAPE')? '' : 
 					(meta)? key : key.split(' + ').pop();
 				prefpane.userChangedValue(elm);
@@ -289,7 +290,7 @@ Windows Firefox 2にてpngをマウスカーソルにすると透過できなか
 		
 		function mouseStringField(name){
 			var elm = getField(name);
-			env.observeMouseShortcut(elm, function(e, key){
+			observeMouseShortcut(elm, function(e, key){
 				elm.value = key;
 				prefpane.userChangedValue(elm);
 				
@@ -297,7 +298,7 @@ Windows Firefox 2にてpngをマウスカーソルにすると透過できなか
 				return true;
 			});
 			elm.addEventListener('keydown', function(e){
-				switch(env.keyString(e)) {
+				switch(keyString(e)) {
 				case 'TAB':
 				case 'SHIFT + TAB':
 					return;
@@ -307,9 +308,9 @@ Windows Firefox 2にてpngをマウスカーソルにすると透過できなか
 					prefpane.userChangedValue(elm);
 				}
 				
-				env.cancel(e);
+				cancel(e);
 			}, false);
-			elm.addEventListener('contextmenu', env.cancel, true);
+			elm.addEventListener('contextmenu', cancel, true);
 		}
 		
 		mouseStringField('shortcutkey.checkAndPost');
@@ -319,10 +320,9 @@ Windows Firefox 2にてpngをマウスカーソルにすると透過できなか
 		
 		
 		var tagProvider = document.getElementsByAttribute('preference', 'tagProvider')[0];
-		var ms = env.models;
-		for(var n in ms)
-			if(ms[n].getUserTags)
-				tagProvider.appendItem(n, n).setAttribute('src', ms[n].ICON);
+		for(var name in models)
+			if(models[name].getUserTags)
+				tagProvider.appendItem(name, name).setAttribute('src', models[name].ICON);
 		window.addEventListener('load', function(){
 			// スクリプト実行時点でprefpaneのコンストラクターからvalueが先に与えられているため、
 			// 後から追加したradioのチェックをつけることはできない。
@@ -331,15 +331,15 @@ Windows Firefox 2にてpngをマウスカーソルにすると透過できなか
 			tagProvider.value = tagProvider.value;
 		}, true)
 		
-		var models = document.getElementById('posters');
-		var config = eval(env.getPref('postConfig'));
-		env.values(env.models).forEach(function(model){
+		var elmPosters = document.getElementById('posters');
+		var config = eval(getPref('postConfig'));
+		values(models).forEach(function(model){
 			// インターフェースが実装されているポスト対象のサービスでない場合は処理しない
 			if(!model.check)
 				return;
 			
 			var conf = config[model.name] || {};
-			var row = <row style="margin: 0.1em 0; height: 1.7em;" xmlns:html={env.HTML_NS}>
+			var row = <row style="margin: 0.1em 0; height: 1.7em;" xmlns:html={HTML_NS}>
 				<vbox>
 					<html:img src={model.ICON} />
 				</vbox>
@@ -348,21 +348,20 @@ Windows Firefox 2にてpngをマウスカーソルにすると透過できなか
 				</hbox>
 			</row>;
 			
-			env.reduce(function(memo, type){
+			'regular photo quote link video conversation favorite'.split(' ').forEach(function(type){
 				var postable = (type=='favorite')? !!model.favor : model.check({
 					type : type,
 					pageUrl : {
 						match: function(){return true}
 					},
 				});
-				var elm = memo.appendChild(!postable? <spacer/> : 
+				row.appendChild(!postable? <spacer/> : 
 					<checkbox 
 						type={type} model={model.name} 
 						checked={conf[type] == 'default'} disabled={conf[type] == 'disabled'}/>);
-				
-				return memo;
-			}, 'regular photo quote link video conversation favorite'.split(' '), row);
-			models.appendChild(env.convertToXULElement(row));
+			});
+			
+			elmPosters.appendChild(convertToXULElement(row));
 		});
 		
 		
@@ -382,7 +381,7 @@ Windows Firefox 2にてpngをマウスカーソルにすると透過できなか
 			if(target.tagName != 'checkbox')
 				return;
 			
-			env.cancel(e);
+			cancel(e);
 			
 			if(target.disabled) {
 				target.disabled = false;
@@ -431,18 +430,18 @@ Windows Firefox 2にてpngをマウスカーソルにすると透過できなか
 		
 		var elmDataDir = getField('dataDir');
 		elmDataDir.nextSibling.addEventListener('command', function(){
-			var fp = new env.FilePicker(window, env.getMessage('label.dataDir'), env.FilePicker.modeGetFolder);
-			fp.displayDirectory = env.getDataDir();
+			var fp = new FilePicker(window, getMessage('label.dataDir'), FilePicker.modeGetFolder);
+			fp.displayDirectory = getDataDir();
 			if(fp.show() == fp.returnOK){
-				elmDataDir.value = fp.file.path.replace(env.getProfileDir().path, '{ProfD}');
+				elmDataDir.value = fp.file.path.replace(getProfileDir().path, '{ProfD}');
 				prefpane.userChangedValue(elmDataDir);
 			}
 		}, true)
 		
 		// MacではOK/キャンセルが表示されないため無条件にunloadで保存する
-		window.addEventListener(env.AppInfo.OS.indexOf('WIN') == 0? 'beforeaccept' : 'unload', function(e){
+		window.addEventListener(AppInfo.OS.indexOf('WIN') == 0? 'beforeaccept' : 'unload', function(e){
 			var posters = {};
-			env.$x('.//*[@model]', document, true).forEach(function(checkbox){
+			$x('.//*[@model]', document, true).forEach(function(checkbox){
 				var name = checkbox.getAttribute('model');
 				if(!posters[name])
 					posters[name] = {};
@@ -451,13 +450,13 @@ Windows Firefox 2にてpngをマウスカーソルにすると透過できなか
 					(checkbox.checked)? 'default' : 'enabled';
 			});
 			
-			env.setPref('postConfig', uneval(posters));
+			setPref('postConfig', uneval(posters));
 		}, true);
 		
 		// beforeaccept時点ではpreferenceが更新されていないためunloadを使う
 		window.addEventListener('unload', function(e){
 			// ショートカットキーの変更を反映させる
-			env.reload();
+			reload();
 		}, true);
 		
 		]]></script>

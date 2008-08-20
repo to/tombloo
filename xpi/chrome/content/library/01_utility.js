@@ -1021,7 +1021,9 @@ function capitalize(str){
  * @param {Object} source コピー元。
  * @return {Object} コピー先。
  */
-function extend(target, source){
+function extend(target, source, overwrite){
+	overwrite = overwrite==null? true : overwrite;
+	
 	for(var p in source){
 		var getter = source.__lookupGetter__(p);
 		if(getter)
@@ -1031,7 +1033,7 @@ function extend(target, source){
 		if(setter)
 			target.__defineSetter__(p, setter);
 		
-		if(!getter && !setter)
+		if(!getter && !setter && (overwrite || !(p in target)))
 			target[p] = source[p];
 	}
 	
@@ -1207,6 +1209,54 @@ Repository.prototype = {
 }
 
 // ----[DOM]-------------------------------------------------
+'tree treecols treecol treechildren treeitem treerow treecell splitter'.split(' ').forEach(function(tag){
+	this[tag.toUpperCase()] = bind(E, null, tag);
+});
+
+function E(){
+	var tag = Array.prototype.shift.call(arguments);
+	var elm = currentDocument().createElement(tag);
+	
+	var text = [];
+	function processChild(arr){
+		Array.prototype.forEach.call(arr, function(value){
+			if(!value)
+				return;
+			
+			if(value && value.nodeType){
+				elm.appendChild(value);
+				return;
+			}
+			
+			switch (typeof(value)) {
+				case 'string':
+				case 'number':
+					elm.appendChild(currentDocument().createTextNode(value))
+					break;
+					
+				default:
+					if(value.forEach){
+						processChild(value)
+						break;
+					}
+					
+					for(var key in value){
+						var attr = value[key];
+						switch(key){
+						case 'class': elm.className = attr; break;
+						case 'style': elm.style.cssText = attr; break;
+						default:      elm.setAttribute(key, attr);
+						}
+					};
+					break;
+			}
+		});
+	}
+	processChild(arguments);
+	
+	return elm;
+}
+
 function unescapeHTML(s){
 	return s.replace(
 		/&amp;/g, '&').replace(

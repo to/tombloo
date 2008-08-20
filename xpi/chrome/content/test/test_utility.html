@@ -370,7 +370,6 @@ try {
 	});
 	*/
 	
-	
 	// extend
 	var src = {
 		_name : '',
@@ -380,10 +379,21 @@ try {
 		set name(val){
 			return this._name = val;
 		},
+		value : 5,
 	}
-	var target = extend({}, src);
+	var target = extend({value : 0}, src, false);
 	is(target.name = 'NAME', 'NAME');
 	is(target.name, 'NAME');
+	is(target.value, 0, 'extend: 上書きされないか');
+	
+	// E
+	var elm = TREECOL({
+		class : 'test',
+		style : 'display:none', 
+	});
+	is(tagName(elm), 'treecol');
+	is(elm.style.display, 'none');
+	is(elm.className, 'test');
 	
 } catch (err) {
 	var s = [];

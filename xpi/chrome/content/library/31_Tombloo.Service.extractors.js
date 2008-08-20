@@ -334,10 +334,11 @@ Tombloo.Service.extractors = new Repository([
 			return (/(tumblr-beta\.com|tumblr\.com)\//).test(ctx.href) && this.getLink(ctx);
 		},
 		extract : function(ctx){
-			return Tombloo.Service.extractors.ReBlog.extractByEndpoint(ctx, this.getLink(ctx));
+			// タイトルなどを取得するためextractByLinkを使う(reblogリンクを取得しextractByEndpointを使った方が速い)
+			return Tombloo.Service.extractors.ReBlog.extractByLink(ctx, this.getLink(ctx));
 		},
 		getLink : function(ctx){
-			var link = $x('./ancestor-or-self::li[starts-with(@class, "post")]//a[@class="reblog_link"]', ctx.target);
+			var link = $x('./ancestor-or-self::li[starts-with(@class, "post")]//a[@title="Permalink"]', ctx.target);
 			return link && link.href;
 		},
 	},

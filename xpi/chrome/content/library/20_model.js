@@ -1167,20 +1167,18 @@ models.register( {
 	ICON: 'http://d.hatena.ne.jp/favicon.ico',
 	POST_URL : 'http://d.hatena.ne.jp',
 	
-	/*
 	check : function(ps){
 		return (/(regular|photo|quote|link)/).test(ps.type) && !ps.file;
 	},
-	*/
 	converters: {
 		getTitle: function(ps){
 			return Hatena.reprTags(ps.tags) + (ps.page || '')
 		},
 		renderingTemplates: {
-			regular: '<>{ps.description}</>',
-			photo: '<><blockquote class="tombloo_photo" cite={ps.pageUrl} title={ps.page}><img src={ps.itemUrl} /></blockquote>{ps.description}</>',
-			link: '<><div class="tombloo_link"><a href={ps.pageUrl} title={ps.page}>{ps.page}</a></div>{ps.description}</>',
-			quote: '<>blockquote class="tombloo_quote" cite={ps.pageUrl} title={ps.page}>{ps.body}</blockquote>{ps.description}</>',
+			regular: '<p>{ps.description}</p>',
+			photo: '<p><blockquote class="tombloo_photo" cite={ps.pageUrl} title={ps.page}><img src={ps.itemUrl} /></blockquote>{ps.description}</p>',
+			link: '<p><div class="tombloo_link"><a href={ps.pageUrl} title={ps.page}>{ps.page}</a></div>{ps.description}</p>',
+			quote: '<p><blockquote class="tombloo_quote" cite={ps.pageUrl} title={ps.page}>{ps.body}</blockquote>{ps.description}</p>',
 		},
 		__noSuchMethod__: function(name, args){
 			var ps = args[0];

@@ -42,7 +42,7 @@
 		<label class="sectionTitle">&contributors.label;</label>
 		<vbox class="boxIndent">
 			<label value="ku" class="text-link" onclick="openURL('http://ido.nu/kuma/')" />
-			<label value="mattn"/>
+			<label value="mattn" class="text-link" onclick="openURL('http://mattn.kaoriya.net/')" />
 			<label value="youpy" class="text-link" onclick="openURL('http://github.com/youpy')" />
 			<label value="cxx"/>
 			<label value="Constellation" class="text-link" onclick="openURL('http://d.hatena.ne.jp/Constellation/')" />

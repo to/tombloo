@@ -1344,10 +1344,25 @@ models.register({
 // 全てのサービスをグローバルコンテキストに置く(後方互換)
 models.copyTo(this);
 
+
+/**
+ * ポストを受け取ることができるサービスのリストを取得する。
+ * 
+ * @param {Object} ps ポスト情報。
+ * @return {Array}
+ */
+models.check = function(ps){
+	return this.values.filter(function(m){
+		if((ps.favorite && ps.favorite.name==m.name) || (m.check && m.check(ps)))
+			return true;
+	});
+}
+
 /**
  * デフォルトのサービスのリストを取得する。
  * ユーザーの設定が適用される。
  *
+ * @param {Object} ps ポスト情報。
  * @return {Array}
  */
 models.getDefaults = function(ps){
@@ -1361,6 +1376,7 @@ models.getDefaults = function(ps){
  * 利用可能なサービスのリストを取得する。
  * ユーザーの設定が適用される。
  *
+ * @param {Object} ps ポスト情報。
  * @return {Array}
  */
 models.getEnables = function(ps){

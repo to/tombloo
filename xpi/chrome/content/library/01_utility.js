@@ -1210,7 +1210,7 @@ Repository.prototype = {
 
 // ----[DOM]-------------------------------------------------
 'tree treecols treecol treechildren treeitem treerow treecell splitter'.split(' ').forEach(function(tag){
-	this[tag.toUpperCase()] = bind(E, null, tag);
+	grobal[tag.toUpperCase()] = bind(E, null, tag);
 });
 
 function E(){

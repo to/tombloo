@@ -15,56 +15,67 @@ tab {
 tabpanel {
 	padding: 1.2em 0.7em;
 }
+
 checkbox, radio, button, tab {
 	cursor: pointer;
-	-moz-outline: none !important;
 }
 
-checkbox:focus .checkbox-label-box {
+
+#posters{
+	width : 43em;
+}
+
+treechildren::-moz-tree-image{
+	margin-left : 0.5em;
+}
+
+treechildren::-moz-tree-cell-text{
+	margin-left : 0.5em;
+}
+
+treechildren::-moz-tree-row {
+  height: 2.5em !important;
+}
+
+/* 画像をセルの真ん中に寄せるためcheckbox型を利用 */
+treechildren::-moz-tree-checkbox(default) {
+	list-style-image: url('chrome://tombloo/skin/default.png');
+}
+
+treechildren::-moz-tree-checkbox(enabled) {
+	/* 透明度の設定はできない */
+	list-style-image: url('chrome://tombloo/skin/enabled.png');
+}
+
+treechildren::-moz-tree-checkbox(disabled) {
+	list-style-image: url('chrome://tombloo/skin/disabled.png');
+}
+
+/* 選択行のハイライトを無効に */
+treechildren::-moz-tree-cell-text(selected) {
+	color: inherit !important;
+}
+
+treechildren::-moz-tree-row(selected) {
+  background-color: -moz-Field !important;
+}
+
+treechildren::-moz-tree-row(selected, focus) {
+  background-color: -moz-Field !important;
+}
+
+treechildren::-moz-tree-row(current, focus) {
 	border: none !important;
-	-moz-outline: none !important;
 }
 
-#postConfig checkbox hbox{
-	-moz-appearance: none;
-	-moz-outline: none !important;
+treechildren::-moz-tree-row(selected, current, focus) {
 	border: none !important;
-	background: transparent !important;
 }
 
-#postConfig .checkbox-check{
-	-moz-appearance: none;
-	border: none !important;
-	background: url('chrome://tombloo/skin/disabled.png') no-repeat !important;
-	min-width: 16px;
-	min-height: 16px;
-	-moz-opacity: .3;
-}
-
-#postConfig checkbox[checked='true'] .checkbox-check{
-	background: url('chrome://tombloo/skin/tick.png') no-repeat !important;
-	list-style-image: none !important;
-	-moz-opacity: 1;
-}
-
-#postConfig checkbox[disabled='true'] .checkbox-check{
-	background: url('chrome://tombloo/skin/cross.png') no-repeat !important;
-	-moz-opacity: .5;
-}
-
-/*
-Windows Firefox 2にてpngをマウスカーソルにすると透過できなかったためicoを用意
-*/
-#postConfig.copyChecked * {
-	cursor: url(chrome://tombloo/skin/tick.ico), pointer !important;
-}
-
-#postConfig.copyDisabled * {
-	cursor: url(chrome://tombloo/skin/cross.ico), pointer !important;
-}
-
-#postConfig.copyNormal * {
-	cursor: url(chrome://tombloo/skin/disabled.ico), pointer !important;
+/* 交互に色分けし見やすく */
+treechildren::-moz-tree-row(selected, even),
+treechildren::-moz-tree-row(even) {
+  background-color: #F3F3F3 !important;
 }
 " type="text/css"?>
 
@@ -135,36 +146,19 @@ Windows Firefox 2にてpngをマウスカーソルにすると透過できなか
 				<tab label="&label.entry;"/>
 			</tabs>
 			<tabpanels flex="1">
-				<tabpanel id="postConfig">
-					<grid flex="1" style="overflow:auto">
-						<columns>
-							<column/>
-							<column/>
-							<column/>
-							<column/>
-							<column/>
-							<column/>
-							<column/>
-							<column/>
-							<column/>
-						</columns>
-						<rows id="posters">
-							<row align="center">
-								<spacer />
-								<spacer />
-								<label value="Text"/>
-								<label value="Photo"/>
-								<label value="Quote"/>
-								<label value="Link"/>
-								<label value="Video"/>
-								<label value="Chat"/>
-								<vbox align="center">
-									<label value="Reblog"/>
-									<label value="Favorite"/>
-								</vbox>
-							</row>
-						</rows>
-					</grid>
+				<tabpanel>
+					<tree id="posters" hidecolumnpicker="true" seltype="single" >
+						<treecols>
+							<treecol flex="1"/>
+							<treecol type="checkbox" style="width:4em" label="Text" />
+							<treecol type="checkbox" style="width:4em" label="Photo" />
+							<treecol type="checkbox" style="width:4em" label="Quote" />
+							<treecol type="checkbox" style="width:4em" label="Link" />
+							<treecol type="checkbox" style="width:4em" label="Video" />
+							<treecol type="checkbox" style="width:4em" label="Chat" />
+							<treecol type="checkbox" style="width:5.5em" label="Reblog" />
+						</treecols>
+					</tree>
 				</tabpanel>
 				<tabpanel>
 					<grid flex="1">
@@ -331,101 +325,101 @@ Windows Firefox 2にてpngをマウスカーソルにすると透過できなか
 			tagProvider.value = tagProvider.value;
 		}, true)
 		
+		
 		var elmPosters = document.getElementById('posters');
 		var config = eval(getPref('postConfig'));
-		values(models).forEach(function(model){
-			// インターフェースが実装されているポスト対象のサービスでない場合は処理しない
-			if(!model.check)
-				return;
+		var table = [];
+		withDocument(document, function(){
+			var elmChildren = elmPosters.appendChild(TREECHILDREN());
 			
-			var conf = config[model.name] || {};
-			var row = <row style="margin: 0.1em 0; height: 1.7em;" xmlns:html={HTML_NS}>
-				<vbox>
-					<html:img src={model.ICON} />
-				</vbox>
-				<hbox>
-					<label value={model.name} flex="1"/>
-				</hbox>
-			</row>;
-			
-			'regular photo quote link video conversation favorite'.split(' ').forEach(function(type){
-				var postable = (type=='favorite')? !!model.favor : model.check({
-					type : type,
-					pageUrl : {
-						match: function(){return true}
-					},
+			values(models).forEach(function(model){
+				// インターフェースが実装されているポスト対象のサービスでない場合は処理しない
+				if(!model.check)
+					return;
+				
+				var conf = config[model.name] || {};
+				var row = [null];
+				var elmRow = TREEROW(TREECELL({
+					label    : model.name, 
+					src      : model.ICON,
+				}));
+				
+				'regular photo quote link video conversation favorite'.split(' ').forEach(function(type){
+					var postable = (type=='favorite')? !!model.favor : model.check({
+						type : type,
+						pageUrl : {
+							match: function(){return true}
+						},
+					});
+					
+					// type
+					var elmCell = elmRow.appendChild(TREECELL({
+						properties : conf[type],
+					}));
+					update(elmCell, {
+						type     : type, 
+						name     : model.name, 
+					});
+					row.push(postable? elmCell : null);
 				});
-				row.appendChild(!postable? <spacer/> : 
-					<checkbox 
-						type={type} model={model.name} 
-						checked={conf[type] == 'default'} disabled={conf[type] == 'disabled'}/>);
+				
+				elmChildren.appendChild(TREEITEM(elmRow));
+				table.push(row);
 			});
-			
-			elmPosters.appendChild(convertToXULElement(row));
 		});
 		
-		
-		var elmPostConfig = document.getElementById('postConfig');
-		var elmSource;
-		
-		elmPostConfig.addEventListener('mousedown', function(e){
-			var target = e.target;
-			if(target.tagName != 'checkbox')
+		function getTargetCell(elm, e){
+			var row={}, col={}, obj={};
+			elm.treeBoxObject.getCellAt(e.clientX, e.clientY, row, col, obj);
+			
+			if(!col.value)
 				return;
 			
-			elmSource = target;
+			return table[row.value][col.value.index];
+		}
+		
+		var source;
+		var elmDowned;
+		elmPosters.addEventListener('click', function(e){
+			// ドラッグ後のマウスアップではないか?
+			var elmCell = getTargetCell(elmPosters, e);
+			if(!elmCell || elmDowned != elmCell)
+				return;
+			
+			var val = elmCell.getAttribute('properties');
+			val = 
+				(val=='default')? 'enabled' : 
+				(val=='enabled')? 'disabled' : 'default'
+			elmCell.setAttribute('properties', val);
 		}, true);
 		
-		elmPostConfig.addEventListener('click', function(e){
-			var target = e.target;
-			if(target.tagName != 'checkbox')
-				return;
-			
-			cancel(e);
-			
-			if(target.disabled) {
-				target.disabled = false;
-				target.checked = false;
-				return;
+		elmPosters.addEventListener('mousemove', function(e){
+			var elmCell = getTargetCell(elmPosters, e);
+			if(!source){
+				elmPosters.style.cursor = elmCell? 'pointer' : '';
+			} else {
+				elmPosters.style.cursor = 'url(chrome://tombloo/skin/' + source + '.ico), pointer';
+				elmCell && elmCell.setAttribute('properties', source);
 			}
-			if(target.checked){
-				target.disabled = true;
-				target.checked = false;
-				return;
-			}
-			
-			target.disabled = false;
-			target.checked = true;
 		}, true);
 		
-		elmPostConfig.addEventListener('mouseover', function(e){
-			var target = e.target;
-			if(!elmSource)
+		elmPosters.addEventListener('mousedown', function(e){
+			var elmCell = getTargetCell(elmPosters, e);
+			if(!elmCell)
 				return;
 			
-			// Firefox 2でクラスを変える処理に時間が掛かるためmousedownではなくここで行う
-			if(!elmPostConfig.className)
-				elmPostConfig.className = elmSource.checked? 'copyChecked' : elmSource.disabled? 'copyDisabled' : 'copyNormal';
-			
-			if(target.tagName != 'checkbox')
-				return;
-			
-			target.disabled = elmSource.disabled;
-			target.checked = elmSource.checked;
+			source = elmCell.getAttribute('properties');
+			elmDowned = elmCell;
 		}, true);
 		
-		elmPostConfig.addEventListener('mouseout', function(e){
-			if(e.target != elmPostConfig)
-				return;
-			
-			elmSource = null;
-			elmPostConfig.className = '';
+		elmPosters.addEventListener('mouseup', function(e){
+			source = null;
+			elmPosters.style.cursor = getTargetCell(elmPosters, e)? 'pointer' : '';
+		}, true);
+		
+		elmPosters.addEventListener('mouseout', function(e){
+			source = null;
 		}, false);
-		
-		elmPostConfig.addEventListener('mouseup', function(e){
-			elmSource = null;
-			elmPostConfig.className = '';
-		}, true);
 		
 		
 		var elmDataDir = getField('dataDir');
@@ -440,17 +434,20 @@ Windows Firefox 2にてpngをマウスカーソルにすると透過できなか
 		
 		// MacではOK/キャンセルが表示されないため無条件にunloadで保存する
 		window.addEventListener(AppInfo.OS.indexOf('WIN') == 0? 'beforeaccept' : 'unload', function(e){
-			var posters = {};
-			$x('.//*[@model]', document, true).forEach(function(checkbox){
-				var name = checkbox.getAttribute('model');
-				if(!posters[name])
-					posters[name] = {};
-				posters[name][checkbox.getAttribute('type')] = 
-					(checkbox.disabled)? 'disabled' : 
-					(checkbox.checked)? 'default' : 'enabled';
-			});
+			var configs = {};
+			for each(var row in table){
+				for each(var elmCell in row){
+					if(!elmCell)
+						continue;
+					
+					var name = elmCell.name;
+					if(!configs[name])
+						configs[name] = {};
+					configs[name][elmCell.type] = elmCell.getAttribute('properties');
+				}
+			}
 			
-			setPref('postConfig', uneval(posters));
+			setPref('postConfig', uneval(configs));
 		}, true);
 		
 		// beforeaccept時点ではpreferenceが更新されていないためunloadを使う

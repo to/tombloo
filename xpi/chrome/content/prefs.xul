@@ -327,8 +327,25 @@ treechildren::-moz-tree-row(even) {
 		
 		
 		var elmPosters = document.getElementById('posters');
+		elmPosters.table = [];
+		elmPosters.getTargetCell = function(e){
+			var row={}, col={}, obj={};
+			this.treeBoxObject.getCellAt(e.clientX, e.clientY, row, col, obj);
+			
+			if(!col.value)
+				return;
+			
+			return this.table[row.value][col.value.index];
+		}
+		elmPosters.changeCursor = function(cursor){
+			if(this.style.cursor == cursor)
+				return;
+			
+			this.style.cursor = cursor;
+			this.treeBoxObject.clearStyleAndImageCaches();
+		}
+		
 		var config = eval(getPref('postConfig'));
-		var table = [];
 		withDocument(document, function(){
 			var elmChildren = elmPosters.appendChild(TREECHILDREN());
 			
@@ -364,25 +381,15 @@ treechildren::-moz-tree-row(even) {
 				});
 				
 				elmChildren.appendChild(TREEITEM(elmRow));
-				table.push(row);
+				elmPosters.table.push(row);
 			});
 		});
-		
-		function getTargetCell(elm, e){
-			var row={}, col={}, obj={};
-			elm.treeBoxObject.getCellAt(e.clientX, e.clientY, row, col, obj);
-			
-			if(!col.value)
-				return;
-			
-			return table[row.value][col.value.index];
-		}
 		
 		var source;
 		var elmDowned;
 		elmPosters.addEventListener('click', function(e){
 			// ドラッグ後のマウスアップではないか?
-			var elmCell = getTargetCell(elmPosters, e);
+			var elmCell = elmPosters.getTargetCell(e);
 			if(!elmCell || elmDowned != elmCell)
 				return;
 			
@@ -394,17 +401,17 @@ treechildren::-moz-tree-row(even) {
 		}, true);
 		
 		elmPosters.addEventListener('mousemove', function(e){
-			var elmCell = getTargetCell(elmPosters, e);
+			var elmCell = elmPosters.getTargetCell(e);
 			if(!source){
-				elmPosters.style.cursor = elmCell? 'pointer' : '';
+				elmPosters.changeCursor(elmCell? 'pointer' : '');
 			} else {
-				elmPosters.style.cursor = 'url(chrome://tombloo/skin/' + source + '.ico), pointer';
+				elmPosters.changeCursor('url(chrome://tombloo/skin/' + source + '.png), pointer');
 				elmCell && elmCell.setAttribute('properties', source);
 			}
 		}, true);
 		
 		elmPosters.addEventListener('mousedown', function(e){
-			var elmCell = getTargetCell(elmPosters, e);
+			var elmCell = elmPosters.getTargetCell(e);
 			if(!elmCell)
 				return;
 			
@@ -414,7 +421,7 @@ treechildren::-moz-tree-row(even) {
 		
 		elmPosters.addEventListener('mouseup', function(e){
 			source = null;
-			elmPosters.style.cursor = getTargetCell(elmPosters, e)? 'pointer' : '';
+			elmPosters.changeCursor(elmPosters.getTargetCell(e)? 'pointer' : '')
 		}, true);
 		
 		elmPosters.addEventListener('mouseout', function(e){
@@ -432,10 +439,11 @@ treechildren::-moz-tree-row(even) {
 			}
 		}, true)
 		
+		
 		// MacではOK/キャンセルが表示されないため無条件にunloadで保存する
 		window.addEventListener(AppInfo.OS.indexOf('WIN') == 0? 'beforeaccept' : 'unload', function(e){
 			var configs = {};
-			for each(var row in table){
+			for each(var row in elmPosters.table){
 				for each(var elmCell in row){
 					if(!elmCell)
 						continue;

@@ -73,13 +73,16 @@
 					<tree id="posters" hidecolumnpicker="true" seltype="single" >
 						<treecols>
 							<treecol flex="1"/>
-							<treecol type="checkbox" style="width:4em" label="Text" />
-							<treecol type="checkbox" style="width:4em" label="Photo" />
-							<treecol type="checkbox" style="width:4em" label="Quote" />
-							<treecol type="checkbox" style="width:4em" label="Link" />
-							<treecol type="checkbox" style="width:4em" label="Video" />
-							<treecol type="checkbox" style="width:4em" label="Chat" />
-							<treecol type="checkbox" style="width:5.5em" label="Reblog" />
+							<treecol type="checkbox"><vbox><label value="Text"/></vbox></treecol>
+							<treecol type="checkbox"><vbox><label value="Photo"/></vbox></treecol>
+							<treecol type="checkbox"><vbox><label value="Quote"/></vbox></treecol>
+							<treecol type="checkbox"><vbox><label value="Link"/></vbox></treecol>
+							<treecol type="checkbox"><vbox><label value="Video"/></vbox></treecol>
+							<treecol type="checkbox"><vbox><label value="Chat"/></vbox></treecol>
+							<treecol type="checkbox"><vbox>
+								<label value="Reblog"/>
+								<label value="Favorite"/>
+							</vbox></treecol>
 						</treecols>
 					</tree>
 				</tabpanel>
@@ -115,11 +118,11 @@
 									<textbox preference="shortcutkey.checkAndPost" size="35"/>
 								</hbox>
 							</row>
-							<row align="center" style="margin-top: 0.6em;">
+							<row align="center" style="margin-top: 0.7em;">
 								<label value="&label.tagProvider;" />
 								<radiogroup preference="tagProvider" />
 							</row>
-							<row align="center" style="margin: 0.4em 0 0.5em 0;">
+							<row align="center" style="margin: 0.7em 0 0.5em 0;">
 								<label value="&label.tagAutoComplete;" />
 								<checkbox preference="tagAutoComplete" />
 							</row>

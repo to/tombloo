@@ -14,15 +14,23 @@ checkbox, radio, button, tab {
 textbox[readonly=true] {
 	-moz-appearance : none;
 	-moz-user-focus : ignore !important;
-	-moz-border-bottom-colors : transparent;
-	-moz-border-left-colors : transparent;
-	-moz-border-right-colors : transparent;
-	-moz-border-top-colors : transparent;
+	-moz-border-bottom-colors : transparent !important;
+	-moz-border-left-colors : transparent !important;
+	-moz-border-right-colors : transparent !important;
+	-moz-border-top-colors : transparent !important;
+	background-color : transparent !important;
 }
 
 
 #posters {
 	width : 43em;
+}
+
+#posters treecol vbox{
+	-moz-box-align : center;
+	-moz-box-pack : center;
+	align : center;
+	width : 3.5em;
 }
 
 #posters treechildren::-moz-tree-image {
@@ -34,7 +42,7 @@ textbox[readonly=true] {
 }
 
 #posters treechildren::-moz-tree-row {
-  height : 2.5em !important;
+	height : 2.5em !important;
 }
 
 /* 画像をセルの真ん中に寄せるためcheckbox型を利用 */
@@ -53,27 +61,21 @@ textbox[readonly=true] {
 
 /* 選択行のハイライトを無効に */
 #posters treechildren::-moz-tree-cell-text(selected) {
+	font-weight : normal !important;
 	color : inherit !important;
 }
 
+#posters treechildren::-moz-tree-row(selected, current, focus),
+#posters treechildren::-moz-tree-row(current, focus) ,
+#posters treechildren::-moz-tree-row(selected, focus),
 #posters treechildren::-moz-tree-row(selected) {
-  background-color : -moz-Field !important;
-}
-
-#posters treechildren::-moz-tree-row(selected, focus) {
-  background-color : -moz-Field !important;
-}
-
-#posters treechildren::-moz-tree-row(current, focus) {
-	border : none !important;
-}
-
-#posters treechildren::-moz-tree-row(selected, current, focus) {
-	border : none !important;
+	border-color : transparent !important;
+	background-color : -moz-Field !important;
+	background-image : none !important;
 }
 
 /* 交互に色分けし見やすく */
 #posters treechildren::-moz-tree-row(selected, even),
 #posters treechildren::-moz-tree-row(even) {
-  background-color : #F3F3F3 !important;
+	background-color : #F3F3F3 !important;
 }

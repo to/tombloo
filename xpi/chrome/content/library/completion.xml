@@ -142,29 +142,6 @@
 						return res;
 					}
 					
-					function hsvToRGB(h, s, v) {
-						var r, g, b;
-						if (s === 0) {
-							r = g = b = v;
-						} else {
-							var i = Math.floor(h * 6);
-							var f = (h * 6) - i;
-							var p = v * (1 - s);
-							var q = v * (1 - (s * f));
-							var t = v * (1 - (s * (1 - f)));
-							switch (i) {
-								case 1: r = q; g = v; b = p; break;
-								case 2: r = p; g = v; b = t; break;
-								case 3: r = p; g = q; b = v; break;
-								case 4: r = t; g = p; b = v; break;
-								case 5: r = v; g = p; b = q; break;
-								case 6: // fall through
-								case 0: r = v; g = t; b = p; break;
-							}
-						}
-						return {r: r, g: g, b: b,};
-					}
-					
 					function hslToRGB(h, s, l){
 						var r, g, b;
 						if (s === 0) {
@@ -233,6 +210,9 @@
 					this.value = text.substring(0, word.start) + cand + delimiter + suffix;
 					this.selectionStart = this.selectionEnd = word.start + cand.length + delimiter.length;
 					
+					// 削除/修正を終了し自動決定の挙動を元に戻す
+					this.deleting = false
+					
 					if(terminate)
 						this.notify();
 				]]></body>
@@ -293,9 +273,8 @@
 					}
 					
 					var cands = this.getCandidates(hint, text.substring(0, word.start).split(this.delimiter));
-					if(this.autoComplete && cands.length==1 && (hint.length >=2 || cands[0].length == 1)){
-						if(!this.deleting)
-							this.injectCandidate(cands[0], true);
+					if(this.autoComplete && !this.deleting && cands.length==1 && (hint.length >=2 || cands[0].length == 1)){
+						this.injectCandidate(cands[0], true);
 						this.popup.hidePopup();
 						return;
 					}
@@ -316,14 +295,6 @@
 		
 		<handlers>
 			<handler event="input" action="this.complete(true)" />
-			<handler event="keyup"><![CDATA[
-				switch (event.keyCode) {
-					case KeyEvent.DOM_VK_DELETE:
-					case KeyEvent.DOM_VK_BACK_SPACE:
-						this.deleting = false;
-						return;
-				}
-			]]></handler>
 			<handler event="keydown"><![CDATA[
 				switch (event.keyCode) {
 					case KeyEvent.DOM_VK_DELETE:
@@ -341,6 +312,10 @@
 					event.preventDefault();
 					return;
 				}
+				
+				// タグが完結した場合、削除/修正を終了とする
+				if(this.delimiter.charCodeAt() == event.charCode)
+					this.deleting = false;
 				
 				switch (event.keyCode) {
 					case KeyEvent.DOM_VK_TAB:

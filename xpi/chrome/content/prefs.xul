@@ -294,7 +294,7 @@
 					
 					// type
 					var elmCell = elmRow.appendChild(TREECELL({
-						properties : conf[type],
+						properties : conf[type] || (postable && 'enabled'),
 					}));
 					update(elmCell, {
 						type     : type, 

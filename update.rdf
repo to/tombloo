@@ -2,21 +2,21 @@
 <RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
          xmlns:NC="http://home.netscape.com/NC-rdf#"
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Description RDF:about="rdf:#$qKXZi1"
+  <RDF:Seq RDF:about="rdf:#$GtgzR1">
+    <RDF:li RDF:resource="rdf:#$HtgzR1"/>
+  </RDF:Seq>
+  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAFCzSelJl1fyynoorDWUEay/yKcyCHXPXaNbE5KVNM1kPOseVhHgGawIlIXfKkBefwOpx+vPeyY/45DEwneztaNuzDkVmwxMR+D1/CBVu9icoLxJ7SAetSrQeqKz7MTmS53W5FE2ATpv4kQbU0wJtCZJvdOyKM7OW8fblcVpaffw">
+    <em:updates RDF:resource="rdf:#$GtgzR1"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$KtgzR1"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="2.0"
                    em:maxVersion="3.0.*"
-                   em:updateLink="http://github.com/to/tombloo/tree/master/tombloo.xpi?raw=true"
-                   em:updateHash="sha512:8d288c00d415926fe9252ef46d6b419acf758e711e00855820cd6bbd62c924ea91d899a7201ec2b8f2528500178dff3cb25925cee60ee644b92ba01fe8dda05b" />
-  <RDF:Seq RDF:about="rdf:#$mKXZi1">
-    <RDF:li RDF:resource="rdf:#$nKXZi1"/>
-  </RDF:Seq>
-  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
-                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAEeB/PCV3Y3yqzsxT3GzdAnsMNY/1sw1kshTKbf+eiLmQ7WqTqqirsmbcwV+7G+gwbSdjfOYqGZn8LXBsS7PeWCS2rtCndpP1WfXWmmvIaRooD6fbvE2QFNvyhdRY4tHCQdwJGv7hQz48J8Z7NbobKVDQCGPKjST3eHVmJ7Bu3LZ">
-    <em:updates RDF:resource="rdf:#$mKXZi1"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$nKXZi1"
-                   em:version="0.3.11">
-    <em:targetApplication RDF:resource="rdf:#$qKXZi1"/>
+                   em:updateLink="http://github.com/to/tombloo/tree/release/tombloo.xpi?raw=true"
+                   em:updateHash="sha512:c992f4e7f5d7d32a0f9f4d1859943b6c9faf720b5c968dccf275a8aa50a7867cefff3d914bbc7a368421033413102e571c7f6668204db79f211782bcd783d68a" />
+  <RDF:Description RDF:about="rdf:#$HtgzR1"
+                   em:version="0.3.12">
+    <em:targetApplication RDF:resource="rdf:#$KtgzR1"/>
   </RDF:Description>
 </RDF:RDF>

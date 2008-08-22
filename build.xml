@@ -42,7 +42,7 @@
 								<em:id>${RDF.Description.em:targetApplication.Description.em:id}</em:id>
 								<em:minVersion>${RDF.Description.em:targetApplication.Description.em:minVersion}</em:minVersion>
 								<em:maxVersion>${RDF.Description.em:targetApplication.Description.em:maxVersion}</em:maxVersion>
-								<em:updateLink>${RDF.Description.em:updateURL}</em:updateLink>
+								<em:updateLink>${updateLink}</em:updateLink>
 								<em:updateHash>sha512:${hash}</em:updateHash>
 							</Description>
 						</em:targetApplication>
@@ -52,7 +52,6 @@
 		</em:updates>
 	</Description>
 </RDF>]]></echo>
-		<replace file="update.rdf" token="update.rdf" value="${project}.xpi" />
 		
 		<property name="update.rdf" location="update.rdf"/>
 		<exec executable="${mccoy}">

@@ -760,21 +760,22 @@ Tombloo.Service.extractors = new Repository([
 	{
 		name : 'Photo',
 		ICON : 'chrome://tombloo/skin/photo.png',
+		PROTECTED_SITES : [
+			'files.posterous.com',
+			'image.itmedia.co.jp',
+			'wretch.yimg.com/',
+			'pics.*\.blog.yam.com/',
+			'www.imgscan.com/image_c.php',
+			'keep4u.ru/imgs/',
+		],
 		check : function(ctx){
 			return ctx.onImage;
 		},
 		extract : function(ctx){
 			var target = ctx.target;
 			var source = tagName(target)=='object'? target.data : target.src;
-			if([
-				'files.posterous.com',
-				'image.itmedia.co.jp',
-				'wretch.yimg.com/',
-				'pics.*\.blog.yam.com/',
-				'www.imgscan.com/image_c.php',
-				'keep4u.ru/imgs/',
-			].some(function(re){
-				return source.match(re);
+			if(this.PROTECTED_SITES.some(function(re){
+				return RegExp(re).test(source);
 			})){
 				return Tombloo.Service.extractors['Photo - Upload from Cache'].extract(ctx);
 			};

@@ -39,7 +39,7 @@
 				class="text-link" />
 		</vbox>
 			
-		<label class="sectionTitle">&contributors.label;</label>
+		<label class="sectionTitle">&developers.label;</label>
 		<vbox class="boxIndent">
 			<label value="ku" class="text-link" onclick="openURL('http://ido.nu/kuma/')" />
 			<label value="mattn" class="text-link" onclick="openURL('http://mattn.kaoriya.net/')" />

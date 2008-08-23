@@ -1,9 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css" ?>
 <?xml-stylesheet href="chrome://tombloo/content/prefs.css" type="text/css" ?>
-
 <!DOCTYPE prefwindow SYSTEM "chrome://tombloo/locale/tombloo.dtd" >
-
 <prefwindow 
 	style="width: 50em;" 
 	xmlns:html="http://www.w3.org/1999/xhtml" 
@@ -72,18 +70,21 @@
 				<tabpanel>
 					<tree id="posters" hidecolumnpicker="true" seltype="single" >
 						<treecols>
-							<treecol flex="1"/>
-							<treecol type="checkbox"><vbox><label value="Text"/></vbox></treecol>
-							<treecol type="checkbox"><vbox><label value="Photo"/></vbox></treecol>
-							<treecol type="checkbox"><vbox><label value="Quote"/></vbox></treecol>
-							<treecol type="checkbox"><vbox><label value="Link"/></vbox></treecol>
-							<treecol type="checkbox"><vbox><label value="Video"/></vbox></treecol>
-							<treecol type="checkbox"><vbox><label value="Chat"/></vbox></treecol>
-							<treecol type="checkbox"><vbox>
+							<treecol flex="1" style="cursor : pointer">
+								<vbox><image/></vbox><label/>
+							</treecol>
+							<treecol cycler="true"><hbox><label value="Text"/></hbox></treecol>
+							<treecol cycler="true"><hbox><label value="Photo"/></hbox></treecol>
+							<treecol cycler="true"><hbox><label value="Quote"/></hbox></treecol>
+							<treecol cycler="true"><hbox><label value="Link"/></hbox></treecol>
+							<treecol cycler="true"><hbox><label value="Video"/></hbox></treecol>
+							<treecol cycler="true"><hbox><label value="Chat"/></hbox></treecol>
+							<treecol cycler="true"><hbox><vbox align="center">
 								<label value="Reblog"/>
 								<label value="Favorite"/>
-							</vbox></treecol>
+							</vbox></hbox></treecol>
 						</treecols>
+						<treechildren flex="1" />
 					</tree>
 				</tabpanel>
 				<tabpanel>
@@ -239,6 +240,17 @@
 		keyStringField('accesskey.share', false);
 		
 		
+		var elmDataDir = getField('dataDir');
+		elmDataDir.nextSibling.addEventListener('command', function(){
+			var fp = new FilePicker(window, getMessage('label.dataDir'), FilePicker.modeGetFolder);
+			fp.displayDirectory = getDataDir();
+			if(fp.show() == fp.returnOK){
+				elmDataDir.value = fp.file.path.replace(getProfileDir().path, '{ProfD}');
+				prefpane.userChangedValue(elmDataDir);
+			}
+		}, true)
+		
+		
 		var tagProvider = document.getElementsByAttribute('preference', 'tagProvider')[0];
 		for(var name in models)
 			if(models[name].getUserTags)
@@ -252,136 +264,220 @@
 		}, true)
 		
 		
-		var elmPosters = document.getElementById('posters');
-		elmPosters.table = [];
-		elmPosters.getTargetCell = function(e){
-			var row={}, col={}, obj={};
-			this.treeBoxObject.getCellAt(e.clientX, e.clientY, row, col, obj);
+		function PosterTree(elmTree){
+			this.load();
 			
-			if(!col.value)
-				return;
+			this.elmTree = elmTree;
 			
-			return this.table[row.value][col.value.index];
-		}
-		elmPosters.changeCursor = function(cursor){
-			if(this.style.cursor == cursor)
-				return;
+			elmTree.addEventListener('click', bind('onClick', this), true);
+			elmTree.addEventListener('mousedown', bind('onMouseDown', this), true);
+			elmTree.addEventListener('mouseup', bind('onMouseUp', this), true);
+			elmTree.addEventListener('mouseout', bind('onMouseOut', this), true);
+			elmTree.addEventListener('mousemove', bind('onMouseMove', this), true);
+			elmTree.view = this;
 			
-			this.style.cursor = cursor;
-			this.treeBoxObject.clearStyleAndImageCaches();
+			
+			this.elmToggle = $x('.//xul:treecol', elmTree);
+			this.elmToggle.image = $x('.//xul:image', this.elmToggle);
+			this.elmToggle.label = $x('.//xul:label', this.elmToggle);
+			this.elmToggle.closed = false;
+			this.cycleHeader({index : 0});
 		}
 		
-		var config = eval(getPref('postConfig'));
-		withDocument(document, function(){
-			var elmChildren = elmPosters.appendChild(TREECHILDREN());
+		PosterTree.prototype = extend(new AbstractTreeView(), {
+			TYPES : 'regular photo quote link video conversation favorite'.split(' '),
 			
-			values(models).forEach(function(model){
-				// インターフェースが実装されているポスト対象のサービスでない場合は処理しない
-				if(!model.check)
-					return;
+			
+			resetData : function(rows){
+				// ロード以前はboxが存在しない
+				this.box && this.box.rowCountChanged(0, -this.rows.length);
+				this.rows = rows;
+				this.box && this.box.rowCountChanged(0, this.rows.length);
+			},
+			
+			load : function(){
+				var self = this;
+				var configs = eval(getPref('postConfig'));
 				
-				var conf = config[model.name] || {};
-				var row = [null];
-				var elmRow = TREEROW(TREECELL({
-					label    : model.name, 
-					src      : model.ICON,
-				}));
+				self.all = [];
 				
-				'regular photo quote link video conversation favorite'.split(' ').forEach(function(type){
-					var postable = (type=='favorite')? !!model.favor : model.check({
-						type : type,
-						pageUrl : {
-							match: function(){return true}
-						},
+				values(models).forEach(function(model){
+					// インターフェースが実装されているポスト対象のサービスでない場合は処理しない
+					if(!model.check)
+						return;
+					
+					var row = [model.name];
+					row.icon = model.ICON;
+					
+					var config = configs[model.name] || {};
+					self.TYPES.forEach(function(type){
+						var postable = (type=='favorite')? !!model.favor : model.check({
+							type : type,
+							pageUrl : {
+								match : function(){return true}
+							},
+						});
+						row.push(config[type] || (postable? 'enabled' : null));
 					});
 					
-					// type
-					var elmCell = elmRow.appendChild(TREECELL({
-						properties : conf[type] || (postable && 'enabled'),
-					}));
-					update(elmCell, {
-						type     : type, 
-						name     : model.name, 
-					});
-					row.push(postable? elmCell : null);
+					self.all.push(row);
 				});
 				
-				elmChildren.appendChild(TREEITEM(elmRow));
-				elmPosters.table.push(row);
-			});
+				self.rows = [].concat(self.all);
+			},
+			
+			save : function(){
+				var configs = {};
+				var self = this;
+				this.all.forEach(function(row){
+					var config = configs[row[0]] = {};
+					for(var j=1 ; j<row.length ; j++){
+						if(!row[j])
+							continue;
+						config[self.TYPES[j-1]] = row[j];
+					}
+				});
+				
+				setPref('postConfig', uneval(configs));
+			},
+			
+			// DOM
+			changeCursor : function(cursor){
+				if(this.elmTree.style.cursor == cursor)
+					return;
+				
+				this.elmTree.style.cursor = cursor;
+				
+				// Firefox 2でカーソルを更新するために必要
+				this.box.clearStyleAndImageCaches();
+			},
+			
+			setProp :function(pos, prop){
+				if(!pos)
+					return;
+				
+				this.rows[pos.row][pos.col] = prop;
+				this.box.invalidateCell(pos.row, this.box.columns.getColumnAt(pos.col));
+			},
+			
+			getCellAt : function(e){
+				var row={}, col={}, obj={};
+				this.box.getCellAt(e.clientX, e.clientY, row, col, obj);
+				
+				if(!col.value)
+					return;
+				
+				var pos = {
+					row : row.value,
+					col : col.value.index,
+				};
+				if(pos.col>0 && this.rows[pos.row] && this.rows[pos.row][pos.col])
+					return pos;
+			},
+			
+			// cycleCellはmousedownで発生してしまうため使わない
+			onClick : function(e){
+				// ドラッグ後のマウスアップではないか?
+				var pos = this.getCellAt(e);
+				if(!pos || (this.downed.row!=pos.row || this.downed.col!=pos.col))
+					return;
+				
+				var val = this.rows[pos.row][pos.col];
+				this.setProp(pos, 
+					(val=='default')? 'enabled' : 
+					(val=='enabled')? 'disabled' : 'default'
+				);
+			},
+			
+			onMouseDown : function(e){
+				var pos = this.getCellAt(e);
+				if(!pos)
+					return;
+				
+				this.source = this.rows[pos.row][pos.col];
+				this.downed = pos;
+			},
+			
+			onMouseUp : function(e){
+				delete this.source;
+				this.changeCursor(this.getCellAt(e)? 'pointer' : '')
+			},
+			
+			onMouseOut : function(e){
+				delete this.source;
+			},
+			
+			onMouseMove : function(e){
+				var pos = this.getCellAt(e);
+				if(!this.source){
+					this.changeCursor(pos? 'pointer' : '');
+					return;
+				}
+				
+				this.changeCursor('url(chrome://tombloo/skin/' + this.source + '.png), pointer');
+				this.setProp(pos, this.source);
+			},
+			
+			
+			// nsITreeView
+			get rowCount() {
+				return this.rows.length;
+			},
+			
+			setTree : function(box) {
+				this.box = box;
+			},
+			
+			getCellProperties : function(row, {index : col}, props){
+				var val = this.rows[row][col];
+				if(col!=0 && val)
+					props.AppendElement(AtomService.getAtom(val));
+			},
+			
+			getCellText : function(row, {index : col}){
+				return this.rows[row][col];
+			},
+			
+			getImageSrc : function(row, {index : col}){
+				if(col==0)
+					return this.rows[row].icon;
+			},
+			
+			cycleHeader : function({index : col}){
+				if(col!=0)
+					return;
+				
+				var elmToggle = this.elmToggle;
+				var closed = elmToggle.closed;
+				var button = closed? {
+					image : 'twisty-open.png',
+					label : getMessage('label.collapseServices'),
+				} : {
+					image : 'twisty-clsd.png',
+					label : getMessage('label.openServices'),
+				};
+				elmToggle.image.src = 'chrome://global/skin/tree/' + button.image;
+				elmToggle.label.value = button.label;
+				
+				this.resetData(closed? [].concat(this.all) : reduce(function(memo, row){
+					var used = row.some(function(cell){
+						return (/(default|enable)/).test(cell);
+					});
+					if(used)
+						memo.push(row);
+					
+					return memo;
+				}, this.all, []));
+				
+				elmToggle.closed = !closed;
+			},
 		});
-		
-		var source;
-		var elmDowned;
-		elmPosters.addEventListener('click', function(e){
-			// ドラッグ後のマウスアップではないか?
-			var elmCell = elmPosters.getTargetCell(e);
-			if(!elmCell || elmDowned != elmCell)
-				return;
-			
-			var val = elmCell.getAttribute('properties');
-			val = 
-				(val=='default')? 'enabled' : 
-				(val=='enabled')? 'disabled' : 'default'
-			elmCell.setAttribute('properties', val);
-		}, true);
-		
-		elmPosters.addEventListener('mousemove', function(e){
-			var elmCell = elmPosters.getTargetCell(e);
-			if(!source){
-				elmPosters.changeCursor(elmCell? 'pointer' : '');
-			} else {
-				elmPosters.changeCursor('url(chrome://tombloo/skin/' + source + '.png), pointer');
-				elmCell && elmCell.setAttribute('properties', source);
-			}
-		}, true);
-		
-		elmPosters.addEventListener('mousedown', function(e){
-			var elmCell = elmPosters.getTargetCell(e);
-			if(!elmCell)
-				return;
-			
-			source = elmCell.getAttribute('properties');
-			elmDowned = elmCell;
-		}, true);
-		
-		elmPosters.addEventListener('mouseup', function(e){
-			source = null;
-			elmPosters.changeCursor(elmPosters.getTargetCell(e)? 'pointer' : '')
-		}, true);
-		
-		elmPosters.addEventListener('mouseout', function(e){
-			source = null;
-		}, false);
-		
-		
-		var elmDataDir = getField('dataDir');
-		elmDataDir.nextSibling.addEventListener('command', function(){
-			var fp = new FilePicker(window, getMessage('label.dataDir'), FilePicker.modeGetFolder);
-			fp.displayDirectory = getDataDir();
-			if(fp.show() == fp.returnOK){
-				elmDataDir.value = fp.file.path.replace(getProfileDir().path, '{ProfD}');
-				prefpane.userChangedValue(elmDataDir);
-			}
-		}, true)
 		
 		
 		// MacではOK/キャンセルが表示されないため無条件にunloadで保存する
+		var tree = new PosterTree(document.getElementById('posters'));
 		window.addEventListener(AppInfo.OS.indexOf('WIN') == 0? 'beforeaccept' : 'unload', function(e){
-			var configs = {};
-			for each(var row in elmPosters.table){
-				for each(var elmCell in row){
-					if(!elmCell)
-						continue;
-					
-					var name = elmCell.name;
-					if(!configs[name])
-						configs[name] = {};
-					configs[name][elmCell.type] = elmCell.getAttribute('properties');
-				}
-			}
-			
-			setPref('postConfig', uneval(configs));
+			tree.save()
 		}, true);
 		
 		// beforeaccept時点ではpreferenceが更新されていないためunloadを使う

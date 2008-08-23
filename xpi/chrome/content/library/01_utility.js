@@ -1481,6 +1481,8 @@ function convertToDataURL(src){
 
 
 // ----[UI]-------------------------------------------------
+var AbstractTreeView = createMock('@mozilla.org/xul/xul-tree-builder;1');
+
 /**
  * マウスショートカットを監視する。
  * マウスダウンにより1セッションがはじまり、全てのボタンのマウスアップで終わる。

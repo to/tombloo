@@ -56,7 +56,7 @@ Tombloo.Service.actions = new Repository([
 	{
 		name : getMessage('label.action.tomblooOptions'),
 		execute : function(){
-			openDialog('chrome://tombloo/content/prefs.xul', 600, 500, 'resizable');
+			openDialog('chrome://tombloo/content/prefs.xul', 600, 600, 'resizable');
 		},
 	},
 ]);

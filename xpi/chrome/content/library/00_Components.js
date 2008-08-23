@@ -26,6 +26,7 @@ var ISelectionListener   = Ci.nsISelectionListener;
 // var IAccessNode          = Ci.nsIAccessNode;
 
 
+// Firefox 2で全てのページがガベージされなくなるメモリーリークが発生したため停止中
 // const AccessibilityService = getService('/accessibilityService;1', Ci.nsIAccessibilityService);
 var ExtensionManager    = getService('/extensions/manager;1', Ci.nsIExtensionManager);
 var StorageService      = getService('/storage/service;1', Ci.mozIStorageService);
@@ -153,6 +154,9 @@ function createMock(sample, proto){
 	
 	for(var key in sample){
 		try{
+			if(sample.__lookupGetter__(key))
+				continue;
+			
 			var val = sample[key];
 			switch (typeof(val)){
 			case 'number':
@@ -171,6 +175,7 @@ function createMock(sample, proto){
 	
 	Mock.prototype.QueryInterface = createQueryInterface(ifcs);
 	
+	// FIXME: extendに変える(アクセサをコピーできない)
 	update(Mock.prototype, proto);
 	update(Mock, Mock.prototype);
 	

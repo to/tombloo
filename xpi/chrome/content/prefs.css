@@ -23,10 +23,10 @@ textbox[readonly=true] {
 
 
 #posters {
-	width : 43em;
+	width : 48em;
 }
 
-#posters treecol vbox{
+#posters treecol hbox{
 	-moz-box-align : center;
 	-moz-box-pack : center;
 	align : center;
@@ -45,19 +45,19 @@ textbox[readonly=true] {
 	height : 2.5em !important;
 }
 
-/* 画像をセルの真ん中に寄せるためcheckbox型を利用 */
-#posters treechildren::-moz-tree-checkbox(default) {
+#posters treechildren::-moz-tree-image(default) {
 	list-style-image : url('chrome://tombloo/skin/default.png');
 }
 
-#posters treechildren::-moz-tree-checkbox(enabled) {
+#posters treechildren::-moz-tree-image(enabled) {
 	/* 透明度の設定はできない */
 	list-style-image : url('chrome://tombloo/skin/enabled.png');
 }
 
-#posters treechildren::-moz-tree-checkbox(disabled) {
+#posters treechildren::-moz-tree-image(disabled) {
 	list-style-image : url('chrome://tombloo/skin/disabled.png');
 }
+
 
 /* 選択行のハイライトを無効に */
 #posters treechildren::-moz-tree-cell-text(selected) {

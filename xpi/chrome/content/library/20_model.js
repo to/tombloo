@@ -1387,7 +1387,7 @@ models.getEnables = function(ps){
 		// クイックポストフォームにて、取得後にデフォルトなのか利用可能なのかを
 		// 判定する必要があったため、サービスに設定値を保存し返す
 		var val = m.config[ps.type] = models.getPostConfig(config, m.name, ps);
-		return (/(default|enable)/).test(val);
+		return val==null || (/(default|enable)/).test(val);
 	});
 }
 

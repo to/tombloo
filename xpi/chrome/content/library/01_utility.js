@@ -35,6 +35,7 @@ function getCookieString(host, name){
 }
 
 function getPasswords(host, user){
+	// Firefox 2
 	if(PasswordManager){
 		return filter(function(p){
 			return (p.host == host) && 
@@ -48,7 +49,7 @@ function getPasswords(host, user){
 				password : p.password,
 				passwordFieldName : p.passwordField,
 			}
-		}, ifilter(function(c){
+		}, ifilter(function(p){
 			return (user? p.username == user : true);
 		}, LoginManager.findLogins({}, host, host, null)));
 	}
@@ -759,6 +760,13 @@ String.prototype = update(String.prototype, {
 		return crypto.finish(false).split('').map(function(char){
 			return char.charCodeAt().toHexString();
 		}).join('');
+	},
+	sha1 : function(charset){
+		var crypto = new CryptoHash(CryptoHash.SHA1);
+		var data = this.toByteArray(charset);
+		crypto.update(data, data.length);
+		
+		return crypto.finish(true);
 	},
 	extract : function(re, group){
 		group = group==null? 1 : group;
@@ -1780,5 +1788,22 @@ AbstractSessionService = {
 		this.cookie = cookie;
 		
 		return 'changed';
+	},
+	
+	getSessionValue : function(key, func){
+		var self = this;
+		switch (this.updateSession()){
+		case 'none':
+			return fail(new Error(getMessage('error.notLoggedin')));
+			
+		case 'same':
+			if(self[key])
+				return succeed(self[key]);
+			
+		case 'changed':
+			return func().addCallback(function(value){
+				return self[key] = value;
+			});
+		}
 	},
 }

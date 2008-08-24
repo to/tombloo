@@ -110,8 +110,8 @@ Tombloo.Service = {
 	/**
 	 * 詳細なエラー情報を表す文字列を生成する。
 	 *
-	 * @param {Error} err 。
-	 * @return {String} 。
+	 * @param {Error} err 
+	 * @return {String}
 	 */
 	reprError : function(err){
 		if(err.name && err.name.match('GenericError'))
@@ -126,7 +126,7 @@ Tombloo.Service = {
 		var msg = [];
 		for(var p in err){
 			var val = err[p];
-			if(val == null || p == 'stack' || typeof(val)=='function')
+			if(val == null || /(stack|name)/.test(p) || typeof(val)=='function')
 				continue;
 			
 			if(p.toLowerCase() == 'filename' || p == 'location')

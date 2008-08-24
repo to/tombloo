@@ -616,6 +616,57 @@ models.register({
 	},
 });
 
+models.register(update({
+	name : 'Plurk',
+	ICON : 'http://www.plurk.com/static/favicon.png',
+
+	check : function(ps){
+		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
+	},
+	
+	post : function(ps){
+		return Plurk.addPlurk(
+			ps.type=='regular'? 'says' : 'shares',
+			joinText([ps.item, ps.itemUrl, ps.body, ps.description], ' ', true)
+		);
+	},
+	
+	addPlurk : function(qualifier, content){
+		return Plurk.getToken().addCallback(function(token){
+			return request('http://www.plurk.com/TimeLine/addPlurk', {
+				redirectionLimit : 0,
+				sendContent : update(token, {
+					qualifier : qualifier,
+					content   : content,
+				}),
+			});
+		});
+	},
+	
+	getAuthCookie : function(){
+		return getCookieString('plurk.com', 'plurkcookie').extract(/user_id=(.+)/);
+	},
+	
+	getToken : function(){
+		var status = this.updateSession();
+		switch (status){
+		case 'none':
+			throw new Error(getMessage('error.notLoggedin'));
+			
+		case 'same':
+			if(this.token)
+				return succeed(this.token);
+			
+		case 'changed':
+			var self = this;
+			return request('http://www.plurk.com/').addCallback(function(res){
+				return self.token = {
+					uid : res.responseText.extract(/"user_id": (.+?),/)
+				};
+			});
+		}
+	},
+}, AbstractSessionService));
 
 models.register({
 	name : 'Google',

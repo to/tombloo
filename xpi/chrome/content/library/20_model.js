@@ -616,6 +616,54 @@ models.register({
 	},
 });
 
+models.register(update({}, AbstractSessionService, {
+	name : 'Rejaw',
+	ICON : 'http://rejaw.com/images/logo/favicon.ico',
+
+	check : function(ps){
+		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
+	},
+	
+	post : function(ps){
+		return Rejaw.shout(joinText([ps.item, ps.itemUrl, ps.body, ps.description], '\n', true));
+	},
+	
+	shout : function(text){
+		return Rejaw.getToken().addCallback(function(token){
+			return request('http://rejaw.com/v1/conversation/shout.json', {
+				redirectionLimit : 0,
+				sendContent : update(token, {
+					text : text,
+				}),
+			});
+		});
+	},
+	
+	getAuthCookie : function(){
+		return getCookieString('rejaw.com', 'signin_email');
+	},
+	
+	getToken : function(){
+		var status = this.updateSession();
+		switch (status){
+		case 'none':
+			throw new Error(getMessage('error.notLoggedin'));
+			
+		case 'same':
+			if(this.token)
+				return succeed(this.token);
+			
+		case 'changed':
+			var self = this;
+			return request('http://rejaw.com/').addCallback(function(res){
+				return self.token = {
+					session : res.responseText.extract(/"session":"(.+?)"/)
+				};
+			});
+		}
+	},
+}));
+
 models.register(update({
 	name : 'Plurk',
 	ICON : 'http://www.plurk.com/static/favicon.png',

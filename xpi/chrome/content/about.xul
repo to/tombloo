@@ -44,8 +44,9 @@
 			<label value="ku" class="text-link" onclick="openURL('http://ido.nu/kuma/')" />
 			<label value="mattn" class="text-link" onclick="openURL('http://mattn.kaoriya.net/')" />
 			<label value="youpy" class="text-link" onclick="openURL('http://github.com/youpy')" />
-			<label value="cxx"/>
+			<label value="cxx" class="text-link" onclick="openURL('http://cxx.tumblr.com/')" />
 			<label value="Constellation" class="text-link" onclick="openURL('http://d.hatena.ne.jp/Constellation/')" />
+			<label value="YungSang" class="text-link" onclick="openURL('http://blog.yungsang.com/')" />
 		</vbox>
 			
 		<label class="sectionTitle"></label>

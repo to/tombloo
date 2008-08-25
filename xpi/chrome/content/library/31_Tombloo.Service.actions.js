@@ -60,3 +60,48 @@ Tombloo.Service.actions = new Repository([
 		},
 	},
 ]);
+
+if(AppShellService.hiddenDOMWindow.PicLensContext){
+	Tombloo.Service.actions.register({
+		name : 'Piclens + Local Tumblr',
+		execute : function(){
+			var users = Tombloo.Photo.findUsers();
+			var user = (users.length<=1)? users[0] : input({'User' : users});
+			if(!user)
+				return;
+			
+			var photos = Tombloo.Photo.findByUser({
+				user   : user, 
+				limit  : 1000, 
+				offset : 0, 
+				order  : 'date DESC', // 'random()'
+			});
+			
+			// E4Xを使うコードに比べて30倍程度高速
+			var items = [];
+			photos.forEach(function(photo){
+				var imegeUri = createURI(photo.getFile(500)).asciiSpec;
+				items.push('<item>' + 
+						'<title>' + photo.body.trimTag() + '</title>' +
+						'<link>' + photo.url + '</link>' +
+						'<guid>' + photo.id + '</guid>' +
+						'<media:thumbnail url="' + imegeUri + '" />' +
+						'<media:content url="' + imegeUri + '" />' +
+					'</item>'
+				);
+			});
+			
+			var file = getTempDir('photos.rss');
+			putContents(file, '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' + 
+				'<rss version="2.0" xmlns:media="http://search.yahoo.com/mrss"><channel>' +
+					items.join('') +
+ 				'</channel></rss>');
+			
+			// hiddenDOMWindowを使うとFirefoxがクラッシュした
+			// ガベージのことも考慮しコンテンツのウィンドウを利用する
+			// location以外の実行では開始されなかった(PicLensの相対パス解決などと関係あり)
+			var win = wrappedObject(getMostRecentWindow().content);
+			win.location = 'javascript:piclens = new PicLensContext();piclens.launch("' + createURI(file).asciiSpec + '", "", "")';
+		},
+	}, '----');
+}

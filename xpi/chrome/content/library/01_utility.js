@@ -780,7 +780,7 @@ String.prototype = update(String.prototype, {
 		return new UnicodeConverter(charset).ConvertFromUnicode(this);
 	},
 	trimTag : function(){
-		return this.replace(/<.*?>/g, '');
+		return this.replace(/<!--[\s\S]+?-->/gm, '').replace(/<[\s\S]+?>/gm, '');
 	},
 	includesFullwidth : function(){
 		return (/[^ -~｡-ﾟ]/).test(this);

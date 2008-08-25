@@ -611,9 +611,13 @@ connect(grobal, 'browser-load', function(e){
 	}, true);
 	
 	var menuAction = doc.getElementById('tombloo-menu-main');
-	Tombloo.Service.actions.names.forEach(function(name){
-		appendMenuItem(menuAction, name);
-	});
+	menuAction.addEventListener('popupshowing', function(e){
+		clearChildren(menuAction);
+		
+		Tombloo.Service.actions.names.forEach(function(name){
+			appendMenuItem(menuAction, name);
+		});
+	}, true);
 	
 	menuAction.addEventListener('command', function(e){
 		Tombloo.Service.actions[e.originalTarget.label].execute();

@@ -6,6 +6,9 @@
 	
 	var configs = eval(json);
 	items(configs).forEach(function([name, config]){
+		if(!models[name])
+			return;
+		
 		var favor = models[name].favor;
 		
 		delete config.reblog;

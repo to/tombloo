@@ -513,11 +513,11 @@ forEach({
 		
 		Tombloo.Service.share(ctx, ext, ext.name.match(/^Link/));
 	},
-}, function(pair){
-	var key = getPref(pair[0]);
+}, function([key, func]){
+	key = getPref(key);
 	if(key)
 		shortcutkeys[key] = {
-			execute : pair[1],
+			execute : func,
 		};
 });
 
@@ -669,7 +669,9 @@ function connectToBrowser(win){
 			if(!key)
 				return;
 			
-			key.execute(e);
+			// Shift + Tなどをテキストエリアで入力できるように
+			if((e.ctrlKey || e.altKey) || !(/(input|textarea)/i).test(e.target.tagName))
+				key.execute(e);
 		}, true);
 		hooked.shortcutkey = true;
 	}

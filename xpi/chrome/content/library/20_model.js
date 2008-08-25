@@ -910,10 +910,10 @@ models.register(update({}, AbstractSessionService, {
 	},
 	
 	post : function(ps){
-		return this.iLikeIt(ps.item, ps.itemUrl);
+		return this.iLikeIt(ps.item, ps.itemUrl, ps.description);
 	},
 	
-	iLikeIt : function(title, url){
+	iLikeIt : function(title, url, comment){
 		var username;
 		return StumbleUpon.getCurrentId().addCallback(function(id){
 			username = id;
@@ -942,14 +942,15 @@ models.register(update({}, AbstractSessionService, {
 				},
 			});
 		}).addCallback(function(res){
-			log(res.responseText);
 			if(/NEWURL/.test(res.responseText))
 				return addTab('http://www.stumbleupon.com/newurl.php?' + queryString({
 					title   : title,
 					url     : url,
 					rating  : 1,
 					referer : url,
-				}), true);
+				}), true).addCallback(function(win){
+					$x('id("searchtext")', win.document).value = comment;
+				});
 		});
 	},
 	

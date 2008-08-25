@@ -225,8 +225,7 @@ function addTab(url, background){
 	browser.addEventListener('DOMContentLoaded', function(event){
 		browser.removeEventListener('DOMContentLoaded', arguments.callee, true);
 		
-		var win = event.originalTarget.defaultView;
-		d.callback(win.wrappedJSObject || win);
+		d.callback(wrappedObject(event.originalTarget.defaultView));
 	}, true);
 	
 	return d;

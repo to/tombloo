@@ -767,6 +767,7 @@ Tombloo.Service.extractors = new Repository([
 			'pics.*\.blog.yam.com/',
 			'www.imgscan.com/image_c.php',
 			'keep4u.ru/imgs/',
+			'www.toofly.com/userGallery/',
 		],
 		check : function(ctx){
 			return ctx.onImage;

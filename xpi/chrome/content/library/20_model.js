@@ -1577,16 +1577,24 @@ models.register({
 	},
 	
 	post : function(ps){
+		return this.addMessage(joinText([ps.item, ps.itemUrl, ps.body, ps.description], ' ', true));
+	},
+	
+	addMessage : function(message){
 		return request('http://wassr.jp/my/').addCallback(function(res){
+			if(res.channel.URI.asciiSpec != 'http://wassr.jp/my/')
+				throw new Error(getMessage('error.notLoggedin'));
+			
 			return request('http://wassr.jp/my/status/add', {
 				redirectionLimit : 0,
 				sendContent : update(formContents(convertToHTMLDocument(res.responseText)), {
-					message : joinText([ps.item, ps.itemUrl, ps.body, ps.description], ' ', true),
+					message : message,
 				}),
 			});
 		})
 	},
 });
+
 
 // 全てのサービスをグローバルコンテキストに置く(後方互換)
 models.copyTo(this);

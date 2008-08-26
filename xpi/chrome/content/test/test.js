@@ -123,3 +123,7 @@ function copy(src, target){
 function remove(file){
 	file.exists() && file.remove(false);
 }
+
+function lipsum(){
+	return (Math.floor(Math.random()*Math.pow(9,9))).toString(36);
+}

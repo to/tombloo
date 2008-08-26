@@ -807,9 +807,7 @@ models.register({
 		return succeed().addCallback(function(){
 			return request('http://feeds.delicious.com/feeds/json/tags/' + (user || Delicious.getCurrentUser()));
 		}).addCallback(function(res){
-			var tags = Components.utils.evalInSandbox(
-				res.responseText, 
-				Components.utils.Sandbox('http://feeds.delicious.com/'));
+			var tags = evalInSandbox(res.responseText, 'http://feeds.delicious.com/');
 			return reduce(function(memo, tag){
 				memo.push({
 					name      : tag[0],
@@ -1218,7 +1216,7 @@ models.register({
 						frequency : -1,
 					});
 					return memo;
-				}, Components.utils.evalInSandbox(RegExp.$1, Components.utils.Sandbox('http://bookmarks.yahoo.co.jp/')), []);
+				}, evalInSandbox(RegExp.$1, 'http://bookmarks.yahoo.co.jp/'), []);
 			}
 			
 			throw new Error(getMessage('error.notLoggedin'));
@@ -1405,7 +1403,7 @@ models.register({
 					frequency : -1,
 				});
 				return memo;
-			}, Components.utils.evalInSandbox(RegExp.$1, Components.utils.Sandbox('http://b.hatena.ne.jp/')), []);
+			}, evalInSandbox(RegExp.$1, 'http://b.hatena.ne.jp/'), []);
 		});
 	},
 });

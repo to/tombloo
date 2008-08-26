@@ -16,6 +16,10 @@ if(typeof(constant)=='undefined')
 	constant = {};
 
 // ----[XPCOM]-------------------------------------------------
+function evalInSandbox(js, url){
+	return Components.utils.evalInSandbox(js, Components.utils.Sandbox(url));
+}
+
 function wrappedObject(obj){
 	return obj.wrappedJSObject || obj;
 }
@@ -437,7 +441,10 @@ function request(url, opts){
 			}
 		},
 	};
-	channel.requestMethod = opts.sendContent? 'POST' : 'GET';
+	
+	channel.requestMethod = 
+		(opts.method)? opts.method : 
+		(opts.sendContent)? 'POST' : 'GET';
 	channel.notificationCallbacks = listner;
 	channel.asyncOpen(listner, null);
 	

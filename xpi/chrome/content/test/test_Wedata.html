@@ -1,0 +1,228 @@
+<html>
+<head>
+	<script type="text/javascript" src="library/MochiKit.js"></script>
+	<script type="text/javascript" src="library/SimpleTest.js"></script>
+	<script type="text/javascript" src="test.js"></script>
+	<link rel="stylesheet" type="text/css" href="library/test.css">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+</head>
+<body>
+<pre id="test">
+</pre>
+<script type="text/javascript" src="../library/00_MochiKit.js"></script>
+<script type="text/javascript" src="../library/00_Components.js"></script>
+<script type="text/javascript" src="../library/01_utility.js"></script>
+<script type="text/javascript" src="../library/20_model.js"></script>
+<script type="text/javascript" src="../library/20_Wedata.js"></script>
+<script type="text/javascript;version=1.8">
+try {
+	// chrome://tombloo/content/test/test_Wedata.html
+	
+	SimpleTest.waitForExplicitFinish();
+	
+	var d = succeed();
+	var DATABASE;
+	
+	
+	// 取得
+	d.addCallback(function(){
+		return Wedata.Database.findAll();
+	}).addCallback(function(dbs){
+		ok(dbs.length > 5, 'Database.findAll');
+	});
+	
+	d.addCallback(function(){
+		return Wedata.Database.findByName('Wedata API Example');
+	}).addCallback(function(db){
+		is(db.name, 'Wedata API Example', 'Database.findByName');
+		
+		return db.getItems();
+	}).addCallback(function(items){
+		ok(items.length > 5, 'Database#getItems');
+	});
+	
+	
+	// テストデータベース名設定(一連の対データベーステストで利用)
+	d.addCallback(function(){
+		DATABASE = 'Test Database for Tomblooo ' + lipsum();
+	});
+	
+	
+	// 新規追加
+	d.addCallback(function(){
+		var db = new Wedata.Database(DATABASE, {
+			name : DATABASE,
+			description : DATABASE,
+			required_keys : 'name',
+			optional_keys : 'value',
+			permit_other_keys : true,
+		});
+		
+		return db.save();
+	});
+	
+	// 更新(新規追加から連続)
+	d.addCallback(function(db){
+		db.permit_other_keys = false;
+		
+		return db.save();
+	});
+	
+	d.addCallback(function(){
+		return Wedata.Database.findByName(DATABASE);
+	}).addCallback(function(db){
+		is(db.name, DATABASE);
+		is(db.description, DATABASE);
+		is(db.optional_keys, 'value');
+		is(db.required_keys, 'name');
+		
+		is(db.permit_other_keys, false);
+	});
+	
+	// 更新(検索結果)
+	d.addCallback(function(){
+		return Wedata.Database.findByName(DATABASE);
+	}).addCallback(function(db){
+		db.description = 'CHANGED_DESCRIPTION';
+		db.permit_other_keys = true;
+		
+		return db.save();
+	});
+	
+	d.addCallback(function(){
+		return Wedata.Database.findByName(DATABASE);
+	}).addCallback(function(db){
+		is(db.name, DATABASE);
+		is(db.description, 'CHANGED_DESCRIPTION');
+		is(db.optional_keys, 'value');
+		is(db.required_keys, 'name');
+		
+		is(db.permit_other_keys, true);
+	});
+	
+	// 削除
+	d.addCallback(function(){
+		return Wedata.Database.findByName(DATABASE);
+	}).addCallback(function(db){
+		db.remove();
+	});
+	
+	
+	// 取得
+	d.addCallback(function(){
+		return Wedata.Item.findByDatabaseAndKeyword('Wedata API Example', 'a');
+	});
+	
+	d.addCallback(function(items){
+		ok(items.length > 2);
+	});
+	
+	
+	// テストデータベース名設定(一連の対アイテムテストで利用)
+	d.addCallback(function(){
+		DATABASE = 'Test Database for Tomblooo';
+	});
+	
+	
+	// 削除
+	d.addCallback(function(){
+		return Wedata.Item.findByDatabase(DATABASE);
+	}).addCallback(function(items){
+		return deferredForEach(items, function(item){
+			return item.remove();
+		});
+	});
+	
+	d.addCallback(function(){
+		return Wedata.Item.findByDatabase(DATABASE);
+	}).addCallback(function(items){
+		is(items.length, 0, '全削除');
+	});
+	
+	
+	// 新規追加
+	d.addCallback(function(items){
+		var item = new Wedata.Item(DATABASE, 'テストアイテム 20080826', {
+			name : '名前',
+			value : '値',
+		});
+		
+		return item.save();
+	});
+	
+	// 更新(新規追加から連続)
+	d.addCallback(function(item){
+		item.name = 'CHANGED_NAME';
+		
+		return item.save();
+	});
+	
+	d.addCallback(function(){
+		return Wedata.Item.findByDatabase(DATABASE);
+	}).addCallback(function(items){
+		is(items.length, 1);
+		
+		var item = items[0];
+		is(item.value, '値');
+		is(item.name, 'CHANGED_NAME');
+		is(item.getMetaInfo().name, 'テストアイテム 20080826');
+	});
+	
+	// キーワード検索
+	d.addCallback(function(){
+		return Wedata.Item.findByDatabaseAndKeyword(DATABASE, 'CHANGED_NAME');
+	}).addCallback(function(items){
+		is(items.length, 1);
+		
+		var item = items[0];
+		is(item.value, null, '※キーワードで検索すると対象以外の属性が返らない');
+	});
+	
+	// 更新(検索結果)
+	d.addCallback(function(){
+		return Wedata.Item.findByDatabase(DATABASE);
+	}).addCallback(function(items){
+		is(items.length, 1);
+		
+		var item = items[0];
+		is(item.value, '値', '検索結果の属性が揃っていることを確認');
+		
+		item.name = 'CHANGED_CHANGED_NAME';
+		
+		return item.save();
+	});
+	
+	d.addCallback(function(){
+		return Wedata.Item.findByDatabase(DATABASE);
+	}).addCallback(function(items){
+		is(items.length, 1);
+		
+		var item = items[0];
+		is(item.value, '値');
+		is(item.name, 'CHANGED_CHANGED_NAME');
+		is(item.getMetaInfo().name, 'テストアイテム 20080826');
+	});
+	
+	
+	d.addErrback(function(e){
+		error(e.message);
+		ok(false, '遅延テストエラー');
+	});
+	d.addBoth(function(){
+		SimpleTest.finish()
+	});
+	
+} catch (err) {
+	error(err);
+	var s = [];
+	s.push('TEST SUITE FAILURE!');
+	for(var prop in err)
+		s.push(prop + ':  ' + err[prop]);
+	ok(false, s.join('\n'));
+	
+	SimpleTest.finish()
+}
+</script>
+
+</body>
+</html>

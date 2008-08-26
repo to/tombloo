@@ -1,3 +1,6 @@
+if(typeof(models)=='undefined')
+	this.models = models = new Repository();
+
 var Tumblr = update({}, AbstractSessionService, {
 	name : 'Tumblr',
 	ICON : 'http://www.tumblr.com/images/favicon.gif',
@@ -558,6 +561,4 @@ Tumblr.Quote = {
 	},
 }
 
-if(typeof(models)=='undefined')
-	this.models = models = new Repository();
 models.register(Tumblr);

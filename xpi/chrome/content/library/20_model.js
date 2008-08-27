@@ -525,6 +525,31 @@ models.register({
 });
 
 models.register({
+	name : 'PingFm',
+	ICON : 'http://ping.fm/favicon.ico',
+
+	check : function(ps){
+		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
+	},
+	
+	post : function(ps){
+		// ログインせずにポストしてもエラーが発生しない
+		// クッキーでログインを判別できない
+		return request('http://ping.fm/dashboard/').addCallback(function(res){
+			// 未ログインか?
+			if(res.channel.URI.path == '/login/')
+				throw new Error(getMessage('error.notLoggedin'));
+			
+			return request('http://ping.fm/post/', {
+				sendContent : {
+					message : joinText([ps.item, ps.itemUrl, ps.body, ps.description], ' ', true),
+				},
+			});
+		})
+	}
+});
+
+models.register({
 	name : 'Twitter',
 	ICON : 'http://twitter.com/favicon.ico',
 	

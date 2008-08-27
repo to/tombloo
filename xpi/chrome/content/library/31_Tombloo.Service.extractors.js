@@ -746,14 +746,13 @@ Tombloo.Service.extractors = new Repository([
 		name : 'Photo - image link',
 		ICON : 'chrome://tombloo/skin/photo.png',
 		check : function(ctx){
-			return (ctx.onLink && ctx.link.href.match(/^[^?]*/)[0].match(/(png|gif|jpe?g)$/i));
+			var uri = createURI(ctx.link.href);
+			return ctx.onLink && (/(png|gif|jpe?g)$/i).test(uri.fileExtension);
 		},
 		extract : function(ctx){
-			return {
-				type    : 'photo',
-				item    : ctx.title,
-				itemUrl : ctx.link.href, 
-			}
+			ctx.target = ctx.link;
+			
+			return Tombloo.Service.extractors['Photo'].extract(ctx);
 		},
 	},
 	
@@ -774,7 +773,10 @@ Tombloo.Service.extractors = new Repository([
 		},
 		extract : function(ctx){
 			var target = ctx.target;
-			var source = tagName(target)=='object'? target.data : target.src;
+			var tag = tagName(target);
+			var source = 
+				tag=='object'? target.data : 
+				tag=='img'? target.src : target.href;
 			if(this.PROTECTED_SITES.some(function(re){
 				return RegExp(re).test(source);
 			})){

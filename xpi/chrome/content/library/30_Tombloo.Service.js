@@ -159,7 +159,7 @@ Tombloo.Service = {
 	 * @param {String} type ポストタイプ。
 	 */
 	alertPreference : function(type){
-		var win = openDialog('chrome://tombloo/content/prefs.xul', 600, 500, 'resizable');
+		var win = openDialog('chrome://tombloo/content/prefs.xul', 'resizable,centerscreen');
 		win.addEventListener('load', function(){
 			// load時は、まだダイアログが表示されていない
 			setTimeout(function(){

@@ -2,7 +2,7 @@ Tombloo.Service.actions = new Repository([
 	{
 		name : getMessage('label.action.changeAcount'),
 		execute : function(){
-			openDialog('chrome://tombloo/content/library/login.xul', 300, 250, 'resizable');
+			openDialog('chrome://tombloo/content/library/login.xul', 'resizable,centerscreen');
 		},
 	},
 	{
@@ -56,7 +56,7 @@ Tombloo.Service.actions = new Repository([
 	{
 		name : getMessage('label.action.tomblooOptions'),
 		execute : function(){
-			openDialog('chrome://tombloo/content/prefs.xul', 600, 600, 'resizable');
+			openDialog('chrome://tombloo/content/prefs.xul', 'resizable,centerscreen');
 		},
 	},
 ]);

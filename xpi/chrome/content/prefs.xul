@@ -3,7 +3,6 @@
 <?xml-stylesheet href="chrome://tombloo/content/prefs.css" type="text/css" ?>
 <!DOCTYPE prefwindow SYSTEM "chrome://tombloo/locale/tombloo.dtd" >
 <prefwindow 
-	style="width: 50em;" 
 	xmlns:html="http://www.w3.org/1999/xhtml" 
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
 	title="&label.tomblooOptions;" >

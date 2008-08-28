@@ -191,24 +191,40 @@ function getTempFile(ext){
 	return file;
 }
 
+/**
+ * ダイアログを開く。
+ * Progressオブジェクト、または、個別の値を渡す。
+ *
+ * @param {Progress || String} progress Progressオブジェクト。新しく生成する場合は名前。
+ * @param {Number} max 最大値。
+ * @param {Number} value 現在値。
+ */
 function openProgressDialog(progress, max, value){
 	if(!(progress instanceof Progress))
 		progress = new Progress(progress, max, value);
 	
-	openDialog('chrome://tombloo/content/library/progressDialog.xul', 400, 95, 'dialog', progress);
+	openDialog('chrome://tombloo/content/library/progressDialog.xul', 'dialog,centerscreen', progress);
 	
 	return progress;
 }
 
-function openDialog(url, w, h, features, value){
-	var x = (screen.width - w) / 2;
-	var y = (screen.height - h) / 2;
-	return getMostRecentWindow().openDialog(url, '_blank', (features? features + ',' : '') + openParamString({
-		width : w,
-		height : h,
-		left : x,
-		top : y,
-	}), value);
+/**
+ * ダイアログを開く。
+ *
+ * @param {String} url ウィンドウURL。
+ * @param {String} features ウィンドウの特徴。
+ * @param {Object} value ウィンドウへ渡す値。
+ */
+function openDialog(url, features, value){
+	// FIXME: values
+	return getMostRecentWindow().openDialog(url, '_blank', features, value);
+}
+
+function openParamString(obj){
+	var params=[];
+	for(var p in obj)
+		params.push(p+(obj[p]!=null? '='+obj[p] : ''));
+	return params.join(',');
 }
 
 /**
@@ -1052,13 +1068,6 @@ function extend(target, source, overwrite){
 	}
 	
 	return target;
-}
-
-function openParamString(obj){
-	var params=[];
-	for(var p in obj)
-		params.push(p+(obj[p]? '='+obj[p] : ''));
-	return params.join(',');
 }
 
 /**

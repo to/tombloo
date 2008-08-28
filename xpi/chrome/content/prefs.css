@@ -31,6 +31,9 @@ textbox[readonly=true] {
 	-moz-box-pack : center;
 	align : center;
 	width : 3.5em;
+	
+	/* Macで列ヘッダーの高さが広がらない問題に対応 */
+	height : 3.5em;
 }
 
 #posters treechildren::-moz-tree-image {

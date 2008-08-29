@@ -746,8 +746,11 @@ Tombloo.Service.extractors = new Repository([
 		name : 'Photo - image link',
 		ICON : 'chrome://tombloo/skin/photo.png',
 		check : function(ctx){
+			if(!ctx.onLink)
+				return;
+			
 			var uri = createURI(ctx.link.href);
-			return ctx.onLink && (/(png|gif|jpe?g)$/i).test(uri.fileExtension);
+			return uri && (/(png|gif|jpe?g)$/i).test(uri.fileExtension);
 		},
 		extract : function(ctx){
 			ctx.target = ctx.link;

@@ -665,7 +665,7 @@ models.register(update({}, AbstractSessionService, {
 	},
 	
 	getAuthCookie : function(){
-		return getCookieString('rejaw.com', 'signin_email') || getCookieString('rejaw.com', 'signin_openid_url');
+		return getCookieString('rejaw.com', 'signin_email');
 	},
 	
 	getToken : function(){

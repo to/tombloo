@@ -286,7 +286,7 @@ var Tumblr = update({}, AbstractSessionService, {
 			
 			default:
 				// このチェックをするためリダイレクトを追う必要がある
-				if(res.responseText.match(/(exceeded|tomorrow)/))
+				if(res.responseText.match(/(100%)/))
 					throw new Error("You've exceeded your daily post limit.");
 				
 				error(res);

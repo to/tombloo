@@ -620,7 +620,7 @@ connect(grobal, 'browser-load', function(e){
 	}, true);
 	
 	menuAction.addEventListener('command', function(e){
-		Tombloo.Service.actions[e.originalTarget.label].execute();
+		Tombloo.Service.actions[e.originalTarget.getAttribute("label")].execute();
 	}, true);
 	
 	

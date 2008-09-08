@@ -96,17 +96,8 @@ DialogPanel.prototype = {
 	},
 	
 	sizeToContent : function(){
-		var box = this.elmWindow.boxObject;
-		var before = {
-			w : box.width,
-			h : box.height,
-		}
-		
-		// sizeToContentは横幅縮むことがあるため、そのまま利用できない。
-		// また、photoタイプでwindow要素のboxObject.heightが更新されないことがあったため、
-		// 最終的に二つの合わせて利用する。
-		window.sizeToContent();
-		window.resizeTo(Math.max(before.w, box.width), Math.max(before.h, box.height));
+		var box = this.elmBase.boxObject;
+		window.resizeTo(box.width, box.height);
 	}
 }
 

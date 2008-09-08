@@ -36,7 +36,6 @@ textbox {
 window {
 	font-size: 90%;
 	background-color: transparent;
-	border: none;
 	
 	width : 22em;
 }
@@ -45,7 +44,7 @@ window {
 	-moz-border-radius: 4px;
 	
 	background-image: url(chrome://tombloo/skin/form_light.png);
-	border: 1em solid transparent;
+	border: 1em transparent solid;
 }
 
 window {
@@ -107,7 +106,7 @@ button{
 	margin-top: 0.8em;
 }
 
-#item textbox,
+#item *,
 #tags textbox{
 	-moz-box-flex: 1;
 }

@@ -40,7 +40,7 @@ Tombloo.Service = {
 			
 			if(showForm){
 				(models.getEnables(ps).length)?
-					new QuickPostForm(ps).show() :
+					QuickPostForm.show(ps) :
 					Tombloo.Service.alertPreference(ps.type);
 				
 				// FIXME: クイックポストフォームのポスト結果を伝えるように

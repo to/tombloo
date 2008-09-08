@@ -1,0 +1,673 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://tombloo/content/quickPostForm.css" type="text/css" ?>
+<window id="window" 
+	xmlns:html="http://www.w3.org/1999/xhtml" 
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+	<vbox id="base">
+		<hbox id="titlebar" align="top">
+			<hbox>
+				<vbox pack="center">
+					<image id="typeIcon" />
+				</vbox>
+				<label id="type" />
+				<label id="toggleDetail" value="詳細" class="text-button"/>
+			</hbox>
+			
+			<spacer flex="1" />
+			
+			<vbox>
+				<image id="close" onclick="window.close()"/>
+			</vbox>
+		</hbox>
+		
+		<vbox id="form" />
+		
+		<vbox id="control" >
+			<description id="posters" pack="top" align="top" />
+			<button id="post" label="Post"/>
+		</vbox>
+	</vbox>
+<script><![CDATA[
+
+// chrome://tombloo/content/quickPostForm.xul
+
+var env = Components.classes['@brasil.to/tombloo-service;1'].getService().wrappedJSObject;
+env.extend(this, env, false);
+
+
+// ----[utility]-------------------------------------------------
+'BOX VBOX HBOX SPACER LABEL TEXTBOX IMAGE DESCRIPTION'.split(' ').forEach(function(tag){
+	this[tag] = bind(E, null, tag.toLowerCase());
+});
+
+function getElement(id){
+	return (typeof(id) == 'string')? document.getElementById(id) : id;
+}
+
+
+// ----[Dialog]----------------------------------------------------
+function DialogPanel(){
+	this.elmWindow = getElement('window');
+	this.elmBase = getElement('base');
+	
+	this.elmWindow.addEventListener('draggesture', dynamicBind('onDragStart', this), false);
+	this.elmWindow.addEventListener('mousemove', dynamicBind('onMouseMove', this), false);
+	this.elmWindow.addEventListener('mouseout', dynamicBind('onMouseOut', this), false);
+	
+	// フォーカス移動よりラベル編集などを優先するためbubblingフェーズで捕捉する
+	// 反対に、ドラッグ後はクリックをキャンセルするためcaptureフェーズで補足する
+	this.elmWindow.addEventListener('click', dynamicBind('onClick', this), false);
+	this.elmWindow.addEventListener('click', dynamicBind('onMouseUp', this), true);
+	
+	this.formPanel = new FormPanel(this);
+	this.formPanel.show();
+	
+	var self = this;
+	window.addEventListener('load', function(){
+		self.focusToFirstControl();
+		
+		// 描画が終了するまで正確な高さが取得できない
+		setTimeout(function(){
+			self.snapToContentCorner(false, true);
+		});
+	}, false);
+}
+
+DialogPanel.prototype = {
+	focusToFirstControl : function(){
+		window.focus();
+		document.commandDispatcher.advanceFocus();
+	},
+	
+	snapToContentCorner : function(left, top){
+		var baseBox = this.elmBase.boxObject;
+		var browserBox = getMostRecentWindow().getBrowser().selectedBrowser.boxObject;
+				
+		var x = left? 
+			browserBox.screenX : 
+			(browserBox.screenX + browserBox.width - 16) - baseBox.width;
+		
+		var y = top? 
+			browserBox.screenY : 
+			(browserBox.screenY + browserBox.height) - baseBox.height;
+		
+		window.moveTo(x, y);
+	},
+	
+	sizeToContent : function(){
+		var box = this.elmWindow.boxObject;
+		var before = {
+			w : box.width,
+			h : box.height,
+		}
+		
+		// sizeToContentは横幅縮むことがあるため、そのまま利用できない。
+		// また、photoタイプでwindow要素のboxObject.heightが更新されないことがあったため、
+		// 最終的に二つの合わせて利用する。
+		window.sizeToContent();
+		window.resizeTo(Math.max(before.w, box.width), Math.max(before.h, box.height));
+	}
+}
+
+State.make(DialogPanel, {
+	normal : {
+		onChangeState : function(){
+			this.elmWindow.style.cursor = '';
+		},
+		
+		onMouseMove : function(e){
+			var box = this.elmBase.boxObject;
+			
+			var horizontal = 
+				(e.clientX < 16)? 'left' : 
+				(box.width - 16 < e.clientX)? 'right' : null;
+			
+			var vertical  = (e.clientY < 100)? 'top' :
+				(box.height - 100 < e.clientY)? 'bottom' : null;
+			
+			if(horizontal && vertical){
+				this.elmWindow.style.cursor = 'url(chrome://tombloo/skin/snap-' + horizontal + '-' + vertical + '.cur), pointer';
+			} else {
+				this.elmWindow.style.cursor = '';
+			}
+		},
+		
+		onDragStart : function(e){
+			if(e.target.tagName == 'textbox')
+				return
+			
+			this.start = {
+				x : e.screenX,
+				y : e.screenY,
+			}
+			
+			this.changeState('dragging');
+		},
+		
+		onClick : function(e){
+			if((/^(box|textbox)$/).test(e.target.tagName))
+				return
+			
+			var cursor = this.elmWindow.style.cursor;
+			var match = (/.+snap-(.+)-(.+)\./).exec(cursor);
+			if(match){
+				this.snapToContentCorner(match[1] == 'left', match[2] == 'top');
+			} else {
+				// 何もない領域をクリックしたらウィンドウにフォーカスを移しラベル編集を終了させる
+				this.elmWindow.focus();
+			}
+		},
+	},
+	
+	dragging : {
+		onChangeState : function(){
+			this.elmWindow.style.cursor = '-moz-grabbing';
+		},
+		
+		onMouseMove : function(e){
+			var end = {
+				x : e.screenX,
+				y : e.screenY,
+			}
+		  window.moveBy(end.x - this.start.x, end.y - this.start.y);
+		  this.start = end;
+		},
+		
+		onMouseOut : function(e){
+			// ウィンドウ外か、または、ウィンドウの淵か?
+			if(!e.relatedTarget || e.relatedTarget.tagName=='window')
+				this.changeState('normal');
+		},
+		
+		onMouseUp : function(e){
+			cancel(e);
+			
+			this.changeState('normal');
+		},
+	},
+}, 'normal');
+
+
+// ----[FormPanel]----------------------------------------------------
+// ps
+function FormPanel(dialogPanel){
+	this.dialogPanel = dialogPanel;
+	
+	this.elmForm = getElement('form');
+	this.elmTitlebar = getElement('titlebar');
+	
+	getElement('type').value = capitalize(ps.type);
+	getElement('typeIcon').src = 'chrome://tombloo/skin/' + ps.type + '.png';
+	getElement('toggleDetail').addEventListener('click', bind('toggleDetail', this), true);
+	getElement('post').addEventListener('command', bind('post', this), true);
+	
+	window.addEventListener('keydown', bind('onKeydown', this), true);
+	
+	this.postersPanel = new PostersPanel();
+	this.postersPanel.show();
+}
+
+FormPanel.prototype = {
+	labels : {
+		item        : 'Title',
+		itemUrl     : 'URL',
+		tags        : 'Tags',
+		description : 'Description',
+	},
+	
+	types : {
+		regular : {
+			item        : {toggle : true},
+			tags        : {toggle : true},
+			description : {rows : 4},
+		},
+		link : {
+			item        : {type : 'label'},
+			itemUrl     : {toggle : true},
+			tags        : {},
+			description : {},
+		},
+		quote : {
+			item        : {toggle : true},
+			itemUrl     : {toggle : true},
+			body        : {rows : 3},
+			tags        : {toggle : true},
+			description : {toggle : true},
+		},
+		photo : {
+			item        : {toggle : true},
+			itemUrl     : {type : 'photo'},
+			tags        : {toggle : true},
+			description : {toggle : true},
+		},
+		video : {
+			item        : {type : 'label'},
+			itemUrl     : {toggle : true},
+			tags        : {toggle : true},
+			description : {toggle : true},
+		},
+	},
+	
+	toggles : [],
+	fields : {},
+	
+	show : function(){
+		this.createForm();
+	},
+	
+	toggleDetail : function(e){
+		cancel(e);
+		
+		forEach(this.toggles, function(f){f()});
+		
+		this.dialogPanel.sizeToContent();
+	},
+	
+	post : function(){
+		var checked = this.postersPanel.checked;
+		if(!checked.length)
+			return;
+		
+		items(this.fields).forEach(function([name, field]){
+			ps[name] = field.values || field.value;
+		});
+		
+		this.tagsBox.checkNewTag();
+		
+		Tombloo.Service.post(ps, checked);
+		if(this.elmTags)
+			QuickPostForm.refreshCache = this.elmTags.includesNewTag;
+		
+		window.close();
+	},
+	
+	createForm : function(){
+		var elmForm = this.elmForm;
+		var self = this;
+		var controls = this.controls;
+		
+		withDocument(document, function(){
+			items(self.types[ps.type]).forEach(function([name, def]){
+				var value = (ps[name] != null)? ps[name] : '';
+				var label = self.labels[name] || capitalize(ps.type);
+				var attrs = {
+					id        : name,
+					name      : name,
+					value     : value,
+					emptytext : label,
+					hidden    : !!def.toggle,
+				};
+				
+				var elm, field;
+				if(name == 'tags'){
+					field = elm = elmForm.appendChild(BOX(attrs));
+					self.tagsBox = new TagsBox(elm);
+					
+				} else if(name == 'description'){
+					elm = elmForm.appendChild(VBOX(attrs));
+					field = new DescriptionBox(elm, def.rows);
+					
+				} else {
+					switch(def.type){
+					case 'label':
+						elm = elmForm.appendChild(BOX(attrs));
+						field = new EditableLabel(elm);
+						break;
+						
+					case 'photo':
+						var img = document.createElementNS(HTML_NS, 'img');
+						img.id = 'itemUrl';
+						img.src = ps.itemUrl;
+						
+						elm = elmForm.appendChild(DESCRIPTION(img));
+						break;
+						
+					default:
+						field = elm = elmForm.appendChild(TEXTBOX(attrs, {
+							multiline : !!def.rows,
+							rows : def.rows || 1,
+						}));
+						break;
+					}
+				}
+				
+				if(field)
+					self.fields[name] = field;
+				
+				if(attrs.hidden){
+					self.toggles.push(function(){
+						elm.hidden = !elm.hidden;
+					});
+				} else if(def.type == 'label'){
+					self.toggles.push(function(){
+						field.editable = !field.editable;
+					});
+				}
+			});
+		});
+	},
+	
+	onKeydown : function(e){
+		switch(keyString(e)) {
+		case 'CTRL + RETURN':
+			cancel(e);
+			this.post();
+			break;
+			
+		case 'CTRL + W':
+			cancel(e);
+			window.close();
+			break;
+		}
+	},
+}
+
+
+// ----[DescriptionBox]-------------------------------------------------
+function DescriptionBox(elmBox, rows){
+	var self = this;
+	
+	withDocument(document, function(){
+		elmBox = getElement(elmBox);
+		
+		self.elmDesc = elmBox.appendChild(TEXTBOX({
+			emptytext : elmBox.getAttribute('emptytext'),
+			value     : elmBox.getAttribute('value'),
+			multiline : true,
+			rows : rows || 2,
+		}));
+		self.elmLength = LABEL({
+			class : 'length', 
+			value : 0,
+		});
+		
+		elmBox.appendChild(HBOX(
+			SPACER({flex : 1}), 
+			self.elmLength));
+		
+		self.elmDesc.addEventListener('input', bind('onInput', self), true);
+	});
+}
+
+DescriptionBox.prototype = {
+	get value(){
+		return this.elmDesc.value;
+	},
+	
+	onInput : function(){
+		this.elmLength.value = this.elmDesc.value.length;
+	},
+}
+
+
+// ----[TagBox]-------------------------------------------------
+function TagsBox(elmTags){
+	var self = this;
+	
+	this.elmTags = getElement(elmTags);
+	
+	elmTags.addEventListener('construct', function(){
+		self.elmTags.autoComplete = getPref('tagAutoComplete');
+		self.elmTags.candidates = QuickPostForm.candidates;
+		
+		// キャッシュを利用できるか?
+		var tagProvider = getPref('tagProvider');
+		if(!tagProvider || (tagProvider==QuickPostForm.tagProvider && !QuickPostForm.refreshCache))
+			return;
+		
+		models[tagProvider].getUserTags().addCallback(bind('setTags', self, tagProvider));
+	}, false);
+}
+
+TagsBox.prototype = {
+	checkNewTag : function(){
+		QuickPostForm.refreshCache = this.elmTags.includesNewTag;
+	},
+	
+	setTags : function(tagProvider, tags){
+		if(!tags || !tags.length)
+			return;
+		
+		var self = this;
+		tags = this.sort(tags).map(itemgetter('name'));
+		
+		this.getRomaReadings(tags).addCallback(function(readings){
+			tags = zip(readings, tags).map(function([reading, tag]){
+				return {
+					reading : reading,
+					value : tag,
+				}
+			});
+			
+			// 次回すぐに利用できるようにキャッシュする
+			QuickPostForm.refreshCache = false;
+			QuickPostForm.tagProvider = tagProvider;
+			QuickPostForm.candidates = tags;
+			
+			self.elmTags.candidates = tags;
+		});
+	},
+	
+	sort : function(tags){
+		return tags.sort(function(a, b){
+			return (b.frequency != a.frequency)? 
+				compare(b.frequency, a.frequency) : 
+				compare(a.name, b.name);
+		});
+	},
+	
+	getRomaReadings : function(tags){
+		var source = tags.join(' [');
+		if(includesFullwidth(source)){
+			// 各タグサービスで使われてるデリミタを合成
+			return Yahoo.getRomaReadings(source).addCallback(function(result){
+				return result.join('').split(' [');
+			});
+		} else {
+			return succeed(tags)
+		}
+	},
+}
+
+
+// ----[EditableLabel]-------------------------------------------------
+function EditableLabel(elmBox){
+	var self = this;
+	withDocument(document, function(){
+		elmBox = getElement(elmBox);
+		
+		self.elmLabel = elmBox.appendChild(LABEL({
+			// cssで指定されているinheritを上書きするためimportantを付加する
+			style : 'cursor: text !important;',
+			crop  : 'end',
+			value : elmBox.getAttribute('value'),
+		}));
+		
+		self.elmTextbox = elmBox.appendChild(TEXTBOX({
+			hidden : true,
+			value : elmBox.getAttribute('value'),
+			emptytext : elmBox.getAttribute('emptytext'),
+		}));
+		
+		self.elmLabel.addEventListener('click', bind('onClick', self), true);
+		window.addEventListener('DOMContentLoaded', bind('onLoad', self), false);
+	});
+}
+
+EditableLabel.prototype = {
+	get value(){
+		return this.elmTextbox.value;
+	},
+	
+	get editable(){
+		return this._editable;
+	},
+	
+	set editable(value){
+		value? this.enable() : this.disable();
+		
+		return this._editable = value;
+	},
+	
+	
+	onLoad : function(){
+		// XBLロード後でないと取得できない
+		this.elmInput = document.getAnonymousElementByAttribute(this.elmTextbox, 'anonid', 'input');
+		
+		// textboxはblurの発生が異常
+		this.elmInput.addEventListener('blur', bind('onBlur', this), true);
+	},
+	
+	onBlur : function(){
+		if(this.editable)
+			return;
+		
+		this.disable();
+	},
+	
+	onClick : function(e){
+		cancel(e);
+		
+		this.enable();
+		this.elmInput.focus();
+	},
+	
+	
+	enable : function(){
+		this.elmTextbox.hidden = false;
+		this.elmLabel.hidden = true;
+	},
+	
+	disable : function(){
+		this.elmLabel.value = this.elmTextbox.value;
+		
+		this.elmTextbox.hidden = true;
+		this.elmLabel.hidden = false;
+	},
+}
+
+
+// ----[PostersPanel]-------------------------------------------------
+function PostersPanel(){
+	this.elmPanel = getElement('posters');
+	
+	this.posters = new Repository(models.getEnables(ps));
+	
+	this.elmPanel.addEventListener('mousedown', dynamicBind('onMouseDown', this), true);
+	this.elmPanel.addEventListener('mousemove', dynamicBind('onMouseMove', this), true);
+	this.elmPanel.addEventListener('mouseup', dynamicBind('onMouseUp', this), true);
+	this.elmPanel.addEventListener('mouseout', dynamicBind('onMouseOut', this), true);
+}
+
+PostersPanel.prototype = {
+	get checked(){
+		var self = this;
+		return $x('.//*[@disabled="false"]', this.elmPanel, true).map(function(elm){
+			return self.posters[elm.getAttribute('tooltiptext')];
+		});
+	},
+	
+	show : function(){
+		var self = this;
+		withDocument(document, function(){
+			forEach(self.posters, function([name, poster]){
+				var disabled = poster.config[ps.type] != 'default';
+				var image = self.elmPanel.appendChild(IMAGE({
+					class : 'poster', 
+					tooltiptext : name,
+					disabled : disabled,
+				}));
+				
+				self.setIcon(image, poster, !disabled);
+			});
+		});
+	},
+	
+	setIcon : function(image, poster, enabled){
+		var prop = (enabled)? 'ICON' : 'DISABLED_ICON';
+		var src = poster[prop];
+		var d;
+		if(/^data:/.test(src)){
+			d = succeed(src);
+		} else {
+			d = ((enabled)? convertToDataURL(poster.ICON) : toGrayScale(poster.ICON)).addCallback(function(src){
+				return poster[prop] = src;
+			});
+		}
+		d.addCallback(function(src){
+			image.setAttribute('src', src);
+		});
+	},
+	
+	changeDisabled : function(image, disabled){
+		var name = image.getAttribute('tooltiptext');
+		var poster = this.posters[name];
+		
+		image.setAttribute('disabled', disabled);
+				
+		this.setIcon(image, poster, !disabled);
+	},
+}
+	
+State.make(PostersPanel, {
+	normal : {
+		onMouseDown : function(e){
+			if(e.target == this.elmPanel)
+				return;
+			
+			cancel(e);
+			
+			var disabled = !(e.target.getAttribute('disabled')=='true');
+			this.changeDisabled(e.target, disabled);
+			
+			this.changeState('dragging');
+			this.disabled = disabled;
+		},
+	},
+	
+	dragging : {
+		onMouseUp : function(){
+			this.changeState('normal');
+		},
+		
+		onMouseOut : function(e){
+			if(!e.relatedTarget || e.relatedTarget.tagName != 'vbox')
+				return;
+			
+			// アイコンが小さいため外れてもすぐにドラッグを終了しない。
+			// アイコンが2行になった時、縦にドラッグすると一度マウスアウトするため。
+			var self = this;
+			this.timerId = setTimeout(function(){
+				self.changeState('normal');
+			}, 1000);
+			
+			this.changeState('wait');
+		},
+		
+		onMouseMove : function(e){
+			if(e.target != this.elmPanel)
+				this.changeDisabled(e.target, this.disabled);
+		},
+	},
+	
+	wait : {
+		onMouseMove : function(e){
+			this.timerId = clearTimeout(this.timerId);
+			this.changeState('dragging');
+		},
+	},
+}, 'normal');
+
+
+// ----[main]-------------------------------------------------
+var ps = window.arguments? arguments[0] : {
+	type : 'link',
+	item : 'Twitter',
+	itemUrl : 'http://twitter.com/home',
+};
+
+var dialogPanel = new DialogPanel();
+
+]]></script>
+</window>

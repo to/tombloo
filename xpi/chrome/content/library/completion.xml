@@ -12,7 +12,7 @@
 		</resources>
 		
 		<content>
-			<xul:textbox anonid="textbox" xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction,flex"/>
+			<xul:textbox anonid="textbox" xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction,flex,emptytext"/>
 			<xul:popup anonid="popup" ignorekeys="true">
 				<xul:listbox anonid="listbox" style="height:auto"/>
 			</xul:popup>
@@ -26,6 +26,10 @@
 			function _log(msg){
 				Components.classes['@mozilla.org/consoleservice;1'].getService(Components.interfaces.nsIConsoleService).logStringMessage(''+msg);
 			}
+			
+			var event = document.createEvent('Events');
+			event.initEvent('construct', false, true);
+			this.dispatchEvent(event);
 			]]></constructor>
 			
 			<field name="textbox">
@@ -78,11 +82,18 @@
 				document.getAnonymousElementByAttribute(this, 'anonid', 'input')
 					.QueryInterface(Components.interfaces.nsIDOMNSEditableElement);
 			</field>
+			<field name="content">
+				this.input.editor.rootElement;
+			</field>
 			<field name="autoComplete">
 				false;
 			</field>
+			
 			<property name="values"
 				onget="return this.value.split(this.delimiter).filter(function(i){return i});"/>
+			<property name="padding"
+				onget="return this._padding || (this._padding = Math.ceil(parseFloat(window.getComputedStyle(this, '').paddingLeft)))" />
+			
 			<property name="includesNewTag">
 				<getter><![CDATA[
 					var check = {};
@@ -208,13 +219,17 @@
 					var suffix = text.substr(word.end);
 					var delimiter = (terminate && suffix.charAt(0) != this.delimiter) ? this.delimiter : '';
 					this.value = text.substring(0, word.start) + cand + delimiter + suffix;
-					this.selectionStart = this.selectionEnd = word.start + cand.length + delimiter.length;
+					this.input.selectionStart = this.input.selectionEnd = word.start + cand.length + delimiter.length;
 					
 					// 削除/修正を終了し自動決定の挙動を元に戻す
 					this.deleting = false
 					
-					if(terminate)
+					if(terminate){
+						// valueを変更しカーソルが見えない場所へ移動するのを防ぐ
+						this.ensureCursorIsVisible();
+						
 						this.notify();
+					}
 				]]></body>
 			</method>
 			
@@ -267,11 +282,13 @@
 					var word = this.getCurrentWord();
 					var hint = word.word;
 					
-					if(!hint && denyEmpty){
+					// 削除によりヒントがないか、または、タグ間へのスペース追加か?
+					if((!hint && denyEmpty) || (word.start==this.selectionStart)){
 						this.popup.hidePopup();
 						return;
 					}
 					
+					// 自動決定か?
 					var cands = this.getCandidates(hint, text.substring(0, word.start).split(this.delimiter));
 					if(this.autoComplete && !this.deleting && cands.length==1 && (hint.length >=2 || cands[0].length == 1)){
 						this.injectCandidate(cands[0], true);
@@ -280,15 +297,30 @@
 					}
 					
 					if(cands.length){
-						this.measure.value = text.substr(0, word.start);
-						this.measure.hidden = false;
-						var x = this.measure.boxObject.width;
-						this.measure.hidden = true;
-						
-						this.popup.show(this, x, -2, cands);
+						this.popup.show(this, (this.getCursorLeft(word.start) - this.content.scrollLeft) + this.padding, -2, cands);
 					} else {
 						this.popup.hidePopup();
 					}
+				]]></body>
+			</method>
+			
+			<method name="getCursorLeft">
+				<parameter name="position"/>
+				<body><![CDATA[
+					this.measure.value = this.value.substr(0, position);
+					this.measure.hidden = false;
+					
+					var x = this.measure.boxObject.width;
+					this.measure.hidden = true;
+					
+					return x;
+				]]></body>
+			</method>
+			
+			<method name="ensureCursorIsVisible">
+				<body><![CDATA[
+					this.content.scrollLeft = 
+						this.getCursorLeft(this.selectionStart) - this.input.offsetWidth + 20;
 				]]></body>
 			</method>
 		</implementation>
@@ -376,6 +408,7 @@
 				<parameter name="y"/>
 				<parameter name="cands"/>
 				<body><![CDATA[
+					// Firefox 3
 					if(this.openPopup){
 						this.openPopup(anchor, 'after_start', x, y, false);
 					} else {
@@ -421,6 +454,9 @@
 			<property name="rowHeight"
 				onget="return this._rowHeight || (this._rowHeight = this.childNodes[0].boxObject.height)" />
 			
+			<property name="padding"
+				onget="return this._padding || (this._padding = Math.ceil(parseFloat(window.getComputedStyle(this, '').paddingTop)))" />
+			
 			<method name="removeAll">
 				<body><![CDATA[
 					while(this.lastChild)
@@ -440,7 +476,7 @@
 						this.rows = Math.min(this.rowCount, this.maxRows);
 					} else {
 						// rowsの変更やheight:autoだけでは余白が生じることがあるため手動で高さを計算する
-						this.height = Math.min(this.rowCount, this.maxRows) * this.rowHeight;
+						this.height = Math.min(this.rowCount, this.maxRows) * this.rowHeight + (this.padding * 2);
 					}
 					
 					if(this.rowCount == 1){

@@ -1,0 +1,170 @@
+/* general / widget */
+*, description {
+	margin: 0;
+	padding: 0;
+}
+
+label,
+description{
+	cursor : inherit !important;
+}
+
+textbox {
+	padding: 0.2em;
+}
+
+.text-button{
+	cursor : pointer !important;
+	color : white;
+	background : #777;
+	font-size : 70%;
+	padding : 0.2em 0.5em;
+	-moz-border-radius : 1px;
+}
+
+.text-button:hover{
+	background : #AAAAAA;
+}
+
+.text-button:hover:active{
+	color : #AAAAAA;
+	background : #666;
+}
+
+
+/* window / base */
+window {
+	font-size: 90%;
+	background-color: transparent;
+	border: none;
+	
+	width : 22em;
+}
+
+#base {
+	-moz-border-radius: 4px;
+	
+	background-image: url(chrome://tombloo/skin/form_light.png);
+	border: 1em solid transparent;
+}
+
+window {
+	cursor : -moz-grab;
+}
+
+button{
+	cursor : pointer;
+}
+
+
+/* titlebar */
+#titlebar {
+}
+
+#type {
+	font-weight: bold;
+}
+
+#close {
+	cursor: pointer !important;
+	
+	list-style-image: url(chrome://global/skin/icons/close.png);
+	-moz-image-region: rect(0px, 14px, 14px, 0px);
+}
+
+#close:hover {
+	-moz-image-region: rect(0px, 28px, 14px, 14px);
+}
+
+#close:hover:active {
+	-moz-image-region: rect(0px, 42px, 14px, 28px);
+}
+
+/* form */
+#form {
+	padding-top: 0.7em;
+}
+
+.length {
+	font-size: 70%;
+	color: #999999;
+}
+
+#tags{
+	font-size : 85%;
+	margin-top: 2em;
+	-moz-binding: url("chrome://tombloo/content/library/completion.xml#container");
+}
+
+#tags listbox{
+	padding: 0.2em;
+}
+
+#body,
+#item,
+#itemUrl,
+#description{
+	margin-top: 0.8em;
+}
+
+#item textbox,
+#tags textbox{
+	-moz-box-flex: 1;
+}
+
+div{
+	border : 1px black solid;
+	padding : 0 !important;
+}
+
+img#itemUrl {
+	max-width: 25em;
+	max-height: 25em;
+}
+
+
+/* posters */
+#posters {
+	margin-top: 0.8em;
+}
+
+#posters image.poster{
+	cursor : pointer;
+	
+	width  : 16px;
+	height : 16px;
+	
+	/*
+	横方向の調整にborderを使いマウスオーバーしない時間を減らす。
+	(横にスライドしながら選択できるようにする)
+	縦方向の調整は文字組みの一部のためmarginを使う。
+	下方向に拡大すると、行のベースラインも下がる。
+	*/
+	border : transparent solid;
+	border-width : 0 8px;
+	margin : 8px 0;
+}
+
+#posters image.poster:hover{
+	width  : 24px;
+	height : 24px;
+	
+	border-width : 0 4px;
+	margin : 0;
+}
+
+#posters image.poster:hover:active{
+	width  : 22px;
+	height : 22px;
+	
+	border-width : 0 5px;
+}
+
+#posters image.poster[disabled=true]{
+	opacity: 0.4;
+}
+
+#post {
+	margin-top: 0.8em;
+}
+

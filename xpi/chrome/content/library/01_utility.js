@@ -581,6 +581,23 @@ registerIteratorFactory(
 	});
 
 registerIteratorFactory(
+	'TreeWalker', 
+	function(it){
+		return it instanceof Ci.nsIDOMTreeWalker;
+	}, 
+	function(it){
+		return {
+			next: function(){
+				var elm;
+				if(!(elm = it.nextNode()))
+					throw StopIteration;
+				
+				return elm;
+			}
+		};
+	});
+
+registerIteratorFactory(
 	'XML', 
 	function(it){
 		return typeof(it) == "xml";
@@ -741,6 +758,19 @@ Number.prototype.toHexString = function(){
 };
 
 
+
+function decapitalize(str){
+	return str.substr(0, 1).toLowerCase() + str.substr(1);
+}
+
+function capitalize(str){
+	return str.substr(0, 1).toUpperCase() + str.substr(1);
+}
+
+function includesFullwidth(str){
+	return (/[^ -~｡-ﾟ]/).test(str);
+}
+
 String.prototype = update(String.prototype, {
 	pad :function(len, ch){
 		len = len-this.length;
@@ -766,10 +796,10 @@ String.prototype = update(String.prototype, {
 		return res ? res[group] : '';
 	},
 	decapitalize : function(){
-		return this.substr(0, 1).toLowerCase() + this.substr(1);
+		return decapitalize(this);
 	},
 	capitalize : function(){
-		return this.substr(0, 1).toUpperCase() + this.substr(1);
+		return capitalize(this);
 	},
 	toByteArray : function(charset){
 		return new UnicodeConverter(charset).convertToByteArray(this, {});
@@ -805,7 +835,7 @@ String.prototype = update(String.prototype, {
 		return this.replace(/<!--[\s\S]+?-->/gm, '').replace(/<[\s\S]+?>/gm, '');
 	},
 	includesFullwidth : function(){
-		return (/[^ -~｡-ﾟ]/).test(this);
+		return includesFullwidth(this);
 	},
 	
 	// http://code.google.com/p/kanaxs/
@@ -1033,16 +1063,6 @@ function absolutePath(path){
   return e.firstChild.href;
 }
 
-// FIXME: String.prototypeを使う
-function decapitalize(str){
-	return str.substr(0, 1).toLowerCase() + str.substr(1);
-}
-
-// FIXME: String.prototypeを使う
-function capitalize(str){
-	return str.substr(0, 1).toUpperCase() + str.substr(1);
-}
-
 /**
  * オブジェクトのプロパティをコピーする。
  * ゲッター/セッターの関数も対象に含まれる。
@@ -1155,6 +1175,85 @@ function validateFileName(fileName){
 	return fileName.replace(/[\/]+/g, "_");
 }
 
+
+// ----[State]-------------------------------------------------
+var State = {
+	make : function(cls, stateSetName, stateSet, defaultStateName){
+		if(arguments.length == 3){
+			defaultStateName = stateSet;
+			stateSet = stateSetName;
+			stateSetName = void(0);
+		}
+		
+		var p = cls.prototype;
+		var K = this.K;
+		forEach(this.gatherProperties(stateSet), function(prop){
+			for(var i in stateSet){
+				var state = stateSet[i];
+				if(!state[prop])
+					state[prop] = K;
+			}
+		});
+	
+		update(p, stateSet[defaultStateName]);
+		
+		if(stateSetName){
+			update(p, this._multiProto);
+			if(!p.state){
+				p.state={};
+				p.stateSet={};
+			}
+			p.state[stateSetName] = defaultStateName;
+			p.stateSet[stateSetName] = stateSet;
+		} else {
+			update(p, this._singleProto);
+			p.state = defaultStateName;
+			p.stateSet = stateSet;
+		}
+	},
+	
+	gatherProperties : function(stateSet){
+		var props = {};
+		for(var i in stateSet)
+			for(var prop in stateSet[i])
+				props[prop] = true;
+		
+		return keys(props);
+	},
+	
+	K : function(arg){
+		return arg; 
+	},
+	
+	_singleProto: {
+		changeState : function(stateName){
+			update(this, this.stateSet[stateName]);
+			this.state = stateName;
+			
+			if(this.onChangeState)
+				this.onChangeState();
+		}
+	},
+	
+	_multiProto: {
+		changeState : function(stateSetName, stateName){
+			update(this, this.stateSet[stateSetName][stateName]);
+			
+			// 各オブジェクト個別の状態を持つためにクローンを行い変更する
+			this.state = update({}, this.state);
+			this.state[stateSetName] = stateName;
+			
+			if(this.onChangeState)
+				this.onChangeState();
+		}
+	}
+}
+
+function dynamicBind(func, self){
+	return function(){
+		return self[func].apply(self, arguments);
+	}
+}
 
 // ----[Repository]-------------------------------------------------
 function Repository(){
@@ -1480,12 +1579,46 @@ function capture(win, pos, dim, scale){
 	}
 	
 	ctx.drawWindow(win, pos.x, pos.y, dim.w, dim.h, '#FFF');
+	
 	return canvas.toDataURL('image/png', '');
 }
 
 function convertToDataURL(src){
+	return loadImage(src).addCallback(function(img){
+		var canvas = document.createElementNS(HTML_NS, 'canvas');
+		var ctx = canvas.getContext('2d');
+		
+		canvas.width = img.width;
+		canvas.height = img.height;
+		
+		ctx.drawImage(img, 0, 0);
+		
+		return canvas.toDataURL('image/png', '');
+	});
+}
+
+function toGrayScale(src){
+	return loadImage(src).addCallback(function(img){
+		var canvas = document.createElementNS(HTML_NS, 'canvas');
+		var ctx = canvas.getContext('2d');
+
+		canvas.width = img.width;
+		canvas.height = img.height;
+		
+		ctx.drawImage(img, 0, 0);
+
+		var image = ctx.getImageData(0, 0, img.width, img.height);
+		for(var i=0, d=image.data, len=d.length ; i<len ; i+=4)
+			d[i] = d[i+1] = d[i+2] = (d[i] * 0.299 + d[i+1] * 0.587 + d[i+2] * 0.114);
+		
+		ctx.putImageData(image, 0, 0);
+		
+		return canvas.toDataURL();
+	});
+}
+
+function loadImage(src){
 	var d = new Deferred();
-	var canvas = document.createElementNS(HTML_NS, 'canvas');
 	
 	if(src instanceof Ci.nsIDOMHTMLImageElement){
 		var img = src;
@@ -1493,12 +1626,15 @@ function convertToDataURL(src){
 		var img = document.createElementNS(HTML_NS, 'img');
 		img.src = src;
 	}
+	
 	img.onload = function(){
-		canvas.width = img.width;
-		canvas.height = img.height;
-		canvas.getContext('2d').drawImage(img, 0, 0);
-		d.callback(canvas.toDataURL('image/png', ''));
-	}
+		d.callback(img);
+	};
+	
+	img.onerror = function(){
+		d.errback(img);
+	};
+	
 	return d;
 }
 

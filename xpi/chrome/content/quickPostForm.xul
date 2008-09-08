@@ -11,7 +11,11 @@
 					<image id="typeIcon" />
 				</vbox>
 				<label id="type" />
-				<label id="toggleDetail" value="詳細" class="text-button button"/>
+				<vbox pack="center" align="center" >
+					<hbox id="toggleDetail" class="button" pack="center" align="center" >
+						<image/>
+					</hbox>
+				</vbox>
 			</hbox>
 			
 			<spacer flex="1" />
@@ -188,11 +192,13 @@ function FormPanel(dialogPanel){
 	
 	this.elmForm = getElement('form');
 	this.elmTitlebar = getElement('titlebar');
+	this.elmToggleDetail = getElement('toggleDetail');
 	
 	getElement('type').value = capitalize(ps.type);
 	getElement('typeIcon').src = 'chrome://tombloo/skin/' + ps.type + '.png';
-	getElement('toggleDetail').addEventListener('click', bind('toggleDetail', this), true);
 	getElement('post').addEventListener('command', bind('post', this), true);
+	
+	this.elmToggleDetail.addEventListener('click', bind('toggleDetail', this), true);
 	
 	window.addEventListener('keydown', bind('onKeydown', this), true);
 	
@@ -250,6 +256,8 @@ FormPanel.prototype = {
 	
 	toggleDetail : function(e){
 		cancel(e);
+		
+		toggleElementClass('expanded', this.elmToggleDetail);
 		
 		forEach(this.toggles, function(f){f()});
 		
@@ -651,13 +659,9 @@ State.make(PostersPanel, {
 
 
 // ----[main]-------------------------------------------------
-var ps = window.arguments? arguments[0] : {
-	type : 'link',
-	item : 'Twitter',
-	itemUrl : 'http://twitter.com/home',
-};
-
+var ps = arguments[0];
 var dialogPanel = new DialogPanel();
+
 
 ]]></script>
 </window>

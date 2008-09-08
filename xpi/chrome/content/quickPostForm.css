@@ -65,9 +65,41 @@ window {
 	font-weight: bold;
 }
 
+#toggleDetail{
+	border : transparent solid;
+	border-width : 3px 8px;
+}
+
+#toggleDetail image{
+	list-style-image: url(chrome://tombloo/skin/arrow-down.png);
+	background : #777;
+	
+	/* 押しやすいように拡げる */
+	border : 4px transparent solid;
+	-moz-border-radius : 1px;
+}
+
+#toggleDetail.expanded image{
+	list-style-image: url(chrome://tombloo/skin/arrow-up.png);
+}
+
+#toggleDetail:hover image{
+	background : #AAA;
+	opacity : 0.8;
+}
+
+#toggleDetail:hover:active image{
+	background : #111;
+	opacity : 0.5;
+}
+
 #close {
 	list-style-image: url(chrome://global/skin/icons/close.png);
 	-moz-image-region: rect(0px, 14px, 14px, 0px);
+	
+	/* 押しやすいように拡げる */
+	border : transparent solid;
+	border-width : 0 0 4px 4px;
 }
 
 #close:hover {

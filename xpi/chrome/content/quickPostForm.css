@@ -13,8 +13,13 @@ textbox {
 	padding: 0.2em;
 }
 
-.text-button{
+/* 機能を持つものにbuttonクラスを設定し一般的な処理の回避などに使う */
+button,
+.button{
 	cursor : pointer !important;
+}
+
+.text-button{
 	color : white;
 	background : #777;
 	font-size : 70%;
@@ -51,10 +56,6 @@ window {
 	cursor : -moz-grab;
 }
 
-button{
-	cursor : pointer;
-}
-
 
 /* titlebar */
 #titlebar {
@@ -65,8 +66,6 @@ button{
 }
 
 #close {
-	cursor: pointer !important;
-	
 	list-style-image: url(chrome://global/skin/icons/close.png);
 	-moz-image-region: rect(0px, 14px, 14px, 0px);
 }
@@ -128,8 +127,6 @@ img#itemUrl {
 }
 
 #posters image.poster{
-	cursor : pointer;
-	
 	width  : 16px;
 	height : 16px;
 	

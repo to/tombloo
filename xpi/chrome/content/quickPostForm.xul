@@ -11,13 +11,13 @@
 					<image id="typeIcon" />
 				</vbox>
 				<label id="type" />
-				<label id="toggleDetail" value="詳細" class="text-button"/>
+				<label id="toggleDetail" value="詳細" class="text-button button"/>
 			</hbox>
 			
 			<spacer flex="1" />
 			
 			<vbox>
-				<image id="close" onclick="window.close()"/>
+				<image id="close" class="button" onclick="window.close()"/>
 			</vbox>
 		</hbox>
 		
@@ -29,6 +29,7 @@
 		</vbox>
 	</vbox>
 <script><![CDATA[
+
 
 // chrome://tombloo/content/quickPostForm.xul
 
@@ -125,7 +126,7 @@ State.make(DialogPanel, {
 		},
 		
 		onDragStart : function(e){
-			if(e.target.tagName == 'textbox')
+			if(e.target.tagName=='textbox' || ~e.target.className.indexOf('button'))
 				return
 			
 			this.start = {
@@ -501,7 +502,6 @@ EditableLabel.prototype = {
 		return this._editable = value;
 	},
 	
-	
 	onLoad : function(){
 		// XBLロード後でないと取得できない
 		this.elmInput = document.getAnonymousElementByAttribute(this.elmTextbox, 'anonid', 'input');
@@ -523,7 +523,6 @@ EditableLabel.prototype = {
 		this.enable();
 		this.elmInput.focus();
 	},
-	
 	
 	enable : function(){
 		this.elmTextbox.hidden = false;
@@ -565,7 +564,7 @@ PostersPanel.prototype = {
 			forEach(self.posters, function([name, poster]){
 				var disabled = poster.config[ps.type] != 'default';
 				var image = self.elmPanel.appendChild(IMAGE({
-					class : 'poster', 
+					class : 'poster button', 
 					tooltiptext : name,
 					disabled : disabled,
 				}));
@@ -607,7 +606,7 @@ State.make(PostersPanel, {
 			if(e.target == this.elmPanel)
 				return;
 			
-			cancel(e);
+			// cancelをするとactive擬似クラスが有効にならずリアクションがなくなる
 			
 			var disabled = !(e.target.getAttribute('disabled')=='true');
 			this.changeDisabled(e.target, disabled);

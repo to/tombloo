@@ -187,7 +187,7 @@ Tombloo.Service = {
 			d.addCallback(function(info){
 				// 取得済みのデータがウェブで削除されている場合、その件数分隙間となり取得されない
 				// 但し、ページ単位で処理が行われ、件数を超えて処理が行われるため、そこで補正される可能性が高い
-				p.max = info.total - Tombloo[type? capitalize(type) : 'Post'].countByUser(user);
+				p.max = info.total - Tombloo[type? type.capitalize() : 'Post'].countByUser(user);
 				
 				if(p.ended)
 					return;

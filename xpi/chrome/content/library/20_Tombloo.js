@@ -295,7 +295,7 @@ extend(Tombloo.Photo.prototype, {
 Tombloo.Post = Tombloo.Entity({name : 'posts'});
 extend(Tombloo.Post, {
 	insert : function(post){
-		Tombloo[capitalize(post.type)].insert(post);
+		Tombloo[post.type.capitalize()].insert(post);
 	},
 	
 	initialize : function(){

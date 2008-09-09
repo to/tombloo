@@ -66,6 +66,7 @@ window {
 }
 
 #toggleDetail{
+	/* 押しやすいように拡げる */
 	border : transparent solid;
 	border-width : 3px 8px;
 }
@@ -74,7 +75,6 @@ window {
 	list-style-image: url(chrome://tombloo/skin/arrow-down.png);
 	background : #777;
 	
-	/* 押しやすいように拡げる */
 	border : 4px transparent solid;
 	-moz-border-radius : 1px;
 }
@@ -89,9 +89,13 @@ window {
 }
 
 #toggleDetail:hover:active image{
+	/* ちょっと押し込んだみたいに */
+	border-width : 3px 4px 4px 3px;
+	
 	background : #111;
 	opacity : 0.5;
 }
+
 
 #close {
 	list-style-image: url(chrome://global/skin/icons/close.png);

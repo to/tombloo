@@ -32,6 +32,7 @@
 			<button id="post" label="Post"/>
 		</vbox>
 	</vbox>
+<script type="application/javascript;version=1.7" src="chrome://tombloo/content/library/00_prototype.js"/>
 <script><![CDATA[
 
 
@@ -273,12 +274,13 @@ FormPanel.prototype = {
 			ps[name] = field.values || field.value;
 		});
 		
-		this.tagsBox.checkNewTag();
-		
 		Tombloo.Service.post(ps, checked);
 		if(this.elmTags)
 			QuickPostForm.refreshCache = this.elmTags.includesNewTag;
 		
+		// FIXME: コネクト方法を検討
+		this.tagsBox.checkNewTag();
+		window.opener.content.focus();
 		window.close();
 	},
 	
@@ -368,10 +370,12 @@ FormPanel.prototype = {
 function DescriptionBox(elmBox, rows){
 	var self = this;
 	
+	log();
+	
 	withDocument(document, function(){
 		elmBox = getElement(elmBox);
 		
-		self.elmDesc = elmBox.appendChild(TEXTBOX({
+		self.elmDescription = elmBox.appendChild(TEXTBOX({
 			emptytext : elmBox.getAttribute('emptytext'),
 			value     : elmBox.getAttribute('value'),
 			multiline : true,
@@ -386,17 +390,45 @@ function DescriptionBox(elmBox, rows){
 			SPACER({flex : 1}), 
 			self.elmLength));
 		
-		self.elmDesc.addEventListener('input', bind('onInput', self), true);
+		self.elmDescription.addEventListener('input', bind('onInput', self), true);
+		
+		var selection = broad(window.opener.content.getSelection());
+		selection.addSelectionListener(self);
+		window.addEventListener('unload', function(){
+			selection.removeSelectionListener(self);
+		}, true);
 	});
 }
 
 DescriptionBox.prototype = {
 	get value(){
-		return this.elmDesc.value;
+		return this.elmDescription.value;
 	},
 	
 	onInput : function(){
-		this.elmLength.value = this.elmDesc.value.length;
+		this.elmLength.value = this.elmDescription.value.length;
+	},
+	
+	// nsISelectionListener
+	notifySelectionChanged : function(doc, sel, reason){
+		if(sel.isCollapsed || reason != ISelectionListener.MOUSEUP_REASON)
+			return;
+		
+		var elm = this.elmDescription;
+		var value = elm.value;
+		var start = elm.selectionStart;
+		sel = sel.toString().trim();
+		
+		elm.value = 
+			value.substr(0, elm.selectionStart) + 
+			sel + 
+			value.substr(elm.selectionEnd);
+		elm.selectionStart = elm.selectionEnd = start + sel.length;
+		elm.focus();
+		
+		// valueを変えると先頭に戻ってしまうため最後に移動し直す
+		var input = elm.ownerDocument.getAnonymousElementByAttribute(this.elmDescription, 'anonid', 'input');
+		input.scrollTop = input.scrollHeight;
 	},
 }
 
@@ -459,7 +491,7 @@ TagsBox.prototype = {
 	
 	getRomaReadings : function(tags){
 		var source = tags.join(' [');
-		if(includesFullwidth(source)){
+		if(source.includesFullwidth()){
 			// 各タグサービスで使われてるデリミタを合成
 			return Yahoo.getRomaReadings(source).addCallback(function(result){
 				return result.join('').split(' [');

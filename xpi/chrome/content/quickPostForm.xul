@@ -370,8 +370,6 @@ FormPanel.prototype = {
 function DescriptionBox(elmBox, rows){
 	var self = this;
 	
-	log();
-	
 	withDocument(document, function(){
 		elmBox = getElement(elmBox);
 		
@@ -585,7 +583,7 @@ function PostersPanel(){
 	this.posters = new Repository(models.getEnables(ps));
 	
 	this.elmPanel.addEventListener('mousedown', dynamicBind('onMouseDown', this), true);
-	this.elmPanel.addEventListener('mousemove', dynamicBind('onMouseMove', this), true);
+	this.elmPanel.addEventListener('mouseover', dynamicBind('onMouseOver', this), true);
 	this.elmPanel.addEventListener('mouseup', dynamicBind('onMouseUp', this), true);
 	this.elmPanel.addEventListener('mouseout', dynamicBind('onMouseOut', this), true);
 }
@@ -630,7 +628,8 @@ PostersPanel.prototype = {
 		});
 	},
 	
-	changeDisabled : function(image, disabled){
+	toggleDisabled : function(image){
+		var disabled = !(image.getAttribute('disabled')=='true');
 		var name = image.getAttribute('tooltiptext');
 		var poster = this.posters[name];
 		
@@ -648,11 +647,8 @@ State.make(PostersPanel, {
 			
 			// cancelをするとactive擬似クラスが有効にならずリアクションがなくなる
 			
-			var disabled = !(e.target.getAttribute('disabled')=='true');
-			this.changeDisabled(e.target, disabled);
-			
+			this.toggleDisabled(e.target);
 			this.changeState('dragging');
-			this.disabled = disabled;
 		},
 	},
 	
@@ -665,25 +661,25 @@ State.make(PostersPanel, {
 			if(!e.relatedTarget || e.relatedTarget.tagName != 'vbox')
 				return;
 			
-			// アイコンが小さいため外れてもすぐにドラッグを終了しない。
-			// アイコンが2行になった時、縦にドラッグすると一度マウスアウトするため。
+			// アイコンが小さいため外れてもすぐにドラッグを終了させない
+			// アイコンが2行になった時、縦にドラッグすると一度マウスアウトするため
 			var self = this;
 			this.timerId = setTimeout(function(){
 				self.changeState('normal');
 			}, 1000);
 			
-			this.changeState('wait');
+			this.changeState('waitForCancel');
 		},
 		
-		onMouseMove : function(e){
+		onMouseOver : function(e){
 			if(e.target != this.elmPanel)
-				this.changeDisabled(e.target, this.disabled);
+				this.toggleDisabled(e.target);
 		},
 	},
 	
-	wait : {
-		onMouseMove : function(e){
-			this.timerId = clearTimeout(this.timerId);
+	waitForCancel : {
+		onMouseOver : function(e){
+			clearTimeout(this.timerId);
 			this.changeState('dragging');
 		},
 	},

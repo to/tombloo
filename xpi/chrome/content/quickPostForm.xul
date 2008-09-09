@@ -195,7 +195,7 @@ function FormPanel(dialogPanel){
 	this.elmTitlebar = getElement('titlebar');
 	this.elmToggleDetail = getElement('toggleDetail');
 	
-	getElement('type').value = capitalize(ps.type);
+	getElement('type').value = ps.type.capitalize();
 	getElement('typeIcon').src = 'chrome://tombloo/skin/' + ps.type + '.png';
 	getElement('post').addEventListener('command', bind('post', this), true);
 	
@@ -292,7 +292,7 @@ FormPanel.prototype = {
 		withDocument(document, function(){
 			items(self.types[ps.type]).forEach(function([name, def]){
 				var value = (ps[name] != null)? ps[name] : '';
-				var label = self.labels[name] || capitalize(ps.type);
+				var label = self.labels[name] || ps.type.capitalize();
 				var attrs = {
 					id        : name,
 					name      : name,

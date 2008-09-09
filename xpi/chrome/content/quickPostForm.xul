@@ -107,18 +107,23 @@ function DialogPanel(){
 	this.formPanel.show();
 	
 	var self = this;
+	
+	// 画面外で一度表示して描画を行い、ウィンドウの幅と高さを取得した後スナップする
+	window.moveTo(-1000, 0);
 	window.addEventListener('load', function(){
 		self.focusToFirstControl();
 		
-		self.snapToContentCorner(true, true);
-		
-		/*
 		// 描画が終了するまで正確な高さが取得できない
 		setTimeout(function(){
-			self.snapToContentCorner(true, true);
-		});
-		*/
+			self.snapToContentCorner(true, false);
+		}, 0);
 	}, false);
+	
+	/*
+	window.addEventListener('resize', function(e){
+		log(e);
+	}, true);
+	*/
 }
 
 DialogPanel.prototype = {

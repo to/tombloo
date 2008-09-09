@@ -102,6 +102,8 @@ function DialogPanel(){
 	this.elmWindow.addEventListener('mousemove', dynamicBind('onMouseMove', this), false);
 	this.elmWindow.addEventListener('mouseout', dynamicBind('onMouseOut', this), false);
 	
+	window.addEventListener('focus', bind('onFocus', this), true);
+	window.addEventListener('blur', bind('onBlur', this), true);
 	
 	this.formPanel = new FormPanel(this);
 	this.formPanel.show();
@@ -118,15 +120,38 @@ function DialogPanel(){
 			self.snapToContentCorner(true, false);
 		}, 0);
 	}, false);
-	
-	/*
-	window.addEventListener('resize', function(e){
-		log(e);
-	}, true);
-	*/
 }
 
 DialogPanel.prototype = {
+	onFocus : function(e){
+		var input = e.target.inputField;
+		if(!(input instanceof Ci.nsIDOMNSEditableElement))
+			return;
+		
+		// カーソルを末尾に移動し、テキストボックスが全選択されてしまうのを避ける
+		input.addEventListener('select', function(e){
+			input.removeEventListener('select', arguments.callee, true);
+			
+			cancel(e);
+			
+			var length = input.textLength;
+			input.setSelectionRange(length, length);
+			
+			var content = input.editor.rootElement;
+			content.scrollLeft = content.scrollWidth;
+		}, true);
+	},
+	
+	onBlur : function(e){
+		var input = e.target.inputField;
+		if(!(input instanceof Ci.nsIDOMNSEditableElement))
+			return;
+		
+		// スクロール位置を先頭に戻し見やすく揃える
+		var content = input.editor.rootElement;
+		content.scrollLeft = 0;
+	},
+	
 	focusToFirstControl : function(){
 		window.focus();
 		document.commandDispatcher.advanceFocus();

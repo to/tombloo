@@ -12,7 +12,7 @@
 		</resources>
 		
 		<content style="cursor: text;">
-			<xul:textbox anonid="textbox" xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction,flex,emptytext"/>
+			<xul:textbox anonid="textbox" xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction,flex,emptytext" />
 			<xul:popup anonid="popup" ignorekeys="true">
 				<xul:listbox anonid="listbox" style="height: auto;"/>
 			</xul:popup>
@@ -49,6 +49,10 @@
 			<property name="includesNewTag"
 				onget="return this.textbox.includesNewTag;"/>
 			
+			<!-- textboxとの互換性のため -->
+			<property name="inputField"
+				onget="return this.textbox.input;"/>
+			
 			<method name="focus">
 				<body><![CDATA[
 					this.textbox.focus();
@@ -56,7 +60,6 @@
 			</method>
 		</implementation>
 	</binding>
-	
 	
 	<binding id="textbox" extends="chrome://global/content/bindings/textbox.xml#textbox">
 		<implementation>
@@ -481,7 +484,6 @@
 				<body><![CDATA[
 					if(!this.rowHeight){
 						// 初回表示時は行高さを取得できないためrowsで調整する
-						log(this.boxObject.height);
 						this.rows = Math.min(this.rowCount, this.maxRows);
 					} else {
 						// rowsの変更やheight:autoだけでは余白が生じることがあるため手動で高さを計算する

@@ -13,27 +13,9 @@ textbox {
 	padding: 0.2em;
 }
 
-/* 機能を持つものにbuttonクラスを設定し一般的な処理の回避などに使う */
 button,
 .button{
 	cursor : pointer !important;
-}
-
-.text-button{
-	color : white;
-	background : #777;
-	font-size : 70%;
-	padding : 0.2em 0.5em;
-	-moz-border-radius : 1px;
-}
-
-.text-button:hover{
-	background : #AAAAAA;
-}
-
-.text-button:hover:active{
-	color : #AAAAAA;
-	background : #666;
 }
 
 
@@ -47,20 +29,64 @@ window {
 
 #base {
 	-moz-border-radius: 4px;
-	
 	background-image: url(chrome://tombloo/skin/form_light.png);
-	border: 1em transparent solid;
 }
 
 window {
 	cursor : -moz-grab;
 }
 
-
-/* titlebar */
-#titlebar {
+.snap-top-left{
+	cursor : url(chrome://tombloo/skin/snap-top-left.cur), pointer;
 }
 
+.snap-top-right{
+	cursor : url(chrome://tombloo/skin/snap-top-right.cur), pointer;
+}
+
+.snap-bottom-left{
+	cursor : url(chrome://tombloo/skin/snap-bottom-left.cur), pointer;
+}
+
+.snap-bottom-right{
+	cursor : url(chrome://tombloo/skin/snap-bottom-right.cur), pointer;
+}
+
+resizer[dir="topleft"] {
+	cursor: nw-resize;
+}
+
+resizer[dir="top"] {
+	cursor: n-resize;
+}
+
+resizer[dir="topright"] {
+	cursor: ne-resize;
+}
+
+resizer[dir="left"] {
+	cursor: w-resize;
+}
+
+resizer[dir="right"] {
+	cursor: e-resize;
+}
+
+resizer[dir="bottomleft"] {
+	cursor: sw-resize;
+}
+
+resizer[dir="bottom"] {
+	cursor: s-resize;
+}
+
+resizer[dir="bottomright"] {
+	-moz-appearance: none;
+	cursor: se-resize;
+}
+
+
+/* titlebar */
 #type {
 	font-weight: bold;
 }
@@ -127,7 +153,7 @@ window {
 #tags{
 	font-size : 85%;
 	margin-top: 2em;
-	-moz-binding: url("chrome://tombloo/content/library/completion.xml#container");
+	-moz-binding: url("chrome://tombloo/content/completion.xml#container");
 }
 
 #tags listbox{
@@ -139,6 +165,10 @@ window {
 #itemUrl,
 #description{
 	margin-top: 0.8em;
+}
+
+#description{
+	min-height: 5em;
 }
 
 #item *,

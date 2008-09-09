@@ -8,13 +8,13 @@
 	
 	<binding id="container">
 		<resources>
-			<stylesheet src="chrome://tombloo/content/library/completion.css"/>
+			<stylesheet src="chrome://tombloo/content/completion.css"/>
 		</resources>
 		
-		<content>
+		<content style="cursor: text;">
 			<xul:textbox anonid="textbox" xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction,flex,emptytext"/>
 			<xul:popup anonid="popup" ignorekeys="true">
-				<xul:listbox anonid="listbox" style="height:auto"/>
+				<xul:listbox anonid="listbox" style="height: auto;"/>
 			</xul:popup>
 			<xul:box>
 				<xul:label anonid="measure" hidden="true"/>

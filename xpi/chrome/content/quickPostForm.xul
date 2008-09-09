@@ -4,34 +4,73 @@
 <window id="window" 
 	xmlns:html="http://www.w3.org/1999/xhtml" 
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-	<vbox id="base">
-		<hbox id="titlebar" align="top">
-			<hbox>
-				<vbox pack="center">
-					<image id="typeIcon" />
+	<grid id="base" flex="1">
+		<columns>
+			<column style="width: 1em;"/>
+			<column flex="1"/>
+			<column style="width: 1em;"/>
+		</columns>
+		<rows>
+			<row style="height: 1em;">
+				<resizer dir="topleft" />
+				<hbox>
+					<box class="snap-top-left" style="width: 4em;" />
+					<resizer flex="1" dir="top" />
+					<box class="snap-top-right" style="width: 4em;" />
+				</hbox>
+				<resizer dir="topright" />
+			</row>
+			<row flex="1">
+				<vbox>
+					<box class="snap-top-left" style="height: 4em;" />
+					<resizer flex="1" dir="left" />
+					<box class="snap-bottom-left" style="height: 4em;" />
 				</vbox>
-				<label id="type" />
-				<vbox pack="center" align="center" >
-					<hbox id="toggleDetail" class="button" pack="center" align="center" >
-						<image/>
+				<vbox>
+					<hbox id="titlebar" align="top">
+						<hbox>
+							<vbox pack="center">
+								<image id="typeIcon" />
+							</vbox>
+							<label id="type" />
+							<vbox pack="center" align="center" >
+								<hbox id="toggleDetail" class="button" pack="center" align="center" >
+									<image/>
+								</hbox>
+							</vbox>
+						</hbox>
+						
+						<spacer flex="1" />
+						
+						<vbox>
+							<image id="close" class="button" onclick="window.close()"/>
+						</vbox>
 					</hbox>
+					
+					<vbox id="form" flex="1" />
+					
+					<vbox id="control" >
+						<description id="posters" pack="top" align="top" />
+						<button id="post" label="Post" />
+					</vbox>
 				</vbox>
-			</hbox>
-			
-			<spacer flex="1" />
-			
-			<vbox>
-				<image id="close" class="button" onclick="window.close()"/>
-			</vbox>
-		</hbox>
-		
-		<vbox id="form" />
-		
-		<vbox id="control" >
-			<description id="posters" pack="top" align="top" />
-			<button id="post" label="Post"/>
-		</vbox>
-	</vbox>
+				<vbox>
+					<box class="snap-top-right" style="height: 4em;" />
+					<resizer flex="1" dir="right" />
+					<box class="snap-bottom-right" style="height: 4em;" />
+				</vbox>
+			</row>
+			<row style="height: 1em;">
+				<resizer dir="bottomleft" />
+				<hbox>
+					<box class="snap-bottom-left" style="width: 4em;" />
+					<resizer flex="1" dir="bottom" />
+					<box class="snap-bottom-right" style="width: 4em;" />
+				</hbox>
+				<resizer dir="bottomright" />
+			</row>
+		</rows>
+	</grid>
 <script type="application/javascript;version=1.7" src="chrome://tombloo/content/library/00_prototype.js"/>
 <script><![CDATA[
 
@@ -57,14 +96,12 @@ function DialogPanel(){
 	this.elmWindow = getElement('window');
 	this.elmBase = getElement('base');
 	
+	// ドラッグ後にクリックをキャンセルするためcaptureフェーズで補足する
+	this.elmWindow.addEventListener('click', dynamicBind('onClick', this), true);
 	this.elmWindow.addEventListener('draggesture', dynamicBind('onDragStart', this), false);
 	this.elmWindow.addEventListener('mousemove', dynamicBind('onMouseMove', this), false);
 	this.elmWindow.addEventListener('mouseout', dynamicBind('onMouseOut', this), false);
 	
-	// フォーカス移動よりラベル編集などを優先するためbubblingフェーズで捕捉する
-	// 反対に、ドラッグ後はクリックをキャンセルするためcaptureフェーズで補足する
-	this.elmWindow.addEventListener('click', dynamicBind('onClick', this), false);
-	this.elmWindow.addEventListener('click', dynamicBind('onMouseUp', this), true);
 	
 	this.formPanel = new FormPanel(this);
 	this.formPanel.show();
@@ -73,10 +110,14 @@ function DialogPanel(){
 	window.addEventListener('load', function(){
 		self.focusToFirstControl();
 		
+		self.snapToContentCorner(true, true);
+		
+		/*
 		// 描画が終了するまで正確な高さが取得できない
 		setTimeout(function(){
-			self.snapToContentCorner(false, true);
+			self.snapToContentCorner(true, true);
 		});
+		*/
 	}, false);
 }
 
@@ -86,7 +127,7 @@ DialogPanel.prototype = {
 		document.commandDispatcher.advanceFocus();
 	},
 	
-	snapToContentCorner : function(left, top){
+	snapToContentCorner : function(top, left){
 		var baseBox = this.elmBase.boxObject;
 		var browserBox = getMostRecentWindow().getBrowser().selectedBrowser.boxObject;
 				
@@ -113,26 +154,10 @@ State.make(DialogPanel, {
 			this.elmWindow.style.cursor = '';
 		},
 		
-		onMouseMove : function(e){
-			var box = this.elmBase.boxObject;
-			
-			var horizontal = 
-				(e.clientX < 16)? 'left' : 
-				(box.width - 16 < e.clientX)? 'right' : null;
-			
-			var vertical  = (e.clientY < 100)? 'top' :
-				(box.height - 100 < e.clientY)? 'bottom' : null;
-			
-			if(horizontal && vertical){
-				this.elmWindow.style.cursor = 'url(chrome://tombloo/skin/snap-' + horizontal + '-' + vertical + '.cur), pointer';
-			} else {
-				this.elmWindow.style.cursor = '';
-			}
-		},
-		
 		onDragStart : function(e){
-			if(e.target.tagName=='textbox' || ~e.target.className.indexOf('button'))
-				return
+			var cursor = window.getComputedStyle(e.target, '').cursor;
+			if(cursor != '-moz-grab')
+				return;
 			
 			this.start = {
 				x : e.screenX,
@@ -143,16 +168,20 @@ State.make(DialogPanel, {
 		},
 		
 		onClick : function(e){
-			if((/^(box|textbox)$/).test(e.target.tagName))
-				return
+			var cursor = window.getComputedStyle(e.target, '').cursor;
+			log(cursor);
+			log(e.target.tagName);
 			
-			var cursor = this.elmWindow.style.cursor;
+			if(cursor == '-moz-grab'){
+				// ウィンドウにフォーカスを移しラベル編集を終了させる
+				cancel(e);
+				this.elmWindow.focus();
+			}
+			
 			var match = (/.+snap-(.+)-(.+)\./).exec(cursor);
 			if(match){
-				this.snapToContentCorner(match[1] == 'left', match[2] == 'top');
-			} else {
-				// 何もない領域をクリックしたらウィンドウにフォーカスを移しラベル編集を終了させる
-				this.elmWindow.focus();
+				cancel(e);
+				this.snapToContentCorner(match[1] == 'top', match[2] == 'left');
 			}
 		},
 	},
@@ -177,7 +206,7 @@ State.make(DialogPanel, {
 				this.changeState('normal');
 		},
 		
-		onMouseUp : function(e){
+		onClick : function(e){
 			cancel(e);
 			
 			this.changeState('normal');
@@ -192,7 +221,6 @@ function FormPanel(dialogPanel){
 	this.dialogPanel = dialogPanel;
 	
 	this.elmForm = getElement('form');
-	this.elmTitlebar = getElement('titlebar');
 	this.elmToggleDetail = getElement('toggleDetail');
 	
 	getElement('type').value = ps.type.capitalize();
@@ -219,7 +247,9 @@ FormPanel.prototype = {
 		regular : {
 			item        : {toggle : true},
 			tags        : {toggle : true},
-			description : {rows : 4},
+			description : {
+				attributes : {rows : 7},
+			},
 		},
 		link : {
 			item        : {type : 'label'},
@@ -230,7 +260,7 @@ FormPanel.prototype = {
 		quote : {
 			item        : {toggle : true},
 			itemUrl     : {toggle : true},
-			body        : {rows : 3},
+			body        : {},
 			tags        : {toggle : true},
 			description : {toggle : true},
 		},
@@ -291,15 +321,17 @@ FormPanel.prototype = {
 		
 		withDocument(document, function(){
 			items(self.types[ps.type]).forEach(function([name, def]){
+				def.attributes = def.attributes || {};
+				
 				var value = (ps[name] != null)? ps[name] : '';
 				var label = self.labels[name] || ps.type.capitalize();
-				var attrs = {
+				var attrs = update({
 					id        : name,
 					name      : name,
 					value     : value,
 					emptytext : label,
 					hidden    : !!def.toggle,
-				};
+				}, def.attributes);
 				
 				var elm, field;
 				if(name == 'tags'){
@@ -307,8 +339,10 @@ FormPanel.prototype = {
 					self.tagsBox = new TagsBox(elm);
 					
 				} else if(name == 'description'){
-					elm = elmForm.appendChild(VBOX(attrs));
-					field = new DescriptionBox(elm, def.rows);
+					elm = elmForm.appendChild(VBOX(attrs, {
+						flex : 1,
+					}));
+					field = new DescriptionBox(elm, def.attributes);
 					
 				} else {
 					switch(def.type){
@@ -367,7 +401,7 @@ FormPanel.prototype = {
 
 
 // ----[DescriptionBox]-------------------------------------------------
-function DescriptionBox(elmBox, rows){
+function DescriptionBox(elmBox, attrs){
 	var self = this;
 	
 	withDocument(document, function(){
@@ -377,8 +411,10 @@ function DescriptionBox(elmBox, rows){
 			emptytext : elmBox.getAttribute('emptytext'),
 			value     : elmBox.getAttribute('value'),
 			multiline : true,
-			rows : rows || 2,
+			rows      : attrs.rows || 4,
+			flex      : 1,
 		}));
+		
 		self.elmLength = LABEL({
 			class : 'length', 
 			value : 0,

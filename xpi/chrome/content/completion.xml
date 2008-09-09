@@ -244,8 +244,10 @@
 					
 					return {
 						start : start,
-						end : end,
-						word : text.slice(start, end),
+						end   : end,
+						caret : caret,
+						hint  : text.slice(start, caret),
+						word  : text.slice(start, end),
 					};
 				]]></body>
 			</method>
@@ -280,10 +282,10 @@
 				<body><![CDATA[
 					var text = this.value;
 					var word = this.getCurrentWord();
-					var hint = word.word;
+					var hint = word.hint;
 					
 					// 削除によりヒントがないか、または、タグ間へのスペース追加か?
-					if((!hint && denyEmpty) || (word.start==this.selectionStart)){
+					if(!hint && denyEmpty){
 						this.popup.hidePopup();
 						return;
 					}
@@ -463,16 +465,23 @@
 						this.removeChild(this.lastChild);
 				]]></body>
 			</method>
+			
 			<method name="appendItems">
 				<parameter name="items"/>
 				<body><![CDATA[
 					for(var i=0 ; i<items.length; i++)
 						this.appendItem(items[i]);
+					
+					// ここだけで高さや背景色を変えているため不整合が起きる可能性がある
+					this.adjustSize();
 				]]></body>
 			</method>
+			
 			<method name="adjustSize">
 				<body><![CDATA[
 					if(!this.rowHeight){
+						// 初回表示時は行高さを取得できないためrowsで調整する
+						log(this.boxObject.height);
 						this.rows = Math.min(this.rowCount, this.maxRows);
 					} else {
 						// rowsの変更やheight:autoだけでは余白が生じることがあるため手動で高さを計算する
@@ -486,7 +495,7 @@
 					}
 					
 					// スクロールバーが表示されると切れるため手動で幅を計算する
-					if(this.rowCount > this.maxRows){
+					if(this.rowCount > this.maxRows && this.rowHeight){
 						this.width = null;
 						this.width = this.boxObject.width + 20;
 					} else {
@@ -512,6 +521,7 @@
 					this.ensureIndexIsVisible(index);
 				]]></body>
 			</method>
+			
 			<method name="enter">
 				<parameter name="terminate"/>
 				<body><![CDATA[
@@ -533,9 +543,7 @@
 			<handler event="select" action="this.enter()" />
 			<handler event="DOMNodeInserted"><![CDATA[
 				// getRowCountメソッドは不正確な場合があるため子要素を取得しキャッシュする
-				this.rowCount = this.getElementsByTagName('listitem').length;
-				
-				this.adjustSize();
+				this.rowCount = this.childNodes.length;
 			]]></handler>
 		</handlers>
 	</binding>

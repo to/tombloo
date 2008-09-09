@@ -169,9 +169,6 @@ State.make(DialogPanel, {
 		
 		onClick : function(e){
 			var cursor = window.getComputedStyle(e.target, '').cursor;
-			log(cursor);
-			log(e.target.tagName);
-			
 			if(cursor == '-moz-grab'){
 				// ウィンドウにフォーカスを移しラベル編集を終了させる
 				cancel(e);

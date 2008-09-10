@@ -181,9 +181,10 @@ div{
 	padding : 0 !important;
 }
 
-img#itemUrl {
-	max-width: 25em;
-	max-height: 25em;
+#itemUrl image{
+	/* ウィンドウ初期サイズに揃える	*/
+	max-width: 22em;
+	max-height: 22em;
 }
 
 

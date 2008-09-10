@@ -197,6 +197,15 @@ State.make(DialogPanel, {
 			this.changeState('dragging');
 		},
 		
+		onMouseMove : function(e){
+			/*
+			cancel(e);
+			var box = this.elmBase.boxObject;
+			window.resizeTo(box.width, Math.max(box.height, 400));
+			log(window.innerHeight);
+			*/
+		},
+		
 		onClick : function(e){
 			var cursor = window.getComputedStyle(e.target, '').cursor;
 			if(cursor == '-moz-grab'){
@@ -366,9 +375,7 @@ FormPanel.prototype = {
 					self.tagsBox = new TagsBox(elm);
 					
 				} else if(name == 'description'){
-					elm = elmForm.appendChild(VBOX(attrs, {
-						flex : 1,
-					}));
+					elm = elmForm.appendChild(VBOX(attrs, {flex : 1}));
 					field = new DescriptionBox(elm, def.attributes);
 					
 				} else {
@@ -379,11 +386,9 @@ FormPanel.prototype = {
 						break;
 						
 					case 'photo':
-						var img = document.createElementNS(HTML_NS, 'img');
-						img.id = 'itemUrl';
-						img.src = ps.itemUrl;
-						
-						elm = elmForm.appendChild(DESCRIPTION(img));
+						// flexを大きくし詳細ボックスとバランスを取る
+						elm = elmForm.appendChild(BOX(attrs, {flex : 10}));
+						new FlexImage(elm, ps.itemUrl);
 						break;
 						
 					default:
@@ -426,6 +431,59 @@ FormPanel.prototype = {
 	},
 }
 
+// ----[FlexImage]-------------------------------------------------
+function FlexImage(elmBox, src){
+	var self = this;
+	
+	withDocument(document, function(){
+		elmBox = getElement(elmBox);
+		
+		self.elmHbox = elmBox.appendChild(HBOX({flex : 1}));
+		self.elmImage = IMAGE({src : src});
+		self.elmVbox = self.elmHbox.appendChild(VBOX(self.elmImage));
+		
+		self.elmImage.style.minHeight = '0';
+		self.elmImage.style.minWidth = '0';
+		
+		loadImage(src).addCallback(function(img){
+			self.naturalWidth = img.naturalWidth
+			self.naturalHeight = img.naturalHeight
+		});
+		
+		window.addEventListener('resize', bind('fit', self), true);
+	});
+}
+
+FlexImage.prototype = {
+	fit : function(){
+		// 測量のため画像を消しボックスを縦に伸ばす(横は自動的に伸びる)
+		this.elmImage.style.maxWidth = '0';
+		this.elmImage.style.maxHeight = '0';
+		this.elmVbox.style.maxHeight = '100000px';
+		
+		// ボックスは一定量以上縮まないためウィンドウのプロパティも併用する
+		var bw = Math.min(this.elmHbox.boxObject.width, window.outerWidth);
+		var bh = Math.min(this.elmVbox.boxObject.height, window.outerHeight);
+		
+		var nw = this.naturalWidth;
+		var nh = this.naturalHeight;
+		
+		var ratio = Math.min(bh/nh, bw/nw, 1);
+		var width = nw * ratio;
+		var height = nh * ratio;
+		
+		this.elmImage.style.maxWidth = width + 'px';
+		this.elmImage.style.maxHeight = height + 'px';
+		this.elmVbox.style.maxHeight = height + 'px';
+		
+		if(bw > width){
+			this.elmHbox.setAttribute('pack', 'center');
+		} else {
+			// 小さなボックスで中央揃えをすると異常になるため回避する
+			this.elmHbox.removeAttribute('pack');
+		}
+	},
+}
 
 // ----[DescriptionBox]-------------------------------------------------
 function DescriptionBox(elmBox, attrs){

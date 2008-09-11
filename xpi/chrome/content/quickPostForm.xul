@@ -475,14 +475,19 @@ function FlexImage(elmBox, src, dialogPanel){
 		
 		self.elmHbox = elmBox.appendChild(HBOX({flex : 1}));
 		self.elmImage = IMAGE({src : src});
-		self.elmVbox = self.elmHbox.appendChild(VBOX(self.elmImage, {pack : 'center'}));
+		self.elmSize = LABEL({class : 'meta'});
+		self.elmVbox = self.elmHbox.appendChild(VBOX(
+			self.elmImage, {pack : 'center'}, 
+			HBOX(SPACER({flex : 1}), self.elmSize)));
 		
 		self.elmImage.style.minHeight = '0';
 		self.elmImage.style.minWidth = '0';
 		
 		loadImage(src).addCallback(function(img){
-			self.naturalWidth = img.naturalWidth
-			self.naturalHeight = img.naturalHeight
+			self.naturalWidth = img.naturalWidth;
+			self.naturalHeight = img.naturalHeight;
+			
+			self.elmSize.value = self.naturalWidth + ' * ' + self.naturalHeight;
 		});
 	});
 	
@@ -537,7 +542,7 @@ function DescriptionBox(elmBox, attrs){
 		}));
 		
 		self.elmLength = LABEL({
-			class : 'length', 
+			class : 'meta', 
 			value : 0,
 		});
 		

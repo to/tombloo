@@ -547,15 +547,23 @@ function DescriptionBox(elmBox, attrs){
 		
 		self.elmDescription.addEventListener('input', bind('onInput', self), true);
 		
+		window.addEventListener('DOMContentLoaded', bind('onLoad', self), false);
+		
 		var selection = broad(window.opener.content.getSelection());
 		selection.addSelectionListener(self);
 		window.addEventListener('unload', function(){
+			// FIXME: 対象ウィンドウが先に閉じたときにチェック
 			selection.removeSelectionListener(self);
 		}, true);
 	});
 }
 
 DescriptionBox.prototype = {
+	onLoad : function(){
+		// XBLロード後でないと取得できない
+		this.elmInput = document.getAnonymousElementByAttribute(this.elmDescription, 'anonid', 'input');
+	},
+	
 	get value(){
 		return this.elmDescription.value;
 	},
@@ -579,11 +587,13 @@ DescriptionBox.prototype = {
 			sel + 
 			value.substr(elm.selectionEnd);
 		elm.selectionStart = elm.selectionEnd = start + sel.length;
+		
+		// 別ウィンドウのため一度ウィンドウのフォーカスも戻す
+		window.focus();
 		elm.focus();
 		
 		// valueを変えると先頭に戻ってしまうため最後に移動し直す
-		var input = elm.ownerDocument.getAnonymousElementByAttribute(this.elmDescription, 'anonid', 'input');
-		input.scrollTop = input.scrollHeight;
+		this.elmInput.scrollTop = this.elmInput.scrollHeight;
 	},
 }
 

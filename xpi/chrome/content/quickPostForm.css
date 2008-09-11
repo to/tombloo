@@ -18,6 +18,18 @@ button,
 	cursor : pointer !important;
 }
 
+tooltip{
+	/* 目立たない色に設定し慣れた後の負担を減らす */
+  -moz-appearance: none;
+  
+	-moz-border-radius: 2px;
+	padding: 0.2em 0.4em;
+	
+	border: 1px solid #AAA;
+	background: #E8E8E8;
+	
+	font-size: 90%;
+}
 
 /* window / base */
 window {

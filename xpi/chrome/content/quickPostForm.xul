@@ -83,7 +83,7 @@ env.extend(this, env, false);
 
 
 // ----[utility]-------------------------------------------------
-'BOX VBOX HBOX SPACER LABEL TEXTBOX IMAGE DESCRIPTION'.split(' ').forEach(function(tag){
+'BOX VBOX HBOX SPACER LABEL TEXTBOX IMAGE DESCRIPTION TOOLTIP'.split(' ').forEach(function(tag){
 	this[tag] = bind(E, null, tag.toLowerCase());
 });
 
@@ -781,26 +781,31 @@ function PostersPanel(){
 	this.elmPanel.addEventListener('mouseover', dynamicBind('onMouseOver', this), true);
 	this.elmPanel.addEventListener('mouseup', dynamicBind('onMouseUp', this), true);
 	this.elmPanel.addEventListener('mouseout', dynamicBind('onMouseOut', this), true);
+	
+	this.elmPanel.addEventListener('mouseover', bind('showTooltip', this), true);
+	this.elmPanel.addEventListener('mouseout', bind('hideTooltip', this), true);
 }
 
 PostersPanel.prototype = {
 	get checked(){
 		var self = this;
 		return $x('.//*[@disabled="false"]', this.elmPanel, true).map(function(elm){
-			return self.posters[elm.getAttribute('tooltiptext')];
+			return self.posters[elm.name];
 		});
 	},
 	
 	show : function(){
 		var self = this;
 		withDocument(document, function(){
+			self.elmTooltip = self.elmPanel.appendChild(TOOLTIP());
+			
 			forEach(self.posters, function([name, poster]){
 				var disabled = poster.config[ps.type] != 'default';
 				var image = self.elmPanel.appendChild(IMAGE({
 					class : 'poster button', 
-					tooltiptext : name,
 					disabled : disabled,
 				}));
+				image.name = name;
 				
 				self.setIcon(image, poster, !disabled);
 			});
@@ -825,12 +830,25 @@ PostersPanel.prototype = {
 	
 	toggleDisabled : function(image){
 		var disabled = !(image.getAttribute('disabled')=='true');
-		var name = image.getAttribute('tooltiptext');
-		var poster = this.posters[name];
+		var poster = this.posters[image.name];
 		
 		image.setAttribute('disabled', disabled);
 				
 		this.setIcon(image, poster, !disabled);
+	},
+	
+	showTooltip : function(e){
+		var name = e.target.name;
+		if(!name)
+			return;
+		
+		// FIXME: openPopupの利用も検討する(Firefox 3)
+		this.elmTooltip.label = name;
+		this.elmTooltip.showPopup(null, e.screenX + 16, e.screenY + 16, 'tooltip');
+	},
+	
+	hideTooltip : function(e){
+		this.elmTooltip.hidePopup();
 	},
 }
 	

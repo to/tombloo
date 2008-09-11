@@ -102,6 +102,8 @@ function DialogPanel(){
 	// ドラッグ後にクリックをキャンセルするためcaptureフェーズで補足する
 	this.elmWindow.addEventListener('click', dynamicBind('onClick', this), true);
 	this.elmWindow.addEventListener('draggesture', dynamicBind('onDragStart', this), false);
+	this.elmWindow.addEventListener('mousedown', dynamicBind('onMouseDown', this), false);
+	this.elmWindow.addEventListener('mouseup', dynamicBind('onMouseUp', this), false);
 	this.elmWindow.addEventListener('mousemove', dynamicBind('onMouseMove', this), false);
 	this.elmWindow.addEventListener('mouseout', dynamicBind('onMouseOut', this), false);
 	
@@ -110,7 +112,7 @@ function DialogPanel(){
 	
 	this.formPanel = new FormPanel(this);
 	this.formPanel.show();
-	connect(this.formPanel, 'resize', this, 'onFormResize');
+	connect(this.formPanel, 'resize', this, 'sizeToContent');
 	
 	var self = this;
 	
@@ -179,15 +181,21 @@ DialogPanel.prototype = {
 	},
 	
 	onWindowResize : function(){
+		// 循環イベントの発生を回避する
 		if(this.selfResizing){
 			this.selfResizing = false;
 			return
 		}
 		
 		signal(this, 'resize');
+		
+		this.sizeToContent();
 	},
 	
-	onFormResize : function(shrink){
+	sizeToContent : function(){
+		var shrink = this.formPanel.shrink;
+		
+		// 一度flexを解除しないと画像下の余白を縮められない
 		if(shrink)
 			this.elmBase.removeAttribute('flex');
 		
@@ -204,6 +212,14 @@ DialogPanel.prototype = {
 
 State.make(DialogPanel, {
 	normal : {
+		onMouseDown : function(e){
+			var cursor = window.getComputedStyle(e.target, '').cursor;
+			
+			// 画像のみが表示されている場合は小さくなって良い
+			if(/resize/.test(cursor) && !this.formPanel.shrink)
+				this.changeState('resizing');
+		},
+		
 		onChangeState : function(){
 			this.elmWindow.style.cursor = '';
 		},
@@ -221,15 +237,6 @@ State.make(DialogPanel, {
 			this.changeState('dragging');
 		},
 		
-		onMouseMove : function(e){
-			/*
-			cancel(e);
-			var box = this.elmBase.boxObject;
-			window.resizeTo(box.width, Math.max(box.height, 400));
-			log(window.innerHeight);
-			*/
-		},
-		
 		onClick : function(e){
 			var cursor = window.getComputedStyle(e.target, '').cursor;
 			if(cursor == '-moz-grab'){
@@ -244,6 +251,19 @@ State.make(DialogPanel, {
 				this.snapToContentCorner(match[1] == 'top', match[2] == 'left');
 			}
 		},
+	},
+	
+	resizing : {
+		onMouseMove : function(e){
+			// 最小サイズ以下に縮むのを防ぐ
+			var box = this.elmBase.boxObject;
+			if(box.height > window.innerHeight)
+				window.resizeTo(box.width, box.height);
+		},
+		
+		onMouseUp : function(){
+			this.changeState('normal');
+		}
 	},
 	
 	dragging : {
@@ -276,14 +296,11 @@ State.make(DialogPanel, {
 
 
 // ----[FormPanel]----------------------------------------------------
-// ps
 function FormPanel(dialogPanel){
 	window.addEventListener('unload', partial(disconnectAll, this), false);
 	
 	this.dialogPanel = dialogPanel;
-	
-elmForm = this.elmForm = getElement('form');
-
+	this.elmForm = getElement('form');
 	this.elmToggleDetail = getElement('toggleDetail');
 	
 	getElement('type').value = ps.type.capitalize();
@@ -344,21 +361,25 @@ FormPanel.prototype = {
 	toggles : [],
 	fields : {},
 	
+	expanded : false,
+	
+	get shrink(){
+		// photoタイプの縮小時だけシュリンクさせる
+		// 他の場合はDescriptionBoxの大きさを維持するためシュリンクしない
+		return ps.type=='photo' && !this.expanded;
+	},
+	
 	show : function(){
 		this.createForm();
 	},
 	
-	toggleDetail : function(e){
-		cancel(e);
-		
+	toggleDetail : function(){
 		toggleElementClass('expanded', this.elmToggleDetail);
-		
 		forEach(this.toggles, function(f){f()});
 		
-		// photoタイプの縮小時だけシュリンクさせる
-		// 他の場合はDescriptionBoxの大きさを維持するためシュリンクしない
-		signal(this, 'resize', 
-			!hasElementClass(this.elmToggleDetail, 'expanded') && ps.type=='photo');
+		this.expanded = hasElementClass(this.elmToggleDetail, 'expanded');
+		
+		signal(this, 'resize');
 	},
 	
 	post : function(){
@@ -421,7 +442,7 @@ FormPanel.prototype = {
 						// flexを大きくし詳細ボックスとバランスを取る
 						elm = elmForm.appendChild(BOX(attrs, {flex : 10}));
 						field = new FlexImage(elm, ps.itemUrl, self.dialogPanel);
-						connect(field, 'resize', partial(signal, self, 'resize', true));
+						connect(field, 'resize', bind('onFieldResize', self));
 						break;
 						
 					default:
@@ -447,6 +468,10 @@ FormPanel.prototype = {
 				}
 			});
 		});
+	},
+	
+	onFieldResize : function(){
+		signal(this, 'resize');
 	},
 	
 	onKeydown : function(e){
@@ -521,8 +546,6 @@ FlexImage.prototype = {
 			// 小さなボックスで中央揃えをすると異常になるため回避する
 			this.elmHbox.removeAttribute('pack');
 		}
-		
-		signal(this, 'resize', this);
 	},
 }
 

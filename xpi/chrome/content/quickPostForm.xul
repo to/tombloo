@@ -47,7 +47,7 @@
 						</vbox>
 					</hbox>
 					
-					<vbox id="form" flex="1" />
+					<vbox id="form" flex="1"/>
 					
 					<vbox id="control" >
 						<description id="posters" pack="top" align="top" />
@@ -76,6 +76,7 @@
 
 
 // chrome://tombloo/content/quickPostForm.xul
+// connectされるオブジェクトは必ずunload時にdisconnectAllをしてオブサーバーをクリアする
 
 var env = Components.classes['@brasil.to/tombloo-service;1'].getService().wrappedJSObject;
 env.extend(this, env, false);
@@ -93,6 +94,8 @@ function getElement(id){
 
 // ----[Dialog]----------------------------------------------------
 function DialogPanel(){
+	window.addEventListener('unload', partial(disconnectAll, this), false);
+	
 	this.elmWindow = getElement('window');
 	this.elmBase = getElement('base');
 	
@@ -107,18 +110,21 @@ function DialogPanel(){
 	
 	this.formPanel = new FormPanel(this);
 	this.formPanel.show();
+	connect(this.formPanel, 'resize', this, 'onFormResize');
 	
 	var self = this;
 	
-	// 画面外で一度表示して描画を行い、ウィンドウの幅と高さを取得した後スナップする
-	window.moveTo(-1000, 0);
-	window.addEventListener('load', function(){
+	window.addEventListener('resize', bind('onWindowResize', this), true);
+	
+	self.elmWindow.style.opacity = 0;
+	window.addEventListener('resize', function(){
+		window.removeEventListener('resize', arguments.callee, false);
+		
 		self.focusToFirstControl();
 		
-		// 描画が終了するまで正確な高さが取得できない
-		setTimeout(function(){
-			self.snapToContentCorner(true, false);
-		}, 0);
+		self.snapToContentCorner(true, false);
+		
+		self.elmWindow.style.opacity = 1;
 	}, false);
 }
 
@@ -172,9 +178,27 @@ DialogPanel.prototype = {
 		window.moveTo(x, y);
 	},
 	
-	sizeToContent : function(){
+	onWindowResize : function(){
+		if(this.selfResizing){
+			this.selfResizing = false;
+			return
+		}
+		
+		signal(this, 'resize');
+	},
+	
+	onFormResize : function(shrink){
+		if(shrink)
+			this.elmBase.removeAttribute('flex');
+		
 		var box = this.elmBase.boxObject;
+		if(box.width != window.innerWidth || box.height != window.innerHeight)
+			this.selfResizing = true;
+		
 		window.resizeTo(box.width, box.height);
+		
+		if(shrink)
+			this.elmBase.setAttribute('flex', '1');
 	}
 }
 
@@ -254,9 +278,12 @@ State.make(DialogPanel, {
 // ----[FormPanel]----------------------------------------------------
 // ps
 function FormPanel(dialogPanel){
+	window.addEventListener('unload', partial(disconnectAll, this), false);
+	
 	this.dialogPanel = dialogPanel;
 	
-	this.elmForm = getElement('form');
+elmForm = this.elmForm = getElement('form');
+
 	this.elmToggleDetail = getElement('toggleDetail');
 	
 	getElement('type').value = ps.type.capitalize();
@@ -328,7 +355,10 @@ FormPanel.prototype = {
 		
 		forEach(this.toggles, function(f){f()});
 		
-		this.dialogPanel.sizeToContent();
+		// photoタイプの縮小時だけシュリンクさせる
+		// 他の場合はDescriptionBoxの大きさを維持するためシュリンクしない
+		signal(this, 'resize', 
+			!hasElementClass(this.elmToggleDetail, 'expanded') && ps.type=='photo');
 	},
 	
 	post : function(){
@@ -337,7 +367,9 @@ FormPanel.prototype = {
 			return;
 		
 		items(this.fields).forEach(function([name, field]){
-			ps[name] = field.values || field.value;
+			var value = field.values || field.value;
+			if(value != null)
+				ps[name] = value;
 		});
 		
 		Tombloo.Service.post(ps, checked);
@@ -388,7 +420,8 @@ FormPanel.prototype = {
 					case 'photo':
 						// flexを大きくし詳細ボックスとバランスを取る
 						elm = elmForm.appendChild(BOX(attrs, {flex : 10}));
-						new FlexImage(elm, ps.itemUrl);
+						field = new FlexImage(elm, ps.itemUrl, self.dialogPanel);
+						connect(field, 'resize', partial(signal, self, 'resize', true));
 						break;
 						
 					default:
@@ -432,7 +465,9 @@ FormPanel.prototype = {
 }
 
 // ----[FlexImage]-------------------------------------------------
-function FlexImage(elmBox, src){
+function FlexImage(elmBox, src, dialogPanel){
+	window.addEventListener('unload', partial(disconnectAll, this), false);
+	
 	var self = this;
 	
 	withDocument(document, function(){
@@ -440,7 +475,7 @@ function FlexImage(elmBox, src){
 		
 		self.elmHbox = elmBox.appendChild(HBOX({flex : 1}));
 		self.elmImage = IMAGE({src : src});
-		self.elmVbox = self.elmHbox.appendChild(VBOX(self.elmImage));
+		self.elmVbox = self.elmHbox.appendChild(VBOX(self.elmImage, {pack : 'center'}));
 		
 		self.elmImage.style.minHeight = '0';
 		self.elmImage.style.minWidth = '0';
@@ -449,15 +484,14 @@ function FlexImage(elmBox, src){
 			self.naturalWidth = img.naturalWidth
 			self.naturalHeight = img.naturalHeight
 		});
-		
-		window.addEventListener('resize', bind('fit', self), true);
 	});
+	
+	connect(dialogPanel, 'resize', this, 'fit');
 }
 
 FlexImage.prototype = {
 	fit : function(){
-		// 測量のため画像を消しボックスを縦に伸ばす(横は自動的に伸びる)
-		this.elmImage.style.maxWidth = '0';
+		// 測量のため画像を消しボックスを縦に伸縮させる(横は自動的に伸びる)
 		this.elmImage.style.maxHeight = '0';
 		this.elmVbox.style.maxHeight = '100000px';
 		
@@ -469,8 +503,8 @@ FlexImage.prototype = {
 		var nh = this.naturalHeight;
 		
 		var ratio = Math.min(bh/nh, bw/nw, 1);
-		var width = nw * ratio;
-		var height = nh * ratio;
+		var width = Math.ceil(nw * ratio);
+		var height = Math.ceil(nh * ratio);
 		
 		this.elmImage.style.maxWidth = width + 'px';
 		this.elmImage.style.maxHeight = height + 'px';
@@ -482,6 +516,8 @@ FlexImage.prototype = {
 			// 小さなボックスで中央揃えをすると異常になるため回避する
 			this.elmHbox.removeAttribute('pack');
 		}
+		
+		signal(this, 'resize', this);
 	},
 }
 
@@ -810,7 +846,6 @@ State.make(PostersPanel, {
 // ----[main]-------------------------------------------------
 var ps = arguments[0];
 var dialogPanel = new DialogPanel();
-
 
 ]]></script>
 </window>

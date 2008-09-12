@@ -207,7 +207,7 @@ DialogPanel.prototype = {
 		
 		if(shrink)
 			this.elmBase.setAttribute('flex', '1');
-	}
+	},
 }
 
 State.make(DialogPanel, {
@@ -229,9 +229,9 @@ State.make(DialogPanel, {
 			if(cursor != '-moz-grab')
 				return;
 			
-			this.start = {
-				x : e.screenX,
-				y : e.screenY,
+			this.grab = {
+				x : e.clientX,
+				y : e.clientY,
 			}
 			
 			this.changeState('dragging');
@@ -253,6 +253,27 @@ State.make(DialogPanel, {
 		},
 	},
 	
+	dragging : {
+		onChangeState : function(){
+			this.elmWindow.style.cursor = '-moz-grabbing';
+		},
+		
+		onMouseMove : function(e){
+		  window.moveTo(e.screenX - this.grab.x, e.screenY - this.grab.y);
+		},
+		
+		onMouseOut : function(e){
+			if(e.relatedTarget.tagName=='window')
+				this.changeState('normal');
+		},
+		
+		onMouseUp : function(e){
+			cancel(e);
+			
+			this.changeState('normal');
+		},
+	},
+	
 	resizing : {
 		onMouseMove : function(e){
 			// 最小サイズ以下に縮むのを防ぐ
@@ -261,34 +282,7 @@ State.make(DialogPanel, {
 				window.resizeTo(box.width, box.height);
 		},
 		
-		onMouseUp : function(){
-			this.changeState('normal');
-		}
-	},
-	
-	dragging : {
-		onChangeState : function(){
-			this.elmWindow.style.cursor = '-moz-grabbing';
-		},
-		
-		onMouseMove : function(e){
-			var end = {
-				x : e.screenX,
-				y : e.screenY,
-			}
-		  window.moveBy(end.x - this.start.x, end.y - this.start.y);
-		  this.start = end;
-		},
-		
-		onMouseOut : function(e){
-			// ウィンドウ外か、または、ウィンドウの淵か?
-			if(!e.relatedTarget || e.relatedTarget.tagName=='window')
-				this.changeState('normal');
-		},
-		
-		onClick : function(e){
-			cancel(e);
-			
+		onMouseUp : function(e){
 			this.changeState('normal');
 		},
 	},

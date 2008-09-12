@@ -2,21 +2,21 @@
 <RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
          xmlns:NC="http://home.netscape.com/NC-rdf#"
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
-                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAJW5PBqjg2auUSw0JphZ5xKJigQ2dfYJaBCNJ8TBCLC4a0tteEh9Ha7qGm5tk1Vt6cxvIGV8bDEZiWeC2skWc1OnhMSY5Xbf0d/pho3ndG6oC399Tky/5KdDzxxVLTUguHC4k6ldrq9d8djewKu0C8cJRqLd8oTW+yrROkuxa3Uk">
-    <em:updates RDF:resource="rdf:#$EPxRk"/>
+  <RDF:Description RDF:about="rdf:#$cR3Ru1"
+                   em:version="0.3.20">
+    <em:targetApplication RDF:resource="rdf:#$fR3Ru1"/>
   </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$FPxRk"
-                   em:version="0.3.15">
-    <em:targetApplication RDF:resource="rdf:#$IPxRk"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$IPxRk"
+  <RDF:Description RDF:about="rdf:#$fR3Ru1"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="2.0"
                    em:maxVersion="3.0.*"
                    em:updateLink="http://github.com/to/tombloo/tree/release/tombloo.xpi?raw=true"
-                   em:updateHash="sha512:3b3140878bc7dda5abad9ec5d178ee32a19fffec6b95fa1d6b6782f76b5c97e3416381fb446b1e0e1994afd32bf9ae0eaf797f5b16781f793e160a073f93d3e1" />
-  <RDF:Seq RDF:about="rdf:#$EPxRk">
-    <RDF:li RDF:resource="rdf:#$FPxRk"/>
+                   em:updateHash="sha512:f799c7dc3eb9fd41f2410810d75e10c78df5acca650d5862253b4d2ab65350a63ad7ddb782c08de2816abd901b2ffb4fe15aacb79cd1d5c39e1822691dc6958d" />
+  <RDF:Seq RDF:about="rdf:#$bR3Ru1">
+    <RDF:li RDF:resource="rdf:#$cR3Ru1"/>
   </RDF:Seq>
+  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBACabPjmqojDpBV/wA3WKrkPjQIg9ugDtL9x2vZ4fJqoSVC3lE/QSlCla8NsC6mYZLftdcfis4bS8Na13IVyt6ThewBE71acSWZPER5Ku/d5ADf/y27wqmnOugc6uUl8VgbVcOkXa79j3obm1VmRj8syiR0qh4IKHNSC84sTRGtUv">
+    <em:updates RDF:resource="rdf:#$bR3Ru1"/>
+  </RDF:Description>
 </RDF:RDF>

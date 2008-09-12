@@ -524,13 +524,16 @@ function FlexImage(elmBox, src, dialogPanel){
 
 FlexImage.prototype = {
 	fit : function(){
+		// 画像以外のラベルや余白などの高さを取得
+		var lh = (this.elmVbox.boxObject.height - parseInt(this.elmImage.style.maxHeight)) || 0;
+		
 		// 測量のため画像を消しボックスを縦に伸縮させる(横は自動的に伸びる)
 		this.elmImage.style.maxHeight = '0';
 		this.elmVbox.style.maxHeight = '100000px';
 		
 		// ボックスは一定量以上縮まないためウィンドウのプロパティも併用する
 		var bw = Math.min(this.elmHbox.boxObject.width, window.outerWidth);
-		var bh = Math.min(this.elmVbox.boxObject.height, window.outerHeight);
+		var bh = Math.min(this.elmVbox.boxObject.height, window.outerHeight) - lh;
 		
 		var nw = this.naturalWidth;
 		var nh = this.naturalHeight;
@@ -541,7 +544,7 @@ FlexImage.prototype = {
 		
 		this.elmImage.style.maxWidth = width + 'px';
 		this.elmImage.style.maxHeight = height + 'px';
-		this.elmVbox.style.maxHeight = height + 'px';
+		this.elmVbox.style.maxHeight = (height + lh) + 'px';
 		
 		if(bw > width){
 			this.elmHbox.setAttribute('pack', 'center');

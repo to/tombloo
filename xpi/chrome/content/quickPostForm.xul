@@ -475,6 +475,9 @@ FormPanel.prototype = {
 	},
 	
 	onKeydown : function(e){
+		if(!e.ctrlKey)
+			return;
+		
 		switch(keyString(e)) {
 		case 'CTRL + RETURN':
 			cancel(e);

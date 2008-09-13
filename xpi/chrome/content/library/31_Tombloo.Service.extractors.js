@@ -544,6 +544,22 @@ Tombloo.Service.extractors = new Repository([
 	},
 	
 	{
+		name : 'Photo - Picoolio.co.uk',
+		ICON : 'chrome://tombloo/skin/item.ico',
+		check : function(ctx){
+			return ctx.onImage && 
+				ctx.target.src.match('//picoolio.co.uk/photos/');
+		},
+		extract : function(ctx){
+			return {
+				type      : 'photo',
+				item      : ctx.title,
+				itemUrl   : ctx.target.src.replace(/(picoolio\.co\.uk\/photos)\/.+?\//, '$1/original/'), 
+			}
+		},
+	},
+	
+	{
 		name : 'Photo - webshots',
 		ICON : 'http://www.webshots.com/favicon.ico',
 		check : function(ctx){

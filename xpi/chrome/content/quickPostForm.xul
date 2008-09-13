@@ -82,11 +82,8 @@ var env = Components.classes['@brasil.to/tombloo-service;1'].getService().wrappe
 env.extend(this, env, false);
 
 
-MochiKit.Signal._observers.forEach(log);
-
-
 // ----[utility]-------------------------------------------------
-'BOX VBOX HBOX SPACER LABEL TEXTBOX IMAGE DESCRIPTION TOOLTIP'.split(' ').forEach(function(tag){
+'BOX VBOX HBOX SPACER LABEL TEXTBOX IMAGE DESCRIPTION TOOLTIP BUTTON'.split(' ').forEach(function(tag){
 	this[tag] = bind(E, null, tag.toLowerCase());
 });
 
@@ -338,7 +335,6 @@ function FormPanel(dialogPanel){
 	window.addEventListener('keydown', bind('onKeydown', this), true);
 	
 	this.postersPanel = new PostersPanel();
-	this.postersPanel.show();
 }
 
 FormPanel.prototype = {
@@ -809,10 +805,34 @@ EditableLabel.prototype = {
 
 // ----[PostersPanel]-------------------------------------------------
 function PostersPanel(){
+	var self = this;
+	
 	this.elmPanel = getElement('posters');
 	this.elmButton = getElement('post');
-	
 	this.posters = new Repository(models.getEnables(ps));
+	
+	withDocument(document, function(){
+		self.elmTooltip = self.elmPanel.appendChild(TOOLTIP());
+		
+		forEach(self.posters, function([name, poster]){
+			var disabled = poster.config[ps.type] != 'default';
+			var image = self.elmPanel.appendChild(IMAGE({
+				class : 'poster button', 
+				disabled : disabled,
+			}));
+			image.name = name;
+			
+			self.setIcon(image, poster, !disabled);
+		});
+		
+		self.elmAllOff = self.elmPanel.appendChild(LABEL({
+			value : getMessage('label.allOff'),
+			class : 'label-button button',
+		}));
+	});
+	
+	
+	this.elmAllOff.addEventListener('click', bind('allOff', this), true);
 	
 	this.elmPanel.addEventListener('mousedown', dynamicBind('onMouseDown', this), true);
 	this.elmPanel.addEventListener('mouseover', dynamicBind('onMouseOver', this), true);
@@ -828,24 +848,6 @@ PostersPanel.prototype = {
 		var self = this;
 		return $x('.//*[@disabled="false"]', this.elmPanel, true).map(function(elm){
 			return self.posters[elm.name];
-		});
-	},
-	
-	show : function(){
-		var self = this;
-		withDocument(document, function(){
-			self.elmTooltip = self.elmPanel.appendChild(TOOLTIP());
-			
-			forEach(self.posters, function([name, poster]){
-				var disabled = poster.config[ps.type] != 'default';
-				var image = self.elmPanel.appendChild(IMAGE({
-					class : 'poster button', 
-					disabled : disabled,
-				}));
-				image.name = name;
-				
-				self.setIcon(image, poster, !disabled);
-			});
 		});
 	},
 	
@@ -865,8 +867,14 @@ PostersPanel.prototype = {
 		});
 	},
 	
-	toggleDisabled : function(image){
-		var disabled = !(image.getAttribute('disabled')=='true');
+	allOff : function(){
+		var self = this;
+		$x('.//xul:image', this.elmPanel, true).forEach(function(image){
+			self.setDisabled(image, true);
+		});
+	},
+	
+	setDisabled : function(image, disabled){
 		var poster = this.posters[image.name];
 		
 		image.setAttribute('disabled', disabled);
@@ -874,6 +882,10 @@ PostersPanel.prototype = {
 		this.setIcon(image, poster, !disabled);
 		
 		this.elmButton.disabled = !this.checked.length;
+	},
+	
+	toggleDisabled : function(image){
+		this.setDisabled(image, !(image.getAttribute('disabled')=='true'));
 	},
 	
 	showTooltip : function(e){
@@ -899,7 +911,7 @@ PostersPanel.prototype = {
 State.make(PostersPanel, {
 	normal : {
 		onMouseDown : function(e){
-			if(e.target == this.elmPanel)
+			if((/description|label/).test(e.target.tagName))
 				return;
 			
 			// cancelをするとactive擬似クラスが有効にならずリアクションがなくなる
@@ -929,7 +941,7 @@ State.make(PostersPanel, {
 		},
 		
 		onMouseOver : function(e){
-			if(e.target != this.elmPanel)
+			if(!(/description|label/).test(e.target.tagName))
 				this.toggleDisabled(e.target);
 		},
 	},

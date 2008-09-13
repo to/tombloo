@@ -15,6 +15,7 @@ textbox {
 
 button,
 .button{
+	margin : 0 2px;
 	cursor : pointer !important;
 }
 
@@ -240,6 +241,33 @@ div{
 
 #posters image.poster[disabled=true]{
 	opacity: 0.4;
+}
+
+/* FIXME: 再利用するときに共通化する */
+#posters .label-button{
+	background : #777;
+	color : white;
+	font-size : 70%;
+	
+	margin : 6px 24px;
+	border : transparent solid;
+	border-width: 4px 5px;
+	-moz-border-radius : 1px;
+	
+	vertical-align : top;
+}
+
+#posters .label-button:hover{
+	background : #AAA;
+}
+
+#posters .label-button:hover:active{
+	/* ちょっと押し込んだみたいに */
+	border-width : 2px 3px 3px 4px;
+	margin-right : 9px;
+	
+	color : #DDD;
+	background : #666;
 }
 
 #post {

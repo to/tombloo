@@ -180,6 +180,7 @@ resizer[dir="bottomright"] {
 	margin-top: 0.8em;
 }
 
+#body,
 #description{
 	min-height: 5em;
 }

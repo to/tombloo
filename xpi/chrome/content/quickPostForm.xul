@@ -350,7 +350,12 @@ FormPanel.prototype = {
 		quote : {
 			item        : {toggle : true},
 			itemUrl     : {toggle : true},
-			body        : {},
+			body        : {
+				attributes : {
+					flex : 1,
+					rows : 4,
+				},
+			},
 			tags        : {toggle : true},
 			description : {toggle : true},
 		},

@@ -864,9 +864,14 @@ PostersPanel.prototype = {
 		if(!name)
 			return;
 		
-		// FIXME: openPopupの利用も検討する(Firefox 3)
 		this.elmTooltip.label = name;
-		this.elmTooltip.showPopup(null, e.screenX + 16, e.screenY + 16, 'tooltip');
+		
+		// Firefox 3
+		if(this.elmTooltip.openPopup){
+			this.elmTooltip.openPopup(e.target, 'end_before', 4, 30, false);
+		} else {
+			this.elmTooltip.showPopup(null, e.screenX + 16, e.screenY + 16, 'tooltip');
+		}
 	},
 	
 	hideTooltip : function(e){

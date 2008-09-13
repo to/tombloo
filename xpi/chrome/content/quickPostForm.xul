@@ -126,7 +126,8 @@ function DialogPanel(){
 			self.formPanel.toggleDetail();
 		
 		self.focusToFirstControl();
-		self.snapToContentCorner(true, false);
+		with(QuickPostForm.dialog.snap)
+			self.snapToContentCorner(top, left);
 		
 		self.elmWindow.style.opacity = 1;
 	}, false);
@@ -167,6 +168,11 @@ DialogPanel.prototype = {
 	},
 	
 	snapToContentCorner : function(top, left){
+		QuickPostForm.dialog.snap = {
+			top : top,
+			left : left,
+		}
+		
 		var baseBox = this.elmBase.boxObject;
 		var browserBox = getMostRecentWindow().getBrowser().selectedBrowser.boxObject;
 				

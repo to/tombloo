@@ -219,7 +219,7 @@
 					var text = this.value;
 					var word = this.getCurrentWord();
 					
-					var suffix = text.substr(word.end);
+					var suffix = text.substr(word.caret);
 					var delimiter = (terminate && suffix.charAt(0) != this.delimiter) ? this.delimiter : '';
 					this.value = text.substring(0, word.start) + cand + delimiter + suffix;
 					this.input.selectionStart = this.input.selectionEnd = word.start + cand.length + delimiter.length;
@@ -241,16 +241,11 @@
 					var text = this.value;
 					var caret = this.selectionStart;
 					var start = text.lastIndexOf(this.delimiter, caret - 1) + 1;
-					var end = text.indexOf(this.delimiter, caret);
-					if(end == -1)
-						end = text.length;
 					
 					return {
 						start : start,
-						end   : end,
 						caret : caret,
 						hint  : text.slice(start, caret),
-						word  : text.slice(start, end),
 					};
 				]]></body>
 			</method>

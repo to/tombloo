@@ -451,9 +451,11 @@ FormPanel.prototype = {
 						break;
 						
 					case 'photo':
+						var src = ps.itemUrl || (createURI(ps.file).spec + '?' + Date.now());
+						
 						// flexを大きくし詳細ボックスとバランスを取る
 						elm = elmForm.appendChild(BOX(attrs, {flex : 10}));
-						field = new FlexImage(elm, ps.itemUrl, self.dialogPanel);
+						field = new FlexImage(elm, src, self.dialogPanel);
 						connect(field, 'resize', bind('onFieldResize', self));
 						break;
 						

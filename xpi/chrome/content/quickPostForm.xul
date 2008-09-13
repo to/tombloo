@@ -97,7 +97,6 @@ function DialogPanel(){
 	window.addEventListener('unload', partial(disconnectAll, this), false);
 	
 	var self = this;
-	var state = QuickPostForm.dialog[ps.type] || {};
 	
 	this.elmWindow = getElement('window');
 	this.elmBase = getElement('base');
@@ -118,12 +117,17 @@ function DialogPanel(){
 	window.addEventListener('focus', bind('onFocus', this), true);
 	window.addEventListener('resize', bind('onWindowResize', this), true);
 	
+	// ロード時にはウィンドウのサイズが決定されていない
 	self.elmWindow.style.opacity = 0;
 	window.addEventListener('resize', function(){
 		window.removeEventListener('resize', arguments.callee, false);
 		
+		var state = QuickPostForm.dialog[ps.type] || {};
 		if(state.expanded)
 			self.formPanel.toggleDetail();
+			
+		if(state.size)
+			window.resizeTo(state.size.width, state.size.height);
 		
 		self.focusToFirstControl();
 		with(QuickPostForm.dialog.snap)
@@ -135,8 +139,13 @@ function DialogPanel(){
 
 DialogPanel.prototype = {
 	close : function(){
+		var box = this.elmBase.boxObject;
 		QuickPostForm.dialog[ps.type] = {
 			expanded : this.formPanel.expanded,
+			size : {
+				width : box.width,
+				height : box.height,
+			},
 		};
 		
 		getMostRecentWindow().content.focus();

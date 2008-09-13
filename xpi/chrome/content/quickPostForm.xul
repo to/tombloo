@@ -82,6 +82,9 @@ var env = Components.classes['@brasil.to/tombloo-service;1'].getService().wrappe
 env.extend(this, env, false);
 
 
+MochiKit.Signal._observers.forEach(log);
+
+
 // ----[utility]-------------------------------------------------
 'BOX VBOX HBOX SPACER LABEL TEXTBOX IMAGE DESCRIPTION TOOLTIP'.split(' ').forEach(function(tag){
 	this[tag] = bind(E, null, tag.toLowerCase());
@@ -93,10 +96,11 @@ function getElement(id){
 
 
 // ----[DialogPanel]----------------------------------------------------
-function DialogPanel(){
-	window.addEventListener('unload', partial(disconnectAll, this), false);
-	
+function DialogPanel(position){
 	var self = this;
+	window.addEventListener('unload', function(){
+		disconnectAll(self);
+	}, false);
 	
 	this.elmWindow = getElement('window');
 	this.elmBase = getElement('base');
@@ -130,8 +134,17 @@ function DialogPanel(){
 			window.resizeTo(state.size.width, state.size.height);
 		
 		self.focusToFirstControl();
-		with(QuickPostForm.dialog.snap)
-			self.snapToContentCorner(top, left);
+		
+		if(position){
+			// ポスト先の一番最初のアイコンの上にマウスカーソルがあるあたりへ移動
+			var box = self.formPanel.postersPanel.elmPanel.boxObject;
+			window.moveTo(
+				position.x - (box.x + 16), 
+				position.y - (box.y + (box.height / 2)));
+		} else {
+			with(QuickPostForm.dialog.snap)
+				self.snapToContentCorner(top, left);
+		}
 		
 		self.elmWindow.style.opacity = 1;
 	}, false);
@@ -307,7 +320,10 @@ State.make(DialogPanel, {
 
 // ----[FormPanel]----------------------------------------------------
 function FormPanel(dialogPanel){
-	window.addEventListener('unload', partial(disconnectAll, this), false);
+	var self = this;
+	window.addEventListener('unload', function(){
+		disconnectAll(self);
+	}, false);
 	
 	this.dialogPanel = dialogPanel;
 	this.elmForm = getElement('form');
@@ -508,8 +524,6 @@ FormPanel.prototype = {
 
 // ----[FlexImage]-------------------------------------------------
 function FlexImage(elmBox, src, dialogPanel){
-	window.addEventListener('unload', partial(disconnectAll, this), false);
-	
 	var self = this;
 	
 	withDocument(document, function(){
@@ -928,7 +942,8 @@ State.make(PostersPanel, {
 
 // ----[main]-------------------------------------------------
 var ps = arguments[0];
-var dialogPanel = new DialogPanel();
+var position = arguments[1];
+var dialogPanel = new DialogPanel(position);
 
 ]]></script>
 </window>

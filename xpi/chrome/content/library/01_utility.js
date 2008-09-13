@@ -216,8 +216,10 @@ function openProgressDialog(progress, max, value){
  * @param {Object} value ウィンドウへ渡す値。
  */
 function openDialog(url, features, value){
-	// FIXME: values
-	return getMostRecentWindow().openDialog(url, '_blank', features, value);
+	var win = getMostRecentWindow(); 
+	var args = Array.slice(arguments);
+	args.splice(1, 0, '_blank')
+	return win.openDialog.apply(win, args);
 }
 
 function openParamString(obj){

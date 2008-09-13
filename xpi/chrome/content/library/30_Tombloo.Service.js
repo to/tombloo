@@ -39,9 +39,11 @@ Tombloo.Service = {
 				return succeed({});
 			
 			if(showForm){
-				(models.getEnables(ps).length)?
-					QuickPostForm.show(ps) :
+				if(models.getEnables(ps).length){
+					QuickPostForm.show(ps, (ctx.mouse && (ctx.mouse.post || ctx.mouse.screen)));
+				} else {
 					Tombloo.Service.alertPreference(ps.type);
+				}
 				
 				// FIXME: クイックポストフォームのポスト結果を伝えるように
 				return succeed({});

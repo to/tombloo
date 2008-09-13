@@ -103,11 +103,10 @@ function Pagebar(opt){
 
 
 var QuickPostForm = {
-	show : function(ps){
-		// centerscreen
+	show : function(ps, position){
 		openDialog(
 			'chrome://tombloo/content/quickPostForm.xul', 
-			'chrome,alwaysRaised,resizable,titlebar=no,dependent', ps);
+			'chrome,alwaysRaised,resizable,titlebar=no,dependent', ps, position);
 	},
 };
 QuickPostForm.refreshCache = true;
@@ -168,11 +167,10 @@ forEach({
 			window    : win,
 			title     : doc.title,
 			selection : ''+win.getSelection(),
-			event     : e,
 			target    : e.originalTarget,
 			mouse     : {
-				x : e.pageX,
-				y : e.pageY,
+				page   : {x : e.pageX, y : e.pageY},
+				screen : {x : e.screenX, y : e.screenY},
 			},
 		}, win.location);
 		
@@ -265,10 +263,9 @@ connect(grobal, 'browser-load', function(e){
 			title     : ''+doc.title || '',
 			selection : ''+win.getSelection(),
 			target    : wrappedObject(cwin.gContextMenu.target),
-			event     : e,
 			mouse     : {
-				x : e.pageX,
-				y : e.pageY,
+				page   : {x : e.pageX, y : e.pageY},
+				screen : {x : e.screenX, y : e.screenY},
 			},
 			menu      : cwin.gContextMenu,
 		});
@@ -305,10 +302,19 @@ connect(grobal, 'browser-load', function(e){
 		if(!e.target.extractor)
 			return;
 		
-		context.event = e;
-		
 		var svc = Tombloo.Service;
 		svc.share(context, svc.extractors[e.target.extractor], e.target.showForm);
+	}, true);
+	
+	// clickイベントはマウス座標が異常
+	menuContext.addEventListener('mousedown', function(e){
+		if(!e.target.extractor)
+			return;
+		
+		context.mouse.post = {
+			x : e.screenX, 
+			y : e.screenY
+		}
 	}, true);
 	
 	var menuAction = doc.getElementById('tombloo-menu-main');

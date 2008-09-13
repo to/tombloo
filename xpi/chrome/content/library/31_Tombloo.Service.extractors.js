@@ -375,7 +375,7 @@ Tombloo.Service.extractors = new Repository([
 				removeElement(ctx.target);
 				
 				if(currentDocument().elementFromPoint){
-					ctx.target = currentDocument().elementFromPoint(ctx.mouse.x, ctx.mouse.y);
+					ctx.target = currentDocument().elementFromPoint(ctx.mouse.page.x, ctx.mouse.page.y);
 				} else {
 					ctx.target = ctx.target.previousSibling;
 				}
@@ -737,7 +737,7 @@ Tombloo.Service.extractors = new Repository([
 			return {
 				type    : 'photo',
 				item    : ctx.title,
-				itemUrl : currentDocument().elementFromPoint(ctx.mouse.x, ctx.mouse.y).src, 
+				itemUrl : currentDocument().elementFromPoint(ctx.mouse.page.x, ctx.mouse.page.y).src, 
 			}
 		},
 	},

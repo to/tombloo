@@ -810,6 +810,7 @@ EditableLabel.prototype = {
 // ----[PostersPanel]-------------------------------------------------
 function PostersPanel(){
 	this.elmPanel = getElement('posters');
+	this.elmButton = getElement('post');
 	
 	this.posters = new Repository(models.getEnables(ps));
 	
@@ -871,6 +872,8 @@ PostersPanel.prototype = {
 		image.setAttribute('disabled', disabled);
 				
 		this.setIcon(image, poster, !disabled);
+		
+		this.elmButton.disabled = !this.checked.length;
 	},
 	
 	showTooltip : function(e){

@@ -339,8 +339,13 @@ function createURI(path){
 	try{
 		var path = (path instanceof IFile) ? path : new LocalFile(path);
 		return IOService.newFileURI(path)	;
-	}catch(e if e.name=='NS_ERROR_FILE_UNRECOGNIZED_PATH'){}
-	return IOService.newURI(path, null, null).QueryInterface(Ci.nsIURL);
+	}catch(e){}
+	
+	try{
+		return IOService.newURI(path, null, null).QueryInterface(Ci.nsIURL);
+	}catch(e){
+		// javascript:などで発生するエラーを無視する
+	}
 }
 
 /**

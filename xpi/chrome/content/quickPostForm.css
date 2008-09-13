@@ -22,7 +22,7 @@ tooltip{
 	/* 目立たない色に設定し慣れた後の負担を減らす */
   -moz-appearance: none;
   
-	-moz-border-radius: 2px;
+	-moz-border-radius: 1px;
 	padding: 0.2em 0.4em;
 	
 	border: 1px solid #AAA;
@@ -40,7 +40,7 @@ window {
 }
 
 #base {
-	-moz-border-radius: 4px;
+	-moz-border-radius: 2px;
 	background-image: url(chrome://tombloo/skin/form_light.png);
 	border: 1px solid #CCC;
 }
@@ -137,7 +137,7 @@ resizer[dir="bottomright"] {
 
 
 #close {
-	list-style-image: url(chrome://global/skin/icons/close.png);
+	list-style-image: url(chrome://tombloo/skin/mac/close.png);
 	-moz-image-region: rect(0px, 14px, 14px, 0px);
 	
 	/* 押しやすいように拡げる */

@@ -113,6 +113,7 @@ var QuickPostForm = {
 QuickPostForm.refreshCache = true;
 QuickPostForm.candidates = [];
 QuickPostForm.tagProvider = null;
+QuickPostForm.dialog = {};
 
 
 // ----[Shortcutkey]-------------------------------------------------

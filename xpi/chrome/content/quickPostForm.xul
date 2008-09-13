@@ -43,7 +43,7 @@
 						<spacer flex="1" />
 						
 						<vbox>
-							<image id="close" class="button" onclick="window.close()"/>
+							<image id="close" class="button" onclick="dialogPanel.close()"/>
 						</vbox>
 					</hbox>
 					
@@ -76,7 +76,7 @@
 
 
 // chrome://tombloo/content/quickPostForm.xul
-// connectされるオブジェクトは必ずunload時にdisconnectAllをしてオブサーバーをクリアする
+// connectされるオブジェクト(signalを送る方)は必ずunload時にdisconnectAllをしてオブサーバーをクリアする
 
 var env = Components.classes['@brasil.to/tombloo-service;1'].getService().wrappedJSObject;
 env.extend(this, env, false);
@@ -92,15 +92,23 @@ function getElement(id){
 }
 
 
-// ----[Dialog]----------------------------------------------------
+// ----[DialogPanel]----------------------------------------------------
 function DialogPanel(){
 	window.addEventListener('unload', partial(disconnectAll, this), false);
+	
+	var self = this;
+	var state = QuickPostForm.dialog[ps.type] || {};
 	
 	this.elmWindow = getElement('window');
 	this.elmBase = getElement('base');
 	
-	// ドラッグ後にクリックをキャンセルするためcaptureフェーズで補足する
-	this.elmWindow.addEventListener('click', dynamicBind('onClick', this), true);
+	this.formPanel = new FormPanel(this);
+	this.formPanel.show();
+	
+	connect(this.formPanel, 'resize', this, 'sizeToContent');
+	connect(this.formPanel, 'post', this, 'close');
+	
+	this.elmWindow.addEventListener('click', dynamicBind('onClick', this), false);
 	this.elmWindow.addEventListener('draggesture', dynamicBind('onDragStart', this), false);
 	this.elmWindow.addEventListener('mousedown', dynamicBind('onMouseDown', this), false);
 	this.elmWindow.addEventListener('mouseup', dynamicBind('onMouseUp', this), false);
@@ -108,22 +116,16 @@ function DialogPanel(){
 	this.elmWindow.addEventListener('mouseout', dynamicBind('onMouseOut', this), false);
 	
 	window.addEventListener('focus', bind('onFocus', this), true);
-	window.addEventListener('blur', bind('onBlur', this), true);
-	
-	this.formPanel = new FormPanel(this);
-	this.formPanel.show();
-	connect(this.formPanel, 'resize', this, 'sizeToContent');
-	
-	var self = this;
-	
 	window.addEventListener('resize', bind('onWindowResize', this), true);
 	
 	self.elmWindow.style.opacity = 0;
 	window.addEventListener('resize', function(){
 		window.removeEventListener('resize', arguments.callee, false);
 		
-		self.focusToFirstControl();
+		if(state.expanded)
+			self.formPanel.toggleDetail();
 		
+		self.focusToFirstControl();
 		self.snapToContentCorner(true, false);
 		
 		self.elmWindow.style.opacity = 1;
@@ -131,6 +133,15 @@ function DialogPanel(){
 }
 
 DialogPanel.prototype = {
+	close : function(){
+		QuickPostForm.dialog[ps.type] = {
+			expanded : this.formPanel.expanded,
+		};
+		
+		getMostRecentWindow().content.focus();
+		window.close();
+	},
+	
 	onFocus : function(e){
 		var input = e.target.inputField;
 		if(!(input instanceof Ci.nsIDOMNSEditableElement))
@@ -148,16 +159,6 @@ DialogPanel.prototype = {
 			var content = input.editor.rootElement;
 			content.scrollLeft = content.scrollWidth;
 		}, true);
-	},
-	
-	onBlur : function(e){
-		var input = e.target.inputField;
-		if(!(input instanceof Ci.nsIDOMNSEditableElement))
-			return;
-		
-		// スクロール位置を先頭に戻し見やすく揃える
-		var content = input.editor.rootElement;
-		content.scrollLeft = 0;
 	},
 	
 	focusToFirstControl : function(){
@@ -391,10 +392,7 @@ FormPanel.prototype = {
 		if(this.elmTags)
 			QuickPostForm.refreshCache = this.elmTags.includesNewTag;
 		
-		// FIXME: コネクト方法を検討
-		this.tagsBox.checkNewTag();
-		window.opener.content.focus();
-		window.close();
+		signal(this, 'post');
 	},
 	
 	createForm : function(){
@@ -419,7 +417,7 @@ FormPanel.prototype = {
 				var elm, field;
 				if(name == 'tags'){
 					field = elm = elmForm.appendChild(BOX(attrs));
-					self.tagsBox = new TagsBox(elm);
+					self.tagsBox = new TagsBox(elm, self);
 					
 				} else if(name == 'description'){
 					elm = elmForm.appendChild(VBOX(attrs, {flex : 1}));
@@ -480,7 +478,7 @@ FormPanel.prototype = {
 			
 		case 'CTRL + W':
 			cancel(e);
-			window.close();
+			this.dialogPanel.close();
 			break;
 		}
 	},
@@ -627,7 +625,7 @@ DescriptionBox.prototype = {
 
 
 // ----[TagBox]-------------------------------------------------
-function TagsBox(elmTags){
+function TagsBox(elmTags, formPanel){
 	var self = this;
 	
 	this.elmTags = getElement(elmTags);
@@ -643,6 +641,8 @@ function TagsBox(elmTags){
 		
 		models[tagProvider].getUserTags().addCallback(bind('setTags', self, tagProvider));
 	}, false);
+	
+	connect(formPanel, 'post', this, 'checkNewTag');
 }
 
 TagsBox.prototype = {

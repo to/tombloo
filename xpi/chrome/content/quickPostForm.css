@@ -187,6 +187,12 @@ resizer[dir="bottomright"] {
 	min-height: 5em;
 }
 
+#description .textbox-textarea{
+	/* 延長機能により制御される */
+	/* XBLがロードされるタイミングが表示状態により変わるためCSSで初期値を設定する */
+	overflow : hidden;
+}
+
 #item *,
 #tags textbox{
 	-moz-box-flex: 1;
@@ -272,4 +278,3 @@ div{
 #post {
 	margin-top: 0.8em;
 }
-

@@ -6,9 +6,9 @@
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 	<grid id="base" flex="1">
 		<columns>
-			<column style="width: 1em;"/>
+			<column style="width: 0.8em;"/>
 			<column flex="1"/>
-			<column style="width: 1em;"/>
+			<column style="width: 0.8em;"/>
 		</columns>
 		<rows>
 			<row style="height: 1em;">
@@ -213,7 +213,8 @@ DialogPanel.prototype = {
 			return
 		}
 		
-		signal(this, 'resize');
+		signal(this, 'resize', this.resizeDirection);
+		delete this.resizeDirection;
 		
 		this.sizeToContent();
 	},
@@ -240,10 +241,11 @@ State.make(DialogPanel, {
 	normal : {
 		onMouseDown : function(e){
 			var cursor = window.getComputedStyle(e.target, '').cursor;
-			
-			// 画像のみが表示されている場合は小さくなって良い
-			if(/resize/.test(cursor) && !this.formPanel.shrink)
+			var match = /(.+)-resize/.exec(cursor);
+			if(match){
+				this.resizeDirection = match[1];
 				this.changeState('resizing');
+			}
 		},
 		
 		onChangeState : function(){
@@ -302,6 +304,10 @@ State.make(DialogPanel, {
 	
 	resizing : {
 		onMouseMove : function(e){
+			// 画像のみが表示されている場合は小さくなって良い
+			if(this.formPanel.shrink)
+				return;
+			
 			// 最小サイズ以下に縮むのを防ぐ
 			var box = this.elmBase.boxObject;
 			if(box.height > window.innerHeight)
@@ -453,7 +459,7 @@ FormPanel.prototype = {
 					
 				} else if(name == 'description'){
 					elm = elmForm.appendChild(VBOX(attrs, {flex : 1}));
-					field = new DescriptionBox(elm, def.attributes);
+					field = new DescriptionBox(elm, def.attributes, self.dialogPanel);
 					
 				} else {
 					switch(def.type){
@@ -468,7 +474,6 @@ FormPanel.prototype = {
 						// flexを大きくし詳細ボックスとバランスを取る
 						elm = elmForm.appendChild(BOX(attrs, {flex : 10}));
 						field = new FlexImage(elm, src, self.dialogPanel);
-						connect(field, 'resize', bind('onFieldResize', self));
 						break;
 						
 					default:
@@ -494,10 +499,6 @@ FormPanel.prototype = {
 				}
 			});
 		});
-	},
-	
-	onFieldResize : function(){
-		signal(this, 'resize');
 	},
 	
 	onKeydown : function(e){
@@ -547,7 +548,7 @@ function FlexImage(elmBox, src, dialogPanel){
 }
 
 FlexImage.prototype = {
-	fit : function(){
+	fit : function(direction){
 		// 画像以外のラベルや余白などの高さを取得
 		var lh = (this.elmVbox.boxObject.height - parseInt(this.elmImage.style.maxHeight)) || 0;
 		
@@ -580,11 +581,15 @@ FlexImage.prototype = {
 }
 
 // ----[DescriptionBox]-------------------------------------------------
-function DescriptionBox(elmBox, attrs){
+function DescriptionBox(elmBox, attrs, dialogPanel){
 	var self = this;
 	
 	withDocument(document, function(){
-		elmBox = getElement(elmBox);
+		elmBox = self.elmBox = getElement(elmBox);
+		
+		self.dialogPanel = dialogPanel;
+		self.minHeight = parseInt(window.getComputedStyle(elmBox, '').minHeight);
+		self.maxHeight = window.screen.height / 2;
 		
 		self.elmDescription = elmBox.appendChild(TEXTBOX({
 			emptytext : elmBox.getAttribute('emptytext'),
@@ -604,6 +609,8 @@ function DescriptionBox(elmBox, attrs){
 			self.elmLength));
 		
 		self.elmDescription.addEventListener('input', bind('onInput', self), true);
+		
+		connect(self.dialogPanel, 'resize', self, 'onResize');
 		
 		window.addEventListener('DOMContentLoaded', bind('onLoad', self), false);
 		
@@ -626,8 +633,46 @@ DescriptionBox.prototype = {
 		return this.elmDescription.value;
 	},
 	
-	onInput : function(){
+	refreshLength : function(){
 		this.elmLength.value = this.elmDescription.value.length;
+	},
+	
+	onResize : function(direction){
+		// 手動でリサイズされたら延長機能を終了する
+		// 見えづらいなどの理由により縮小されたときに再度拡がるのを防ぐ
+		if(direction)
+			this.endExpand();
+	},
+	
+	onInput : function(){
+		this.expand();
+		this.refreshLength();
+	},
+	
+	expand : function(){
+		var height = this.elmInput.offsetHeight;
+		var scrollHeight = this.elmInput.scrollHeight;
+		if(height >= scrollHeight)
+			return;
+		
+		height = Math.min(scrollHeight + 50, this.maxHeight);
+		this.resize(height);
+		
+		// 最大まで拡がったら延長機能を終了する
+		if(height >= this.maxHeight)
+			this.endExpand();
+	},
+	
+	endExpand : function(){
+		// 簡易的にイベントハンドラを解除する
+		this.expand = this.onResize = function(){};
+		this.elmInput.style.overflow = 'auto';
+	},
+	
+	resize : function(height){
+		this.elmBox.style.minHeight = height + 'px';
+		this.dialogPanel.sizeToContent();
+		this.elmBox.style.minHeight = this.minHeight + 'px';
 	},
 	
 	// nsISelectionListener

@@ -106,7 +106,7 @@ var QuickPostForm = {
 	show : function(ps, position){
 		openDialog(
 			'chrome://tombloo/content/quickPostForm.xul', 
-			'chrome,alwaysRaised,resizable,titlebar=no,dependent', ps, position);
+			'chrome,alwaysRaised=yes,resizable=yes,titlebar=no,dependent=yes', ps, position);
 	},
 };
 QuickPostForm.refreshCache = true;

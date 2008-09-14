@@ -251,7 +251,7 @@ div{
 	
 	margin : 6px 24px;
 	border : transparent solid;
-	border-width: 4px 5px;
+	border-width: 3px 4px;
 	-moz-border-radius : 1px;
 	
 	vertical-align : top;
@@ -264,7 +264,6 @@ div{
 #posters .label-button:hover:active{
 	/* ちょっと押し込んだみたいに */
 	border-width : 2px 3px 3px 4px;
-	margin-right : 9px;
 	
 	color : #DDD;
 	background : #666;

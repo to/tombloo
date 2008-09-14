@@ -548,7 +548,7 @@ function FlexImage(elmBox, src, dialogPanel){
 }
 
 FlexImage.prototype = {
-	fit : function(direction){
+	fit : function(dir){
 		// 画像以外のラベルや余白などの高さを取得
 		var lh = (this.elmVbox.boxObject.height - parseInt(this.elmImage.style.maxHeight)) || 0;
 		
@@ -563,7 +563,11 @@ FlexImage.prototype = {
 		var nw = this.naturalWidth;
 		var nh = this.naturalHeight;
 		
-		var ratio = Math.min(bh/nh, bw/nw, 1);
+		// 上下左右を掴んでリサイズを行った場合は、常にそちらを優先する
+		var ratio = Math.min(1,
+			(dir=='w' || dir=='e')? bw/nw : 
+			(dir=='n' || dir=='s')? bh/nh : Math.min(bh/nh, bw/nw));
+		
 		var width = Math.ceil(nw * ratio);
 		var height = Math.ceil(nh * ratio);
 		

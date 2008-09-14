@@ -127,7 +127,7 @@ function DialogPanel(position){
 		if(state.expanded)
 			self.formPanel.toggleDetail();
 			
-		if(state.size)
+		if(ps.type != 'photo' && state.size)
 			window.resizeTo(state.size.width, state.size.height);
 		
 		self.focusToFirstControl();
@@ -585,7 +585,10 @@ function DescriptionBox(elmBox, attrs, dialogPanel){
 	var self = this;
 	
 	withDocument(document, function(){
+		// XBLをロードしinput要素を取得するため一度表示する
 		elmBox = self.elmBox = getElement(elmBox);
+		self.hidden = elmBox.hidden;
+		elmBox.hidden = false;
 		
 		self.dialogPanel = dialogPanel;
 		self.minHeight = parseInt(window.getComputedStyle(elmBox, '').minHeight);
@@ -627,6 +630,10 @@ DescriptionBox.prototype = {
 	onLoad : function(){
 		// XBLロード後でないと取得できない
 		this.elmInput = document.getAnonymousElementByAttribute(this.elmDescription, 'anonid', 'input');
+		this.elmInput.style.overflow = 'hidden';
+		
+		// input要素の取得が終わったら初期設定の非表示状態に戻す
+		this.elmBox.hidden = this.hidden;
 	},
 	
 	get value(){
@@ -675,6 +682,7 @@ DescriptionBox.prototype = {
 		this.elmBox.style.minHeight = this.minHeight + 'px';
 	},
 	
+	// FIXME: 非表示時の挙動を検討する
 	// nsISelectionListener
 	notifySelectionChanged : function(doc, sel, reason){
 		if(sel.isCollapsed || reason != ISelectionListener.MOUSEUP_REASON)

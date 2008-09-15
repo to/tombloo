@@ -847,24 +847,35 @@ models.register({
 		return this.getSuggestions(url).addCallback(itemgetter('recommended'));
 	},
 	
+	/**
+	 * おすすめタグ、ネットワークをなど取得する。
+	 * 既ブックマークでも取得することができる。
+	 *
+	 * @param {String} url 関連情報を取得する対象のページURL。
+	 * @return {Object}
+	 */
 	getSuggestions : function(url){
 		var self = this;
 		return succeed().addCallback(function(){
 			// ログインをチェックする
 			self.getCurrentUser();
 			
+			// ブックマークレット用画面の削除リンクを使い既ブックマークを判定する
 			return request('http://delicious.com/save', {
 				queryString : {
-					url : url,
+					noui : 1,
+					url  : url,
 				},
 			});
 		}).addCallback(function(res){
 			var doc = convertToHTMLDocument(res.responseText);
+			
 			function getTags(part){
 				return $x('id("save-' + part + '-tags")//a[contains(@class, "tag-list-tag")]/text()', doc, true);
 			}
 			
 			return {
+				duplicated : !!doc.getElementById('delete'),
 				recommended : getTags('reco'), 
 				popular : getTags('pop'),
 				network : getTags('net'),
@@ -1450,7 +1461,7 @@ models.register({
 	 * タグ、おすすめタグ、キーワードを取得する
 	 * ページURLが空の場合、タグだけが返される。
 	 *
-	 * @param {String} url サポート情報を取得する対象のページURL。
+	 * @param {String} url 関連情報を取得する対象のページURL。
 	 * @return {Object}
 	 */
 	getSuggestions : function(url){

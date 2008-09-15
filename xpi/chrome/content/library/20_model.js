@@ -843,6 +843,35 @@ models.register({
 		});
 	},
 	
+	getRecommendedTags : function(url){
+		return this.getSuggestions(url).addCallback(itemgetter('recommended'));
+	},
+	
+	getSuggestions : function(url){
+		var self = this;
+		return succeed().addCallback(function(){
+			// ログインをチェックする
+			self.getCurrentUser();
+			
+			return request('http://delicious.com/save', {
+				queryString : {
+					url : url,
+				},
+			});
+		}).addCallback(function(res){
+			var doc = convertToHTMLDocument(res.responseText);
+			function getTags(part){
+				return $x('id("save-' + part + '-tags")//a[contains(@class, "tag-list-tag")]/text()', doc, true);
+			}
+			
+			return {
+				recommended : getTags('reco'), 
+				popular : getTags('pop'),
+				network : getTags('net'),
+			}
+		});
+	},
+	
 	getCurrentUser : function(){
 		if(decodeURIComponent(getCookieString('delicious.com', '_user')).match(/user=(.*?) /))
 			return RegExp.$1;

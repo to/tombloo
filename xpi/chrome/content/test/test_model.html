@@ -222,6 +222,26 @@ try {
 		ok(tag.name.length > 0, 'Delicious: タグの名前を取得できているか');
 		ok(tag.frequency!=null, 'Delicious: タグの利用回数を取得できているか');
 	});
+	
+	d.addCallback(function(){
+		return Delicious.getSuggestions('http://developer.mozilla.org/En');
+	});
+	d.addCallback(function(suggestions){
+		ok(suggestions.popular.length);
+	});
+	d.addCallback(function(){
+		return Delicious.getRecommendedTags('http://developer.mozilla.org/En');
+	});
+	d.addCallback(function(tags){
+		ok(tags.length);
+	});
+	
+	d.addCallback(function(){
+		return Delicious.getSuggestions('http://developer.mozilla.org/Ja/XUL_Reference');
+	});
+	d.addCallback(function(suggestions){
+		is(suggestions.popular.length, 0, 'オススメがないと空の配列が返される');
+	});
 	*/
 	ok(Delicious.getCurrentUser().length > 1);
 	

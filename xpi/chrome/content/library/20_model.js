@@ -1446,18 +1446,52 @@ models.register({
 		});
 	},
 	
-	getUserTags : function(){
-		return request(HatenaBookmark.POST_URL+'?mode=confirm').addCallback(function(res){
-			if(!res.responseText.match(/var tags ?=(.*);/))
+	/**
+	 * タグ、おすすめタグ、キーワードを取得する
+	 * ページURLが空の場合、タグだけが返される。
+	 *
+	 * @param {String} url サポート情報を取得する対象のページURL。
+	 * @return {Object}
+	 */
+	getSuggestions : function(url){
+		return succeed().addCallback(function(){
+			if(!Hatena.getAuthCookie())
 				throw new Error(getMessage('error.notLoggedin'));
 			
+			return request(HatenaBookmark.POST_URL, {
+				sendContent : {
+					mode : 'confirm',
+					url  : url,
+				},
+			})
+		}).addCallback(function(res){
+			function getTags(part){
+				return evalInSandbox(res.responseText.extract(RegExp('var ' + part + ' ?=(.*);')), HatenaBookmark.POST_URL);
+			}
+			
+			var tags = getTags('tags');
+			return {
+				duplicated  : !tags,
+				tags        : tags || [],
+				recommended : !tags? [] : getTags('otherTags'),
+				keywords    : !tags? [] : getTags('keywords'),
+			};
+		});
+	},
+	
+	getRecommendedTags : function(url){
+		return this.getSuggestions(url).addCallback(itemgetter('recommended'));
+	},
+	
+	getUserTags : function(){
+		return this.getSuggestions().addCallback(function(res){
 			return reduce(function(memo, tag){
 				memo.push({
 					name      : tag,
 					frequency : -1,
 				});
 				return memo;
-			}, evalInSandbox(RegExp.$1, 'http://b.hatena.ne.jp/'), []);
+			}, res.tags, []);
 		});
 	},
 });

@@ -137,6 +137,23 @@ try {
 		ok(tag.frequency!=null, 'HatenaBookmark: タグの利用回数を取得できているか');
 	});
 	
+	d.addCallback(function(){
+		return HatenaBookmark.getSuggestions('http://www.hatena.ne.jp/');
+	});
+	d.addCallback(function(res){
+		ok(! res.duplicated);
+		ok(res.tags.length);
+		ok(res.recommended.length);
+		ok(res.keywords.length);
+	});
+	
+	d.addCallback(function(){
+		return HatenaBookmark.getRecommendedTags('http://www.hatena.ne.jp/');
+	});
+	d.addCallback(function(tags){
+		ok(tags.length);
+	});
+	
 	d.addCallback(bind('getToken', HatenaBookmark));
 	d.addCallback(function(token){
 		ok(token, 'HatenaBookmark: トークン取得');
@@ -151,6 +168,7 @@ try {
 		ok(true, 'HatenaBookmark: 追加');
 	});
 	*/
+	
 	
 	
 	/*

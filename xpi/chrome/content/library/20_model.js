@@ -1288,6 +1288,13 @@ models.register({
 		});
 	},
 	
+	/**
+	 * タグ、おすすめタグを取得する。
+	 * ブックマーク済みでも取得することができる。
+	 *
+	 * @param {String} url 関連情報を取得する対象のページURL。
+	 * @return {Object}
+	 */
 	getSuggestions : function(url){
 		return request('http://bookmarks.yahoo.co.jp/bookmarklet/showpopup', {
 			queryString : {
@@ -1651,11 +1658,12 @@ models.register(update({
 		// 何かのURLを渡す必要がある
 		return request(LivedoorClip.POST_URL, {
 			queryString : {
-				link : 'http://tombloo/',
+				link : url || 'http://tombloo/',
 			}
 		}).addCallback(function(res){
 			var doc = convertToHTMLDocument(res.responseText);
 			return {
+				duplicated : !!$x('//form[@name="delete_form"]', doc),
 				tags : $x('//div[@class="TagBox"]/span/text()', doc, true).map(function(tag){
 					return {
 						name      : tag,

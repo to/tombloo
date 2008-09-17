@@ -433,11 +433,9 @@ try {
 		return LivedoorClip.getSuggestions('http://www.hatena.ne.jp/');
 	});
 	d.addCallback(function(res){
-		log(res);
 		ok(res.tags.length);
 	});
 	*/
-	
 	ok(LivedoorClip.getAuthCookie(), 'LivedoorClip: ログインしているか(未ログインの場合エラー)');
 	
 	

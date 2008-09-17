@@ -827,6 +827,12 @@ models.register({
 	name : 'Delicious',
 	ICON : 'http://delicious.com/favicon.ico',
 	
+	/**
+	 * ユーザーの利用しているタグ一覧を取得する。
+	 *
+	 * @param {String} user 対象ユーザー名。未指定の場合、ログインしているユーザー名が使われる。
+	 * @return {Array}
+	 */
 	getUserTags : function(user){
 		// 同期でエラーが起きないようにする
 		return succeed().addCallback(function(){
@@ -843,43 +849,53 @@ models.register({
 		});
 	},
 	
-	getRecommendedTags : function(url){
-		return this.getSuggestions(url).addCallback(itemgetter('recommended'));
-	},
-	
 	/**
-	 * おすすめタグ、ネットワークをなど取得する。
-	 * 既ブックマークでも取得することができる。
+	 * タグ、おすすめタグ、ネットワークなどを取得する。
+	 * ブックマーク済みでも取得することができる。
 	 *
 	 * @param {String} url 関連情報を取得する対象のページURL。
 	 * @return {Object}
 	 */
 	getSuggestions : function(url){
 		var self = this;
-		return succeed().addCallback(function(){
-			// ログインをチェックする
-			self.getCurrentUser();
+		var ds = {
+			tags : this.getUserTags(),
+			suggestions : succeed().addCallback(function(){
+				// ログインをチェックする
+				self.getCurrentUser();
+				
+				// ブックマークレット用画面の削除リンクを使い既ブックマークを判定する
+				return request('http://delicious.com/save', {
+					queryString : {
+						noui : 1,
+						url  : url,
+					},
+				});
+			}).addCallback(function(res){
+				var doc = convertToHTMLDocument(res.responseText);
+				
+				function getTags(part){
+					return $x('id("save-' + part + '-tags")//a[contains(@class, "tag-list-tag")]/text()', doc, true);
+				}
+				
+				return {
+					duplicated : !!doc.getElementById('delete'),
+					recommended : getTags('reco'), 
+					popular : getTags('pop'),
+					network : getTags('net'),
+				}
+			})
+		};
+		
+		return new DeferredHash(ds).addCallback(function(ress){
+			// エラーチェック
+			for each(var [success, res] in ress)
+				if(!success)
+					throw res;
 			
-			// ブックマークレット用画面の削除リンクを使い既ブックマークを判定する
-			return request('http://delicious.com/save', {
-				queryString : {
-					noui : 1,
-					url  : url,
-				},
-			});
-		}).addCallback(function(res){
-			var doc = convertToHTMLDocument(res.responseText);
-			
-			function getTags(part){
-				return $x('id("save-' + part + '-tags")//a[contains(@class, "tag-list-tag")]/text()', doc, true);
-			}
-			
-			return {
-				duplicated : !!doc.getElementById('delete'),
-				recommended : getTags('reco'), 
-				popular : getTags('pop'),
-				network : getTags('net'),
-			}
+			var res = ress.suggestions[1];
+			res.tags = ress.tags[1];
+			return res;
 		});
 	},
 	
@@ -1272,19 +1288,30 @@ models.register({
 		});
 	},
 	
-	getUserTags : function(){
-		return request('http://bookmarks.yahoo.co.jp/bookmarklet/showpopup').addCallback(function(res){
-			if(res.responseText.match(/yourtags =(.*)(;|$)/)[1]){
-				return reduce(function(memo, tag){
-					memo.push({
-						name      : tag,
-						frequency : -1,
-					});
-					return memo;
-				}, evalInSandbox(RegExp.$1, 'http://bookmarks.yahoo.co.jp/'), []);
+	getSuggestions : function(url){
+		return request('http://bookmarks.yahoo.co.jp/bookmarklet/showpopup', {
+			queryString : {
+				u : url,
+			}
+		}).addCallback(function(res){
+			var doc = convertToHTMLDocument(res.responseText);
+			if(!$x('id("bmtsave")', doc))
+				throw new Error(getMessage('error.notLoggedin'));
+			
+			function getTags(part){
+				return evalInSandbox(unescapeHTML(res.responseText.extract(RegExp('^' + part + ' ?= ?(.+)(;|$)', 'm'))), 'http://bookmarks.yahoo.co.jp/') || [];
 			}
 			
-			throw new Error(getMessage('error.notLoggedin'));
+			return {
+				duplicated : !!$x('//input[@name="docid"]', doc),
+				popular : getTags('rectags'),
+				tags : getTags('yourtags').map(function(tag){
+					return {
+						name      : tag,
+						frequency : -1,
+					}
+				}),
+			};
 		});
 	},
 });
@@ -1477,32 +1504,20 @@ models.register({
 			})
 		}).addCallback(function(res){
 			function getTags(part){
-				return evalInSandbox(res.responseText.extract(RegExp('var ' + part + ' ?=(.*);')), HatenaBookmark.POST_URL);
+				return evalInSandbox(res.responseText.extract(RegExp('var ' + part + ' ?=(.*);')), HatenaBookmark.POST_URL) || [];
 			}
 			
-			var tags = getTags('tags');
 			return {
-				duplicated  : !tags,
-				tags        : tags || [],
-				recommended : !tags? [] : getTags('otherTags'),
-				keywords    : !tags? [] : getTags('keywords'),
+				duplicated : !(/var tags ?=/).test(res.responseText),
+				popular    : getTags('otherTags'),
+				keywords   : getTags('keywords'),
+				tags       : getTags('tags').map(function(tag){
+					return {
+						name      : tag,
+						frequency : -1,
+					};
+				}),
 			};
-		});
-	},
-	
-	getRecommendedTags : function(url){
-		return this.getSuggestions(url).addCallback(itemgetter('recommended'));
-	},
-	
-	getUserTags : function(){
-		return this.getSuggestions().addCallback(function(res){
-			return reduce(function(memo, tag){
-				memo.push({
-					name      : tag,
-					frequency : -1,
-				});
-				return memo;
-			}, res.tags, []);
 		});
 	},
 });
@@ -1629,18 +1644,25 @@ models.register(update({
 		return getCookieString('livedoor.com', '.LRC');
 	},
 	
-	getUserTags : function(){
+	getSuggestions : function(url){
 		if(!this.getAuthCookie())
 			return fail(new Error(getMessage('error.notLoggedin')));
 		
-		return request(LivedoorClip.POST_URL+'?link=http%3A%2F%2Ftombloo/').addCallback(function(res){
+		// 何かのURLを渡す必要がある
+		return request(LivedoorClip.POST_URL, {
+			queryString : {
+				link : 'http://tombloo/',
+			}
+		}).addCallback(function(res){
 			var doc = convertToHTMLDocument(res.responseText);
-			return $x('id("tag_list")/span/text()', doc, true).map(function(tag){
-				return {
-					name      : tag,
-					frequency : -1,
-				};
-			});
+			return {
+				tags : $x('//div[@class="TagBox"]/span/text()', doc, true).map(function(tag){
+					return {
+						name      : tag,
+						frequency : -1,
+					};
+				}),
+			}
 		});
 	},
 	

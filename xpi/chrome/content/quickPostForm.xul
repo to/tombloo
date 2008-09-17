@@ -6,9 +6,9 @@
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 	<grid id="base" flex="1">
 		<columns>
-			<column style="width: 0.8em;"/>
+			<column style="width: 1em;"/>
 			<column flex="1"/>
-			<column style="width: 0.8em;"/>
+			<column style="width: 1em;"/>
 		</columns>
 		<rows>
 			<row style="height: 1em;">
@@ -34,16 +34,14 @@
 							</vbox>
 							<label id="type" />
 							<vbox pack="center" align="center" >
-								<hbox id="toggleDetail" class="button" pack="center" align="center" >
-									<image/>
-								</hbox>
+								<image id="toggleDetail" class="button image-button" />
 							</vbox>
 						</hbox>
 						
 						<spacer flex="1" />
 						
 						<vbox>
-							<image id="close" class="button" onclick="dialogPanel.close()"/>
+							<image id="close" class="button image-button" onclick="dialogPanel.close()"/>
 						</vbox>
 					</hbox>
 					
@@ -105,7 +103,6 @@ function DialogPanel(position){
 	this.formPanel = new FormPanel(this);
 	this.formPanel.show();
 	
-	connect(this.formPanel, 'resize', this, 'sizeToContent');
 	connect(this.formPanel, 'post', this, 'close');
 	
 	this.elmWindow.addEventListener('click', dynamicBind('onClick', this), false);
@@ -123,10 +120,15 @@ function DialogPanel(position){
 	window.addEventListener('resize', function(){
 		window.removeEventListener('resize', arguments.callee, false);
 		
+		// FIXME: 状態の復元コードを移動
+		// 各オブジェクトが自分の状態を保存/ロードできるように
 		var state = QuickPostForm.dialog[ps.type] || {};
-		if(state.expanded)
+		if(state.expandedForm)
 			self.formPanel.toggleDetail();
-			
+		
+		if(state.expandedTags)
+			self.formPanel.tagsPanel.toggleSuggestion();
+		
 		if(ps.type != 'photo' && state.size)
 			window.resizeTo(state.size.width, state.size.height);
 		
@@ -151,7 +153,8 @@ DialogPanel.prototype = {
 	close : function(){
 		var box = this.elmBase.boxObject;
 		QuickPostForm.dialog[ps.type] = {
-			expanded : this.formPanel.expanded,
+			expandedForm : this.formPanel.expanded,
+			expandedTags : this.formPanel.tagsPanel.expanded,
 			size : {
 				width : box.width,
 				height : box.height,
@@ -412,7 +415,7 @@ FormPanel.prototype = {
 		
 		this.expanded = hasElementClass(this.elmToggleDetail, 'expanded');
 		
-		signal(this, 'resize');
+		this.dialogPanel.sizeToContent();
 	},
 	
 	post : function(){
@@ -421,14 +424,11 @@ FormPanel.prototype = {
 			return;
 		
 		items(this.fields).forEach(function([name, field]){
-			var value = field.values || field.value;
-			if(value != null)
-				ps[name] = value;
+			if(field.value != null)
+				ps[name] = field.value;
 		});
 		
 		Tombloo.Service.post(ps, checked);
-		if(this.elmTags)
-			QuickPostForm.refreshCache = this.elmTags.includesNewTag;
 		
 		signal(this, 'post');
 	},
@@ -454,8 +454,8 @@ FormPanel.prototype = {
 				
 				var elm, field;
 				if(name == 'tags'){
-					field = elm = elmForm.appendChild(BOX(attrs));
-					self.tagsBox = new TagsBox(elm, self);
+					elm = elmForm.appendChild(VBOX(attrs));
+					field = self.tagsPanel = new TagsPanel(elm, self);
 					
 				} else if(name == 'description'){
 					elm = elmForm.appendChild(VBOX(attrs, {flex : 1}));
@@ -713,53 +713,97 @@ DescriptionBox.prototype = {
 }
 
 
-// ----[TagBox]-------------------------------------------------
-function TagsBox(elmTags, formPanel){
+// ----[TagsPanel]-------------------------------------------------
+function TagsPanel(elmPanel, formPanel){
 	var self = this;
+	this.formPanel = formPanel;
+	this.suggest = (ps.type == 'link');
 	
-	this.elmTags = getElement(elmTags);
-	
-	elmTags.addEventListener('construct', function(){
-		self.elmTags.autoComplete = getPref('tagAutoComplete');
-		self.elmTags.candidates = QuickPostForm.candidates;
+	withDocument(document, function(){
+		self.elmPanel = getElement(elmPanel);
+		self.elmCompletion = self.elmPanel.appendChild(BOX({class : 'completion'}));
+
+		if(self.suggest){
+			self.elmSuggestion = self.elmPanel.appendChild(DESCRIPTION({
+				hidden : true,
+			}, IMAGE({
+				src : 'chrome://browser/skin/places/searching_16.png'
+			})));
+			self.elmToggleSuggestion = IMAGE({
+				class : 'image-button button',
+			});
+		}
+	});
 		
-		// キャッシュを利用できるか?
-		var tagProvider = getPref('tagProvider');
-		if(!tagProvider || (tagProvider==QuickPostForm.tagProvider && !QuickPostForm.refreshCache))
-			return;
+	self.elmCompletion.addEventListener('construct', function(){
+		self.elmTextbox = self.elmCompletion.textbox;
 		
-		models[tagProvider].getUserTags().addCallback(bind('setTags', self, tagProvider));
+		self.elmCompletion.autoComplete = getPref('tagAutoComplete');
+		self.elmCompletion.candidates = QuickPostForm.candidates;
+		
+		if(self.suggest){
+			insertSiblingNodesAfter(self.elmTextbox.input, self.elmToggleSuggestion);
+			
+			self.elmTextbox.addEventListener('input', bind('onChange', self), true);
+			self.elmTextbox.addEventListener('terminate', bind('onChange', self), true);
+			
+			self.elmToggleSuggestion.addEventListener('click', bind('toggleSuggestion', self), true);
+			self.elmSuggestion.addEventListener('click', bind('toggleTag', self), true);
+		}
+		
+		// linkタイプの場合、既ブックマークかの判定も行うため必ずタグを取得する
+		// それ以外のタイプの場合、キャッシュがあればそれを使う
+		self.tagProvider = getPref('tagProvider');
+		if(self.tagProvider && (self.suggest || !QuickPostForm.candidates.length)){
+			models[self.tagProvider].getSuggestions(ps.itemUrl).addCallback(function(res){
+				if(self.suggest)
+					self.setSuggestions(res);
+				self.setTags(self.tagProvider, res.tags);
+			});
+		}
 	}, false);
 	
-	connect(formPanel, 'post', this, 'checkNewTag');
+	connect(formPanel, 'post', self, 'addNewTags');
 }
 
-TagsBox.prototype = {
-	checkNewTag : function(){
-		QuickPostForm.refreshCache = this.elmTags.includesNewTag;
+TagsPanel.prototype = {
+	elmTags : {},
+	
+	get value(){
+		return this.elmCompletion.values;
+	},
+	
+	setSuggestions : function(res){
+		var self = this;
+		withDocument(document, function(){
+			// inputイベントで高速にチェックをする必要があるためハッシュで持つ
+			self.elmTags = {};
+			clearChildren(self.elmSuggestion);
+			
+			for each(var prop in ['recommended', 'popular']){
+				if(!res[prop])
+					continue;
+				
+				res[prop].forEach(function(tag){
+					self.elmTags[tag] = self.elmSuggestion.appendChild(LABEL({
+						value : tag,
+						class : 'button ' + prop
+					}));
+				});
+			}
+		});
 	},
 	
 	setTags : function(tagProvider, tags){
-		if(!tags || !tags.length)
+		if((!tags || !tags.length) || QuickPostForm.candidates.length)
 			return;
 		
 		var self = this;
 		tags = this.sort(tags).map(itemgetter('name'));
 		
-		this.getRomaReadings(tags).addCallback(function(readings){
-			tags = zip(readings, tags).map(function([reading, tag]){
-				return {
-					reading : reading,
-					value : tag,
-				}
-			});
-			
-			// 次回すぐに利用できるようにキャッシュする
-			QuickPostForm.refreshCache = false;
-			QuickPostForm.tagProvider = tagProvider;
-			QuickPostForm.candidates = tags;
-			
-			self.elmTags.candidates = tags;
+		this.comvertToCandidates(tags).addCallback(function(cands){
+			self.elmCompletion.candidates = cands;
+			QuickPostForm.candidates = cands;
 		});
 	},
 	
@@ -771,15 +815,89 @@ TagsBox.prototype = {
 		});
 	},
 	
-	getRomaReadings : function(tags){
+	comvertToCandidates : function(tags){
+		// 各タグサービスで使われてるデリミタを合成
 		var source = tags.join(' [');
+		var d;
+		
 		if(source.includesFullwidth()){
-			// 各タグサービスで使われてるデリミタを合成
-			return Yahoo.getRomaReadings(source).addCallback(function(result){
+			d = Yahoo.getRomaReadings(source).addCallback(function(result){
 				return result.join('').split(' [');
 			});
 		} else {
-			return succeed(tags)
+			d = succeed(tags)
+		}
+		d.addCallback(function(readings){
+			return zip(readings, tags).map(function([reading, tag]){
+				return {
+					reading : reading,
+					value : tag,
+				}
+			});
+		})
+		
+		return d;
+	},
+	
+	addNewTags : function(){
+		var tags = this.elmCompletion.newWords;
+		this.comvertToCandidates(tags).addCallback(function(newCands){
+			var memo = {};
+			var cands = []
+			QuickPostForm.candidates.concat(newCands).forEach(function(cand){
+				if(memo[cand.value])
+					return;
+				
+				cands.push(cand);
+				memo[cand.value] = true;
+			});
+			
+			QuickPostForm.candidates = cands;
+		});
+	},
+	
+	onChange : function(){
+		var self = this;
+		
+		// 増えたタグを処理する
+		var tags = {};
+		this.value.forEach(function(tag){
+			var elmTag = self.elmTags[tag];
+			if(elmTag)
+				addElementClass(elmTag, 'used');
+			tags[tag] = null;
+		});
+		
+		// 減ったタグを処理する
+		items(self.elmTags).forEach(function([tag, elmTag]){
+			if(!(tag in tags))
+				removeElementClass(elmTag, 'used');
+		});
+	},
+	
+	toggleSuggestion : function(){
+		toggleElementClass('expanded', this.elmToggleSuggestion);
+		
+		this.expanded = hasElementClass(this.elmToggleSuggestion, 'expanded');
+		this.elmSuggestion.hidden = !this.expanded;
+		
+		this.elmTextbox.focus();
+		this.formPanel.dialogPanel.sizeToContent();
+	},
+	
+	toggleTag : function(e){
+		var elmTag = e.target;
+		if(elmTag.tagName!='label')
+			return;
+		
+		var used = hasElementClass(elmTag, 'used');
+		var word = elmTag.value;
+		if(used){
+			removeElementClass(elmTag, 'used');
+			this.elmTextbox.removeWord(word);
+		} else {
+			addElementClass(elmTag, 'used');
+			this.elmTextbox.injectCandidate(word, true, false);
 		}
 	},
 }

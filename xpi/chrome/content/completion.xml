@@ -12,7 +12,10 @@
 		</resources>
 		
 		<content style="cursor: text;">
-			<xul:textbox anonid="textbox" xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction,flex,emptytext" />
+			<xul:textbox 
+				anonid="textbox" 
+				xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction,flex,emptytext" >
+			</xul:textbox>
 			<xul:popup anonid="popup" ignorekeys="true">
 				<xul:listbox anonid="listbox" style="height: auto;"/>
 			</xul:popup>
@@ -46,8 +49,8 @@
 			<property name="autoComplete"
 				onget="return this.textbox.autoComplete;"
 				onset="return this.textbox.autoComplete = val;"/>
-			<property name="includesNewTag"
-				onget="return this.textbox.includesNewTag;"/>
+			<property name="newWords"
+				onget="return this.textbox.newWords;"/>
 			
 			<!-- textboxとの互換性のため -->
 			<property name="inputField"
@@ -64,7 +67,7 @@
 	<binding id="textbox" extends="chrome://global/content/bindings/textbox.xml#textbox">
 		<implementation>
 			<field name="delay">
-				230;
+				170;
 			</field>
 			<field name="delimiter">
 				' ';
@@ -97,7 +100,7 @@
 			<property name="padding"
 				onget="return this._padding || (this._padding = Math.ceil(parseFloat(window.getComputedStyle(this, '').paddingLeft)))" />
 			
-			<property name="includesNewTag">
+			<property name="newWords">
 				<getter><![CDATA[
 					var check = {};
 					this.values.forEach(function(val){
@@ -108,10 +111,11 @@
 						delete check[cand.value];
 					});
 					
-					for(var k in check)
-						return true;
+					var res = [];
+					for(var word in check)
+						res.push(word);
 					
-					return false;
+					return res;
 				]]></getter>
 			</property>
 			
@@ -212,10 +216,25 @@
 				]]></body>
 			</method>
 			
+			<method name="removeWord">
+				<parameter name="word"/>
+				<body><![CDATA[
+					var values = this.values;
+					var index = values.indexOf(word);
+					if(index != -1)
+						values.splice(index, 1);
+					values = values.join(this.delimiter);
+					this.value = values + (values? this.delimiter : '');
+				]]></body>
+			</method>
+			
 			<method name="injectCandidate">
 				<parameter name="cand"/>
 				<parameter name="terminate"/>
+				<parameter name="notify"/>
 				<body><![CDATA[
+					notify = (notify==null)? terminate : notify;
+					
 					var text = this.value;
 					var word = this.getCurrentWord();
 					
@@ -231,7 +250,12 @@
 						// valueを変更しカーソルが見えない場所へ移動するのを防ぐ
 						this.ensureCursorIsVisible();
 						
-						this.notify();
+						if(notify)
+							this.notify();
+						
+						var event = document.createEvent('Events');
+						event.initEvent('terminate', false, true);
+						this.dispatchEvent(event);
 					}
 				]]></body>
 			</method>
@@ -269,8 +293,9 @@
 								cands.push(cand.value);
 						});
 					
+					var values = this.values;
 					return cands.filter(function(cand){
-						return !used.some(function(u){return u==cand})
+						return !~values.indexOf(cand);
 					});
 				]]></body>
 			</method>
@@ -289,6 +314,7 @@
 					}
 					
 					// 自動決定か?
+					// var cands = this.getCandidates(hint);
 					var cands = this.getCandidates(hint, text.substring(0, word.start).split(this.delimiter));
 					if(this.autoComplete && !this.deleting && cands.length==1 && (hint.length >=2 || cands[0].length == 1)){
 						this.injectCandidate(cands[0], true);

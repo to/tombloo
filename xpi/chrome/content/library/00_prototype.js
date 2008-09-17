@@ -20,33 +20,42 @@ update(String.prototype, {
 		if(len<=0) return this;
 		return (ch || ' ').repeat(len) + this;
 	},
+	
 	indent : function(num, c){
 		c = c || ' ';
 		return this.replace(/^/mg, c.repeat(num))
 	},
+	
 	link: function(href){
 		return '<a href="' + href + '">' + this + '</a>';
 	},
+	
 	trim : function(){
 		return this.replace(/^\s+|\s+$/g, '');
 	},
+	
 	repeat : function(n){
 		return new Array(n+1).join(this);
 	},
+	
 	extract : function(re, group){
 		group = group==null? 1 : group;
 		var res = this.match(re);
 		return res ? res[group] : '';
 	},
+	
 	decapitalize : function(){
 		return this.substr(0, 1).toLowerCase() + this.substr(1);
 	},
+	
 	capitalize : function(){
 		return this.substr(0, 1).toUpperCase() + this.substr(1);
 	},
+	
 	toByteArray : function(charset){
 		return new UnicodeConverter(charset).convertToByteArray(this, {});
 	},
+	
 	md5 : function(charset){
 		var crypto = new CryptoHash(CryptoHash.MD5);
 		var data = this.toByteArray(charset);
@@ -56,6 +65,7 @@ update(String.prototype, {
 			return char.charCodeAt().toHexString();
 		}).join('');
 	},
+	
 	sha1 : function(charset){
 		var crypto = new CryptoHash(CryptoHash.SHA1);
 		var data = this.toByteArray(charset);
@@ -63,20 +73,25 @@ update(String.prototype, {
 		
 		return crypto.finish(true);
 	},
+	
 	extract : function(re, group){
 		group = group==null? 1 : group;
 		var res = this.match(re);
 		return res ? res[group] : '';
 	},
+	
 	convertToUnicode : function(charset){
 		return new UnicodeConverter(charset).ConvertToUnicode(this);
 	},
+	
 	convertFromUnicode : function(charset){
 		return new UnicodeConverter(charset).ConvertFromUnicode(this);
 	},
+	
 	trimTag : function(){
 		return this.replace(/<!--[\s\S]+?-->/gm, '').replace(/<[\s\S]+?>/gm, '');
 	},
+	
 	includesFullwidth : function(){
 		return (/[^ -~¡-ß]/).test(this);
 	},
@@ -92,6 +107,7 @@ update(String.prototype, {
 
 		return String.fromCharCode.apply(null, a);
 	},
+	
 	toKatakana : function(){
 		var c, i = this.length, a = [];
 

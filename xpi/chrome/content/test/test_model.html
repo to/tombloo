@@ -67,17 +67,20 @@ try {
 		tags        : ['search', 'portal'],
 		private     : true,
 	});
+	
 	d.addCallback(function(){
-		return YahooBookmarks.getUserTags();
+		return YahooBookmarks.getSuggestions('http://www.hatena.ne.jp/');
 	});
-	d.addCallback(function(tags){
-		log(tags);
-		var tag = tags[0];
+	d.addCallback(function(res){
+		log(res);
+		
+		ok(res.tags.length);
+		ok(res.popular.length);
+		
+		var tag = res.tags[0];
 		ok(tag.name.length > 0, 'YahooBookmarks: タグの名前を取得できているか');
-		ok(tag.frequency!=null, 'YahooBookmarks: タグの利用回数を取得できているか');
 	});
 	*/
-	
 	
 	/*
 	// Yahoo
@@ -137,26 +140,19 @@ try {
 		ok(tag.frequency!=null, 'HatenaBookmark: タグの利用回数を取得できているか');
 	});
 	
+	d.addCallback(bind('getToken', HatenaBookmark));
+	d.addCallback(function(token){
+		ok(token, 'HatenaBookmark: トークン取得');
+	});
+	
 	d.addCallback(function(){
 		return HatenaBookmark.getSuggestions('http://www.hatena.ne.jp/');
 	});
 	d.addCallback(function(res){
 		ok(! res.duplicated);
 		ok(res.tags.length);
-		ok(res.recommended.length);
+		ok(res.popular.length);
 		ok(res.keywords.length);
-	});
-	
-	d.addCallback(function(){
-		return HatenaBookmark.getRecommendedTags('http://www.hatena.ne.jp/');
-	});
-	d.addCallback(function(tags){
-		ok(tags.length);
-	});
-	
-	d.addCallback(bind('getToken', HatenaBookmark));
-	d.addCallback(function(token){
-		ok(token, 'HatenaBookmark: トークン取得');
 	});
 	
 	d.addCallback(bind('post', HatenaBookmark), {
@@ -168,7 +164,6 @@ try {
 		ok(true, 'HatenaBookmark: 追加');
 	});
 	*/
-	
 	
 	
 	/*
@@ -247,12 +242,6 @@ try {
 	d.addCallback(function(suggestions){
 		ok(suggestions.popular.length);
 	});
-	d.addCallback(function(){
-		return Delicious.getRecommendedTags('http://developer.mozilla.org/En');
-	});
-	d.addCallback(function(tags){
-		ok(tags.length);
-	});
 	
 	d.addCallback(function(){
 		return Delicious.getSuggestions('http://developer.mozilla.org/Ja/XUL_Reference');
@@ -261,7 +250,7 @@ try {
 		is(suggestions.popular.length, 0, 'オススメがないと空の配列が返される');
 	});
 	*/
-	ok(Delicious.getCurrentUser().length > 1);
+	// ok(Delicious.getCurrentUser().length > 1);
 	
 	
 	/*
@@ -441,10 +430,11 @@ try {
 	});
 	
 	d.addCallback(function(){
-		return LivedoorClip.getUserTags();
+		return LivedoorClip.getSuggestions('http://www.hatena.ne.jp/');
 	});
-	d.addCallback(function(tags){
-		ok(tags.length);
+	d.addCallback(function(res){
+		log(res);
+		ok(res.tags.length);
 	});
 	*/
 	

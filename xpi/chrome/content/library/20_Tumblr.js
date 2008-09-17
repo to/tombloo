@@ -286,10 +286,9 @@ var Tumblr = update({}, AbstractSessionService, {
 			
 			default:
 				// このチェックをするためリダイレクトを追う必要がある
-				/* FIXME: エラー判定大失敗
-				if(res.responseText.match(/(100%)/))
+				// You've used 100% of your daily photo uploads. You can upload more tomorrow.
+				if(res.responseText.match('more tomorrow'))
 					throw new Error("You've exceeded your daily post limit.");
-				*/
 				
 				error(res);
 				throw new Error('Error posting entry.');

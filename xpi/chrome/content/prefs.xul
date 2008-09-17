@@ -252,8 +252,9 @@
 		
 		var tagProvider = document.getElementsByAttribute('preference', 'tagProvider')[0];
 		for(var name in models)
-			if(models[name].getUserTags)
+			if(models[name].getSuggestions)
 				tagProvider.appendItem(name, name).setAttribute('src', models[name].ICON);
+		
 		window.addEventListener('load', function(){
 			// スクリプト実行時点でprefpaneのコンストラクターからvalueが先に与えられているため、
 			// 後から追加したradioのチェックをつけることはできない。
@@ -482,6 +483,7 @@
 		// beforeaccept時点ではpreferenceが更新されていないためunloadを使う
 		window.addEventListener('unload', function(e){
 			// ショートカットキーの変更を反映させる
+			// タグのキャッシュもクリアされる
 			reload();
 		}, true);
 		

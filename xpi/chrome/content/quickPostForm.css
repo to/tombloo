@@ -1,12 +1,15 @@
 /* general / widget */
+label,
+textbox,
 description {
 	margin: 0;
 	padding: 0;
 }
 
+
 label,
 description{
-	cursor : inherit !important;
+	cursor: inherit !important;
 }
 
 textbox {
@@ -15,9 +18,22 @@ textbox {
 
 button,
 .button{
-	margin : 0 2px;
-	cursor : pointer !important;
+	margin: 0;
+	cursor: pointer !important;
 }
+
+.image-button{
+	-moz-image-region: rect(0px, 14px, 14px, 0px);
+}
+
+.image-button:hover{
+	-moz-image-region: rect(0px, 28px, 14px, 14px);
+}
+
+.image-button:hover:active{
+	-moz-image-region: rect(0px, 42px, 14px, 28px);
+}
+
 
 tooltip{
 	/* 目立たない色に設定し慣れた後の負担を減らす */
@@ -38,33 +54,33 @@ window {
 	font-size: 90%;
 	background-color: transparent;
 	
-	width : 22em;
+	width: 22em;
 }
 
 #base {
 	-moz-border-radius: 2px;
-	background-image: url(chrome://tombloo/skin/form_light.png);
+	background-color: #E8E8E8;
 	border: 1px solid #CCC;
 }
 
 window {
-	cursor : -moz-grab;
+	cursor: -moz-grab;
 }
 
 .snap-top-left{
-	cursor : url(chrome://tombloo/skin/snap-top-left.cur), pointer;
+	cursor: url(chrome://tombloo/skin/snap-top-left.cur), pointer;
 }
 
 .snap-top-right{
-	cursor : url(chrome://tombloo/skin/snap-top-right.cur), pointer;
+	cursor: url(chrome://tombloo/skin/snap-top-right.cur), pointer;
 }
 
 .snap-bottom-left{
-	cursor : url(chrome://tombloo/skin/snap-bottom-left.cur), pointer;
+	cursor: url(chrome://tombloo/skin/snap-bottom-left.cur), pointer;
 }
 
 .snap-bottom-right{
-	cursor : url(chrome://tombloo/skin/snap-bottom-right.cur), pointer;
+	cursor: url(chrome://tombloo/skin/snap-bottom-right.cur), pointer;
 }
 
 resizer[dir="topleft"] {
@@ -102,58 +118,35 @@ resizer[dir="bottomright"] {
 
 
 /* titlebar */
+#typeIcon{
+	margin-right: 3px;
+}
+
 #type {
 	font-weight: bold;
 }
 
 #toggleDetail{
-	/* 押しやすいように拡げる */
-	border : transparent solid;
-	border-width : 3px 8px;
-}
-
-#toggleDetail image{
 	list-style-image: url(chrome://tombloo/skin/arrow-down.png);
-	background : #777;
+	margin-left : 5px;
 	
-	border : 4px transparent solid;
-	-moz-border-radius : 1px;
+	/* 押しやすいように少し拡げる */
+	border: transparent solid;
+	border-width: 3px 4px;
 }
 
-#toggleDetail.expanded image{
+#toggleDetail.expanded{
 	list-style-image: url(chrome://tombloo/skin/arrow-up.png);
 }
 
-#toggleDetail:hover image{
-	background : #AAA;
-	opacity : 0.8;
-}
-
-#toggleDetail:hover:active image{
-	/* ちょっと押し込んだみたいに */
-	border-width : 3px 4px 4px 3px;
-	
-	background : #111;
-	opacity : 0.5;
-}
-
-
-#close {
+#close{
 	list-style-image: url(chrome://tombloo/skin/mac/close.png);
-	-moz-image-region: rect(0px, 14px, 14px, 0px);
 	
-	/* 押しやすいように拡げる */
-	border : transparent solid;
-	border-width : 0 0 4px 4px;
+	/* 押しやすいように左下へ拡げる */
+	border: transparent solid;
+	border-width: 0 0 4px 4px;
 }
 
-#close:hover {
-	-moz-image-region: rect(0px, 28px, 14px, 14px);
-}
-
-#close:hover:active {
-	-moz-image-region: rect(0px, 42px, 14px, 28px);
-}
 
 /* form */
 #form {
@@ -162,18 +155,79 @@ resizer[dir="bottomright"] {
 
 .meta {
 	font-size: 70%;
-	color: #999999;
+	color: #999;
 }
 
 #tags{
-	font-size : 85%;
 	margin-top: 2em;
+}
+
+#tags box.completion{
+	font-size: 85%;
 	-moz-binding: url("chrome://tombloo/content/completion.xml#container");
+}
+
+#tags .image-button{
+	list-style-image: url(chrome://tombloo/skin/arrow-down.png);
+}
+
+#tags .image-button.expanded{
+	list-style-image: url(chrome://tombloo/skin/arrow-up.png);
 }
 
 #tags listbox{
 	padding: 0.2em;
 }
+
+#tags description{
+	margin-top: 0.3em;
+}
+
+#tags description label{
+	cursor: pointer !important;
+	
+	vertical-align: bottom;
+	
+	color: #999;
+	
+	border-style: solid;
+	border-color: #E8E8E8;
+	
+	/* emにすると微妙にガタガタする */
+	padding: 2px 3px;
+	margin: 4px 0;
+	border-width: 0 5px;
+	
+	-moz-border-radius: 6px;
+}
+
+#tags description label.popular{
+	font-size: 75%;
+}
+
+#tags description label:hover{
+	background: #CCC;
+	color: white;
+	
+	padding: 3px 4px;
+	margin: 3px 0;
+	border-width: 0 4px;
+}
+
+#tags description label:hover:active{
+	background: #999;
+	color: white;
+	
+	padding: 2px 3px;
+	margin: 4px 0;
+	border-width: 0 5px;
+}
+
+#tags description label.used{
+	background: #999;
+	color: white;
+}
+
 
 #body,
 #item,
@@ -193,8 +247,8 @@ resizer[dir="bottomright"] {
 }
 
 div{
-	border : 1px black solid;
-	padding : 0 !important;
+	border: 1px black solid;
+	padding: 0 !important;
 }
 
 #itemUrl image{
@@ -210,8 +264,8 @@ div{
 }
 
 #posters image.poster{
-	width  : 16px;
-	height : 16px;
+	width: 16px;
+	height: 16px;
 	
 	/*
 	横方向の調整にborderを使いマウスオーバーしない時間を減らす。
@@ -219,24 +273,24 @@ div{
 	縦方向の調整は文字組みの一部のためmarginを使う。
 	下方向に拡大すると、行のベースラインも下がる。
 	*/
-	border : transparent solid;
-	border-width : 0 8px;
-	margin : 8px 0;
+	border: transparent solid;
+	border-width: 0 8px;
+	margin: 8px 0;
 }
 
 #posters image.poster:hover{
-	width  : 24px;
-	height : 24px;
+	width: 24px;
+	height: 24px;
 	
-	border-width : 0 4px;
-	margin : 0;
+	border-width: 0 4px;
+	margin: 0;
 }
 
 #posters image.poster:hover:active{
-	width  : 22px;
-	height : 22px;
+	width: 22px;
+	height: 22px;
 	
-	border-width : 0 5px;
+	border-width: 0 5px;
 }
 
 #posters image.poster[disabled=true]{
@@ -245,28 +299,28 @@ div{
 
 /* FIXME: 再利用するときに共通化する */
 #posters .label-button{
-	background : #777;
-	color : white;
-	font-size : 70%;
+	background: #777;
+	color: white;
+	font-size: 70%;
 	
-	margin : 6px 24px;
-	border : transparent solid;
+	margin: 6px 0 6px 24px;
+	border: transparent solid;
 	border-width: 3px 4px;
-	-moz-border-radius : 1px;
+	-moz-border-radius: 1px;
 	
-	vertical-align : top;
+	vertical-align: top;
 }
 
 #posters .label-button:hover{
-	background : #AAA;
+	background: #AAA;
 }
 
 #posters .label-button:hover:active{
 	/* ちょっと押し込んだみたいに */
-	border-width : 2px 3px 3px 4px;
+	border-width: 2px 3px 3px 4px;
 	
-	color : #DDD;
-	background : #666;
+	color: #DDD;
+	background: #666;
 }
 
 #post {

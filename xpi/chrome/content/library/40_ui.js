@@ -109,7 +109,6 @@ var QuickPostForm = {
 			'chrome,alwaysRaised=yes,resizable=yes,titlebar=no,dependent=yes', ps, position);
 	},
 };
-QuickPostForm.refreshCache = true;
 QuickPostForm.candidates = [];
 QuickPostForm.tagProvider = null;
 QuickPostForm.dialog = {

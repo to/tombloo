@@ -222,8 +222,10 @@ DialogPanel.prototype = {
 		this.sizeToContent();
 	},
 	
-	sizeToContent : function(){
-		var shrink = this.formPanel.shrink;
+	sizeToContent : function(shrink){
+		// トグル操作では常にシュリンクするため引数が渡ってくる。
+		// ウィンドウリサイズ操作では、タイプや状態により異なるためプロパティを見る。
+		shrink = shrink || this.formPanel.shrink;
 		
 		// 一度flexを解除しないと画像下の余白を縮められない
 		if(shrink)
@@ -401,21 +403,12 @@ FormPanel.prototype = {
 	
 	get shrink(){
 		// photoタイプの縮小時だけシュリンクさせる
-		// 他の場合はDescriptionBoxの大きさを維持するためシュリンクしない
+		// 他の場合はDescriptionBoxをフレックスにするためシュリンクしない
 		return ps.type=='photo' && !this.expanded;
 	},
 	
 	show : function(){
 		this.createForm();
-	},
-	
-	toggleDetail : function(){
-		toggleElementClass('expanded', this.elmToggleDetail);
-		forEach(this.toggles, function(f){f()});
-		
-		this.expanded = hasElementClass(this.elmToggleDetail, 'expanded');
-		
-		this.dialogPanel.sizeToContent();
 	},
 	
 	post : function(){
@@ -459,7 +452,7 @@ FormPanel.prototype = {
 					
 				} else if(name == 'description'){
 					elm = elmForm.appendChild(VBOX(attrs, {flex : 1}));
-					field = new DescriptionBox(elm, def.attributes, self.dialogPanel);
+					field = self.descriptionBox = new DescriptionBox(elm, def.attributes, self.dialogPanel);
 					
 				} else {
 					switch(def.type){
@@ -501,6 +494,24 @@ FormPanel.prototype = {
 		});
 	},
 	
+	toggleDetail : function(){
+		toggleElementClass('expanded', this.elmToggleDetail);
+		this.expanded = hasElementClass(this.elmToggleDetail, 'expanded');
+		
+		this.lock();
+		forEach(this.toggles, function(f){f()});
+		this.dialogPanel.sizeToContent(true);
+		this.unlock();
+	},
+	
+	lock : function(){
+		this.descriptionBox.lock();
+	},
+	
+	unlock : function(){
+		this.descriptionBox.unlock();
+	},
+	
 	onKeydown : function(e){
 		if(!e.ctrlKey)
 			return;
@@ -518,6 +529,275 @@ FormPanel.prototype = {
 		}
 	},
 }
+
+
+// ----[EditableLabel]-------------------------------------------------
+function EditableLabel(elmBox){
+	var self = this;
+	withDocument(document, function(){
+		elmBox = getElement(elmBox);
+		
+		self.elmLabel = elmBox.appendChild(LABEL({
+			// cssで指定されているinheritを上書きするためimportantを付加する
+			style : 'cursor: text !important;',
+			crop  : 'end',
+			value : elmBox.getAttribute('value'),
+		}));
+		
+		self.elmTextbox = elmBox.appendChild(TEXTBOX({
+			hidden : true,
+			value : elmBox.getAttribute('value'),
+			emptytext : elmBox.getAttribute('emptytext'),
+		}));
+		
+		self.elmLabel.addEventListener('click', bind('onClick', self), true);
+		window.addEventListener('DOMContentLoaded', bind('onLoad', self), false);
+	});
+}
+
+EditableLabel.prototype = {
+	get value(){
+		return this.elmTextbox.value;
+	},
+	
+	get editable(){
+		return this._editable;
+	},
+	
+	set editable(value){
+		value? this.enable() : this.disable();
+		
+		return this._editable = value;
+	},
+	
+	onLoad : function(){
+		// XBLロード後でないと取得できない
+		this.elmInput = document.getAnonymousElementByAttribute(this.elmTextbox, 'anonid', 'input');
+		
+		// textboxはblurの発生が異常
+		this.elmInput.addEventListener('blur', bind('onBlur', this), true);
+	},
+	
+	onBlur : function(){
+		if(this.editable)
+			return;
+		
+		this.disable();
+	},
+	
+	onClick : function(e){
+		cancel(e);
+		
+		this.enable();
+		this.elmInput.focus();
+	},
+	
+	enable : function(){
+		this.elmTextbox.hidden = false;
+		this.elmLabel.hidden = true;
+	},
+	
+	disable : function(){
+		this.elmLabel.value = this.elmTextbox.value;
+		
+		this.elmTextbox.hidden = true;
+		this.elmLabel.hidden = false;
+	},
+}
+
+
+// ----[TagsPanel]-------------------------------------------------
+function TagsPanel(elmPanel, formPanel){
+	var self = this;
+	this.formPanel = formPanel;
+	this.suggest = (ps.type == 'link');
+	
+	withDocument(document, function(){
+		self.elmPanel = getElement(elmPanel);
+		self.elmCompletion = self.elmPanel.appendChild(BOX({class : 'completion'}));
+
+		if(self.suggest){
+			self.elmSuggestion = self.elmPanel.appendChild(DESCRIPTION({
+				hidden : true,
+			}, IMAGE({
+				src : 'chrome://browser/skin/places/searching_16.png'
+			})));
+			self.elmToggleSuggestion = IMAGE({
+				class : 'image-button button',
+			});
+		}
+	});
+		
+	self.elmCompletion.addEventListener('construct', function(){
+		self.elmTextbox = self.elmCompletion.textbox;
+		
+		self.elmCompletion.autoComplete = getPref('tagAutoComplete');
+		self.elmCompletion.candidates = QuickPostForm.candidates;
+		
+		if(self.suggest){
+			insertSiblingNodesAfter(self.elmTextbox.input, self.elmToggleSuggestion);
+			
+			self.elmTextbox.addEventListener('input', bind('onChange', self), true);
+			self.elmTextbox.addEventListener('terminate', bind('onChange', self), true);
+			
+			self.elmToggleSuggestion.addEventListener('click', bind('toggleSuggestion', self), true);
+			self.elmSuggestion.addEventListener('click', bind('toggleTag', self), true);
+		}
+		
+		// linkタイプの場合、既ブックマークかの判定も行うため必ずタグを取得する
+		// それ以外のタイプの場合、キャッシュがあればそれを使う
+		self.tagProvider = getPref('tagProvider');
+		if(self.tagProvider && (self.suggest || !QuickPostForm.candidates.length)){
+			models[self.tagProvider].getSuggestions(ps.itemUrl).addCallback(function(res){
+				if(self.suggest)
+					self.setSuggestions(res);
+				self.setTags(self.tagProvider, res.tags);
+			});
+		}
+	}, false);
+	
+	connect(formPanel, 'post', self, 'addNewTags');
+}
+
+TagsPanel.prototype = {
+	elmTags : {},
+	
+	get value(){
+		return this.elmCompletion.values;
+	},
+	
+	setSuggestions : function(res){
+		var self = this;
+		withDocument(document, function(){
+			// inputイベントで高速にチェックをする必要があるためハッシュで持つ
+			self.elmTags = {};
+			clearChildren(self.elmSuggestion);
+			
+			for each(var prop in ['recommended', 'popular']){
+				if(!res[prop])
+					continue;
+				
+				res[prop].forEach(function(tag){
+					// この処理でパネルが延びるがロックしないため詳細ボックスが縮む。
+					// ロード時に開く場合、詳細ボックスはタグパネルの大きさも含んでいるため、
+					// 最終的に前回と同程度の大きさと間隔に復元される。
+					self.elmTags[tag] = self.elmSuggestion.appendChild(LABEL({
+						value : tag,
+						class : 'button ' + prop
+					}));
+				});
+			}
+		});
+	},
+	
+	setTags : function(tagProvider, tags){
+		if((!tags || !tags.length) || QuickPostForm.candidates.length)
+			return;
+		
+		var self = this;
+		tags = this.sort(tags).map(itemgetter('name'));
+		
+		this.comvertToCandidates(tags).addCallback(function(cands){
+			self.elmCompletion.candidates = cands;
+			QuickPostForm.candidates = cands;
+		});
+	},
+	
+	sort : function(tags){
+		return tags.sort(function(a, b){
+			return (b.frequency != a.frequency)? 
+				compare(b.frequency, a.frequency) : 
+				compare(a.name, b.name);
+		});
+	},
+	
+	comvertToCandidates : function(tags){
+		// 各タグサービスで使われてるデリミタを合成
+		var source = tags.join(' [');
+		var d;
+		
+		if(source.includesFullwidth()){
+			d = Yahoo.getRomaReadings(source).addCallback(function(result){
+				return result.join('').split(' [');
+			});
+		} else {
+			d = succeed(tags)
+		}
+		d.addCallback(function(readings){
+			return zip(readings, tags).map(function([reading, tag]){
+				return {
+					reading : reading,
+					value : tag,
+				}
+			});
+		})
+		
+		return d;
+	},
+	
+	addNewTags : function(){
+		var tags = this.elmCompletion.newWords;
+		this.comvertToCandidates(tags).addCallback(function(newCands){
+			var memo = {};
+			var cands = []
+			QuickPostForm.candidates.concat(newCands).forEach(function(cand){
+				if(memo[cand.value])
+					return;
+				
+				cands.push(cand);
+				memo[cand.value] = true;
+			});
+			
+			QuickPostForm.candidates = cands;
+		});
+	},
+	
+	onChange : function(){
+		var self = this;
+		
+		// 増えたタグを処理する
+		var tags = {};
+		this.value.forEach(function(tag){
+			var elmTag = self.elmTags[tag];
+			if(elmTag)
+				addElementClass(elmTag, 'used');
+			tags[tag] = null;
+		});
+		
+		// 減ったタグを処理する
+		items(self.elmTags).forEach(function([tag, elmTag]){
+			if(!(tag in tags))
+				removeElementClass(elmTag, 'used');
+		});
+	},
+	
+	toggleSuggestion : function(){
+		toggleElementClass('expanded', this.elmToggleSuggestion);
+		this.expanded = hasElementClass(this.elmToggleSuggestion, 'expanded');
+		
+		this.formPanel.lock();
+		this.elmSuggestion.hidden = !this.expanded;
+		this.formPanel.dialogPanel.sizeToContent(true);
+		this.formPanel.unlock();
+	},
+	
+	toggleTag : function(e){
+		var elmTag = e.target;
+		if(elmTag.tagName!='label')
+			return;
+		
+		var used = hasElementClass(elmTag, 'used');
+		var word = elmTag.value;
+		if(used){
+			removeElementClass(elmTag, 'used');
+			this.elmTextbox.removeWord(word);
+		} else {
+			addElementClass(elmTag, 'used');
+			this.elmTextbox.injectCandidate(word, true, false);
+		}
+	},
+}
+
 
 // ----[FlexImage]-------------------------------------------------
 function FlexImage(elmBox, src, dialogPanel){
@@ -584,9 +864,13 @@ FlexImage.prototype = {
 	},
 }
 
+
 // ----[DescriptionBox]-------------------------------------------------
 function DescriptionBox(elmBox, attrs, dialogPanel){
 	var self = this;
+	window.addEventListener('unload', function(){
+		disconnectAll(self);
+	}, false);
 	
 	withDocument(document, function(){
 		// XBLをロードしinput要素を取得するため一度表示する
@@ -681,9 +965,30 @@ DescriptionBox.prototype = {
 	},
 	
 	resize : function(height){
-		this.elmBox.style.minHeight = height + 'px';
+		// flexのためheigtで高さを変えられない
+		this.lock(height);
 		this.dialogPanel.sizeToContent();
-		this.elmBox.style.minHeight = this.minHeight + 'px';
+		this.unlock();
+	},
+	
+	lock : function(height){
+		if(this.locked)
+			return;
+		
+		var style = this.elmBox.style;
+		style.minHeight = style.maxHeight = (height || this.elmBox.boxObject.height) + 'px';
+		this.locked = true;
+	},
+	
+	unlock : function(){
+		if(!this.locked)
+			return;
+		
+		with(this.elmBox.style){
+			minHeight = this.minHeight + 'px';
+			maxHeight = '10000px';
+		}
+		this.locked = false;
 	},
 	
 	// FIXME: 非表示時の挙動を検討する
@@ -709,270 +1014,6 @@ DescriptionBox.prototype = {
 		
 		// valueを変えると先頭に戻ってしまうため最後に移動し直す
 		this.elmInput.scrollTop = this.elmInput.scrollHeight;
-	},
-}
-
-
-// ----[TagsPanel]-------------------------------------------------
-function TagsPanel(elmPanel, formPanel){
-	var self = this;
-	this.formPanel = formPanel;
-	this.suggest = (ps.type == 'link');
-	
-	withDocument(document, function(){
-		self.elmPanel = getElement(elmPanel);
-		self.elmCompletion = self.elmPanel.appendChild(BOX({class : 'completion'}));
-
-		if(self.suggest){
-			self.elmSuggestion = self.elmPanel.appendChild(DESCRIPTION({
-				hidden : true,
-			}, IMAGE({
-				src : 'chrome://browser/skin/places/searching_16.png'
-			})));
-			self.elmToggleSuggestion = IMAGE({
-				class : 'image-button button',
-			});
-		}
-	});
-		
-	self.elmCompletion.addEventListener('construct', function(){
-		self.elmTextbox = self.elmCompletion.textbox;
-		
-		self.elmCompletion.autoComplete = getPref('tagAutoComplete');
-		self.elmCompletion.candidates = QuickPostForm.candidates;
-		
-		if(self.suggest){
-			insertSiblingNodesAfter(self.elmTextbox.input, self.elmToggleSuggestion);
-			
-			self.elmTextbox.addEventListener('input', bind('onChange', self), true);
-			self.elmTextbox.addEventListener('terminate', bind('onChange', self), true);
-			
-			self.elmToggleSuggestion.addEventListener('click', bind('toggleSuggestion', self), true);
-			self.elmSuggestion.addEventListener('click', bind('toggleTag', self), true);
-		}
-		
-		// linkタイプの場合、既ブックマークかの判定も行うため必ずタグを取得する
-		// それ以外のタイプの場合、キャッシュがあればそれを使う
-		self.tagProvider = getPref('tagProvider');
-		if(self.tagProvider && (self.suggest || !QuickPostForm.candidates.length)){
-			models[self.tagProvider].getSuggestions(ps.itemUrl).addCallback(function(res){
-				if(self.suggest)
-					self.setSuggestions(res);
-				self.setTags(self.tagProvider, res.tags);
-			});
-		}
-	}, false);
-	
-	connect(formPanel, 'post', self, 'addNewTags');
-}
-
-TagsPanel.prototype = {
-	elmTags : {},
-	
-	get value(){
-		return this.elmCompletion.values;
-	},
-	
-	setSuggestions : function(res){
-		var self = this;
-		withDocument(document, function(){
-			// inputイベントで高速にチェックをする必要があるためハッシュで持つ
-			self.elmTags = {};
-			clearChildren(self.elmSuggestion);
-			
-			for each(var prop in ['recommended', 'popular']){
-				if(!res[prop])
-					continue;
-				
-				res[prop].forEach(function(tag){
-					self.elmTags[tag] = self.elmSuggestion.appendChild(LABEL({
-						value : tag,
-						class : 'button ' + prop
-					}));
-				});
-			}
-		});
-	},
-	
-	setTags : function(tagProvider, tags){
-		if((!tags || !tags.length) || QuickPostForm.candidates.length)
-			return;
-		
-		var self = this;
-		tags = this.sort(tags).map(itemgetter('name'));
-		
-		this.comvertToCandidates(tags).addCallback(function(cands){
-			self.elmCompletion.candidates = cands;
-			QuickPostForm.candidates = cands;
-		});
-	},
-	
-	sort : function(tags){
-		return tags.sort(function(a, b){
-			return (b.frequency != a.frequency)? 
-				compare(b.frequency, a.frequency) : 
-				compare(a.name, b.name);
-		});
-	},
-	
-	comvertToCandidates : function(tags){
-		// 各タグサービスで使われてるデリミタを合成
-		var source = tags.join(' [');
-		var d;
-		
-		if(source.includesFullwidth()){
-			d = Yahoo.getRomaReadings(source).addCallback(function(result){
-				return result.join('').split(' [');
-			});
-		} else {
-			d = succeed(tags)
-		}
-		d.addCallback(function(readings){
-			return zip(readings, tags).map(function([reading, tag]){
-				return {
-					reading : reading,
-					value : tag,
-				}
-			});
-		})
-		
-		return d;
-	},
-	
-	addNewTags : function(){
-		var tags = this.elmCompletion.newWords;
-		this.comvertToCandidates(tags).addCallback(function(newCands){
-			var memo = {};
-			var cands = []
-			QuickPostForm.candidates.concat(newCands).forEach(function(cand){
-				if(memo[cand.value])
-					return;
-				
-				cands.push(cand);
-				memo[cand.value] = true;
-			});
-			
-			QuickPostForm.candidates = cands;
-		});
-	},
-	
-	onChange : function(){
-		var self = this;
-		
-		// 増えたタグを処理する
-		var tags = {};
-		this.value.forEach(function(tag){
-			var elmTag = self.elmTags[tag];
-			if(elmTag)
-				addElementClass(elmTag, 'used');
-			tags[tag] = null;
-		});
-		
-		// 減ったタグを処理する
-		items(self.elmTags).forEach(function([tag, elmTag]){
-			if(!(tag in tags))
-				removeElementClass(elmTag, 'used');
-		});
-	},
-	
-	toggleSuggestion : function(){
-		toggleElementClass('expanded', this.elmToggleSuggestion);
-		
-		this.expanded = hasElementClass(this.elmToggleSuggestion, 'expanded');
-		this.elmSuggestion.hidden = !this.expanded;
-		
-		this.formPanel.dialogPanel.sizeToContent();
-	},
-	
-	toggleTag : function(e){
-		var elmTag = e.target;
-		if(elmTag.tagName!='label')
-			return;
-		
-		var used = hasElementClass(elmTag, 'used');
-		var word = elmTag.value;
-		if(used){
-			removeElementClass(elmTag, 'used');
-			this.elmTextbox.removeWord(word);
-		} else {
-			addElementClass(elmTag, 'used');
-			this.elmTextbox.injectCandidate(word, true, false);
-		}
-	},
-}
-
-
-// ----[EditableLabel]-------------------------------------------------
-function EditableLabel(elmBox){
-	var self = this;
-	withDocument(document, function(){
-		elmBox = getElement(elmBox);
-		
-		self.elmLabel = elmBox.appendChild(LABEL({
-			// cssで指定されているinheritを上書きするためimportantを付加する
-			style : 'cursor: text !important;',
-			crop  : 'end',
-			value : elmBox.getAttribute('value'),
-		}));
-		
-		self.elmTextbox = elmBox.appendChild(TEXTBOX({
-			hidden : true,
-			value : elmBox.getAttribute('value'),
-			emptytext : elmBox.getAttribute('emptytext'),
-		}));
-		
-		self.elmLabel.addEventListener('click', bind('onClick', self), true);
-		window.addEventListener('DOMContentLoaded', bind('onLoad', self), false);
-	});
-}
-
-EditableLabel.prototype = {
-	get value(){
-		return this.elmTextbox.value;
-	},
-	
-	get editable(){
-		return this._editable;
-	},
-	
-	set editable(value){
-		value? this.enable() : this.disable();
-		
-		return this._editable = value;
-	},
-	
-	onLoad : function(){
-		// XBLロード後でないと取得できない
-		this.elmInput = document.getAnonymousElementByAttribute(this.elmTextbox, 'anonid', 'input');
-		
-		// textboxはblurの発生が異常
-		this.elmInput.addEventListener('blur', bind('onBlur', this), true);
-	},
-	
-	onBlur : function(){
-		if(this.editable)
-			return;
-		
-		this.disable();
-	},
-	
-	onClick : function(e){
-		cancel(e);
-		
-		this.enable();
-		this.elmInput.focus();
-	},
-	
-	enable : function(){
-		this.elmTextbox.hidden = false;
-		this.elmLabel.hidden = true;
-	},
-	
-	disable : function(){
-		this.elmLabel.value = this.elmTextbox.value;
-		
-		this.elmTextbox.hidden = true;
-		this.elmLabel.hidden = false;
 	},
 }
 

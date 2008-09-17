@@ -881,7 +881,6 @@ TagsPanel.prototype = {
 		this.expanded = hasElementClass(this.elmToggleSuggestion, 'expanded');
 		this.elmSuggestion.hidden = !this.expanded;
 		
-		this.elmTextbox.focus();
 		this.formPanel.dialogPanel.sizeToContent();
 	},
 	

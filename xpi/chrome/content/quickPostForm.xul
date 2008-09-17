@@ -28,17 +28,17 @@
 				</vbox>
 				<vbox>
 					<hbox id="titlebar" align="top">
-						<hbox>
+						<hbox pack="center" align="center" >
 							<vbox pack="center">
 								<image id="typeIcon" />
 							</vbox>
 							<label id="type" />
-							<vbox pack="center" align="center" >
+							<vbox pack="center">
 								<image id="toggleDetail" class="button image-button" />
 							</vbox>
 						</hbox>
 						
-						<spacer flex="1" />
+						<spacer id="titleSpace" flex="1" />
 						
 						<vbox>
 							<image id="close" class="button image-button" onclick="dialogPanel.close()"/>
@@ -336,6 +336,7 @@ function FormPanel(dialogPanel){
 	this.dialogPanel = dialogPanel;
 	this.elmForm = getElement('form');
 	this.elmToggleDetail = getElement('toggleDetail');
+	this.elmToggleDetail.setAttribute('tooltiptext', getMessage('label.showDetail'));
 	
 	getElement('type').value = ps.type.capitalize();
 	getElement('typeIcon').src = 'chrome://tombloo/skin/' + ps.type + '.png';
@@ -494,9 +495,16 @@ FormPanel.prototype = {
 		});
 	},
 	
+	addWidgetToTitlebar : function(elm){
+		addElementClass(elm, 'widget');
+		insertSiblingNodesBefore(document.getElementById('titleSpace'), elm);
+	},
+	
 	toggleDetail : function(){
 		toggleElementClass('expanded', this.elmToggleDetail);
 		this.expanded = hasElementClass(this.elmToggleDetail, 'expanded');
+		this.elmToggleDetail.setAttribute('tooltiptext', 
+			getMessage('label.' + (this.expanded? 'hideDetail' : 'showDetail')));
 		
 		this.lock();
 		forEach(this.toggles, function(f){f()});
@@ -614,7 +622,10 @@ function TagsPanel(elmPanel, formPanel){
 	
 	withDocument(document, function(){
 		self.elmPanel = getElement(elmPanel);
-		self.elmCompletion = self.elmPanel.appendChild(BOX({class : 'completion'}));
+		self.elmCompletion = self.elmPanel.appendChild(BOX({
+			emptytext : elmPanel.getAttribute('emptytext'),
+			class : 'completion',
+		}));
 
 		if(self.suggest){
 			self.elmSuggestion = self.elmPanel.appendChild(DESCRIPTION({
@@ -669,6 +680,14 @@ TagsPanel.prototype = {
 	setSuggestions : function(res){
 		var self = this;
 		withDocument(document, function(){
+			// ブックマーク済みを表示する
+			if(res.duplicated){
+				self.formPanel.addWidgetToTitlebar(IMAGE({
+					tooltiptext : getMessage('label.bookmarked'),
+					src : 'chrome://tombloo/skin/star.png',
+				}));
+			}
+			
 			// inputイベントで高速にチェックをする必要があるためハッシュで持つ
 			self.elmTags = {};
 			clearChildren(self.elmSuggestion);

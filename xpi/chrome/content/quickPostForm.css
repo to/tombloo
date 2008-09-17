@@ -35,20 +35,6 @@ button,
 }
 
 
-tooltip{
-	/* 目立たない色に設定し慣れた後の負担を減らす */
-  -moz-appearance: none;
-  
-	-moz-border-radius: 1px;
-	padding: 0.2em 0.4em;
-	
-	border: 1px solid #AAA;
-	background: #E8E8E8;
-	
-	font-size: 90%;
-}
-
-
 /* window / base */
 window {
 	font-size: 90%;
@@ -119,10 +105,11 @@ resizer[dir="bottomright"] {
 
 /* titlebar */
 #typeIcon{
-	margin-right: 3px;
+	margin: 0;
 }
 
 #type {
+	margin-left: 5px;
 	font-weight: bold;
 }
 
@@ -132,11 +119,16 @@ resizer[dir="bottomright"] {
 	
 	/* 押しやすいように少し拡げる */
 	border: transparent solid;
-	border-width: 3px 4px;
+	border-width: 3px 5px;
 }
 
 #toggleDetail.expanded{
 	list-style-image: url(chrome://tombloo/skin/arrow-up.png);
+}
+
+#titlebar .widget{
+	cursor: default !important;
+	margin-left: 10px;
 }
 
 #close{

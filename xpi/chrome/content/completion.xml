@@ -14,8 +14,7 @@
 		<content style="cursor: text;">
 			<xul:textbox 
 				anonid="textbox" 
-				xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction,flex,emptytext" >
-			</xul:textbox>
+				xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction,flex,emptytext" />
 			<xul:popup anonid="popup" ignorekeys="true">
 				<xul:listbox anonid="listbox" style="height: auto;"/>
 			</xul:popup>

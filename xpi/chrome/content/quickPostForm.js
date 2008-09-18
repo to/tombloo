@@ -80,7 +80,9 @@ DialogPanel.prototype = {
 			},
 		};
 		
-		getMostRecentWindow().content.focus();
+		// フォーカスを戻すと複数フォームを開いていたときに背後に回ってしまう
+		// getMostRecentWindow().focus();
+		
 		window.close();
 	},
 	

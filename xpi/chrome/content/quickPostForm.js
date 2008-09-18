@@ -590,15 +590,17 @@ function TagsPanel(elmPanel, formPanel){
 		if(self.suggest || !QuickPostForm.candidates.length){
 			models[self.tagProvider].getSuggestions(ps.itemUrl).addCallback(function(res){
 				self.arrangeSuggestions(res);
+				self.setTags(res.tags);
 				
-				if(self.suggest)
+				if(self.suggest){
 					self.showSuggestions(res);
+					self.finishLoading();
+				}
 				
 				if(res.duplicated)
 					self.showBookmarked();
-				
-				self.finishLoading();
-				self.setTags(res.tags);
+			}).addErrback(function(e){
+				error(e);
 			});
 		}
 	}, false);

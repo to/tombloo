@@ -54,19 +54,19 @@ window {
 }
 
 .snap-top-left{
-	cursor: url(chrome://tombloo/skin/snap-top-left.cur), pointer;
+	cursor: url(chrome://tombloo/skin/snap-top-left.png) 2 1, pointer;
 }
 
 .snap-top-right{
-	cursor: url(chrome://tombloo/skin/snap-top-right.cur), pointer;
+	cursor: url(chrome://tombloo/skin/snap-top-right.png) 10 1, pointer;
 }
 
 .snap-bottom-left{
-	cursor: url(chrome://tombloo/skin/snap-bottom-left.cur), pointer;
+	cursor: url(chrome://tombloo/skin/snap-bottom-left.png) 2 15, pointer;
 }
 
 .snap-bottom-right{
-	cursor: url(chrome://tombloo/skin/snap-bottom-right.cur), pointer;
+	cursor: url(chrome://tombloo/skin/snap-bottom-right.png) 10 15, pointer;
 }
 
 resizer[dir="topleft"] {

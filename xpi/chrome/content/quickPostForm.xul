@@ -82,6 +82,9 @@ env.extend(this, env, false);
 
 var ps = arguments[0];
 var position = arguments[1];
+
+env.signal(env, 'form-open', window);
+
 var dialogPanel = new DialogPanel(position);
 
 ]]></script>

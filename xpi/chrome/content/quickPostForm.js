@@ -676,8 +676,9 @@ TagsPanel.prototype = {
 	},
 	
 	showBookmarked : function(){
+		var self = this;
 		withDocument(document, function(){
-			this.formPanel.addWidgetToTitlebar(IMAGE({
+			self.formPanel.addWidgetToTitlebar(IMAGE({
 				tooltiptext : getMessage('label.bookmarked'),
 				src : 'chrome://tombloo/skin/star.png',
 			}));

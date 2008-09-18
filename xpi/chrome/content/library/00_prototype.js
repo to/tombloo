@@ -34,6 +34,10 @@ update(String.prototype, {
 		return this.replace(/^\s+|\s+$/g, '');
 	},
 	
+	wrap : function(c){
+		return c+this+c;
+	},
+	
 	repeat : function(n){
 		return new Array(n+1).join(this);
 	},

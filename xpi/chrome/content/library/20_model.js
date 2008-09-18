@@ -36,6 +36,65 @@ models.register({
 
 
 models.register({
+	name : 'Mento',
+	ICON : 'http://www.mento.info/favicon.ico',
+	
+	check : function(ps){
+		// キャプチャ(file)はAPIキーを入手後に対応(現在未公開)
+		return (/(photo|quote|link)/).test(ps.type) && !ps.file;
+	},
+	
+	post : function(ps){
+		return this.save({
+			title       : ps.page,
+			url         : ps.itemUrl,
+			tags        : ps.tags,
+			private     : ps.private,
+			image       : (ps.type == 'photo')? ps.itemUrl : '',
+			description : joinText([ps.body? ps.body.wrap('"') : '', ps.description], '\n', true),
+		});
+	},
+	
+	getCurrentUser : function(){
+		var cookie = getCookies('mento.info', 'mxtu')[0];
+		if(!cookie)
+			throw new Error(getMessage('error.notLoggedin'));
+			
+		return cookie.value;
+	},
+	
+	save : function(ps){
+		Mento.getCurrentUser();
+		
+		if(ps.image){
+			ps.image0 = ps.media = ps.image;
+			delete ps.image;
+		}
+		
+		// quick APIはプライベートなどを保存できなかった
+		// http://www.mento.info/post/save/v1/quick
+		
+		return request('http://www.mento.info/post/save', {
+			sendContent : update(ps, {
+				src        : 'tombloo',
+				action     : 'save',
+				save       : 1,
+				tags       : joinText(ps.tags, ','),
+				local      : this.getLocalTimestamp(),
+				private    : ps.private? 1 : 0,
+				for_public : ps.private? 0 : 1,
+			}),
+		});
+	},
+	
+	getLocalTimestamp : function(){
+		with(new Date())
+			return [getSeconds(), getMinutes(), getHours(), getDate(), getMonth()+1, getFullYear()].join('-'); 
+	},
+});
+
+
+models.register({
 	name : 'FFFFOUND',
 	ICON : 'http://ffffound.com/favicon.ico',
 	URL : 'http://FFFFOUND.com/',

@@ -987,7 +987,7 @@ DescriptionBox.prototype = {
 	},
 	
 	lock : function(height){
-		if(this.locked)
+		if(this.locked || this.elmBox.hidden)
 			return;
 		
 		var style = this.elmBox.style;

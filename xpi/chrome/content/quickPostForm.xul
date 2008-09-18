@@ -656,8 +656,8 @@ function TagsPanel(elmPanel, formPanel){
 			insertSiblingNodesAfter(self.elmTextbox.input, self.elmLoading);
 			insertSiblingNodesAfter(self.elmTextbox.input, self.elmToggleSuggestion);
 			
-			self.elmTextbox.addEventListener('input', bind('onChange', self), true);
-			self.elmTextbox.addEventListener('terminate', bind('onChange', self), true);
+			self.elmTextbox.addEventListener('input', bind('refreshCheck', self), true);
+			self.elmTextbox.addEventListener('terminate', bind('refreshCheck', self), true);
 			
 			self.elmToggleSuggestion.addEventListener('click', bind('toggleSuggestion', self), true);
 			
@@ -712,6 +712,7 @@ TagsPanel.prototype = {
 					}));
 				});
 			}
+			self.refreshCheck();
 			
 			// ロード中終了
 			removeElement(self.elmLoading);
@@ -784,7 +785,7 @@ TagsPanel.prototype = {
 		});
 	},
 	
-	onChange : function(){
+	refreshCheck : function(){
 		var self = this;
 		
 		// 増えたタグを処理する

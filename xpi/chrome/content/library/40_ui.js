@@ -109,8 +109,10 @@ var QuickPostForm = {
 			'chrome,alwaysRaised=yes,resizable=yes,titlebar=no,dependent=yes', ps, position);
 	},
 };
+
+// 設定画面が保存されたタイミングでコンテキストがリロードされクリアされる
+// 仕様変更の際はsignal/connectでクリアすること
 QuickPostForm.candidates = [];
-QuickPostForm.tagProvider = null;
 QuickPostForm.dialog = {
 	snap : {
 		top : true,

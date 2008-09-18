@@ -178,7 +178,11 @@ resizer[dir="bottomright"] {
 }
 
 #tags description{
-	margin-top: 0.3em;
+	margin-top: 0.5em;
+}
+
+#tags description spacer{
+	width : 1em;
 }
 
 #tags description label{
@@ -193,6 +197,10 @@ resizer[dir="bottomright"] {
 	border-width: 0 5px;
 	-moz-border-radius: 6px;
 	margin: 4px 0;
+}
+
+#tags description label.recommended{
+	color: #999;
 }
 
 #tags description label.popular{

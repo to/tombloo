@@ -65,6 +65,9 @@
 	
 	<binding id="textbox" extends="chrome://global/content/bindings/textbox.xml#textbox">
 		<implementation>
+			<field name="candidates">
+				[];
+			</field>
 			<field name="delay">
 				170;
 			</field>

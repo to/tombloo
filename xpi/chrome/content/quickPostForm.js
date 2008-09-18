@@ -657,8 +657,9 @@ TagsPanel.prototype = {
 			// inputイベントで高速にチェックをする必要があるためハッシュで持つ
 			self.elmTags = {};
 			
+			var i = 0;
 			for each(var prop in ['recommended', 'popular']){
-				if(prop != 'recommended')
+				if(i++ && self.elmTags.length)
 					self.elmSuggestion.appendChild(SPACER());
 				
 				res[prop].forEach(function(tag){

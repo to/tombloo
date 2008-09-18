@@ -33,6 +33,7 @@ function DialogPanel(position){
 	
 	window.addEventListener('focus', bind('onFocus', this), true);
 	window.addEventListener('resize', bind('onWindowResize', this), true);
+	window.addEventListener('keydown', bind('onKeydown', this), true);
 	
 	// ロード時にはウィンドウのサイズが決定されていない
 	self.elmWindow.style.opacity = 0;
@@ -66,6 +67,17 @@ function DialogPanel(position){
 		
 		self.elmWindow.style.opacity = 1;
 	}, false);
+}
+
+DialogPanel.shortcutkeys = {
+	'CTRL + RETURN' : function(e){
+		cancel(e);
+		dialogPanel.formPanel.post();
+	},
+	'CTRL + W' : function(e){
+		cancel(e);
+		dialogPanel.close();
+	},
 }
 
 DialogPanel.prototype = {
@@ -160,6 +172,12 @@ DialogPanel.prototype = {
 		
 		if(shrink)
 			this.elmBase.setAttribute('flex', '1');
+	},
+	
+	onKeydown : function(e){
+		var proc = DialogPanel.shortcutkeys[keyString(e)];
+		if(proc)
+			proc(e);
 	},
 }
 
@@ -264,8 +282,6 @@ function FormPanel(dialogPanel){
 	getElement('post').addEventListener('command', bind('post', this), true);
 	
 	this.elmToggleDetail.addEventListener('click', bind('toggleDetail', this), true);
-	
-	window.addEventListener('keydown', bind('onKeydown', this), true);
 	
 	this.postersPanel = new PostersPanel();
 }
@@ -439,23 +455,6 @@ FormPanel.prototype = {
 	
 	unlock : function(){
 		this.descriptionBox.unlock();
-	},
-	
-	onKeydown : function(e){
-		if(!e.ctrlKey)
-			return;
-		
-		switch(keyString(e)) {
-		case 'CTRL + RETURN':
-			cancel(e);
-			this.post();
-			break;
-			
-		case 'CTRL + W':
-			cancel(e);
-			this.dialogPanel.close();
-			break;
-		}
 	},
 }
 

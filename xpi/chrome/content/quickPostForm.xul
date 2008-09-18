@@ -630,11 +630,14 @@ function TagsPanel(elmPanel, formPanel){
 		if(self.suggest){
 			self.elmSuggestion = self.elmPanel.appendChild(DESCRIPTION({
 				hidden : true,
-			}, IMAGE({
-				src : 'chrome://browser/skin/places/searching_16.png'
-			})));
+				style  : 'display: none',
+			}));
 			self.elmToggleSuggestion = IMAGE({
-				class : 'image-button button',
+				class  : 'image-button button', 
+				hidden : true,
+			});
+			self.elmLoading = IMAGE({
+				class : 'loading',
 			});
 		}
 	});
@@ -646,6 +649,7 @@ function TagsPanel(elmPanel, formPanel){
 		self.elmCompletion.candidates = QuickPostForm.candidates;
 		
 		if(self.suggest){
+			insertSiblingNodesAfter(self.elmTextbox.input, self.elmLoading);
 			insertSiblingNodesAfter(self.elmTextbox.input, self.elmToggleSuggestion);
 			
 			self.elmTextbox.addEventListener('input', bind('onChange', self), true);
@@ -660,17 +664,11 @@ function TagsPanel(elmPanel, formPanel){
 		// それ以外のタイプの場合、キャッシュがあればそれを使う
 		self.tagProvider = getPref('tagProvider');
 		if(self.tagProvider && (self.suggest || !QuickPostForm.candidates.length)){
-			// models[self.tagProvider].getSuggestions(ps.itemUrl).addCallback(function(res){
-			(function(res){
-				var res = {
-					recommended : ['TOOL', 'PHOTO', 'WEB', 'RSS', 'BLOG', 'NEWS', 'SERVICE'],
-					popular : ['hatena', 'portal', 'search', 'community', 'web2.0', 'blog', 'web'],
-				};
-				
+			models[self.tagProvider].getSuggestions(ps.itemUrl).addCallback(function(res){
 				if(self.suggest)
 					self.setSuggestions(res);
 				self.setTags(self.tagProvider, res.tags);
-			})();
+			});
 		}
 	}, false);
 	
@@ -697,8 +695,6 @@ TagsPanel.prototype = {
 			
 			// inputイベントで高速にチェックをする必要があるためハッシュで持つ
 			self.elmTags = {};
-			clearChildren(self.elmSuggestion);
-			
 			for each(var prop in ['recommended', 'popular']){
 				if(!res[prop])
 					continue;
@@ -712,6 +708,13 @@ TagsPanel.prototype = {
 						class : 'button ' + prop
 					}));
 				});
+			}
+			
+			// ロード中終了
+			removeElement(self.elmLoading);
+			if(!isEmpty(self.elmTags)){
+				self.elmToggleSuggestion.hidden = false;
+				self.elmSuggestion.style.display = '';
 			}
 		});
 	},

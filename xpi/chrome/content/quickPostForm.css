@@ -160,7 +160,13 @@ resizer[dir="bottomright"] {
 }
 
 #tags .image-button{
+	margin: 1px 3px;
 	list-style-image: url(chrome://tombloo/skin/arrow-down.png);
+}
+
+#tags .loading{
+	cursor: progress !important;
+	list-style-image: url(chrome://browser/skin/places/searching_16.png) !important;
 }
 
 #tags .image-button.expanded{

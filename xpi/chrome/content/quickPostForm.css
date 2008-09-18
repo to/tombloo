@@ -146,8 +146,8 @@ resizer[dir="bottomright"] {
 }
 
 .meta {
-	font-size: 70%;
-	color: #999;
+	font-size: 75%;
+	color: #AAA;
 }
 
 #tags{
@@ -178,19 +178,15 @@ resizer[dir="bottomright"] {
 #tags description label{
 	cursor: pointer !important;
 	
-	vertical-align: bottom;
+	color: #AAA;
 	
-	color: #999;
-	
-	border-style: solid;
 	border-color: #E8E8E8;
+	border-style: solid;
 	
-	/* emにすると微妙にガタガタする */
 	padding: 2px 3px;
-	margin: 4px 0;
 	border-width: 0 5px;
-	
 	-moz-border-radius: 6px;
+	margin: 4px 0;
 }
 
 #tags description label.popular{
@@ -201,22 +197,21 @@ resizer[dir="bottomright"] {
 	background: #CCC;
 	color: white;
 	
-	padding: 3px 4px;
-	margin: 3px 0;
-	border-width: 0 4px;
+	padding: 4px 5px;
+	border-width: 0 3px;
+	-moz-border-radius: 4px;
+	margin: 2px 0;
 }
 
+
 #tags description label:hover:active{
-	background: #999;
-	color: white;
+	background: #AAA;
 	
-	padding: 2px 3px;
-	margin: 4px 0;
-	border-width: 0 5px;
+	/* 押したリアクションを追加するとガタつく */
 }
 
 #tags description label.used{
-	background: #999;
+	background: #AAA;
 	color: white;
 }
 

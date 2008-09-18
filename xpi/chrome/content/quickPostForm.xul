@@ -652,18 +652,25 @@ function TagsPanel(elmPanel, formPanel){
 			self.elmTextbox.addEventListener('terminate', bind('onChange', self), true);
 			
 			self.elmToggleSuggestion.addEventListener('click', bind('toggleSuggestion', self), true);
-			self.elmSuggestion.addEventListener('click', bind('toggleTag', self), true);
+			
+			new ChekboxPanel(self.elmSuggestion, self);
 		}
 		
 		// linkタイプの場合、既ブックマークかの判定も行うため必ずタグを取得する
 		// それ以外のタイプの場合、キャッシュがあればそれを使う
 		self.tagProvider = getPref('tagProvider');
 		if(self.tagProvider && (self.suggest || !QuickPostForm.candidates.length)){
-			models[self.tagProvider].getSuggestions(ps.itemUrl).addCallback(function(res){
+			// models[self.tagProvider].getSuggestions(ps.itemUrl).addCallback(function(res){
+			(function(res){
+				var res = {
+					recommended : ['TOOL', 'PHOTO', 'WEB', 'RSS', 'BLOG', 'NEWS', 'SERVICE'],
+					popular : ['hatena', 'portal', 'search', 'community', 'web2.0', 'blog', 'web'],
+				};
+				
 				if(self.suggest)
 					self.setSuggestions(res);
 				self.setTags(self.tagProvider, res.tags);
-			});
+			})();
 		}
 	}, false);
 	
@@ -800,11 +807,7 @@ TagsPanel.prototype = {
 		this.formPanel.unlock();
 	},
 	
-	toggleTag : function(e){
-		var elmTag = e.target;
-		if(elmTag.tagName!='label')
-			return;
-		
+	toggleTag : function(elmTag){
 		var used = hasElementClass(elmTag, 'used');
 		var word = elmTag.value;
 		if(used){
@@ -814,6 +817,19 @@ TagsPanel.prototype = {
 			addElementClass(elmTag, 'used');
 			this.elmTextbox.injectCandidate(word, true, false);
 		}
+	},
+	
+	// ChekboxPanel
+	onCheck : function(e){
+		if(e.target.tagName!='label')
+			return;
+		
+		this.toggleTag(e.target);
+	},
+	
+	onCarry : function(e){
+		if(e.target.tagName=='label')
+			this.toggleTag(e.target);
 	},
 }
 
@@ -1068,13 +1084,11 @@ function PostersPanel(){
 	
 	this.elmAllOff.addEventListener('click', bind('allOff', this), true);
 	
-	this.elmPanel.addEventListener('mousedown', dynamicBind('onMouseDown', this), true);
-	this.elmPanel.addEventListener('mouseover', dynamicBind('onMouseOver', this), true);
-	this.elmPanel.addEventListener('mouseup', dynamicBind('onMouseUp', this), true);
-	this.elmPanel.addEventListener('mouseout', dynamicBind('onMouseOut', this), true);
-	
+	// マウスオーバーですぐに表示されるよう自前で用意する
 	this.elmPanel.addEventListener('mouseover', bind('showTooltip', this), true);
 	this.elmPanel.addEventListener('mouseout', bind('hideTooltip', this), true);
+	
+	new ChekboxPanel(this.elmPanel, this);
 }
 
 PostersPanel.prototype = {
@@ -1140,18 +1154,41 @@ PostersPanel.prototype = {
 	hideTooltip : function(e){
 		this.elmTooltip.hidePopup();
 	},
-}
 	
-State.make(PostersPanel, {
+	// ChekboxPanel
+	onCheck : function(e){
+		if((/description|label/).test(e.target.tagName))
+			return true;
+		
+		// cancelをするとactive擬似クラスが有効にならずリアクションがなくなる
+		
+		this.toggleDisabled(e.target);
+	},
+	
+	onCarry : function(e){
+		if(!(/description|label/).test(e.target.tagName))
+			this.toggleDisabled(e.target);
+	},
+}
+
+
+// ----[ChekboxPanel]-------------------------------------------------
+function ChekboxPanel(elmPanel, handler){
+	this.handler = handler;
+	
+	elmPanel.addEventListener('mousedown', dynamicBind('onMouseDown', this), true);
+	elmPanel.addEventListener('mouseover', dynamicBind('onMouseOver', this), true);
+	elmPanel.addEventListener('mouseup', dynamicBind('onMouseUp', this), true);
+	elmPanel.addEventListener('mouseout', dynamicBind('onMouseOut', this), true);
+}
+
+State.make(ChekboxPanel, {
+	mouseoutDelay : 500,
+	
 	normal : {
 		onMouseDown : function(e){
-			if((/description|label/).test(e.target.tagName))
-				return;
-			
-			// cancelをするとactive擬似クラスが有効にならずリアクションがなくなる
-			
-			this.toggleDisabled(e.target);
-			this.changeState('dragging');
+			if(! this.handler.onCheck(e))
+				this.changeState('dragging');
 		},
 	},
 	
@@ -1164,19 +1201,18 @@ State.make(PostersPanel, {
 			if(!e.relatedTarget || e.relatedTarget.tagName != 'vbox')
 				return;
 			
-			// アイコンが小さいため外れてもすぐにドラッグを終了させない
+			// アイコンが小さいため外れてもすぐにドラッグを終了しない
 			// アイコンが2行になった時、縦にドラッグすると一度マウスアウトするため
 			var self = this;
 			this.timerId = setTimeout(function(){
 				self.changeState('normal');
-			}, 1000);
+			}, this.mouseoutDelay);
 			
 			this.changeState('waitForCancel');
 		},
 		
 		onMouseOver : function(e){
-			if(!(/description|label/).test(e.target.tagName))
-				this.toggleDisabled(e.target);
+			this.handler.onCarry(e);
 		},
 	},
 	

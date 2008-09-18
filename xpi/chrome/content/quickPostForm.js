@@ -684,7 +684,10 @@ TagsPanel.prototype = {
 		removeElement(this.elmLoading);
 		if(!isEmpty(this.elmTags)){
 			this.elmToggleSuggestion.hidden = false;
+			
+			// おすすめパネル表示によりオーバーフローしないようにする
 			this.elmSuggestion.style.display = '';
+			this.formPanel.dialogPanel.sizeToContent();
 		}
 	},
 	

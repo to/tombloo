@@ -1059,8 +1059,9 @@ function PostersPanel(){
 			value : getMessage('label.allOff'),
 			class : 'label-button button',
 		}));
+		
+		self.elmButton.disabled = !self.checked.length;
 	});
-	
 	
 	this.elmAllOff.addEventListener('click', bind('allOff', this), true);
 	

@@ -71,6 +71,9 @@ Tombloo.Service.extractors = new Repository([
 			var item = Tombloo.Service.extractors.LDR.getItem(ctx);
 			ctx.title = item.title;
 			
+			with(createURI(ctx.href))
+				ctx.href = prePath + filePath;
+			
 			return {
 				type      : 'photo',	
 				item      : item.title,

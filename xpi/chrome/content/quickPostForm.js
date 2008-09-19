@@ -409,8 +409,8 @@ FormPanel.prototype = {
 						
 					default:
 						field = elm = elmForm.appendChild(TEXTBOX(attrs, {
-							multiline : !!def.rows,
-							rows : def.rows || 1,
+							multiline : !!attrs.rows,
+							rows : attrs.rows || 1,
 						}));
 						break;
 					}

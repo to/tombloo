@@ -56,10 +56,12 @@ function DialogPanel(position){
 		
 		if(position){
 			// ポスト先の一番最初のアイコンの上にマウスカーソルがあるあたりへ移動
+			var win = getMostRecentWindow();
 			var box = self.formPanel.postersPanel.elmPanel.boxObject;
 			window.moveTo(
-				position.x - (box.x + 16), 
-				position.y - (box.y + (box.height / 2)));
+				Math.min(win.screenX + win.outerWidth - window.innerWidth,  Math.max(win.screenX, position.x - (box.x + 16))), 
+				Math.min(win.screenY + win.outerHeight - window.innerHeight, Math.max(win.screenY, position.y - (box.y + (box.height / 2))))
+			);
 		} else {
 			with(QuickPostForm.dialog.snap)
 				self.snapToContentCorner(top, left);

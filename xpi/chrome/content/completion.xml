@@ -278,24 +278,32 @@
 			
 			<method name="getCandidates">
 				<parameter name="hint"/>
-				<parameter name="used"/>
 				<body><![CDATA[
 					var cands = [];
-					var reStrict = new RegExp('^' + hint, 'i');
-					var reLoose = new RegExp('^' + hint.split('').join('.*'), 'i');
 					
+					var reStrict = new RegExp('^' + hint, 'i');
 					this.candidates.forEach(function(cand){
 						if(reStrict.test(cand.reading))
 							cands.push(cand.value);
 					});
 					
-					if(!cands.length)
+					if(!cands.length){
+						var reLoose = new RegExp('^' + hint.split('').join('.*'), 'i');
 						this.candidates.forEach(function(cand){
 							if(reLoose.test(cand.reading))
 								cands.push(cand.value);
 						});
+					}
 					
+					// 利用済みタグとして取得する
 					var values = this.values;
+					
+					// 入力途中の内容を利用済みタグから除去する
+					// 2個ある場合、片方は入力済みタグとみなす
+					var index = values.indexOf(hint);
+					if(~index)
+						values.splice(index, 1);
+					
 					return cands.filter(function(cand){
 						return !~values.indexOf(cand);
 					});
@@ -316,8 +324,7 @@
 					}
 					
 					// 自動決定か?
-					// var cands = this.getCandidates(hint);
-					var cands = this.getCandidates(hint, text.substring(0, word.start).split(this.delimiter));
+					var cands = this.getCandidates(hint);
 					if(this.autoComplete && !this.deleting && cands.length==1 && (hint.length >=2 || cands[0].length == 1)){
 						this.injectCandidate(cands[0], true);
 						this.popup.hidePopup();

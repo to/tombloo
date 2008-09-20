@@ -517,7 +517,7 @@ Tumblr.Link = {
 	},
 	
 	convertToForm : function(ps){
-		var thumb = getPref('thumbnailTemplate').replace('{url}', ps.pageUrl);
+		var thumb = getPref('thumbnailTemplate').replace(RegExp('{url}', 'g'), ps.pageUrl);
 		return {
 			'post[type]'  : ps.type,
 			'post[one]'   : ps.item,

@@ -186,7 +186,13 @@ try {
 	
 	/*
 	// Twitter
-	Twitter.getToken();
+	d.addCallback(function(){
+		return Twitter.getToken();
+	});
+	d.addCallback(function(token){
+		ok(token.authenticity_token > 3);
+	});
+	
 	d.addCallback(function(){
 		return Twitter.addFavorite(808614559);
 	});
@@ -201,7 +207,6 @@ try {
 		return Twitter.remove(847473592);
 	});
 	*/
-	
 	
 	/*
 	// Delicious

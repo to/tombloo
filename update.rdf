@@ -2,21 +2,21 @@
 <RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
          xmlns:NC="http://home.netscape.com/NC-rdf#"
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Seq RDF:about="rdf:#$CBijL1">
-    <RDF:li RDF:resource="rdf:#$DBijL1"/>
-  </RDF:Seq>
-  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
-                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBABS81+J6CjrH00qnH/pig5/1eGrfQX1LXTxoiNmTM/3GI5RdJ0CC78PfMo39wMZeZ3ht7VIU1IckBIHdBSaPQEVcev0eo11qlA2sJ9RdtC6s/62jJ5kN/Hp9NrFWJNbJESbjIHwntyR4MS8nHLvvqj4ws5sBUedupPhBgdaTfphX">
-    <em:updates RDF:resource="rdf:#$CBijL1"/>
+  <RDF:Description RDF:about="rdf:#$XwY3f3"
+                   em:version="0.3.23">
+    <em:targetApplication RDF:resource="rdf:#$.wY3f3"/>
   </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$DBijL1"
-                   em:version="0.3.22">
-    <em:targetApplication RDF:resource="rdf:#$GBijL1"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$GBijL1"
+  <RDF:Description RDF:about="rdf:#$.wY3f3"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="3.0"
                    em:maxVersion="3.0.*"
                    em:updateLink="http://github.com/to/tombloo/tree/master/tombloo.xpi?raw=true"
-                   em:updateHash="sha512:2f518a3633c91de8dae55449ff51ec7a0b6f9a38f2411c411110dcea8397114572ec53132f8c16bbe56db5b84e7c2b69aa214dd12ef09875a38a15a2a4cfb300" />
+                   em:updateHash="sha512:5c3f3bab6453d39ffc0c2457f4de0fba50793104fd0e5cb62eb9c399ee4839ff959d177cc53393c896744c28b80c81b496b665895d95bba9fa1027d82f4459ba" />
+  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBABxrCMYP/kevhsfWYvgxRAH+ve1Een1za534/Y2lvP/ePjR2hvynOTDemjLT7mE0L0/p2N2lbLUJWxRt65ZqEaZijLFmESKhph4yhq1MfkxAOZ403S41U3AxCwUrTLlZw0LHUpQJMpbasn3l9RMccA+BBdR8xhUktNXvByP/k7wW">
+    <em:updates RDF:resource="rdf:#$WwY3f3"/>
+  </RDF:Description>
+  <RDF:Seq RDF:about="rdf:#$WwY3f3">
+    <RDF:li RDF:resource="rdf:#$XwY3f3"/>
+  </RDF:Seq>
 </RDF:RDF>

@@ -782,13 +782,14 @@ Tombloo.Service.extractors = new Repository([
 		name : 'Photo',
 		ICON : 'chrome://tombloo/skin/photo.png',
 		PROTECTED_SITES : [
-			'files.posterous.com',
-			'image.itmedia.co.jp',
+			'files.posterous.com/',
+			'image.itmedia.co.jp/',
 			'wretch.yimg.com/',
 			'pics.*\.blog.yam.com/',
-			'www.imgscan.com/image_c.php',
+			'/www.imgscan.com/image_c.php',
 			'keep4u.ru/imgs/',
-			'www.toofly.com/userGallery/',
+			'/www.toofly.com/userGallery/',
+			'/www.dru.pl/',
 		],
 		check : function(ctx){
 			return ctx.onImage;

@@ -120,8 +120,8 @@ models.register({
 					title   : ps.item,
 				},
 			}).addCallback(function(res){
-				if(res.responseText.match('(FAILED:|ERROR:) (.*?)</span>'))
-					throw RegExp.$2;
+				if(res.responseText.match('(FAILED:|ERROR:) +(.*?)</span>'))
+					throw new Error(RegExp.$2.trim());
 				
 				if(res.responseText.match('login'))
 					throw new Error(getMessage('error.notLoggedin'));
@@ -134,7 +134,6 @@ models.register({
 	},
 	
 	remove : function(id){
-		// 200 {"success":false}
 		return request(FFFFOUND.URL + 'gateway/in/api/remove_asset', {
 			referrer : FFFFOUND.URL,
 			sendContent : {
@@ -151,9 +150,13 @@ models.register({
 				inappropriate : false,
 			},
 		}).addCallback(function(res){
-			// NOT_FOUND / EXISTS / AUTH_FAILD
-			if(res.responseText.match(/"error":"(.*?)"/))
-				throw RegExp.$1;
+			var error = res.responseText.extract(/"error":"(.*?)"/);
+			if(error == 'AUTH_FAILED')
+				throw new Error(getMessage('error.notLoggedin'));
+			
+			// NOT_FOUND / EXISTS / TOO_BIG
+			if(error)
+				throw new Error(RegExp.$1.trim());
 		});
 	},
 });

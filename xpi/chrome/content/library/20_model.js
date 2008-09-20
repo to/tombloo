@@ -637,7 +637,7 @@ models.register({
 	getToken : function(){
 		return request('http://twitter.com/account/settings').addCallback(function(res){
 			var html = res.responseText;
-			if(html.indexOf('signin')!=-1)
+			if(~html.indexOf('class="signin"'))
 				throw new Error(getMessage('error.notLoggedin'));
 			
 			return {

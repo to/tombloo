@@ -286,8 +286,10 @@ var Tumblr = update({}, AbstractSessionService, {
 			
 			default:
 				// このチェックをするためリダイレクトを追う必要がある
+				/* FIXME: エラー判定大失敗
 				if(res.responseText.match(/(100%)/))
 					throw new Error("You've exceeded your daily post limit.");
+				*/
 				
 				error(res);
 				throw new Error('Error posting entry.');
@@ -471,7 +473,7 @@ Tumblr.Photo = {
 				ps.description], '\n\n'),
 			'post[three]' : ps.pageUrl,
 		};
-		ps.file? (form['image'] = ps.file) : (form['photo_src'] = ps.itemUrl);
+		ps.file? (form['images[o1]'] = ps.file) : (form['photo_src'] = ps.itemUrl);
 		
 		return form;
 	},

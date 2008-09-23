@@ -536,9 +536,10 @@ Tombloo.Service.extractors = new Repository([
 			return ctx.host == 'picasaweb.google.com' && ctx.onImage;
 		},
 		extract : function(ctx){
+			var item = $x('//span[@class="gphoto-context-current"]/text()') || $x('//div[@class="lhcl_albumtitle"]/text()') || '';
 			return {
 				type      : 'photo',
-				item      : $x('//div[@class="lhcl_albumtitle"]/text()').trim(),
+				item      : item.trim(),
 				itemUrl   : ctx.target.src.replace(/\?.*/, ''), 
 				author    : $x('id("lhid_user_nickname")/text()').trim(),
 				authorUrl : $x('id("lhid_portraitlink")/@href'),

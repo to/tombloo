@@ -745,6 +745,9 @@ TagsPanel.prototype = {
 	
 	addNewTags : function(){
 		var tags = this.elmCompletion.newWords;
+		if(!tags || !tags.length)
+			return;
+		
 		this.comvertToCandidates(tags).addCallback(function(newCands){
 			var memo = {};
 			var cands = []

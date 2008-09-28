@@ -245,7 +245,7 @@ Tombloo.Service.extractors = new Repository([
 			return request(link).addCallback(function(res){
 				var doc = convertToHTMLDocument(res.responseText);
 				ctx.href = link;
-				ctx.title = $x('//title/text()', doc).replace(/[\n\r]/g, '') || '';
+				ctx.title = ($x('//title/text()', doc) || '').replace(/[\n\r]/g, '') || '';
 				
 				return self.extractByPage(ctx, doc);
 			});

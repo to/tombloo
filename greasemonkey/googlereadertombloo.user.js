@@ -33,7 +33,7 @@ window.addEventListener('load', function(e){
     if(win.o && win.cp && win.P && win.t){
       // 定義部 必要物を持ってくる
       // Native Code
-      var o = win.o;//addEventListner
+      var o = win.o;//bind
       var cp = win.cp;//KeyEvent Controller
       var P = win.P;//Reader Controller
       var t = win.t;//addClass

@@ -129,7 +129,7 @@ Tombloo.Service.extractors = new Repository([
 			var res = {
         author : ($x('descendant::div[@class="entry-author"]/*[@class="entry-author-name"]/text()', item) || ''),
 				title  : $x('descendant::a[@class="entry-title-link"]/text()', item) || '',
-				feed   : $x('id("chrome-stream-title")//a/text()'),
+				feed   : ($x('descendant::a[@class="entry-source-title"]/text()', item) || $x('id("chrome-stream-title")//a/text()')),
 				href   : $x('descendant::a[@class="entry-title-link"]/@href', item).replace(/[?&;](fr?(om)?|track|ref|FM)=(r(ss(all)?|df)|atom)([&;].*)?/,''),
 			};
 

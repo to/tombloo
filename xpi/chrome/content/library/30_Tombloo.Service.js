@@ -33,6 +33,10 @@ Tombloo.Service = {
 		return succeed().addCallback(function(){
 			return Tombloo.Service.extractors.extract(ctx, ext);
 		}).addCallback(function(ps){
+			// 予期せずに連続してquoteをポストしてしまうのを避けるため選択を解除する
+			if(ps.type == 'quote')
+				ctx.window.getSelection().collapseToStart();
+			
 			debug(ps);
 			
 			if(!ps)

@@ -851,6 +851,7 @@ Tombloo.Service.extractors = new Repository([
 				return;
 			
 			// 1px四方の画像の上でクリックされたか?
+			// FIXME: naturalHeight利用
 			var img = IMG({src : ctx.target.src});
 			return (img.width==1 && img.height==1);
 		},

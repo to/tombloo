@@ -647,6 +647,21 @@ Tombloo.Service.extractors = new Repository([
 	},
 	
 	{
+		name : 'Photo - 1101.com/ajisha',
+		ICON : 'http://www.1101.com/favicon.ico',
+		check : function(ctx){
+			return (ctx.onLink && ctx.link.href.match('http://www.1101.com/ajisha/p_.*.html'));
+		},
+		extract : function(ctx){
+			return {
+				type      : 'photo',
+				item      : ctx.title,
+				itemUrl   : ctx.link.href.replace(new RegExp('http://www.1101.com/ajisha/p_(.+).html'), 'http://www.1101.com/ajisha/photo/p_$1_z.jpg'),
+			}
+		},
+	},
+	
+	{
 		name : 'Photo - Picasa',
 		ICON : 'http://picasaweb.google.com/favicon.ico',
 		check : function(ctx){

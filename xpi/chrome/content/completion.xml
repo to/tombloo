@@ -69,7 +69,7 @@
 				[];
 			</field>
 			<field name="delay">
-				170;
+				130;
 			</field>
 			<field name="delimiter">
 				' ';

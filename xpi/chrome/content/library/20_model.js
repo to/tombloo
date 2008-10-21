@@ -761,7 +761,7 @@ models.register(update({
 	
 	post : function(ps){
 		return Plurk.addPlurk(
-			ps.type=='regular'? 'says' : 'shares',
+			':',
 			joinText([ps.item, ps.itemUrl, ps.body, ps.description], ' ', true)
 		);
 	},

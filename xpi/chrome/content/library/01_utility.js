@@ -1379,11 +1379,12 @@ function keyString(e){
 	return (keyString = function(e){
 		var code = e.keyCode;
 		var res = [];
+		(e.metaKey  || code==KeyEvent.DOM_VK_META)    && res.push('CTRL');
 		(e.ctrlKey  || code==KeyEvent.DOM_VK_CONTROL) && res.push('CTRL');
 		(e.shiftKey || code==KeyEvent.DOM_VK_SHIFT)   && res.push('SHIFT');
 		(e.altKey   || code==KeyEvent.DOM_VK_ALT)     && res.push('ALT');
 		
-		if(code < KeyEvent.DOM_VK_SHIFT || KeyEvent.DOM_VK_ALT < code)
+		if((code < KeyEvent.DOM_VK_SHIFT || KeyEvent.DOM_VK_ALT < code) && code != KeyEvent.DOM_VK_META)
 			res.push(table[code]);
 		
 		return res.join(' + ');

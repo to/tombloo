@@ -125,7 +125,7 @@ Tombloo.Service.extractors = new Repository([
 		extract : function(ctx){
 			var body = ctx.selection;
 			if(!body){
-				var desc = $x('(//div[@class="desc"]/p)[1]');
+				var desc = $x('(//div[@class="desc-inner"]/p)[1]');
 				$x('.//a', desc, true).forEach(function(l){l.href = l.href;});
 				body = desc.innerHTML.replace(/ (rel|target)=".+?"/g, '');
 			}

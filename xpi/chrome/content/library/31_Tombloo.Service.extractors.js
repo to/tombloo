@@ -913,6 +913,25 @@ Tombloo.Service.extractors = new Repository([
 	},
 
 	{
+		name : 'Photo - Data URI',
+		ICON : 'chrome://tombloo/skin/photo.png',
+		check : function(ctx){
+			return ctx.onImage && ctx.target.src.match(/^data:/);
+		},
+		extract : function(ctx){
+			var source = ctx.target.src;
+			var uri = IOService.newURI(source, null, null);
+			var channel = IOService.newChannelFromURI(uri);
+			return {
+				type    : 'photo',
+				item    : ctx.title,
+				itemUrl : source,
+				file    : channel.open(),
+			};
+		},
+	},
+
+	{
 		name : 'Photo',
 		ICON : 'chrome://tombloo/skin/photo.png',
 		PROTECTED_SITES : [
@@ -934,18 +953,7 @@ Tombloo.Service.extractors = new Repository([
 			var source = 
 				tag=='object'? target.data : 
 				tag=='img'? target.src : target.href;
-
-			if ( source.match( /^data:/ ) ) {
-				var uri = IOService.newURI(source, null, null);
-				var channel = IOService.newChannelFromURI( uri );
-				return {
-					type    : 'photo',
-					item    : ctx.title,
-					itemUrl : source,
-					file    : channel.open()
-				};
-			}
-
+			
 			if(this.PROTECTED_SITES.some(function(re){
 				return RegExp(re).test(source);
 			})){

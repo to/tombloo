@@ -41,7 +41,7 @@
 						<spacer id="titleSpace" flex="1" />
 						
 						<vbox>
-							<image id="close" class="button image-button" onclick="dialogPanel.close()"/>
+							<image id="close" class="button image-button" onclick="dialogPanel? dialogPanel.close() : window.close()"/>
 						</vbox>
 					</hbox>
 					

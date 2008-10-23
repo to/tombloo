@@ -1379,11 +1379,12 @@ function keyString(e){
 	return (keyString = function(e){
 		var code = e.keyCode;
 		var res = [];
+		(e.metaKey  || code==KeyEvent.DOM_VK_META)    && res.push('CTRL');
 		(e.ctrlKey  || code==KeyEvent.DOM_VK_CONTROL) && res.push('CTRL');
 		(e.shiftKey || code==KeyEvent.DOM_VK_SHIFT)   && res.push('SHIFT');
 		(e.altKey   || code==KeyEvent.DOM_VK_ALT)     && res.push('ALT');
 		
-		if(code < KeyEvent.DOM_VK_SHIFT || KeyEvent.DOM_VK_ALT < code)
+		if((code < KeyEvent.DOM_VK_SHIFT || KeyEvent.DOM_VK_ALT < code) && code != KeyEvent.DOM_VK_META)
 			res.push(table[code]);
 		
 		return res.join(' + ');
@@ -1633,6 +1634,8 @@ function selectRegion(doc){
 	var deferred = new Deferred();
 	doc = doc || currentDocument();
 	
+	var win = doc.defaultView;
+	
 	doc.documentElement.style.cursor = 'crosshair';
 	
 	var style = doc.createElement('style');
@@ -1691,8 +1694,8 @@ function selectRegion(doc){
 		
 		doc.addEventListener('mousemove', onMouseMove, true);
 		doc.addEventListener('mouseup', onMouseUp, true);
-		doc.addEventListener('keydown', onKeyDown, true);
-		doc.addEventListener('keyup', onKeyUp, true);
+		win.addEventListener('keydown', onKeyDown, true);
+		win.addEventListener('keyup', onKeyUp, true);
 	}
 	
 	function onKeyDown(e){
@@ -1747,8 +1750,8 @@ function selectRegion(doc){
 		doc.removeEventListener('mousedown', onMouseDown, true);
 		doc.removeEventListener('mousemove', onMouseMove, true);
 		doc.removeEventListener('mouseup', onMouseUp, true);
-		doc.removeEventListener('keydown', onKeyDown, true);
-		doc.removeEventListener('keyup', onKeyUp, true);
+		win.removeEventListener('keydown', onKeyDown, true);
+		win.removeEventListener('keyup', onKeyUp, true);
 		
 		doc.documentElement.style.cursor = '';
 		

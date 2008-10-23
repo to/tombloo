@@ -31,7 +31,6 @@ function DialogPanel(position){
 	this.elmWindow.addEventListener('mousemove', dynamicBind('onMouseMove', this), false);
 	this.elmWindow.addEventListener('mouseout', dynamicBind('onMouseOut', this), false);
 	
-	window.addEventListener('focus', bind('onFocus', this), true);
 	window.addEventListener('resize', bind('onWindowResize', this), true);
 	window.addEventListener('keydown', bind('onKeydown', this), true);
 	
@@ -98,25 +97,6 @@ DialogPanel.prototype = {
 		// getMostRecentWindow().focus();
 		
 		window.close();
-	},
-	
-	onFocus : function(e){
-		var input = e.target.inputField;
-		if(!(input instanceof Ci.nsIDOMNSEditableElement))
-			return;
-		
-		// カーソルを末尾に移動し、テキストボックスが全選択されてしまうのを避ける
-		input.addEventListener('select', function(e){
-			input.removeEventListener('select', arguments.callee, true);
-			
-			cancel(e);
-			
-			var length = input.textLength;
-			input.setSelectionRange(length, length);
-			
-			var content = input.editor.rootElement;
-			content.scrollLeft = content.scrollWidth;
-		}, true);
 	},
 	
 	focusToFirstControl : function(){

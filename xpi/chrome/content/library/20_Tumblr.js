@@ -219,7 +219,7 @@ var Tumblr = update({}, AbstractSessionService, {
 				
 				// Tumblrから他サービスへポストするため画像URLを取得しておく
 				if(form['post[type]']=='photo')
-					form.image = $x('id("edit_post")//img[starts-with(@src, "http://media.tumblr.com/")]/@src', doc);
+					form.image = $x('id("edit_post")//img[starts-with(@src, "http://media.tumblr.com/") or starts-with(@src, "http://data.tumblr.com/")]/@src', doc);
 			}
 			
 			return form;

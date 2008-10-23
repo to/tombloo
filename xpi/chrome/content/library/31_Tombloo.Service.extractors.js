@@ -859,7 +859,7 @@ Tombloo.Service.extractors = new Repository([
 	},
 	
 	{
-		name : 'Photo - coverd',
+		name : 'Photo - covered',
 		ICON : 'chrome://tombloo/skin/photo.png',
 		check : function(ctx){
 			if(!currentDocument().elementFromPoint || !ctx.onImage)
@@ -911,7 +911,7 @@ Tombloo.Service.extractors = new Repository([
 			return Tombloo.Service.extractors['Photo'].extract(ctx);
 		},
 	},
-	
+
 	{
 		name : 'Photo',
 		ICON : 'chrome://tombloo/skin/photo.png',
@@ -934,6 +934,18 @@ Tombloo.Service.extractors = new Repository([
 			var source = 
 				tag=='object'? target.data : 
 				tag=='img'? target.src : target.href;
+
+			if ( source.match( /^data:/ ) ) {
+				var uri = IOService.newURI(source, null, null);
+				var channel = IOService.newChannelFromURI( uri );
+				return {
+					type    : 'photo',
+					item    : ctx.title,
+					itemUrl : source,
+					file    : channel.open()
+				};
+			}
+
 			if(this.PROTECTED_SITES.some(function(re){
 				return RegExp(re).test(source);
 			})){

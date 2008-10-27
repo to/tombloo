@@ -34,7 +34,7 @@ Tombloo.Service = {
 			return Tombloo.Service.extractors.extract(ctx, ext);
 		}).addCallback(function(ps){
 			// 予期せずに連続してquoteをポストしてしまうのを避けるため選択を解除する
-			if(ps.type == 'quote'&& ctx.window.getSelection().rangeCount > 0)
+			if(ps.type == 'quote'&& ctx.window.getSelection().rangeCount)
 				ctx.window.getSelection().collapseToStart();
 			
 			debug(ps);

@@ -70,15 +70,15 @@ function DialogPanel(position){
 	}, false);
 }
 
-DialogPanel.shortcutkeys = {
-	'CTRL + RETURN' : function(e){
-		cancel(e);
-		dialogPanel.formPanel.post();
-	},
-	'CTRL + W' : function(e){
-		cancel(e);
-		dialogPanel.close();
-	},
+DialogPanel.shortcutkeys = {};
+DialogPanel.shortcutkeys[KEY_ACCEL + ' + RETURN'] = function(e){
+	cancel(e);
+	dialogPanel.formPanel.post();
+}
+
+DialogPanel.shortcutkeys[KEY_ACCEL + ' + W'] = function(e){
+	cancel(e);
+	dialogPanel.close();
 }
 
 DialogPanel.prototype = {

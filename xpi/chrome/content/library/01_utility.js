@@ -7,6 +7,8 @@ var CHROME_CONTENT_DIR = CHROME_DIR + '/content';
 
 var EXTENSION_ID = 'tombloo@brasil.to';
 
+var KEY_ACCEL = (AppInfo.OS == 'Darwin')? 'META' : 'CTRL';
+
 var grobal = this;
 disconnectAll(grobal);
 
@@ -1379,7 +1381,7 @@ function keyString(e){
 	return (keyString = function(e){
 		var code = e.keyCode;
 		var res = [];
-		(e.metaKey  || code==KeyEvent.DOM_VK_META)    && res.push('CTRL');
+		(e.metaKey  || code==KeyEvent.DOM_VK_META)    && res.push('META');
 		(e.ctrlKey  || code==KeyEvent.DOM_VK_CONTROL) && res.push('CTRL');
 		(e.shiftKey || code==KeyEvent.DOM_VK_SHIFT)   && res.push('SHIFT');
 		(e.altKey   || code==KeyEvent.DOM_VK_ALT)     && res.push('ALT');

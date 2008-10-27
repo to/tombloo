@@ -237,7 +237,7 @@ Tombloo.Service.extractors = new Repository([
 		name : 'Quote - Twitter',
 		ICON : models.Twitter.ICON,
 		check : function(ctx){
-			return ctx.href.match('//twitter.com/.*?/statuses/\\d+');
+			return ctx.href.match('//twitter.com/.*?/(status|statuses)/\\d+');
 		},
 		extract : function(ctx){
 			var body = ctx.selection;
@@ -254,7 +254,7 @@ Tombloo.Service.extractors = new Repository([
 				body     : body.trim(),
 				favorite : {
 					name : 'Twitter',
-					id   : ctx.href.match(/statuses\/(\d+)/)[1],
+					id   : ctx.href.match(/(status|statuses)\/(\d+)/)[2],
 				},
 			}
 		},

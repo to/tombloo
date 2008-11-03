@@ -563,7 +563,8 @@ models.register({
 			
 			return succeed().addCallback(function(){
 				if(ps.file){
-					return ps.file.copyTo(file.parent, file.leafName);
+					ps.file.copyTo(file.parent, file.leafName);
+					return file;
 				} else {
 					return download(ps.itemUrl, file);
 				}

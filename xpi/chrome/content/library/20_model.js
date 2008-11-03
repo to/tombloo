@@ -1546,7 +1546,9 @@ models.register({
 				sendContent : {
 					mode    : 'enter',
 					rkm     : token,
-					url     : url,
+					url     : url.replace(/%[0-9a-f]{2}/g, function(s){
+						return s.toUpperCase();
+					}),
 					title   : title, 
 					comment : Hatena.reprTags(tags) + description.replace(/[\n\r]+/g, ' '),
 				},

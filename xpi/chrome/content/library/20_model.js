@@ -1386,6 +1386,72 @@ models.register({
 });
 
 models.register({
+	name : 'Faves',
+	ICON : 'http://faves.com/favicon.ico',
+	
+	/**
+	 * ユーザーの利用しているタグ一覧を取得する。
+	 *
+	 * @param {String} user 対象ユーザー名。未指定の場合、ログインしているユーザー名が使われる。
+	 * @return {Array}
+	 */
+	getUserTags : function(user){
+		// 同期でエラーが起きないようにする
+		return succeed().addCallback(function(){
+			return request('https://secure.faves.com/v1/tags/get');
+		}).addCallback(function(res){
+			res = convertToXML(res.responseText).tags.tag;
+			return reduce(function(memo, tag){
+				memo.push({
+					name      : tag.@tag,
+					frequency : tag.@count,
+				});
+				return memo;
+			}, tags, []);
+		});
+	},
+	
+	/**
+	 * タグなどを取得する。
+	 *
+	 * @param {String} url 関連情報を取得する対象のページURL。
+	 * @return {Object}
+	 */
+	getSuggestions : function(url){
+		var self = this;
+		var ds = {
+			tags : this.getUserTags(),
+		};
+		
+		return new DeferredHash(ds).addCallback(function(ress){
+			// エラーチェック
+			for each(var [success, res] in ress)
+				if(!success)
+					throw res;
+			
+			var res = ress.suggestions[1];
+			res.tags = ress.tags[1];
+			return res;
+		});
+	},
+	
+	check : function(ps){
+		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
+	},
+	
+	post : function(ps){
+		return request('https://secure.faves.com/v1/posts/add', {
+			queryString : {
+				url         : ps.itemUrl,
+				description : ps.item,
+				tags        : ps.tags ? ps.tags.join(' ') : '',
+				extended    : joinText([ps.body, ps.description], ' ', true),
+			},
+		});
+	},
+});
+
+models.register({
 	name : 'Snipshot',
 	ICON : 'http://snipshot.com/favicon.ico',
 	

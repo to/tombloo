@@ -1391,48 +1391,26 @@ models.register({
 	ICON : 'http://faves.com/favicon.ico',
 	
 	/**
-	 * ユーザーの利用しているタグ一覧を取得する。
-	 *
-	 * @param {String} user 対象ユーザー名。未指定の場合、ログインしているユーザー名が使われる。
-	 * @return {Array}
-	 */
-	getUserTags : function(user){
-		// 同期でエラーが起きないようにする
-		return succeed().addCallback(function(){
-			return request('https://secure.faves.com/v1/tags/get');
-		}).addCallback(function(res){
-			res = convertToXML(res.responseText).tags.tag;
-			return reduce(function(memo, tag){
-				memo.push({
-					name      : tag.@tag,
-					frequency : tag.@count,
-				});
-				return memo;
-			}, tags, []);
-		});
-	},
-	
-	/**
-	 * タグなどを取得する。
+	 * タグを取得する。
 	 *
 	 * @param {String} url 関連情報を取得する対象のページURL。
 	 * @return {Object}
 	 */
 	getSuggestions : function(url){
-		var self = this;
-		var ds = {
-			tags : this.getUserTags(),
-		};
-		
-		return new DeferredHash(ds).addCallback(function(ress){
-			// エラーチェック
-			for each(var [success, res] in ress)
-				if(!success)
-					throw res;
-			
-			var res = ress.suggestions[1];
-			res.tags = ress.tags[1];
-			return res;
+		// 同期でエラーが起きないようにする
+		return succeed().addCallback(function(){
+			return request('https://secure.faves.com/v1/tags/get');
+		}).addCallback(function(res){
+			return {
+				duplicated : false,
+				tags : reduce(function(memo, tag){
+					memo.push({
+						name      : tag.@tag,
+						frequency : tag.@count,
+					});
+					return memo;
+				}, convertToXML(res.responseText).tag, []),
+			};
 		});
 	},
 	
@@ -1448,6 +1426,75 @@ models.register({
 				tags        : ps.tags ? ps.tags.join(' ') : '',
 				extended    : joinText([ps.body, ps.description], ' ', true),
 			},
+		});
+	},
+});
+
+models.register({
+	name : 'Magnolia',
+	ICON : 'http://ma.gnolia.com/favicon.ico',
+	
+	getCurrentUser : function(){
+		return request('https://ma.gnolia.com/').addCallback(function(res){
+			var doc = convertToHTMLDocument(res.responseText);
+			var user = $x('//meta[@name="session-userid"]/@content', doc)
+			if(user=='') throw new Error(getMessage('error.notLoggedin'));
+			return user;
+		});
+	},
+	
+	getApiKey : function(){
+		var self = this;
+		return request('http://ma.gnolia.com/account/applications').addCallback(function(res){
+			return self.apikey = $x(
+				'id("api_key")/text()', 
+				convertToHTMLDocument(res.responseText)).replace(/[\n\r]+/g, '');
+		});
+	},
+	
+	/**
+	 * タグを取得する。
+	 *
+	 * @param {String} url 関連情報を取得する対象のページURL。
+	 * @return {Object}
+	 */
+	getSuggestions : function(url){
+		// 同期でエラーが起きないようにする
+		return succeed().addCallback(function(){
+			return Magnolia.getCurrentUser().addCallback(function(user){
+				return request('https://ma.gnolia.com/people/' + user + '/tags');
+			}).addCallback(function(res){
+				var doc = convertToHTMLDocument(res.responseText);
+				return {
+					duplicated : false,
+					tags : $x('id("tag_cloud_1")/div/a/text()', doc, true).map(function(tag){
+						return {
+							name      : tag,
+							frequency : -1,
+						};
+					}),
+				}
+			});
+		});
+	},
+	
+	check : function(ps){
+		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
+	},
+	
+	post : function(ps){
+		return Magnolia.getApiKey().addCallback(function(apikey){
+			return request('http://ma.gnolia.com/api/rest/1/bookmarks_add', {
+				queryString : {
+					api_key     : apikey,
+					url         : ps.itemUrl,
+					title       : ps.item,
+					description : ps.description,
+					private     : ps.private ? 1 : 0,
+					tags        : ps.tags ? ps.tags.join(' ') : '',
+					rating      : 0,
+				},
+			});
 		});
 	},
 });

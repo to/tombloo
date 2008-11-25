@@ -1566,10 +1566,9 @@ models.register(update({
 				return succeed(this.token);
 			
 		case 'changed':
-			// 画面要素やDBアクセスが少なそうなためブックマーク入力画面から取得する
 			var self = this;
-			return request(HatenaBookmark.POST_URL).addCallback(function(res){
-				if(res.responseText.match(/Hatena\.rkm\s*=\s*['"](.+?)['"]/))
+			return request('http://d.hatena.ne.jp/edit').addCallback(function(res){
+				if(res.responseText.match(/\srkm\s*:\s*['"](.+?)['"]/))
 					return self.token = RegExp.$1;
 			});
 		}
@@ -1628,7 +1627,6 @@ models.register({
 			return Hatena.getCurrentUser();
 		}).addCallback(function(user){
 			return request('http://f.hatena.ne.jp/'+user+'/up', {
-				redirectionLimit : 0,
 				sendContent : update({
 					mode : 'enter',
 				}, ps),
@@ -1637,7 +1635,7 @@ models.register({
 	},
 });
 
-models.register({
+models.register(update({
 	name : 'HatenaBookmark',
 	ICON : 'http://b.hatena.ne.jp/favicon.ico',
 	
@@ -1652,13 +1650,34 @@ models.register({
 		return this.addBookmark(ps.itemUrl, null, ps.tags, joinText([ps.body, ps.description], ' ', true));
 	},
 	
+	getAuthCookie : function(){
+		return Hatena.getAuthCookie();
+	},
+	
+	getToken : function(){
+		switch (this.updateSession()){
+		case 'none':
+			throw new Error(getMessage('error.notLoggedin'));
+			
+		case 'same':
+			if(this.token)
+				return succeed(this.token);
+			
+		case 'changed':
+			var self = this;
+			return request(HatenaBookmark.POST_URL).addCallback(function(res){
+				if(res.responseText.extract(/new Hatena.Bookmark.User\('.*?',\s.*'(.*?)'\)/))
+					return self.token = RegExp.$1;
+			});
+		}
+	},
+	
 	addBookmark : function(url, title, tags, description){
-		return Hatena.getToken().addCallback(function(token){
-			return request(HatenaBookmark.POST_URL, {
+		return HatenaBookmark.getToken().addCallback(function(token){
+			return request('http://b.hatena.ne.jp/bookmarklet.edit', {
 				redirectionLimit : 0,
 				sendContent : {
-					mode    : 'enter',
-					rkm     : token,
+					rks     : token,
 					url     : url.replace(/%[0-9a-f]{2}/g, function(s){
 						return s.toUpperCase();
 					}),
@@ -1688,24 +1707,19 @@ models.register({
 				},
 			})
 		}).addCallback(function(res){
-			function getTags(part){
-				return evalInSandbox(res.responseText.extract(RegExp('var ' + part + ' ?=(.*);')), HatenaBookmark.POST_URL) || [];
-			}
-			
+			var tags = evalInSandbox('(' + res.responseText.extract(/var tags =(.*);$/m) + ')', HatenaBookmark.POST_URL) || {};
 			return {
-				duplicated : !(/var tags ?=/).test(res.responseText),
-				popular    : getTags('otherTags'),
-				keywords   : getTags('keywords'),
-				tags       : getTags('tags').map(function(tag){
+				duplicated : (/bookmarked-confirm/).test(res.responseText),
+				tags : map(function([tag, info]){
 					return {
 						name      : tag,
-						frequency : -1,
-					};
-				}),
-			};
+						frequency : info.count,
+					}
+				}, items(tags)),
+			}
 		});
 	},
-});
+}, AbstractSessionService));
 
 models.register( {
 	name: 'HatenaDiary',

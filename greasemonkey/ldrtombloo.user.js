@@ -3,7 +3,7 @@
 // @namespace  http://userscripts.org/users/7010
 // @updateURL  http://userscripts.org/scripts/source/23537.user.js
 // @include    http://reader.livedoor.com/reader/*
-// @include    http://fastladder.com/reader/* 
+// @include    http://fastladder.com/reader/*
 // ==/UserScript==
 
 
@@ -16,7 +16,7 @@ GM_addStyle(<><![CDATA[
 		color : dimgray !important;
 	}
 	.TMBL_posted img{
-		-moz-opacity: 0.5;
+		opacity: 0.5;
 	}
 ]]></>);
 
@@ -35,7 +35,7 @@ function share(event){
 	var target = item.element;
 	var parent = $x('ancestor::div[starts-with(@id, "item_count")]/parent::div', target);
 	var body = $x('.//div[@class="item_body"]', parent);
-	
+
 	var ctx = update({
 			document  : doc,
 			window    : win,
@@ -46,11 +46,11 @@ function share(event){
 			mouse     : null,
 			menu      : null,
 	}, win.location);
-	
+
 	// FFFFOUND / Flickr / iza newsphoto
 	if([
-		'flickr.com/', 
-		'http://ffffound.com', 
+		'flickr.com/',
+		'http://ffffound.com',
 		'http://www.bighappyfunhouse.com',
 		'http://f.hatena.ne.jp',
 		'http://lpcoverlover.com',
@@ -58,14 +58,14 @@ function share(event){
 		'1eb46a2f1f83c340eee10cd49c144625'].some(function(pattern){
 			return feed.channel.link.indexOf(pattern) != -1;
 		})){
-		
+
 		ctx.onImage = true;
 		ctx.target = $x('.//img[1]', body);
 	}
-	
+
 	var ext = tombloo.check(ctx)[0];
 	tombloo.share(ctx, ext, ext.name.match(/^Link /));
-	
+
 	win.addClass(parent, 'TMBL_posted');
 }
 

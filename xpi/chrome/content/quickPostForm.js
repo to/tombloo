@@ -642,6 +642,7 @@ TagsPanel.prototype = {
 			for each(var prop in ['recommended', 'popular']){
 				if(i++ && self.elmTags.length)
 					self.elmSuggestion.appendChild(SPACER());
+          log(res);
 				
 				res[prop].forEach(function(tag){
 					// この処理でパネルが延びるがロックしないため詳細ボックスが縮む。

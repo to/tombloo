@@ -1708,6 +1708,7 @@ models.register(update({
 			})
 		}).addCallback(function(res){
 			var tags = evalInSandbox('(' + res.responseText.extract(/var tags =(.*);$/m) + ')', HatenaBookmark.POST_URL) || {};
+      log(tags);
 			return {
 				duplicated : (/bookmarked-confirm/).test(res.responseText),
 				tags : map(function([tag, info]){

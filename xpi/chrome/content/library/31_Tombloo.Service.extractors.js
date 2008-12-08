@@ -242,9 +242,11 @@ Tombloo.Service.extractors = new Repository([
 		extract : function(ctx){
 			var body = ctx.selection;
 			if(!body){
-				var desc = $x('(//div[@class="desc-inner"]/p)[1]');
-				$x('.//a', desc, true).forEach(function(l){l.href = l.href;});
-				body = desc.innerHTML.replace(/ (rel|target)=".+?"/g, '');
+				var content = $x('(//span[@class="entry-content"])[1]');
+				$x('.//a', content, true).forEach(function(l){l.href = l.href;});
+				body = content.innerHTML.
+					replace(/ (rel|target)=".+?"/g, '').
+					replace('<a href="' + ctx.href.replace('/statuses/','/status/') + '">...</a>', '');
 			}
 			
 			return {

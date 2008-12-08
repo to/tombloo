@@ -10,7 +10,8 @@
 <pre id="test">
 </pre>
 <script type="text/javascript" src="../library/00_MochiKit.js"></script>
-<script type="text/javascript" src="../library/00_Components.js"></script>
+<script type="text/javascript" src="../library/00_prototype.js"></script>
+<script type="text/javascript" src="../library/00_component.js"></script>
 <script type="text/javascript" src="../library/01_utility.js"></script>
 <script type="text/javascript" src="../library/20_model.js"></script>
 <script type="text/javascript">
@@ -66,17 +67,20 @@ try {
 		tags        : ['search', 'portal'],
 		private     : true,
 	});
+	
 	d.addCallback(function(){
-		return YahooBookmarks.getUserTags();
+		return YahooBookmarks.getSuggestions('http://www.hatena.ne.jp/');
 	});
-	d.addCallback(function(tags){
-		log(tags);
-		var tag = tags[0];
+	d.addCallback(function(res){
+		log(res);
+		
+		ok(res.tags.length);
+		ok(res.popular.length);
+		
+		var tag = res.tags[0];
 		ok(tag.name.length > 0, 'YahooBookmarks: タグの名前を取得できているか');
-		ok(tag.frequency!=null, 'YahooBookmarks: タグの利用回数を取得できているか');
 	});
 	*/
-	
 	
 	/*
 	// Yahoo
@@ -123,22 +127,25 @@ try {
 		ok(token);
 	});
 	*/
-	ok(Hatena.getPasswords().length, 'Hatena: アカウント情報を取得できているか');
-	ok(Hatena.getAuthCookie(), 'Hatena: ログインしているか(未ログインの場合エラー)');
-	
 	
 	/*
 	// HatenaBookmark
-	d.addCallback(bind('getUserTags', HatenaBookmark));;
-	d.addCallback(function(tags){
-		var tag = tags[0];
-		ok(tag.name.length > 0, 'HatenaBookmark: タグの名前を取得できているか');
-		ok(tag.frequency!=null, 'HatenaBookmark: タグの利用回数を取得できているか');
+	ok(Hatena.getPasswords().length, 'Hatena: アカウント情報を取得できているか');
+	ok(Hatena.getAuthCookie(), 'Hatena: ログインしているか(未ログインの場合エラー)');
+	
+	d.addCallback(function(){
+		return HatenaBookmark.getToken();
+	}).addCallback(function(token){
+		log(token);
+		ok(token);
 	});
 	
-	d.addCallback(bind('getToken', HatenaBookmark));
-	d.addCallback(function(token){
-		ok(token, 'HatenaBookmark: トークン取得');
+	d.addCallback(function(){
+		return HatenaBookmark.getSuggestions('http://www.hatena.ne.jp/');
+	});
+	d.addCallback(function(res){
+		ok(! res.duplicated, 'HatenaBookmark: ブックマーク済みでないか');
+		ok(res.tags.length);
 	});
 	
 	d.addCallback(bind('post', HatenaBookmark), {
@@ -226,8 +233,22 @@ try {
 		ok(tag.name.length > 0, 'Delicious: タグの名前を取得できているか');
 		ok(tag.frequency!=null, 'Delicious: タグの利用回数を取得できているか');
 	});
+	
+	d.addCallback(function(){
+		return Delicious.getSuggestions('http://developer.mozilla.org/En');
+	});
+	d.addCallback(function(suggestions){
+		ok(suggestions.popular.length);
+	});
+	
+	d.addCallback(function(){
+		return Delicious.getSuggestions('http://developer.mozilla.org/Ja/XUL_Reference');
+	});
+	d.addCallback(function(suggestions){
+		is(suggestions.popular.length, 0, 'オススメがないと空の配列が返される');
+	});
 	*/
-	ok(Delicious.getCurrentUser().length > 1);
+	// ok(Delicious.getCurrentUser().length > 1);
 	
 	
 	/*
@@ -386,6 +407,20 @@ try {
 	
 	is(Gyazo.getId().length, 14);
 	
+	/*
+	Mento
+	d.addCallback(function(){
+		return Mento.save({
+			title       : 'goo 辞書', 
+			url         : 'http://dictionary.goo.ne.jp/', 
+			image       : 'http://www.goo.ne.jp/img2/logo/gh_logo2.gif',
+			tags        : ['便利', 'dictionary', 'english'], 
+			description : '辞書',
+			private     : false,
+		});
+	});
+	*/
+	
 	
 	/*
 	d.addCallback(function(){
@@ -407,13 +442,12 @@ try {
 	});
 	
 	d.addCallback(function(){
-		return LivedoorClip.getUserTags();
+		return LivedoorClip.getSuggestions('http://www.hatena.ne.jp/');
 	});
-	d.addCallback(function(tags){
-		ok(tags.length);
+	d.addCallback(function(res){
+		ok(res.tags.length);
 	});
 	*/
-	
 	ok(LivedoorClip.getAuthCookie(), 'LivedoorClip: ログインしているか(未ログインの場合エラー)');
 	
 	

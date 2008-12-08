@@ -7,6 +7,8 @@ var CHROME_CONTENT_DIR = CHROME_DIR + '/content';
 
 var EXTENSION_ID = 'tombloo@brasil.to';
 
+var KEY_ACCEL = (AppInfo.OS == 'Darwin')? 'META' : 'CTRL';
+
 var grobal = this;
 disconnectAll(grobal);
 
@@ -216,8 +218,10 @@ function openProgressDialog(progress, max, value){
  * @param {Object} value ウィンドウへ渡す値。
  */
 function openDialog(url, features, value){
-	// FIXME: values
-	return getMostRecentWindow().openDialog(url, '_blank', features, value);
+	var win = getMostRecentWindow(); 
+	var args = Array.slice(arguments);
+	args.splice(1, 0, '_blank')
+	return win.openDialog.apply(win, args);
 }
 
 function openParamString(obj){
@@ -581,6 +585,23 @@ registerIteratorFactory(
 	});
 
 registerIteratorFactory(
+	'TreeWalker', 
+	function(it){
+		return it instanceof Ci.nsIDOMTreeWalker;
+	}, 
+	function(it){
+		return {
+			next: function(){
+				var elm;
+				if(!(elm = it.nextNode()))
+					throw StopIteration;
+				
+				return elm;
+			}
+		};
+	});
+
+registerIteratorFactory(
 	'XML', 
 	function(it){
 		return typeof(it) == "xml";
@@ -729,130 +750,6 @@ function roundPosition(p){
 		Math.round(p.x), 
 		Math.round(p.y));
 }
-
-
-// ----[Prototype]-------------------------------------------------
-Math.hypot = function(x, y){
-	return Math.sqrt(x*x + y*y);
-}
-
-Number.prototype.toHexString = function(){
-	return ('0' + this.toString(16)).slice(-2);
-};
-
-
-String.prototype = update(String.prototype, {
-	pad :function(len, ch){
-		len = len-this.length;
-		if(len<=0) return this;
-		return (ch || ' ').repeat(len) + this;
-	},
-	indent : function(num, c){
-		c = c || ' ';
-		return this.replace(/^/mg, c.repeat(num))
-	},
-	link: function(href){
-		return '<a href="' + href + '">' + this + '</a>';
-	},
-	trim : function(){
-		return this.replace(/^\s+|\s+$/g, '');
-	},
-	repeat : function(n){
-		return new Array(n+1).join(this);
-	},
-	extract : function(re, group){
-		group = group==null? 1 : group;
-		var res = this.match(re);
-		return res ? res[group] : '';
-	},
-	decapitalize : function(){
-		return this.substr(0, 1).toLowerCase() + this.substr(1);
-	},
-	capitalize : function(){
-		return this.substr(0, 1).toUpperCase() + this.substr(1);
-	},
-	toByteArray : function(charset){
-		return new UnicodeConverter(charset).convertToByteArray(this, {});
-	},
-	md5 : function(charset){
-		var crypto = new CryptoHash(CryptoHash.MD5);
-		var data = this.toByteArray(charset);
-		crypto.update(data, data.length);
-		
-		return crypto.finish(false).split('').map(function(char){
-			return char.charCodeAt().toHexString();
-		}).join('');
-	},
-	sha1 : function(charset){
-		var crypto = new CryptoHash(CryptoHash.SHA1);
-		var data = this.toByteArray(charset);
-		crypto.update(data, data.length);
-		
-		return crypto.finish(true);
-	},
-	extract : function(re, group){
-		group = group==null? 1 : group;
-		var res = this.match(re);
-		return res ? res[group] : '';
-	},
-	convertToUnicode : function(charset){
-		return new UnicodeConverter(charset).ConvertToUnicode(this);
-	},
-	convertFromUnicode : function(charset){
-		return new UnicodeConverter(charset).ConvertFromUnicode(this);
-	},
-	trimTag : function(){
-		return this.replace(/<!--[\s\S]+?-->/gm, '').replace(/<[\s\S]+?>/gm, '');
-	},
-	includesFullwidth : function(){
-		return (/[^ -~｡-ﾟ]/).test(this);
-	},
-	
-	// http://code.google.com/p/kanaxs/
-	toHiragana : function(){
-		var c, i = this.length, a = [];
-
-		while(i--){
-			c = this.charCodeAt(i);
-			a[i] = (0x30A1 <= c && c <= 0x30F6) ? c - 0x0060 : c;
-		};
-
-		return String.fromCharCode.apply(null, a);
-	},
-	toKatakana : function(){
-		var c, i = this.length, a = [];
-
-		while(i--){
-			c = this.charCodeAt(i);
-			a[i] = (0x3041 <= c && c <= 0x3096) ? c + 0x0060 : c;
-		};
-
-		return String.fromCharCode.apply(null, a);
-	},
-	
-	toRoma : function(){
-		var res = '';
-		var s = this.toKatakana();
-		for(var i = 0, kana, table = String.katakana ; i < s.length ; i += kana.length){
-			kana = s.substr(i, 2);
-			roma = table[kana];
-			
-			if(!roma){
-				kana = s.substr(i, 1);
-				roma = table[kana];
-			}
-			
-			if(!roma){
-				roma = kana;
-			}
-			
-			res += roma;
-		}
-		res = res.replace(/ltu(.)/g, '$1$1');
-		
-		return res;
-	},
-});
 
 // FIXME: UTF-8でスクリプトをロードするように
 function isCorruptedScript(){
@@ -1033,16 +930,6 @@ function absolutePath(path){
   return e.firstChild.href;
 }
 
-// FIXME: String.prototypeを使う
-function decapitalize(str){
-	return str.substr(0, 1).toLowerCase() + str.substr(1);
-}
-
-// FIXME: String.prototypeを使う
-function capitalize(str){
-	return str.substr(0, 1).toUpperCase() + str.substr(1);
-}
-
 /**
  * オブジェクトのプロパティをコピーする。
  * ゲッター/セッターの関数も対象に含まれる。
@@ -1155,6 +1042,85 @@ function validateFileName(fileName){
 	return fileName.replace(/[\/]+/g, "_");
 }
 
+
+// ----[State]-------------------------------------------------
+var State = {
+	make : function(cls, stateSetName, stateSet, defaultStateName){
+		if(arguments.length == 3){
+			defaultStateName = stateSet;
+			stateSet = stateSetName;
+			stateSetName = void(0);
+		}
+		
+		var p = cls.prototype;
+		var K = this.K;
+		forEach(this.gatherProperties(stateSet), function(prop){
+			for(var i in stateSet){
+				var state = stateSet[i];
+				if(!state[prop])
+					state[prop] = K;
+			}
+		});
+	
+		update(p, stateSet[defaultStateName]);
+		
+		if(stateSetName){
+			update(p, this._multiProto);
+			if(!p.state){
+				p.state={};
+				p.stateSet={};
+			}
+			p.state[stateSetName] = defaultStateName;
+			p.stateSet[stateSetName] = stateSet;
+		} else {
+			update(p, this._singleProto);
+			p.state = defaultStateName;
+			p.stateSet = stateSet;
+		}
+	},
+	
+	gatherProperties : function(stateSet){
+		var props = {};
+		for(var i in stateSet)
+			for(var prop in stateSet[i])
+				props[prop] = true;
+		
+		return keys(props);
+	},
+	
+	K : function(arg){
+		return arg; 
+	},
+	
+	_singleProto: {
+		changeState : function(stateName){
+			update(this, this.stateSet[stateName]);
+			this.state = stateName;
+			
+			if(this.onChangeState)
+				this.onChangeState();
+		}
+	},
+	
+	_multiProto: {
+		changeState : function(stateSetName, stateName){
+			update(this, this.stateSet[stateSetName][stateName]);
+			
+			// 各オブジェクト個別の状態を持つためにクローンを行い変更する
+			this.state = update({}, this.state);
+			this.state[stateSetName] = stateName;
+			
+			if(this.onChangeState)
+				this.onChangeState();
+		}
+	}
+}
+
+function dynamicBind(func, self){
+	return function(){
+		return self[func].apply(self, arguments);
+	}
+}
 
 // ----[Repository]-------------------------------------------------
 function Repository(){
@@ -1415,11 +1381,12 @@ function keyString(e){
 	return (keyString = function(e){
 		var code = e.keyCode;
 		var res = [];
+		(e.metaKey  || code==KeyEvent.DOM_VK_META)    && res.push('META');
 		(e.ctrlKey  || code==KeyEvent.DOM_VK_CONTROL) && res.push('CTRL');
 		(e.shiftKey || code==KeyEvent.DOM_VK_SHIFT)   && res.push('SHIFT');
 		(e.altKey   || code==KeyEvent.DOM_VK_ALT)     && res.push('ALT');
 		
-		if(code < KeyEvent.DOM_VK_SHIFT || KeyEvent.DOM_VK_ALT < code)
+		if((code < KeyEvent.DOM_VK_SHIFT || KeyEvent.DOM_VK_ALT < code) && code != KeyEvent.DOM_VK_META)
 			res.push(table[code]);
 		
 		return res.join(' + ');
@@ -1480,12 +1447,46 @@ function capture(win, pos, dim, scale){
 	}
 	
 	ctx.drawWindow(win, pos.x, pos.y, dim.w, dim.h, '#FFF');
+	
 	return canvas.toDataURL('image/png', '');
 }
 
 function convertToDataURL(src){
+	return loadImage(src).addCallback(function(img){
+		var canvas = document.createElementNS(HTML_NS, 'canvas');
+		var ctx = canvas.getContext('2d');
+		
+		canvas.width = img.width;
+		canvas.height = img.height;
+		
+		ctx.drawImage(img, 0, 0);
+		
+		return canvas.toDataURL('image/png', '');
+	});
+}
+
+function toGrayScale(src){
+	return loadImage(src).addCallback(function(img){
+		var canvas = document.createElementNS(HTML_NS, 'canvas');
+		var ctx = canvas.getContext('2d');
+
+		canvas.width = img.width;
+		canvas.height = img.height;
+		
+		ctx.drawImage(img, 0, 0);
+
+		var image = ctx.getImageData(0, 0, img.width, img.height);
+		for(var i=0, d=image.data, len=d.length ; i<len ; i+=4)
+			d[i] = d[i+1] = d[i+2] = (d[i] * 0.299 + d[i+1] * 0.587 + d[i+2] * 0.114);
+		
+		ctx.putImageData(image, 0, 0);
+		
+		return canvas.toDataURL();
+	});
+}
+
+function loadImage(src){
 	var d = new Deferred();
-	var canvas = document.createElementNS(HTML_NS, 'canvas');
 	
 	if(src instanceof Ci.nsIDOMHTMLImageElement){
 		var img = src;
@@ -1493,12 +1494,15 @@ function convertToDataURL(src){
 		var img = document.createElementNS(HTML_NS, 'img');
 		img.src = src;
 	}
+	
 	img.onload = function(){
-		canvas.width = img.width;
-		canvas.height = img.height;
-		canvas.getContext('2d').drawImage(img, 0, 0);
-		d.callback(canvas.toDataURL('image/png', ''));
-	}
+		d.callback(img);
+	};
+	
+	img.onerror = function(){
+		d.errback(img);
+	};
+	
 	return d;
 }
 
@@ -1632,6 +1636,8 @@ function selectRegion(doc){
 	var deferred = new Deferred();
 	doc = doc || currentDocument();
 	
+	var win = doc.defaultView;
+	
 	doc.documentElement.style.cursor = 'crosshair';
 	
 	var style = doc.createElement('style');
@@ -1690,8 +1696,8 @@ function selectRegion(doc){
 		
 		doc.addEventListener('mousemove', onMouseMove, true);
 		doc.addEventListener('mouseup', onMouseUp, true);
-		doc.addEventListener('keydown', onKeyDown, true);
-		doc.addEventListener('keyup', onKeyUp, true);
+		win.addEventListener('keydown', onKeyDown, true);
+		win.addEventListener('keyup', onKeyUp, true);
 	}
 	
 	function onKeyDown(e){
@@ -1746,8 +1752,8 @@ function selectRegion(doc){
 		doc.removeEventListener('mousedown', onMouseDown, true);
 		doc.removeEventListener('mousemove', onMouseMove, true);
 		doc.removeEventListener('mouseup', onMouseUp, true);
-		doc.removeEventListener('keydown', onKeyDown, true);
-		doc.removeEventListener('keyup', onKeyUp, true);
+		win.removeEventListener('keydown', onKeyDown, true);
+		win.removeEventListener('keyup', onKeyUp, true);
 		
 		doc.documentElement.style.cursor = '';
 		

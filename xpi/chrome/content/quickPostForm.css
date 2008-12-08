@@ -1,0 +1,329 @@
+/* general / widget */
+label,
+textbox,
+description {
+	margin: 0;
+	padding: 0;
+}
+
+
+label,
+description{
+	cursor: inherit !important;
+}
+
+textbox {
+	padding: 0.2em;
+}
+
+button,
+.button{
+	margin: 0;
+	cursor: pointer !important;
+}
+
+.image-button{
+	-moz-image-region: rect(0px, 14px, 14px, 0px);
+}
+
+.image-button:hover{
+	-moz-image-region: rect(0px, 28px, 14px, 14px);
+}
+
+.image-button:hover:active{
+	-moz-image-region: rect(0px, 42px, 14px, 28px);
+}
+
+
+/* window / base */
+window {
+	font-size: 90%;
+	background-color: transparent;
+	
+	width: 22em;
+}
+
+#base {
+	-moz-border-radius: 2px;
+	background-color: #E8E8E8;
+	border: 1px solid #CCC;
+}
+
+window {
+	cursor: -moz-grab;
+}
+
+.snap-top-left{
+	cursor: url(chrome://tombloo/skin/snap-top-left.png) 2 1, pointer;
+}
+
+.snap-top-right{
+	cursor: url(chrome://tombloo/skin/snap-top-right.png) 10 1, pointer;
+}
+
+.snap-bottom-left{
+	cursor: url(chrome://tombloo/skin/snap-bottom-left.png) 2 15, pointer;
+}
+
+.snap-bottom-right{
+	cursor: url(chrome://tombloo/skin/snap-bottom-right.png) 10 15, pointer;
+}
+
+resizer[dir="topleft"] {
+	cursor: nw-resize;
+}
+
+resizer[dir="top"] {
+	cursor: n-resize;
+}
+
+resizer[dir="topright"] {
+	cursor: ne-resize;
+}
+
+resizer[dir="left"] {
+	cursor: w-resize;
+}
+
+resizer[dir="right"] {
+	cursor: e-resize;
+}
+
+resizer[dir="bottomleft"] {
+	cursor: sw-resize;
+}
+
+resizer[dir="bottom"] {
+	cursor: s-resize;
+}
+
+resizer[dir="bottomright"] {
+	-moz-appearance: none;
+	cursor: se-resize;
+}
+
+
+/* titlebar */
+#typeIcon{
+	margin: 0;
+}
+
+#type {
+	margin-left: 5px;
+	font-weight: bold;
+}
+
+#toggleDetail{
+	list-style-image: url(chrome://tombloo/skin/arrow-down.png);
+	margin-left : 5px;
+	
+	/* 押しやすいように少し拡げる */
+	border: transparent solid;
+	border-width: 3px 5px;
+}
+
+#toggleDetail.expanded{
+	list-style-image: url(chrome://tombloo/skin/arrow-up.png);
+}
+
+#titlebar .widget{
+	cursor: default !important;
+	margin-left: 10px;
+}
+
+#close{
+	list-style-image: url(chrome://tombloo/skin/mac/close.png);
+	
+	/* 押しやすいように左下へ拡げる */
+	border: transparent solid;
+	border-width: 0 0 4px 4px;
+}
+
+
+/* form */
+#form {
+	padding-top: 0.7em;
+}
+
+.meta {
+	font-size: 75%;
+	color: #AAA;
+}
+
+#tags{
+	margin-top: 2em;
+}
+
+#tags box.completion{
+	font-size: 85%;
+	-moz-binding: url("chrome://tombloo/content/completion.xml#container");
+}
+
+#tags .image-button{
+	margin: 1px 3px;
+	list-style-image: url(chrome://tombloo/skin/arrow-down.png);
+}
+
+#tags .loading{
+	cursor: progress !important;
+	list-style-image: url(chrome://browser/skin/places/searching_16.png) !important;
+}
+
+#tags .image-button.expanded{
+	list-style-image: url(chrome://tombloo/skin/arrow-up.png);
+}
+
+#tags listbox{
+	padding: 0.2em;
+}
+
+#tags description{
+	margin-top: 0.5em;
+}
+
+#tags description spacer{
+	width : 1em;
+}
+
+#tags description label{
+	cursor: pointer !important;
+	
+	color: #AAA;
+	
+	border-color: #E8E8E8;
+	border-style: solid;
+	
+	padding: 2px 3px;
+	border-width: 0 5px;
+	-moz-border-radius: 6px;
+	margin: 4px 0;
+}
+
+#tags description label.recommended{
+	color: #999;
+}
+
+#tags description label.popular{
+	font-size: 75%;
+}
+
+#tags description label:hover{
+	background: #CCC;
+	color: white;
+	
+	padding: 4px 5px;
+	border-width: 0 3px;
+	-moz-border-radius: 4px;
+	margin: 2px 0;
+}
+
+
+#tags description label:hover:active{
+	background: #AAA;
+	
+	/* 押したリアクションを追加するとガタつく */
+}
+
+#tags description label.used{
+	background: #AAA;
+	color: white;
+}
+
+
+#body,
+#item,
+#itemUrl,
+#description{
+	margin-top: 0.8em;
+}
+
+#body,
+#description{
+	min-height: 5em;
+}
+
+#item *,
+#tags textbox{
+	-moz-box-flex: 1;
+}
+
+div{
+	border: 1px black solid;
+	padding: 0 !important;
+}
+
+#itemUrl image{
+	/* ウィンドウ初期サイズに揃える	*/
+	max-width: 22em;
+	max-height: 22em;
+}
+
+
+/* posters */
+#posters {
+	margin-top: 0.8em;
+}
+
+#posters image.poster{
+	width: 16px;
+	height: 16px;
+	
+	/*
+	横方向の調整にborderを使いマウスオーバーしない時間を減らす。
+	(横にスライドしながら選択できるようにする)
+	縦方向の調整は文字組みの一部のためmarginを使う。
+	下方向に拡大すると、行のベースラインも下がる。
+	*/
+	border: transparent solid;
+	border-width: 0 8px;
+	margin: 8px 0;
+}
+
+#posters image.poster:hover{
+	width: 24px;
+	height: 24px;
+	
+	border-width: 0 4px;
+	margin: 0;
+}
+
+#posters image.poster:hover:active{
+	width: 22px;
+	height: 22px;
+	
+	border-width: 0 5px;
+}
+
+#posters image.poster[disabled=true]{
+	opacity: 0.4;
+}
+
+/* FIXME: 再利用するときに共通化する */
+#posters .label-button{
+	background: #777;
+	color: white;
+	font-size: 70%;
+	
+	margin: 6px 0 6px 24px;
+	border: transparent solid;
+	border-width: 3px 4px;
+	-moz-border-radius: 1px;
+	
+	vertical-align: top;
+}
+
+#posters .label-button:hover{
+	background: #AAA;
+}
+
+#posters .label-button:hover:active{
+	/* ちょっと押し込んだみたいに */
+	border-width: 2px 3px 3px 4px;
+	
+	color: #DDD;
+	background: #666;
+}
+
+#post {
+	margin-top: 0.8em;
+}

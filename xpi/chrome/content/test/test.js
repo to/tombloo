@@ -41,6 +41,10 @@ function withXHR(process, exp, responseText){
 	}
 }
 
+function sameArray(act, exp, msg){
+	is(act.toSource(), exp.toSource(), msg);
+}
+
 function sameObject(act, exp, msg){
 	for(var p in exp){
 		var exv = exp[p];

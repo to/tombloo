@@ -36,6 +36,65 @@ models.register({
 
 
 models.register({
+	name : 'Mento',
+	ICON : 'http://www.mento.info/favicon.ico',
+	
+	check : function(ps){
+		// キャプチャ(file)はAPIキーを入手後に対応(現在未公開)
+		return (/(photo|quote|link)/).test(ps.type) && !ps.file;
+	},
+	
+	post : function(ps){
+		return this.save({
+			title       : ps.page,
+			url         : ps.itemUrl,
+			tags        : ps.tags,
+			private     : ps.private,
+			image       : (ps.type == 'photo')? ps.itemUrl : '',
+			description : joinText([ps.body? ps.body.wrap('"') : '', ps.description], '\n', true),
+		});
+	},
+	
+	getCurrentUser : function(){
+		var cookie = getCookies('mento.info', 'mxtu')[0];
+		if(!cookie)
+			throw new Error(getMessage('error.notLoggedin'));
+			
+		return cookie.value;
+	},
+	
+	save : function(ps){
+		Mento.getCurrentUser();
+		
+		if(ps.image){
+			ps.image0 = ps.media = ps.image;
+			delete ps.image;
+		}
+		
+		// quick APIはプライベートなどを保存できなかった
+		// http://www.mento.info/post/save/v1/quick
+		
+		return request('http://www.mento.info/post/save', {
+			sendContent : update(ps, {
+				src        : 'tombloo',
+				action     : 'save',
+				save       : 1,
+				tags       : joinText(ps.tags, ','),
+				local      : this.getLocalTimestamp(),
+				private    : ps.private? 1 : 0,
+				for_public : ps.private? 0 : 1,
+			}),
+		});
+	},
+	
+	getLocalTimestamp : function(){
+		with(new Date())
+			return [getSeconds(), getMinutes(), getHours(), getDate(), getMonth()+1, getFullYear()].join('-'); 
+	},
+});
+
+
+models.register({
 	name : 'FFFFOUND',
 	ICON : 'http://ffffound.com/favicon.ico',
 	URL : 'http://FFFFOUND.com/',
@@ -61,8 +120,8 @@ models.register({
 					title   : ps.item,
 				},
 			}).addCallback(function(res){
-				if(res.responseText.match('(FAILED:|ERROR:) (.*?)</span>'))
-					throw RegExp.$2;
+				if(res.responseText.match('(FAILED:|ERROR:) +(.*?)</span>'))
+					throw new Error(RegExp.$2.trim());
 				
 				if(res.responseText.match('login'))
 					throw new Error(getMessage('error.notLoggedin'));
@@ -75,7 +134,6 @@ models.register({
 	},
 	
 	remove : function(id){
-		// 200 {"success":false}
 		return request(FFFFOUND.URL + 'gateway/in/api/remove_asset', {
 			referrer : FFFFOUND.URL,
 			sendContent : {
@@ -92,9 +150,13 @@ models.register({
 				inappropriate : false,
 			},
 		}).addCallback(function(res){
-			// NOT_FOUND / EXISTS / AUTH_FAILD
-			if(res.responseText.match(/"error":"(.*?)"/))
-				throw RegExp.$1;
+			var error = res.responseText.extract(/"error":"(.*?)"/);
+			if(error == 'AUTH_FAILED')
+				throw new Error(getMessage('error.notLoggedin'));
+			
+			// NOT_FOUND / EXISTS / TOO_BIG
+			if(error)
+				throw new Error(RegExp.$1.trim());
 		});
 	},
 });
@@ -501,7 +563,8 @@ models.register({
 			
 			return succeed().addCallback(function(){
 				if(ps.file){
-					return ps.file.copyTo(file.parent, file.leafName);
+					ps.file.copyTo(file.parent, file.leafName);
+					return file;
 				} else {
 					return download(ps.itemUrl, file);
 				}
@@ -699,7 +762,7 @@ models.register(update({
 	
 	post : function(ps){
 		return Plurk.addPlurk(
-			ps.type=='regular'? 'says' : 'shares',
+			':',
 			joinText([ps.item, ps.itemUrl, ps.body, ps.description], ' ', true)
 		);
 	},
@@ -827,6 +890,12 @@ models.register({
 	name : 'Delicious',
 	ICON : 'http://delicious.com/favicon.ico',
 	
+	/**
+	 * ユーザーの利用しているタグ一覧を取得する。
+	 *
+	 * @param {String} user 対象ユーザー名。未指定の場合、ログインしているユーザー名が使われる。
+	 * @return {Array}
+	 */
 	getUserTags : function(user){
 		// 同期でエラーが起きないようにする
 		return succeed().addCallback(function(){
@@ -840,6 +909,56 @@ models.register({
 				});
 				return memo;
 			}, tags, []);
+		});
+	},
+	
+	/**
+	 * タグ、おすすめタグ、ネットワークなどを取得する。
+	 * ブックマーク済みでも取得することができる。
+	 *
+	 * @param {String} url 関連情報を取得する対象のページURL。
+	 * @return {Object}
+	 */
+	getSuggestions : function(url){
+		var self = this;
+		var ds = {
+			tags : this.getUserTags(),
+			suggestions : succeed().addCallback(function(){
+				// ログインをチェックする
+				self.getCurrentUser();
+				
+				// ブックマークレット用画面の削除リンクを使い既ブックマークを判定する
+				return request('http://delicious.com/save', {
+					queryString : {
+						noui : 1,
+						url  : url,
+					},
+				});
+			}).addCallback(function(res){
+				var doc = convertToHTMLDocument(res.responseText);
+				
+				function getTags(part){
+					return $x('id("save-' + part + '-tags")//a[contains(@class, "tag-list-tag")]/text()', doc, true);
+				}
+				
+				return {
+					duplicated : !!doc.getElementById('delete'),
+					recommended : getTags('reco'), 
+					popular : getTags('pop'),
+					network : getTags('net'),
+				}
+			})
+		};
+		
+		return new DeferredHash(ds).addCallback(function(ress){
+			// エラーチェック
+			for each(var [success, res] in ress)
+				if(!success)
+					throw res;
+			
+			var res = ress.suggestions[1];
+			res.tags = ress.tags[1];
+			return res;
 		});
 	},
 	
@@ -1232,19 +1351,151 @@ models.register({
 		});
 	},
 	
-	getUserTags : function(){
-		return request('http://bookmarks.yahoo.co.jp/bookmarklet/showpopup').addCallback(function(res){
-			if(res.responseText.match(/yourtags =(.*)(;|$)/)[1]){
-				return reduce(function(memo, tag){
-					memo.push({
-						name      : tag,
-						frequency : -1,
-					});
-					return memo;
-				}, evalInSandbox(RegExp.$1, 'http://bookmarks.yahoo.co.jp/'), []);
+	/**
+	 * タグ、おすすめタグを取得する。
+	 * ブックマーク済みでも取得することができる。
+	 *
+	 * @param {String} url 関連情報を取得する対象のページURL。
+	 * @return {Object}
+	 */
+	getSuggestions : function(url){
+		return request('http://bookmarks.yahoo.co.jp/bookmarklet/showpopup', {
+			queryString : {
+				u : url,
+			}
+		}).addCallback(function(res){
+			var doc = convertToHTMLDocument(res.responseText);
+			if(!$x('id("bmtsave")', doc))
+				throw new Error(getMessage('error.notLoggedin'));
+			
+			function getTags(part){
+				return evalInSandbox(unescapeHTML(res.responseText.extract(RegExp('^' + part + ' ?= ?(.+)(;|$)', 'm'))), 'http://bookmarks.yahoo.co.jp/') || [];
 			}
 			
-			throw new Error(getMessage('error.notLoggedin'));
+			return {
+				duplicated : !!$x('//input[@name="docid"]', doc),
+				popular : getTags('rectags'),
+				tags : getTags('yourtags').map(function(tag){
+					return {
+						name      : tag,
+						frequency : -1,
+					}
+				}),
+			};
+		});
+	},
+});
+
+models.register({
+	name : 'Faves',
+	ICON : 'http://faves.com/favicon.ico',
+	
+	/**
+	 * タグを取得する。
+	 *
+	 * @param {String} url 関連情報を取得する対象のページURL。
+	 * @return {Object}
+	 */
+	getSuggestions : function(url){
+		// 同期でエラーが起きないようにする
+		return succeed().addCallback(function(){
+			return request('https://secure.faves.com/v1/tags/get');
+		}).addCallback(function(res){
+			return {
+				duplicated : false,
+				tags : reduce(function(memo, tag){
+					memo.push({
+						name      : tag.@tag,
+						frequency : tag.@count,
+					});
+					return memo;
+				}, convertToXML(res.responseText).tag, []),
+			};
+		});
+	},
+	
+	check : function(ps){
+		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
+	},
+	
+	post : function(ps){
+		return request('https://secure.faves.com/v1/posts/add', {
+			queryString : {
+				url         : ps.itemUrl,
+				description : ps.item,
+				shared      : ps.private? 'no' : '',  
+				tags        : ps.tags ? ps.tags.join(' ') : '',
+				extended    : joinText([ps.body, ps.description], ' ', true),
+			},
+		});
+	},
+});
+
+models.register({
+	name : 'Magnolia',
+	ICON : 'http://ma.gnolia.com/favicon.ico',
+	
+	getCurrentUser : function(){
+		return request('https://ma.gnolia.com/').addCallback(function(res){
+			var doc = convertToHTMLDocument(res.responseText);
+			var user = $x('//meta[@name="session-userid"]/@content', doc)
+			if(user=='') throw new Error(getMessage('error.notLoggedin'));
+			return user;
+		});
+	},
+	
+	getApiKey : function(){
+		var self = this;
+		return request('http://ma.gnolia.com/account/applications').addCallback(function(res){
+			return self.apikey = $x(
+				'id("api_key")/text()', 
+				convertToHTMLDocument(res.responseText)).replace(/[\n\r]+/g, '');
+		});
+	},
+	
+	/**
+	 * タグを取得する。
+	 *
+	 * @param {String} url 関連情報を取得する対象のページURL。
+	 * @return {Object}
+	 */
+	getSuggestions : function(url){
+		// 同期でエラーが起きないようにする
+		return succeed().addCallback(function(){
+			return Magnolia.getCurrentUser().addCallback(function(user){
+				return request('https://ma.gnolia.com/people/' + user + '/tags');
+			}).addCallback(function(res){
+				var doc = convertToHTMLDocument(res.responseText);
+				return {
+					duplicated : false,
+					tags : $x('id("tag_cloud_1")/div/a/text()', doc, true).map(function(tag){
+						return {
+							name      : tag,
+							frequency : -1,
+						};
+					}),
+				}
+			});
+		});
+	},
+	
+	check : function(ps){
+		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
+	},
+	
+	post : function(ps){
+		return Magnolia.getApiKey().addCallback(function(apikey){
+			return request('http://ma.gnolia.com/api/rest/1/bookmarks_add', {
+				queryString : {
+					api_key     : apikey,
+					url         : ps.itemUrl,
+					title       : ps.item,
+					description : ps.description,
+					private     : ps.private ? 1 : 0,
+					tags        : ps.tags ? ps.tags.join(' ') : '',
+					rating      : 0,
+				},
+			});
 		});
 	},
 });
@@ -1316,10 +1567,9 @@ models.register(update({
 				return succeed(this.token);
 			
 		case 'changed':
-			// 画面要素やDBアクセスが少なそうなためブックマーク入力画面から取得する
 			var self = this;
-			return request(HatenaBookmark.POST_URL).addCallback(function(res){
-				if(res.responseText.match(/Hatena\.rkm\s*=\s*['"](.+?)['"]/))
+			return request('http://d.hatena.ne.jp/edit').addCallback(function(res){
+				if(res.responseText.match(/\srkm\s*:\s*['"](.+?)['"]/))
 					return self.token = RegExp.$1;
 			});
 		}
@@ -1378,7 +1628,6 @@ models.register({
 			return Hatena.getCurrentUser();
 		}).addCallback(function(user){
 			return request('http://f.hatena.ne.jp/'+user+'/up', {
-				redirectionLimit : 0,
 				sendContent : update({
 					mode : 'enter',
 				}, ps),
@@ -1387,7 +1636,7 @@ models.register({
 	},
 });
 
-models.register({
+models.register(update({
 	name : 'HatenaBookmark',
 	ICON : 'http://b.hatena.ne.jp/favicon.ico',
 	
@@ -1402,14 +1651,37 @@ models.register({
 		return this.addBookmark(ps.itemUrl, null, ps.tags, joinText([ps.body, ps.description], ' ', true));
 	},
 	
+	getAuthCookie : function(){
+		return Hatena.getAuthCookie();
+	},
+	
+	getToken : function(){
+		switch (this.updateSession()){
+		case 'none':
+			throw new Error(getMessage('error.notLoggedin'));
+			
+		case 'same':
+			if(this.token)
+				return succeed(this.token);
+			
+		case 'changed':
+			var self = this;
+			return request(HatenaBookmark.POST_URL).addCallback(function(res){
+				if(res.responseText.extract(/new Hatena.Bookmark.User\('.*?',\s.*'(.*?)'\)/))
+					return self.token = RegExp.$1;
+			});
+		}
+	},
+	
 	addBookmark : function(url, title, tags, description){
-		return Hatena.getToken().addCallback(function(token){
-			return request(HatenaBookmark.POST_URL, {
+		return HatenaBookmark.getToken().addCallback(function(token){
+			return request('http://b.hatena.ne.jp/bookmarklet.edit', {
 				redirectionLimit : 0,
 				sendContent : {
-					mode    : 'enter',
-					rkm     : token,
-					url     : url,
+					rks     : token,
+					url     : url.replace(/%[0-9a-f]{2}/g, function(s){
+						return s.toUpperCase();
+					}),
 					title   : title, 
 					comment : Hatena.reprTags(tags) + description.replace(/[\n\r]+/g, ' '),
 				},
@@ -1417,21 +1689,38 @@ models.register({
 		});
 	},
 	
-	getUserTags : function(){
-		return request(HatenaBookmark.POST_URL+'?mode=confirm').addCallback(function(res){
-			if(!res.responseText.match(/var tags ?=(.*);/))
+	/**
+	 * タグ、おすすめタグ、キーワードを取得する
+	 * ページURLが空の場合、タグだけが返される。
+	 *
+	 * @param {String} url 関連情報を取得する対象のページURL。
+	 * @return {Object}
+	 */
+	getSuggestions : function(url){
+		return succeed().addCallback(function(){
+			if(!Hatena.getAuthCookie())
 				throw new Error(getMessage('error.notLoggedin'));
 			
-			return reduce(function(memo, tag){
-				memo.push({
-					name      : tag,
-					frequency : -1,
-				});
-				return memo;
-			}, evalInSandbox(RegExp.$1, 'http://b.hatena.ne.jp/'), []);
+			return request(HatenaBookmark.POST_URL, {
+				sendContent : {
+					mode : 'confirm',
+					url  : url,
+				},
+			})
+		}).addCallback(function(res){
+			var tags = evalInSandbox('(' + res.responseText.extract(/var tags =(.*);$/m) + ')', HatenaBookmark.POST_URL) || {};
+			return {
+				duplicated : (/bookmarked-confirm/).test(res.responseText),
+				tags : map(function([tag, info]){
+					return {
+						name      : tag,
+						frequency : info.count,
+					}
+				}, items(tags)),
+			}
 		});
 	},
-});
+}, AbstractSessionService));
 
 models.register( {
 	name: 'HatenaDiary',
@@ -1555,18 +1844,26 @@ models.register(update({
 		return getCookieString('livedoor.com', '.LRC');
 	},
 	
-	getUserTags : function(){
+	getSuggestions : function(url){
 		if(!this.getAuthCookie())
 			return fail(new Error(getMessage('error.notLoggedin')));
 		
-		return request(LivedoorClip.POST_URL+'?link=http%3A%2F%2Ftombloo/').addCallback(function(res){
+		// 何かのURLを渡す必要がある
+		return request(LivedoorClip.POST_URL, {
+			queryString : {
+				link : url || 'http://tombloo/',
+			}
+		}).addCallback(function(res){
 			var doc = convertToHTMLDocument(res.responseText);
-			return $x('id("tag_list")/span/text()', doc, true).map(function(tag){
-				return {
-					name      : tag,
-					frequency : -1,
-				};
-			});
+			return {
+				duplicated : !!$x('//form[@name="delete_form"]', doc),
+				tags : $x('//div[@class="TagBox"]/span/text()', doc, true).map(function(tag){
+					return {
+						name      : tag,
+						frequency : -1,
+					};
+				}),
+			}
 		});
 	},
 	

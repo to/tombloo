@@ -472,7 +472,7 @@ function Entity(def){
 			} else {
 				var fields = method.substr(type.length+2).
 					split('And').
-					map(decapitalize);
+					map(methodcaller('decapitalize'));
 				
 				switch(type){
 				case 'find':

@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://tombloo/content/quickPostForm.css" type="text/css" ?>
+<window id="window" 
+	xmlns:html="http://www.w3.org/1999/xhtml" 
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+	<grid id="base" flex="1">
+		<columns>
+			<column style="width: 1em;"/>
+			<column flex="1"/>
+			<column style="width: 1em;"/>
+		</columns>
+		<rows>
+			<row style="height: 1em;">
+				<resizer dir="topleft" />
+				<hbox>
+					<box class="snap-top-left" style="width: 4em;" />
+					<resizer flex="1" dir="top" />
+					<box class="snap-top-right" style="width: 4em;" />
+				</hbox>
+				<resizer dir="topright" />
+			</row>
+			<row flex="1">
+				<vbox>
+					<box class="snap-top-left" style="height: 4em;" />
+					<resizer flex="1" dir="left" />
+					<box class="snap-bottom-left" style="height: 4em;" />
+				</vbox>
+				<vbox>
+					<hbox id="titlebar" align="top">
+						<hbox pack="center" align="center" >
+							<vbox pack="center">
+								<image id="typeIcon" />
+							</vbox>
+							<label id="type" />
+							<vbox pack="center">
+								<image id="toggleDetail" class="button image-button" />
+							</vbox>
+						</hbox>
+						
+						<spacer id="titleSpace" flex="1" />
+						
+						<vbox>
+							<image id="close" class="button image-button" onclick="dialogPanel? dialogPanel.close() : window.close()"/>
+						</vbox>
+					</hbox>
+					
+					<vbox id="form" flex="1"/>
+					
+					<vbox id="control" >
+						<description id="posters" pack="top" align="top" />
+						<button id="post" label="Post" />
+					</vbox>
+				</vbox>
+				<vbox>
+					<box class="snap-top-right" style="height: 4em;" />
+					<resizer flex="1" dir="right" />
+					<box class="snap-bottom-right" style="height: 4em;" />
+				</vbox>
+			</row>
+			<row style="height: 1em;">
+				<resizer dir="bottomleft" />
+				<hbox>
+					<box class="snap-bottom-left" style="width: 4em;" />
+					<resizer flex="1" dir="bottom" />
+					<box class="snap-bottom-right" style="width: 4em;" />
+				</hbox>
+				<resizer dir="bottomright" />
+			</row>
+		</rows>
+	</grid>
+<script><![CDATA[
+// chrome://tombloo/content/quickPostForm.xul
+
+var env = Components.classes['@brasil.to/tombloo-service;1'].getService().wrappedJSObject;
+env.extend(this, env, false);
+
+]]></script>
+<script type="application/javascript;version=1.7" src="chrome://tombloo/content/library/00_prototype.js"/>
+<script type="application/javascript;version=1.7" src="quickPostForm.js"/>
+<script><![CDATA[
+
+var ps = arguments[0];
+var position = arguments[1];
+
+env.signal(env, 'form-open', window);
+
+var dialogPanel = new DialogPanel(position);
+
+]]></script>
+</window>

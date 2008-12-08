@@ -101,324 +101,25 @@ function Pagebar(opt){
 	return elmPagebar;
 }
 
-function QuickPostForm(ps){
-	this.params = ps;
-	this.posters = new Repository(models.getEnables(ps));
-}
 
-QuickPostForm.refreshCache = true;
+var QuickPostForm = {
+	show : function(ps, position){
+		openDialog(
+			'chrome://tombloo/content/quickPostForm.xul', 
+			'chrome,alwaysRaised=yes,resizable=yes,titlebar=no,dependent=yes', ps, position);
+	},
+};
+
+// 設定画面が保存されたタイミングでコンテキストがリロードされクリアされる
+// 仕様変更の際はsignal/connectでクリアすること
 QuickPostForm.candidates = [];
-QuickPostForm.prototype = {
-	
-	/**
-	 * 選択されているサービスのリストを取得する。
-	 *
-	 * @return {Array}
-	 */
-	get checked(){
-		var checked = [];
-		var posters = this.posters;
-		forEach(this.notification.getElementsByTagName('checkbox'), function(c){
-			if(c.checked)
-				checked.push(posters[c.getAttribute('label')]);
-		});
-		return checked;
+QuickPostForm.dialog = {
+	snap : {
+		top : true,
+		left : false,
 	},
-	
-	/**
-	 * ポストする。
-	 */
-	post : function(){
-		var ps = this.params;
-		$x('.//*[@name]', this.notification, true).forEach(function(elm){
-			ps[elm.getAttribute('name')] = elm.values || elm.value;
-		});
-		
-		var checked = this.checked;
-		if(!checked.length)
-			return;
-		
-		Tombloo.Service.post(ps, checked);
-		if(this.elmTags)
-			QuickPostForm.refreshCache = this.elmTags.includesNewTag;
-		this.notification.close();
-	},
-	
-	onKeydown : function(e){
-		switch(keyString(e)) {
-		case 'CTRL + RETURN':
-			cancel(e);
-			this.post();
-			break;
-			
-		case 'CTRL + W':
-			cancel(e);
-			this.notification.close();
-			break;
-		}
-	},
-	
-	/**
-	 * ポスト可能かを調べる。
-	 * サービスが選択されていなければポストボタンを利用不能にする。
-	 */
-	checkPostable : function(){
-		return !(this.elmPost.disabled = !this.checked.length);
-	},
-	
-	show : function(){
-		var self = this;
-		var contentWindow = getMostRecentWindow().getBrowser().contentWindow;
-		var selection = broad(contentWindow.getSelection());
-		
-		var notification = this.notification = showNotification(this.createForm());
-		notification.addEventListener('keydown', bind('onKeydown', this), true);
-		notification.persistence = 1000;
-		addBefore(notification, 'close', function(){
-			selection.removeSelectionListener(self);
-			contentWindow.focus();
-		});
-		
-		// FIXME: 外部cssに
-		notification.style.color = '-moz-DialogText';
-		notification.style.backgroundImage = 'none';
-		notification.style.backgroundColor = '-moz-Dialog';
-		
-		this.notification.addEventListener('command', function(e){
-			if(e.target.nodeName == 'checkbox')
-				self.checkPostable();
-		}, true);
-		
-		this.elmPost = notification.getElementsByTagName('button')[0];
-		this.elmPost.addEventListener('command', bind('post', this), true);
-		this.checkPostable();
-		
-		this.elmTags = this.prepareTags();
-		
-		setTimeout(function(){
-			$x('.//*[@tabindex="0"]', notification).focus();
-		}, 50);
-		
-		this.elmDescription = $x('.//xul:textbox[@name="description"]', this.notification);
-		if(this.elmDescription)
-			selection.addSelectionListener(this);
-	},
-	
-	prepareTags : function(){
-		var elmTags = $x('.//xul:textbox[@name="tags"]', this.notification);
-		if(!elmTags)
-			return;
-		
-		elmTags.autoComplete = getPref('tagAutoComplete');
-		elmTags.candidates = QuickPostForm.candidates;
-		
-		var tagProvider = getPref('tagProvider');
-		if(!tagProvider || (tagProvider==QuickPostForm.tagProvider && !QuickPostForm.refreshCache))
-			return elmTags;
-		
-		models[tagProvider].getUserTags().addCallback(function(tags){
-			if(!tags || !tags.length)
-				return;
-			
-			if(QuickPostForm.candidates.length==tags.length){
-				elmTags.candidates = QuickPostForm.candidates
-				return;
-			}
-			
-			tags = tags.sort(function(a, b){
-				return b.frequency != a.frequency ? compare(b.frequency, a.frequency) : compare(a.name, b.name);
-			}).map(itemgetter('name'));
-			
-			var d = succeed();
-			var readings = tags;
-			var source = tags.join(' [');
-			if(source.includesFullwidth()){
-				d = Yahoo.getRomaReadings(source).addCallback(function(rs){
-					readings = rs.join('').split(' [');
-				});
-			}
-			
-			d.addCallback(function(){
-				// 次回すぐに利用できるようにキャッシュする
-				QuickPostForm.refreshCache = false;
-				QuickPostForm.tagProvider = tagProvider;
-				elmTags.candidates = QuickPostForm.candidates = zip(readings, tags).map(function(cand){
-					return {
-						reading : cand[0],
-						value : cand[1],
-					}
-				});
-			});
-		});
-		
-		return elmTags;
-	},
-	
-	// nsISelectionListener
-	notifySelectionChanged : function(doc, sel, reason){
-		if(!sel.isCollapsed && reason == ISelectionListener.MOUSEUP_REASON){
-			var elm = this.elmDescription;
-			var value = elm.value;
-			var start = elm.selectionStart;
-			sel = sel.toString().trim();
-			
-			this.elmDescription.value = 
-				value.substr(0, elm.selectionStart) + 
-				sel + 
-				value.substr(elm.selectionEnd);
-			elm.selectionStart = elm.selectionEnd = start + sel.length;
-			elm.focus();
-			
-			// valueを変えると先頭に戻ってしまうため最後に移動し直す
-			var input = elm.ownerDocument.getAnonymousElementByAttribute(this.elmDescription, 'anonid', 'input');
-			input.scrollTop = input.scrollHeight;
-		}
-	},
-	
-	createForm : function(){
-		var ps = update({
-			description : '',
-		}, this.params);
-		var tags = joinText(ps.tags, ' ');
-		var form = convertToXULElement(<vbox style="margin-bottom: 4px; padding: 7px 1px"  flex="1000">
-			<hbox>
-				<grid flex="1" >
-					<columns>
-						<column/>
-						<column flex="1"/>
-					</columns>
-					{(function(){
-						switch(ps.type){
-						case 'regular':
-							return <rows>
-								<row>
-									<label value="Type"/>
-									<label value={ps.type.capitalize()} />
-								</row>
-								<spacer style="margin-top: 1em;"/>
-								<row>
-									<label value="Description"/>
-									<textbox name="description" tabindex="0" multiline="true" rows="6" value={ps.description}/>
-								</row>
-							</rows>
-							
-						case 'link':
-							return <rows>
-								<row>
-									<label value="Type"/>
-									<label value={ps.type.capitalize()} />
-								</row>
-								<row>
-									<label value="Title"/>
-									<textbox name="item" value={ps.item}/>
-								</row>
-								<row>
-									<label value="URL"/>
-									<textbox name="itemUrl" value={ps.itemUrl}/>
-								</row>
-								<spacer style="margin-top: 1em;"/>
-								<row>
-									<label value="Tag"/>
-									<textbox name="tags" tabindex="0" flex="1" value={tags} style="-moz-binding: url(chrome://tombloo/content/library/completion.xml#container);"/>
-								</row>
-								<row>
-									<label value="Description"/>
-									<textbox name="description" multiline="true" rows="3" value={ps.description}/>
-								</row>
-							</rows>
-							
-						case 'quote':
-							return <rows>
-								<row>
-									<label value="Type"/>
-									<label value={ps.type.capitalize()} />
-								</row>
-								<row>
-									<label value="Title"/>
-									<textbox name="item" value={ps.item}/>
-								</row>
-								<spacer style="margin-top: 1em;"/>
-								<row>
-									<label value="Tag"/>
-									<textbox name="tags" tabindex="0" flex="1" value={tags} style="-moz-binding: url(chrome://tombloo/content/library/completion.xml#container)"/>
-								</row>
-								<row>
-									<label value="Quote"/>
-									<textbox name="body" multiline="true" rows="3" value={ps.body}/>
-								</row>
-								<row>
-									<label value="Description"/>
-									<textbox name="description" multiline="true" rows="3" value={ps.description}/>
-								</row>
-							</rows>
-							
-						case 'photo':
-							return <rows xmlns:html={HTML_NS}>
-								<row>
-									<label value="Type"/>
-									<label value={ps.type.capitalize()} />
-								</row>
-								<row>
-									<label value="Title"/>
-									<textbox name="item" value={ps.item}/>
-								</row>
-								<row>
-									<label value="Photo"/>
-									<html:div>
-										<html:img src={ps.itemUrl || (createURI(ps.file).spec + '?' + Date.now())} style="max-height:80px; margin: 2px 4px;"/>
-									</html:div>
-								</row>
-								<spacer style="margin-top: 1em;"/>
-								<row>
-									<label value="Tag"/>
-									<textbox name="tags" tabindex="0" flex="1" value={tags} style="-moz-binding: url(chrome://tombloo/content/library/completion.xml#container)"/>
-								</row>
-								<row>
-									<label value="Description"/>
-									<textbox name="description" multiline="true" rows="3" value={ps.description}/>
-								</row>
-							</rows>
-							
-						case 'video':
-							return <rows>
-								<row>
-									<label value="Type"/>
-									<label value={ps.type.capitalize()} />
-								</row>
-								<row>
-									<label value="Title"/>
-									<textbox name="item" value={ps.item}/>
-								</row>
-								<spacer style="margin-top: 1em;"/>
-								<row>
-									<label value="Tag"/>
-									<textbox name="tags" tabindex="0" flex="1" value={tags} style="-moz-binding: url(chrome://tombloo/content/library/completion.xml#container)"/>
-								</row>
-								<row>
-									<label value="Description"/>
-									<textbox name="description" multiline="true" rows="3" value={ps.description} />
-								</row>
-							</rows>
-						}
-					})()}
-				</grid>
-				<separator orient="vertical" class="groove-thin" width="1" style="margin: 0 5px 0 9px;" />
-				<vbox>
-					{
-						reduce(function(memo, [name, poster]){
-							memo.checkbox += <checkbox label={poster.name} src={poster.ICON} checked={(poster.config[ps.type] == 'default')} />
-							return memo;
-						}, this.posters, <vbox/>)
-					}
-					<spacer flex="1" style="margin-top: 7px;" />
-					<button label="Post" disabled="true"/>
-				</vbox>
-			</hbox>
-		</vbox>);
-		
-		return form;
-	},
-}
+};
+
 
 // ----[Shortcutkey]-------------------------------------------------
 var shortcutkeys = {};
@@ -430,13 +131,13 @@ forEach({
 		var doc = win.document;
 		win = win.wrappedJSObject || win;
 		
-		new QuickPostForm({
+		QuickPostForm.show({
 			type    : 'link',
 			page    : doc.title,
 			pageUrl : win.location.href,
 			item    : doc.title,
 			itemUrl : win.location.href,
-		}).show();
+		});
 	},
 	'shortcutkey.quickPost.regular' : function(e){
 		cancel(e);
@@ -445,11 +146,11 @@ forEach({
 		var doc = win.document;
 		win = win.wrappedJSObject || win;
 		
-		new QuickPostForm({
+		QuickPostForm.show({
 			type    : 'regular',
 			page    : doc.title,
 			pageUrl : win.location.href,
-		}).show();
+		});
 	},
 	
 	// 処理を行わなかった場合はtrueを返す
@@ -467,11 +168,10 @@ forEach({
 			window    : win,
 			title     : doc.title,
 			selection : ''+win.getSelection(),
-			event     : e,
 			target    : e.originalTarget,
 			mouse     : {
-				x : e.pageX,
-				y : e.pageY,
+				page   : {x : e.pageX, y : e.pageY},
+				screen : {x : e.screenX, y : e.screenY},
 			},
 		}, win.location);
 		
@@ -564,10 +264,9 @@ connect(grobal, 'browser-load', function(e){
 			title     : ''+doc.title || '',
 			selection : ''+win.getSelection(),
 			target    : wrappedObject(cwin.gContextMenu.target),
-			event     : e,
 			mouse     : {
-				x : e.pageX,
-				y : e.pageY,
+				page   : {x : e.pageX, y : e.pageY},
+				screen : {x : e.screenX, y : e.screenY},
 			},
 			menu      : cwin.gContextMenu,
 		});
@@ -604,10 +303,19 @@ connect(grobal, 'browser-load', function(e){
 		if(!e.target.extractor)
 			return;
 		
-		context.event = e;
-		
 		var svc = Tombloo.Service;
 		svc.share(context, svc.extractors[e.target.extractor], e.target.showForm);
+	}, true);
+	
+	// clickイベントはマウス座標が異常
+	menuContext.addEventListener('mousedown', function(e){
+		if(!e.target.extractor)
+			return;
+		
+		context.mouse.post = {
+			x : e.screenX, 
+			y : e.screenY
+		}
 	}, true);
 	
 	var menuAction = doc.getElementById('tombloo-menu-main');

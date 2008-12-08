@@ -33,15 +33,21 @@ Tombloo.Service = {
 		return succeed().addCallback(function(){
 			return Tombloo.Service.extractors.extract(ctx, ext);
 		}).addCallback(function(ps){
+			// 予期せずに連続してquoteをポストしてしまうのを避けるため選択を解除する
+			if(ps.type == 'quote'&& ctx.window.getSelection().rangeCount)
+				ctx.window.getSelection().collapseToStart();
+			
 			debug(ps);
 			
 			if(!ps)
 				return succeed({});
 			
 			if(showForm){
-				(models.getEnables(ps).length)?
-					new QuickPostForm(ps).show() :
+				if(models.getEnables(ps).length){
+					QuickPostForm.show(ps, (ctx.mouse && (ctx.mouse.post || ctx.mouse.screen)));
+				} else {
 					Tombloo.Service.alertPreference(ps.type);
+				}
 				
 				// FIXME: クイックポストフォームのポスト結果を伝えるように
 				return succeed({});
@@ -187,7 +193,7 @@ Tombloo.Service = {
 			d.addCallback(function(info){
 				// 取得済みのデータがウェブで削除されている場合、その件数分隙間となり取得されない
 				// 但し、ページ単位で処理が行われ、件数を超えて処理が行われるため、そこで補正される可能性が高い
-				p.max = info.total - Tombloo[type? capitalize(type) : 'Post'].countByUser(user);
+				p.max = info.total - Tombloo[type? type.capitalize() : 'Post'].countByUser(user);
 				
 				if(p.ended)
 					return;

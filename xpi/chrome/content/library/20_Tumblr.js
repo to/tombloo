@@ -219,7 +219,7 @@ var Tumblr = update({}, AbstractSessionService, {
 				
 				// Tumblrから他サービスへポストするため画像URLを取得しておく
 				if(form['post[type]']=='photo')
-					form.image = $x('id("edit_post")//img[starts-with(@src, "http://media.tumblr.com/")]/@src', doc);
+					form.image = $x('id("edit_post")//img[starts-with(@src, "http://media.tumblr.com/") or starts-with(@src, "http://data.tumblr.com/")]/@src', doc);
 			}
 			
 			return form;
@@ -286,10 +286,9 @@ var Tumblr = update({}, AbstractSessionService, {
 			
 			default:
 				// このチェックをするためリダイレクトを追う必要がある
-				/* FIXME: エラー判定大失敗
-				if(res.responseText.match(/(100%)/))
+				// You've used 100% of your daily photo uploads. You can upload more tomorrow.
+				if(res.responseText.match('more tomorrow'))
 					throw new Error("You've exceeded your daily post limit.");
-				*/
 				
 				error(res);
 				throw new Error('Error posting entry.');

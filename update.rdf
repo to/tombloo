@@ -2,18 +2,22 @@
 <RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
          xmlns:NC="http://home.netscape.com/NC-rdf#"
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Description RDF:about="rdf:#$rM3JZ1"
-                   em:version="0.3.16">
-    <em:targetApplication RDF:resource="rdf:#$uM3JZ1"/>
+  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAFmF0oM+jbcWqhevHB/CRhHv2ZMbIO43tEY/MBLqBNm1k70RjoajHkKA5v8Up/oovZgvodx+r/JQiEbqwSPwzTQ3hWseaDwutN3YCrqvx+9OMQz0DHDRrw77lIRliPyipLSFDkSQ6rxnlUShM9ONg1iqnrtfOEshBlmj4QBuar98">
+    <em:updates RDF:resource="rdf:#$3STl"/>
   </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$uM3JZ1"
+  <RDF:Description RDF:about="rdf:#$4STl"
+                   em:version="0.3.26">
+    <em:targetApplication RDF:resource="rdf:#$7STl"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$7STl"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
-                   em:minVersion="2.0"
-                   em:maxVersion="3.0.*"
-                   em:updateLink="http://github.com/to/tombloo/tree/fx2/tombloo.xpi?raw=true"
-                   em:updateHash="sha512:d97b1c4e3c3338ae43e4c8bf378804a0610e61afab65dc7894a0fb51183ac62947bacc1f8437f14b740432a5d0eab530b37bd5bc382c39e987535d18e1764f39" />
-  <RDF:Seq RDF:about="rdf:#$qM3JZ1">
-    <RDF:li RDF:resource="rdf:#$rM3JZ1"/>
+                   em:minVersion="3.0"
+                   em:maxVersion="3.1.*"
+                   em:updateLink="http://github.com/to/tombloo/tree/master/tombloo.xpi?raw=true"
+                   em:updateHash="sha512:9ad59cf865c60fb9f0fef64db26a89bb9ecbe0fbc1f1320d184666da64e0fa9af07c553e4c2ee5e5eb4f9159a084fc5f35c57fa61967d8a9ae767be4bfc5a03d" />
+  <RDF:Seq RDF:about="rdf:#$3STl">
+    <RDF:li RDF:resource="rdf:#$4STl"/>
   </RDF:Seq>
   <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
                    em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBALU6TEW8msisfI+Pu2OAnBujKqOnp6m0zSuBb3ATbkl5hiQa/aD4QpP7eFnbFScZ6rD9tdyH6FaILtwSOx/K3PwDOW7S7EhM82azRn1K+0v9c0yl43TXPcQ7WqurmR9M/62oz54Hj82Ng/089LoD2CooktudY2LfmiXnrRqGbYxT">

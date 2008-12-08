@@ -8,13 +8,15 @@
 	
 	<binding id="container">
 		<resources>
-			<stylesheet src="chrome://tombloo/content/library/completion.css"/>
+			<stylesheet src="chrome://tombloo/content/completion.css"/>
 		</resources>
 		
-		<content>
-			<xul:textbox anonid="textbox" xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction,flex"/>
+		<content style="cursor: text;">
+			<xul:textbox 
+				anonid="textbox" 
+				xbl:inherits="tooltiptext=inputtooltiptext,onfocus,onblur,value,type,maxlength,disabled,size,readonly,userAction,flex,emptytext" />
 			<xul:popup anonid="popup" ignorekeys="true">
-				<xul:listbox anonid="listbox" style="height:auto"/>
+				<xul:listbox anonid="listbox" style="height: auto;"/>
 			</xul:popup>
 			<xul:box>
 				<xul:label anonid="measure" hidden="true"/>
@@ -26,6 +28,10 @@
 			function _log(msg){
 				Components.classes['@mozilla.org/consoleservice;1'].getService(Components.interfaces.nsIConsoleService).logStringMessage(''+msg);
 			}
+			
+			var event = document.createEvent('Events');
+			event.initEvent('construct', false, true);
+			this.dispatchEvent(event);
 			]]></constructor>
 			
 			<field name="textbox">
@@ -42,8 +48,12 @@
 			<property name="autoComplete"
 				onget="return this.textbox.autoComplete;"
 				onset="return this.textbox.autoComplete = val;"/>
-			<property name="includesNewTag"
-				onget="return this.textbox.includesNewTag;"/>
+			<property name="newWords"
+				onget="return this.textbox.newWords;"/>
+			
+			<!-- textboxとの互換性のため -->
+			<property name="inputField"
+				onget="return this.textbox.input;"/>
 			
 			<method name="focus">
 				<body><![CDATA[
@@ -53,11 +63,13 @@
 		</implementation>
 	</binding>
 	
-	
 	<binding id="textbox" extends="chrome://global/content/bindings/textbox.xml#textbox">
 		<implementation>
+			<field name="candidates">
+				[];
+			</field>
 			<field name="delay">
-				230;
+				130;
 			</field>
 			<field name="delimiter">
 				' ';
@@ -78,12 +90,19 @@
 				document.getAnonymousElementByAttribute(this, 'anonid', 'input')
 					.QueryInterface(Components.interfaces.nsIDOMNSEditableElement);
 			</field>
+			<field name="content">
+				this.input.editor.rootElement;
+			</field>
 			<field name="autoComplete">
 				false;
 			</field>
+			
 			<property name="values"
 				onget="return this.value.split(this.delimiter).filter(function(i){return i});"/>
-			<property name="includesNewTag">
+			<property name="padding"
+				onget="return this._padding || (this._padding = Math.ceil(parseFloat(window.getComputedStyle(this, '').paddingLeft)))" />
+			
+			<property name="newWords">
 				<getter><![CDATA[
 					var check = {};
 					this.values.forEach(function(val){
@@ -94,10 +113,11 @@
 						delete check[cand.value];
 					});
 					
-					for(var k in check)
-						return true;
+					var res = [];
+					for(var word in check)
+						res.push(word);
 					
-					return false;
+					return res;
 				]]></getter>
 			</property>
 			
@@ -198,23 +218,47 @@
 				]]></body>
 			</method>
 			
+			<method name="removeWord">
+				<parameter name="word"/>
+				<body><![CDATA[
+					var values = this.values;
+					var index = values.indexOf(word);
+					if(index != -1)
+						values.splice(index, 1);
+					values = values.join(this.delimiter);
+					this.value = values + (values? this.delimiter : '');
+				]]></body>
+			</method>
+			
 			<method name="injectCandidate">
 				<parameter name="cand"/>
 				<parameter name="terminate"/>
+				<parameter name="notify"/>
 				<body><![CDATA[
+					notify = (notify==null)? terminate : notify;
+					
 					var text = this.value;
 					var word = this.getCurrentWord();
 					
-					var suffix = text.substr(word.end);
+					var suffix = text.substr(word.caret);
 					var delimiter = (terminate && suffix.charAt(0) != this.delimiter) ? this.delimiter : '';
 					this.value = text.substring(0, word.start) + cand + delimiter + suffix;
-					this.selectionStart = this.selectionEnd = word.start + cand.length + delimiter.length;
+					this.input.selectionStart = this.input.selectionEnd = word.start + cand.length + delimiter.length;
 					
 					// 削除/修正を終了し自動決定の挙動を元に戻す
 					this.deleting = false
 					
-					if(terminate)
-						this.notify();
+					if(terminate){
+						// valueを変更しカーソルが見えない場所へ移動するのを防ぐ
+						this.ensureCursorIsVisible();
+						
+						if(notify)
+							this.notify();
+						
+						var event = document.createEvent('Events');
+						event.initEvent('terminate', false, true);
+						this.dispatchEvent(event);
+					}
 				]]></body>
 			</method>
 			
@@ -223,39 +267,45 @@
 					var text = this.value;
 					var caret = this.selectionStart;
 					var start = text.lastIndexOf(this.delimiter, caret - 1) + 1;
-					var end = text.indexOf(this.delimiter, caret);
-					if(end == -1)
-						end = text.length;
 					
 					return {
 						start : start,
-						end : end,
-						word : text.slice(start, end),
+						caret : caret,
+						hint  : text.slice(start, caret),
 					};
 				]]></body>
 			</method>
 			
 			<method name="getCandidates">
 				<parameter name="hint"/>
-				<parameter name="used"/>
 				<body><![CDATA[
 					var cands = [];
-					var reStrict = new RegExp('^' + hint, 'i');
-					var reLoose = new RegExp('^' + hint.split('').join('.*'), 'i');
 					
+					var reStrict = new RegExp('^' + hint, 'i');
 					this.candidates.forEach(function(cand){
 						if(reStrict.test(cand.reading))
 							cands.push(cand.value);
 					});
 					
-					if(!cands.length)
+					if(!cands.length){
+						var reLoose = new RegExp('^' + hint.split('').join('.*'), 'i');
 						this.candidates.forEach(function(cand){
 							if(reLoose.test(cand.reading))
 								cands.push(cand.value);
 						});
+					}
+					
+					// 利用済みタグとして取得する
+					var values = this.values;
+					
+					// 入力途中の内容を利用済みタグから除去する
+					// 2個ある場合、片方は入力済みタグとみなす
+					var index = values.indexOf(hint);
+					if(~index)
+						values.splice(index, 1);
 					
 					return cands.filter(function(cand){
-						return !used.some(function(u){return u==cand})
+						return !~values.indexOf(cand);
 					});
 				]]></body>
 			</method>
@@ -265,14 +315,16 @@
 				<body><![CDATA[
 					var text = this.value;
 					var word = this.getCurrentWord();
-					var hint = word.word;
+					var hint = word.hint;
 					
+					// 削除によりヒントがないか、または、タグ間へのスペース追加か?
 					if(!hint && denyEmpty){
 						this.popup.hidePopup();
 						return;
 					}
 					
-					var cands = this.getCandidates(hint, text.substring(0, word.start).split(this.delimiter));
+					// 自動決定か?
+					var cands = this.getCandidates(hint);
 					if(this.autoComplete && !this.deleting && cands.length==1 && (hint.length >=2 || cands[0].length == 1)){
 						this.injectCandidate(cands[0], true);
 						this.popup.hidePopup();
@@ -280,15 +332,30 @@
 					}
 					
 					if(cands.length){
-						this.measure.value = text.substr(0, word.start);
-						this.measure.hidden = false;
-						var x = this.measure.boxObject.width;
-						this.measure.hidden = true;
-						
-						this.popup.show(this, x, -2, cands);
+						this.popup.show(this, (this.getCursorLeft(word.start) - this.content.scrollLeft) + this.padding, -2, cands);
 					} else {
 						this.popup.hidePopup();
 					}
+				]]></body>
+			</method>
+			
+			<method name="getCursorLeft">
+				<parameter name="position"/>
+				<body><![CDATA[
+					this.measure.value = this.value.substr(0, position);
+					this.measure.hidden = false;
+					
+					var x = this.measure.boxObject.width;
+					this.measure.hidden = true;
+					
+					return x;
+				]]></body>
+			</method>
+			
+			<method name="ensureCursorIsVisible">
+				<body><![CDATA[
+					this.content.scrollLeft = 
+						this.getCursorLeft(this.selectionStart) - this.input.offsetWidth + 20;
 				]]></body>
 			</method>
 		</implementation>
@@ -376,6 +443,7 @@
 				<parameter name="y"/>
 				<parameter name="cands"/>
 				<body><![CDATA[
+					// Firefox 3
 					if(this.openPopup){
 						this.openPopup(anchor, 'after_start', x, y, false);
 					} else {
@@ -421,26 +489,35 @@
 			<property name="rowHeight"
 				onget="return this._rowHeight || (this._rowHeight = this.childNodes[0].boxObject.height)" />
 			
+			<property name="padding"
+				onget="return this._padding || (this._padding = Math.ceil(parseFloat(window.getComputedStyle(this, '').paddingTop)))" />
+			
 			<method name="removeAll">
 				<body><![CDATA[
 					while(this.lastChild)
 						this.removeChild(this.lastChild);
 				]]></body>
 			</method>
+			
 			<method name="appendItems">
 				<parameter name="items"/>
 				<body><![CDATA[
 					for(var i=0 ; i<items.length; i++)
 						this.appendItem(items[i]);
+					
+					// ここだけで高さや背景色を変えているため不整合が起きる可能性がある
+					this.adjustSize();
 				]]></body>
 			</method>
+			
 			<method name="adjustSize">
 				<body><![CDATA[
 					if(!this.rowHeight){
+						// 初回表示時は行高さを取得できないためrowsで調整する
 						this.rows = Math.min(this.rowCount, this.maxRows);
 					} else {
 						// rowsの変更やheight:autoだけでは余白が生じることがあるため手動で高さを計算する
-						this.height = Math.min(this.rowCount, this.maxRows) * this.rowHeight;
+						this.height = Math.min(this.rowCount, this.maxRows) * this.rowHeight + (this.padding * 2);
 					}
 					
 					if(this.rowCount == 1){
@@ -450,7 +527,7 @@
 					}
 					
 					// スクロールバーが表示されると切れるため手動で幅を計算する
-					if(this.rowCount > this.maxRows){
+					if(this.rowCount > this.maxRows && this.rowHeight){
 						this.width = null;
 						this.width = this.boxObject.width + 20;
 					} else {
@@ -476,6 +553,7 @@
 					this.ensureIndexIsVisible(index);
 				]]></body>
 			</method>
+			
 			<method name="enter">
 				<parameter name="terminate"/>
 				<body><![CDATA[
@@ -497,9 +575,7 @@
 			<handler event="select" action="this.enter()" />
 			<handler event="DOMNodeInserted"><![CDATA[
 				// getRowCountメソッドは不正確な場合があるため子要素を取得しキャッシュする
-				this.rowCount = this.getElementsByTagName('listitem').length;
-				
-				this.adjustSize();
+				this.rowCount = this.childNodes.length;
 			]]></handler>
 		</handlers>
 	</binding>

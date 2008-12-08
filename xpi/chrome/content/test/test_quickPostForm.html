@@ -1,0 +1,46 @@
+<html>
+<head>
+	<script type="text/javascript" src="library/MochiKit.js"></script>
+	<script type="text/javascript" src="library/SimpleTest.js"></script>
+	<script type="text/javascript" src="test.js"></script>
+	<link rel="stylesheet" type="text/css" href="library/test.css">
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+</head>
+<body>
+<pre id="test">
+</pre>
+<script type="text/javascript" src="../library/00_MochiKit.js"></script>
+<script type="text/javascript" src="../library/00_prototype.js"></script>
+<script type="text/javascript" src="../library/00_component.js"></script>
+<script type="text/javascript" src="../library/01_utility.js"></script>
+<script type="text/javascript" src="../library/20_model.js"></script>
+<script type="text/javascript" src="../quickPostForm.js"></script>
+<script type="text/javascript;version=1.8">
+try {
+	// chrome://tombloo/content/test/test_quickPostForm.html
+	
+	var res = {
+		tags : [{name:'TOOL'}, {name:'PHOTO'}, {name:'WEB'}, {name:'RSS'}, {name:'BLOG'}, {name:'SERVICE'}],
+		recommended : ['WEB', 'RSS'],
+		popular : ['hatena', 'portal', 'web2.0', 'blog', 'service', 'web'],
+	};
+	TagsPanel.prototype.arrangeSuggestions(res);
+	
+	sameArray(res.recommended, ['WEB', 'RSS', 'BLOG', "SERVICE"]);
+	sameArray(res.popular, ['hatena', 'portal', 'web2.0']);
+	sameArray(res.tags, ["BLOG", "PHOTO", "RSS", "SERVICE", "TOOL", "WEB"], '利用頻度がないばあいアルファベット順に並ぶ');
+	
+} catch (err) {
+	error(err);
+	var s = [];
+	s.push('TEST SUITE FAILURE!');
+	for(var prop in err)
+		s.push(prop + ':  ' + err[prop]);
+	ok(false, s.join('\n'));
+	
+	SimpleTest.finish()
+}
+</script>
+
+</body>
+</html>

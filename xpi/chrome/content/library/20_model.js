@@ -1423,6 +1423,7 @@ models.register({
 			queryString : {
 				url         : ps.itemUrl,
 				description : ps.item,
+				shared      : ps.private? 'no' : '',  
 				tags        : ps.tags ? ps.tags.join(' ') : '',
 				extended    : joinText([ps.body, ps.description], ' ', true),
 			},

@@ -831,12 +831,11 @@ Tombloo.Service.extractors = new Repository([
 			return ctx.href.match(/share-image\.com\/gallery\//) && this.getImage();
 		},
 		extract : function(ctx){
-			return request(this.getImage()).addCallback(function(res){
-				return {
-					type    : 'photo',
-					item    : ctx.title,
-					itemUrl : res.channel.URI.spec, 
+			return request(this.getImage()).addBoth(function(res){
+				ctx.target = {
+					src : (res instanceof Error? res.message : res).channel.URI.spec,
 				}
+				return Tombloo.Service.extractors['Photo - Upload from Cache'].extract(ctx);
 			});
 		},
 		getImage : function(){
@@ -945,6 +944,7 @@ Tombloo.Service.extractors = new Repository([
 			'keep4u.ru/imgs/',
 			'/www.toofly.com/userGallery/',
 			'/www.dru.pl/',
+			'adugle.com/shareimagebig/',
 		],
 		check : function(ctx){
 			return ctx.onImage;

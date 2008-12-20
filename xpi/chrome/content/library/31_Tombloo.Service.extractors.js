@@ -667,7 +667,7 @@ Tombloo.Service.extractors = new Repository([
 		name : 'Photo - Picasa',
 		ICON : 'http://picasaweb.google.com/favicon.ico',
 		check : function(ctx){
-			return ctx.host == 'picasaweb.google.com' && ctx.onImage;
+			return (/picasaweb\.google\./).test(ctx.host) && ctx.onImage;
 		},
 		extract : function(ctx){
 			var item = $x('//span[@class="gphoto-context-current"]/text()') || $x('//div[@class="lhcl_albumtitle"]/text()') || '';

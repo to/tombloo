@@ -940,7 +940,6 @@ models.register({
 				function getTags(part){
 					return $x('id("save-' + part + '-tags")//a[contains(@class, "tag-list-tag")]/text()', doc, true);
 				}
-				
 				return {
 					duplicated : !!doc.getElementById('delete'),
 					recommended : getTags('reco'), 
@@ -1711,6 +1710,7 @@ models.register(update({
 			var tags = evalInSandbox('(' + res.responseText.extract(/var tags =(.*);$/m) + ')', HatenaBookmark.POST_URL) || {};
 			return {
 				duplicated : (/bookmarked-confirm/).test(res.responseText),
+        recommended : $x('id("recommend-tags")/span[@class="tag"]/text()', convertToHTMLDocument(res.responseText), true),
 				tags : map(function([tag, info]){
 					return {
 						name      : tag,

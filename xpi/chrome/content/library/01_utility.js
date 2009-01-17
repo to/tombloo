@@ -17,6 +17,7 @@ disconnectAll(grobal);
 if(typeof(constant)=='undefined')
 	constant = {};
 
+
 // ----[XPCOM]-------------------------------------------------
 function evalInSandbox(js, url){
 	return Components.utils.evalInSandbox(js, Components.utils.Sandbox(url));
@@ -1175,17 +1176,13 @@ Repository.prototype = {
 	},
 	
 	get names(){
-		return reduce(function(memo, i){
-			memo.push(i[0]);
-			return memo;
-		}, this, []);
+		return this.values.map(itemgetter('name'));
 	},
 	
 	get values(){
-		return reduce(function(memo, i){
-			memo.push(i[1]);
-			return memo;
-		}, this, []);
+		return map(itemgetter(1), this).filter(function(v){
+			return v.name;
+		});
 	},
 	
 	clear : function(){
@@ -1216,6 +1213,12 @@ Repository.prototype = {
 		}, this.values, []);
 	},
 	
+	/**
+	 * 新しい定義を追加する。
+	 * 
+	 * @param {Array} defs
+	 * @param {String} target 追加対象。この名前の前に追加される。
+	 */
 	register : function(defs, target){
 		if(!defs)
 			return;

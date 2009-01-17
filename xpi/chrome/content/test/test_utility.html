@@ -287,11 +287,14 @@ try {
 	is(repo.find('A|D').length, 2);
 	is(repo.find(/A|D/).length, 2);
 	
+	repo.extract = function(){};
 	repo.register({
 		name  : 'GHI',
 		check : function(c){},
 	}, 'DEF');
 	is(repo.names.join(), 'ABC,GHI,DEF', '途中に追加できるか');
+	ok(repo.extract, '定義以外のデータが消えないか');
+	
 	
 	ok(getDataDir().exists(), 'データディレクトリが存在するか');
 	

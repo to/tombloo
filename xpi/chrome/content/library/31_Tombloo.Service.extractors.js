@@ -493,7 +493,7 @@ Tombloo.Service.extractors = new Repository([
 		
 		RE : new RegExp('^http://(?:.+?.)?static.flickr.com/\\d+?/(\\d+?)_.*'),
 		getImageId : function(ctx){
-			if(ctx.host == 'flickr.com' && ctx.target.src.match('spaceball.gif')){
+			if(/flickr\.com/.test(ctx.host) && ctx.target.src.match('spaceball.gif')){
 				removeElement(ctx.target);
 				
 				if(currentDocument().elementFromPoint){

@@ -240,25 +240,31 @@ Tombloo.Service.extractors = new Repository([
 			return ctx.href.match('//twitter.com/.*?/(status|statuses)/\\d+');
 		},
 		extract : function(ctx){
-			var body = ctx.selection;
-			if(!body){
-				var content = $x('(//span[@class="entry-content"])[1]');
-				$x('.//a', content, true).forEach(function(l){l.href = l.href;});
-				body = content.innerHTML.
-					replace(/ (rel|target)=".+?"/g, '').
-					replace('<a href="' + ctx.href.replace('/statuses/','/status/') + '">...</a>', '');
-			}
-			
-			return {
-				type     : 'quote',
-				item     : ctx.title.substring(0, ctx.title.indexOf(': ')),
-				itemUrl  : ctx.href,
-				body     : body.trim(),
-				favorite : {
-					name : 'Twitter',
-					id   : ctx.href.match(/(status|statuses)\/(\d+)/)[2],
-				},
-			}
+			return (ctx.selection? 
+				succeed(ctx.selection) : 
+				request(ctx.href).addCallback(function(res){
+					var doc = convertToHTMLDocument(res.responseText);
+					var content = $x('(//span[@class="entry-content"])[1]', doc);
+					
+					$x('.//a', content, true).forEach(function(l){l.href = l.href;});
+					body = content.innerHTML.
+						replace(/ (rel|target)=".+?"/g, '').
+						replace('<a href="' + ctx.href.replace('/statuses/','/status/') + '">...</a>', '');
+					
+					return body;
+				})
+			).addCallback(function(body){
+				return {
+					type     : 'quote',
+					item     : ctx.title.substring(0, ctx.title.indexOf(': ')),
+					itemUrl  : ctx.href,
+					body     : body.trim(),
+					favorite : {
+						name : 'Twitter',
+						id   : ctx.href.match(/(status|statuses)\/(\d+)/)[2],
+					},
+				};
+			});
 		},
 	},
 	

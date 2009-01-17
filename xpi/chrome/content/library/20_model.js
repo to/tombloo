@@ -941,6 +941,14 @@ models.register({
 					return $x('id("save-' + part + '-tags")//a[contains(@class, "tag-list-tag")]/text()', doc, true);
 				}
 				return {
+					editPage : editPage = 'http://delicious.com/save?url=' + url,
+					form : {
+						item        : $x('id("title")', doc).value,
+						description : $x('id("notes")', doc).value,
+						tags        : $x('id("tags")', doc).value.split(' '),
+						private     : $x('id("share")', doc).checked,
+					},
+					
 					duplicated : !!doc.getElementById('delete'),
 					recommended : getTags('reco'), 
 					popular : getTags('pop'),
@@ -1716,10 +1724,16 @@ models.register(update({
 				},
 			})
 		}).addCallback(function(res){
-			var tags = evalInSandbox('(' + res.responseText.extract(/var tags =(.*);$/m) + ')', HatenaBookmark.POST_URL) || {};
+			var tags = evalInSandbox(
+				'(' + res.responseText.extract(/var tags =(.*);$/m) + ')', 
+				HatenaBookmark.POST_URL) || {};
+			
 			return {
 				duplicated : (/bookmarked-confirm/).test(res.responseText),
-        recommended : $x('id("recommend-tags")/span[@class="tag"]/text()', convertToHTMLDocument(res.responseText), true),
+				recommended : $x(
+					'id("recommend-tags")/span[@class="tag"]/text()', 
+					convertToHTMLDocument(res.responseText), 
+					true),
 				tags : map(function([tag, info]){
 					return {
 						name      : tag,

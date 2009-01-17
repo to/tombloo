@@ -1021,6 +1021,17 @@ function addAround(target, methodNames, advice){
 	});
 }
 
+/**
+ * 配列を結合し文字列を作成する。
+ * 空要素は除外される。
+ * 配列が空の場合は、空文字列が返される。
+ * 配列の入れ子は直列化される。
+ * 
+ * @param {Array} txts 文字列配列。
+ * @param {String} delm 区切り文字列。
+ * @param {Boolean} trimTag 各文字列からHTMLタグを除外するか。
+ * @return {String} 結合された文字列。
+ */
 function joinText(txts, delm, trimTag){
 	if(!txts)
 		return '';

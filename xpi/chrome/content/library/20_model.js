@@ -1925,6 +1925,28 @@ models.register({
 	},
 });
 
+models.register({
+	name: 'Femo',
+	ICON: 'http://femo.jp/favicon.ico',
+	POST_URL: 'http://femo.jp/create/post',
+	
+	check: function(ps) {
+		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
+	},
+	post: function(ps) {
+		return this.addMemo(ps);
+	},
+	addMemo : function(ps){
+		return request(this.POST_URL, {
+			sendContent: {
+				title   : ps.item,
+				text    : joinText([ps.itemUrl, ps.body, ps.description], '\n'),
+				tagtext : joinText(ps.tags, ' '),
+			},
+		});
+	},
+});
+
 
 // 全てのサービスをグローバルコンテキストに置く(後方互換)
 models.copyTo(this);

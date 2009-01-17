@@ -1243,28 +1243,37 @@ if(NavBookmarksService){
 	});
 }
 
-models.register({
+
+models.register(update({
 	name : 'Instapaper',
 	ICON : 'chrome://tombloo/skin/instapaper.ico',
-	
+	POST_URL: 'http://www.instapaper.com/edit',
 	check : function(ps){
-		return (/(quote|link)/).test(ps.type) && !ps.file;
+		return (/(quote|link)/).test(ps.type);
 	},
-	
+	getAuthCookie : function(){
+		return getCookieString('www.instapaper.com', 'pfu');
+	},
 	post : function(ps){
-		return request('http://www.instapaper.com/edit', {
-			redirectionLimit : 0,
-			sendContent : {
-				'bookmark[title]' : ps.item, 
-				'bookmark[url]' : ps.itemUrl,
-				'bookmark[selection]' : joinText([ps.body, ps.description], '\n', true),
-			},
-		}).addCallback(function(res){
-			if(res.channel.URI.asciiSpec.match('login'))
-				throw new Error(getMessage('error.notLoggedin'));
+		var url = this.POST_URL;
+		return this.getSessionValue('token', function(){
+			return request(url).addCallback(function(res){
+				var doc = convertToHTMLDocument(res.responseText);
+				return $x('//input[@id="form_key"]/@value', doc);
+			});
+		}).addCallback(function(token){
+			return request(url, {
+				redirectionLimit: 0,
+				sendContent: {
+					'form_key': token,
+					'bookmark[url]': ps.itemUrl,
+					'bookmark[title]': ps.item,
+					'bookmark[selection]': joinText([ps.body, ps.description])
+				}
+			});
 		});
-	},
-});
+	}
+}, AbstractSessionService));
 
 
 // http://www.kawa.net/works/ajax/romanize/japanese.html

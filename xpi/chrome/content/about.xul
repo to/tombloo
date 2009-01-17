@@ -47,6 +47,7 @@
 			<label value="cxx"           class="text-link" onclick="openURL('http://cxx.tumblr.com/')" />
 			<label value="Constellation" class="text-link" onclick="openURL('http://d.hatena.ne.jp/Constellation/')" />
 			<label value="YungSang"      class="text-link" onclick="openURL('http://blog.yungsang.com/')" />
+			<label value="zorio"         class="text-link" onclick="openURL('http://d.hatena.ne.jp/zorio/')" />
 		</vbox>
 			
 		<label class="sectionTitle"></label>

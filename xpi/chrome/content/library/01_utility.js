@@ -1802,6 +1802,7 @@ AbstractSessionService = {
 		delete this.cookie;
 		delete this.user;
 		delete this.token;
+		delete this.password;
 		
 		if(!cookie)
 			return 'none';

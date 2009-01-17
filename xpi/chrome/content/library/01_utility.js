@@ -1042,6 +1042,43 @@ function validateFileName(fileName){
 	return fileName.replace(/[\/]+/g, "_");
 }
 
+/**
+ * Windows上でWSHを実行する。
+ * スクリプト内でWScript.echoなどで出力された文字列も返り値に含まれる。
+ * 
+ * @param {Function} func WSHスクリプト。
+ * @param {Array} args WSHスクリプトの引数。 
+ * @return {String} WSHスクリプトの実行結果。
+ */
+function executeWSH(func, args){
+	args = args || [];
+	
+	var bat = getTempFile('bat');
+	var script = getTempFile();
+	var out = new LocalFile(script.path + '.out');
+	
+	putContents(bat, [
+		'cscript //E:JScript //Nologo', 
+		script.path.quote(), 
+		'>', 
+		out.path.quote()].join(' '));
+	putContents(script, 
+		args.map(function(a, i){return 'var ARG_' + i + ' = ' + uneval(a) + ';'}).join('\n') + 
+		'WScript.echo(' + func.toSource() + '(' + 
+		args.map(function(a, i){return 'ARG_' + i}).join(',') + 
+		'));');
+	
+	new Process(bat).run(true, [], 0);
+	
+	var res = getContents(out, 'Shift-JIS').replace(/\s+$/, '');
+	
+	bat.remove(false);
+	script.remove(false);
+	out.remove(false);
+	
+	return res;
+}
+
 
 // ----[State]-------------------------------------------------
 var State = {

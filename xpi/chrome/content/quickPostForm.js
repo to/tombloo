@@ -353,7 +353,7 @@ FormPanel.prototype = {
 		var self = this;
 		items(ps).forEach(function([name, value]){
 			var field = self.fields[name];
-			if(!field)
+			if(!field || !value)
 				return;
 			
 			field.value = value;

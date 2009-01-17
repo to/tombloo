@@ -1038,7 +1038,7 @@ function joinText(txts, delm, trimTag){
 	
 	if(delm==null)
 		delm = ',';
-	txts = flattenArray(txts.filter(operator.truth));
+	txts = flattenArray([].concat(txts).filter(operator.truth));
 	return (trimTag? txts.map(methodcaller('trimTag')) : txts).join(delm);
 }
 

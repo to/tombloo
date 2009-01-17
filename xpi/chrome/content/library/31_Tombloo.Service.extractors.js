@@ -471,6 +471,21 @@ Tombloo.Service.extractors = new Repository([
 		},
 	},
 	
+  {
+    name: 'ReBlog - Dashboard iPhone',
+    ICON: 'chrome://tombloo/skin/reblog.ico',
+    check: function(ctx){
+      return (/(tumblr\.com)\/iphone/).test(ctx.href) && this.getLink(ctx);
+    },
+    extract : function(ctx){
+      return Tombloo.Service.extractors.ReBlog.extractByLink(ctx, this.getLink(ctx));
+    },
+    getLink : function(ctx){
+      var link = $x('./ancestor-or-self::li[starts-with(normalize-space(@id), "post")]//a[contains(concat(" ",normalize-space(@class)," ")," permalink ")]', ctx.target);
+      return link && link.href;
+    }
+  },
+  
 	{
 		name : 'ReBlog - Mosaic',
 		ICON : 'chrome://tombloo/skin/reblog.ico',

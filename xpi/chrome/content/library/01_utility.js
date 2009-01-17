@@ -274,6 +274,20 @@ function putContents(file, text, charset){
 		stream.write(text, text.length);
 	});
 }
+	
+/**
+ * チャンネルにクッキーを付加する。
+ * Firefox 3.1でnetwork.cookie.cookieBehaviorの値に関わらずクッキーが設定されなくなった。
+ * 詳細調査中。
+ *
+ * @param {nsIHttpChannel} channel
+ */
+function setCookie(channel){
+	if(!(channel instanceof Ci.nsIHttpChannel))
+		return;
+	
+	channel.setRequestHeader('Cookie', getCookieString(channel.originalURI.host), true);
+}
 
 /**
  * POST/GETの通信を行う。
@@ -294,14 +308,6 @@ function putContents(file, text, charset){
  */
 function request(url, opts){
 	var d = new Deferred();
-	
-	function setCookie(channel){
-		// サードパーティのクッキーを送信するか?
-		if(getPrefValue('network.cookie.cookieBehavior') != 1)
-			return;
-		
-		channel.setRequestHeader('Cookie', getCookieString(channel.originalURI.host), true);
-	}
 	
 	opts = opts || {};
 	
@@ -417,8 +423,7 @@ function request(url, opts){
 				return;
 			}
 			
-			// パフォーマンスを考慮しbroadを使わない
-			setCookie(newChannel.QueryInterface(Ci.nsIHttpChannel));
+			setCookie(newChannel);
 		},
 		
 		// nsIStreamListener

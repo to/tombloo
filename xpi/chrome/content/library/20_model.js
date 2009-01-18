@@ -1969,12 +1969,13 @@ models.register({
 	},
 
         getAuthCookie : function(){
-            var cookie = getCookieString('mediamarker.net', 'PHPSESSID');
+            return getCookieString('mediamarker.net', 'PHPSESSID');
 	},
 
 
 	post : function(ps){
-            this.getAuthCookie();
+            if (!this.getAuthCookie())
+                throw new Error(getMessage('error.notLoggedin'));
 	    return request('http://mediamarker.net/reg', {
 		queryString : {
                     mode : 'marklet',
@@ -1982,9 +1983,15 @@ models.register({
                     comment : ps.description
 	        }
 	    }).addCallback(function(res){
-		return request(res.channel.URI.asciiSpec, {
+		var doc = convertToHTMLDocument(res.responseText);
+                if ( ! $x('//td[contains(@class,"menu")]/a/@href', doc).match('http://mediamarker.net/u/') )
+	            throw new Error(getMessage('error.notLoggedin'));
+		var url = $x('id("reg")/@action', doc); // フォーム取得
+		if(!url)
+                    return true; // 既に登録されているとき＝フォームが出ないときはポストせずに終了
+		return request(url, {
 		    redirectionLimit : 0,
-		    sendContent : update(formContents(convertToHTMLDocument(res.responseText)), {
+		    sendContent : update(formContents(doc), {
                         title : ps.item,
 		        tag :  joinText(ps.tags, "\n")
 		    })

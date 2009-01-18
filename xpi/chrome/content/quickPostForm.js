@@ -594,11 +594,12 @@ function TagsPanel(elmPanel, formPanel){
 				
 				if(self.suggest){
 					self.showSuggestions(res);
-					self.formPanel.populateFields(res.form);
 				}
 				
-				if(res.duplicated)
+				if(res.duplicated){
+					self.formPanel.populateFields(res.form);
 					self.showBookmarked(res.editPage);
+				}
 			}).addErrback(function(e){
 				setTimeout(function(){
 					alert(self.tagProvider + ': ' + e.message);

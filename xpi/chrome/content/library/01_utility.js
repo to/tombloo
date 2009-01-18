@@ -12,7 +12,7 @@ var KEY_ACCEL = (AppInfo.OS == 'Darwin')? 'META' : 'CTRL';
 var grobal = this;
 disconnectAll(grobal);
 
-// リロードによっって変更されない領域を用意する
+// リロードによって変更されない領域を用意する
 // イベントに安定してフックするためなどに使われる
 if(typeof(constant)=='undefined')
 	constant = {};

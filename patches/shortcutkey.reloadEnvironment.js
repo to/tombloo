@@ -1,4 +1,4 @@
-shortcutkeys['CTRL + SHIFT + R'] = {
+shortcutkeys[[KEY_ACCEL, 'SHIFT', 'R'].join('+')] = {
 	description : 'Reload Tombloo Environment',
 	execute : function(e){
 		cancel(e);

@@ -954,7 +954,8 @@ Tombloo.Service.extractors = new Repository([
                 if(!ctx.onLink)
                     return false;
                 var uri = createURI(ctx.link.href);
-                return  (/((wikimediafoundation|wikimedia|wiktionary|wikisource|wikipedia|uncyc)\.org|uncyclopedia\.info)$/).test(ctx.host) && !(/^http:\/\/upload\.wikimedia\.org\//).test(ctx.link.href) && uri && (/(png|gif|jpe?g)$/i).test(uri.fileExtension);
+				var body_as_file = $x('//body[contains(@class,"ns-6")]', ctx.document);
+                return !body_as_file &&  (/((wikimediafoundation|wikimedia|wiktionary|wikisource|wikipedia|uncyc)\.org|uncyclopedia\.info)$/).test(ctx.host) && uri && (/(png|gif|jpe?g)$/i).test(uri.fileExtension);
             },
             extract : function(ctx){
                 return request(ctx.link.href).addCallback(function(res){

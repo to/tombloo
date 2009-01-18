@@ -346,6 +346,20 @@ FormPanel.prototype = {
 		signal(this, 'post');
 	},
 	
+	populateFields : function(ps){
+		if(!ps)
+			return;
+		
+		var self = this;
+		items(ps).forEach(function([name, value]){
+			var field = self.fields[name];
+			if(!field || !value)
+				return;
+			
+			field.value = value;
+		});
+	},
+	
 	createForm : function(){
 		var elmForm = this.elmForm;
 		var self = this;
@@ -417,6 +431,7 @@ FormPanel.prototype = {
 	addWidgetToTitlebar : function(elm){
 		addElementClass(elm, 'widget');
 		insertSiblingNodesBefore(document.getElementById('titleSpace'), elm);
+		return elm;
 	},
 	
 	toggleDetail : function(){
@@ -466,6 +481,10 @@ function EditableLabel(elmBox){
 }
 
 EditableLabel.prototype = {
+	set value(value){
+		return this.elmTextbox.value = value;
+	},
+	
 	get value(){
 		return this.elmTextbox.value;
 	},
@@ -575,13 +594,19 @@ function TagsPanel(elmPanel, formPanel){
 				
 				if(self.suggest){
 					self.showSuggestions(res);
-					self.finishLoading();
 				}
 				
-				if(res.duplicated)
-					self.showBookmarked();
+				if(res.duplicated){
+					self.formPanel.populateFields(res.form);
+					self.showBookmarked(res.editPage);
+				}
 			}).addErrback(function(e){
+				setTimeout(function(){
+					alert(self.tagProvider + ': ' + e.message);
+				}, 50);
 				error(e);
+			}).addBoth(function(){
+				self.finishLoading();
 			});
 		}
 	}, false);
@@ -591,6 +616,10 @@ function TagsPanel(elmPanel, formPanel){
 
 TagsPanel.prototype = {
 	elmTags : {},
+	
+	set value(values){
+		return this.elmCompletion.value = joinText(values, ' ');
+	},
 	
 	get value(){
 		return this.elmCompletion.values;
@@ -635,6 +664,7 @@ TagsPanel.prototype = {
 	showSuggestions : function(res){
 		var self = this;
 		withDocument(document, function(){
+			
 			// inputイベントで高速にチェックをする必要があるためハッシュで持つ
 			self.elmTags = {};
 			
@@ -657,13 +687,20 @@ TagsPanel.prototype = {
 		});
 	},
 	
-	showBookmarked : function(){
+	showBookmarked : function(editPage){
 		var self = this;
 		withDocument(document, function(){
-			self.formPanel.addWidgetToTitlebar(IMAGE({
+			var elmStar = self.formPanel.addWidgetToTitlebar(IMAGE({
 				tooltiptext : getMessage('label.bookmarked'),
 				src : 'chrome://tombloo/skin/star.png',
 			}));
+			
+			if(editPage){
+				elmStar.style.cursor = 'pointer';
+				elmStar.addEventListener('click', function(){
+					addTab(editPage);
+				}, true);
+			}
 		});
 	},
 	
@@ -922,6 +959,10 @@ DescriptionBox.prototype = {
 		
 		// input要素の取得が終わったら初期設定の非表示状態に戻す
 		this.elmBox.hidden = this.hidden;
+	},
+	
+	set value(value){
+		return this.elmDescription.value = value;
 	},
 	
 	get value(){

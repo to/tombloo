@@ -940,8 +940,15 @@ models.register({
 				function getTags(part){
 					return $x('id("save-' + part + '-tags")//a[contains(@class, "tag-list-tag")]/text()', doc, true);
 				}
-				
 				return {
+					editPage : editPage = 'http://delicious.com/save?url=' + url,
+					form : {
+						item        : $x('id("title")', doc).value,
+						description : $x('id("notes")', doc).value,
+						tags        : $x('id("tags")', doc).value.split(' '),
+						private     : $x('id("share")', doc).checked,
+					},
+					
 					duplicated : !!doc.getElementById('delete'),
 					recommended : getTags('reco'), 
 					popular : getTags('pop'),
@@ -1244,28 +1251,37 @@ if(NavBookmarksService){
 	});
 }
 
-models.register({
+
+models.register(update({
 	name : 'Instapaper',
 	ICON : 'chrome://tombloo/skin/instapaper.ico',
-	
+	POST_URL: 'http://www.instapaper.com/edit',
 	check : function(ps){
-		return (/(quote|link)/).test(ps.type) && !ps.file;
+		return (/(quote|link)/).test(ps.type);
 	},
-	
+	getAuthCookie : function(){
+		return getCookieString('www.instapaper.com', 'pfu');
+	},
 	post : function(ps){
-		return request('http://www.instapaper.com/edit', {
-			redirectionLimit : 0,
-			sendContent : {
-				'bookmark[title]' : ps.item, 
-				'bookmark[url]' : ps.itemUrl,
-				'bookmark[selection]' : joinText([ps.body, ps.description], '\n', true),
-			},
-		}).addCallback(function(res){
-			if(res.channel.URI.asciiSpec.match('login'))
-				throw new Error(getMessage('error.notLoggedin'));
+		var url = this.POST_URL;
+		return this.getSessionValue('token', function(){
+			return request(url).addCallback(function(res){
+				var doc = convertToHTMLDocument(res.responseText);
+				return $x('//input[@id="form_key"]/@value', doc);
+			});
+		}).addCallback(function(token){
+			return request(url, {
+				redirectionLimit: 0,
+				sendContent: {
+					'form_key': token,
+					'bookmark[url]': ps.itemUrl,
+					'bookmark[title]': ps.item,
+					'bookmark[selection]': joinText([ps.body, ps.description])
+				}
+			});
 		});
-	},
-});
+	}
+}, AbstractSessionService));
 
 
 // http://www.kawa.net/works/ajax/romanize/japanese.html
@@ -1708,9 +1724,16 @@ models.register(update({
 				},
 			})
 		}).addCallback(function(res){
-			var tags = evalInSandbox('(' + res.responseText.extract(/var tags =(.*);$/m) + ')', HatenaBookmark.POST_URL) || {};
+			var tags = evalInSandbox(
+				'(' + res.responseText.extract(/var tags =(.*);$/m) + ')', 
+				HatenaBookmark.POST_URL) || {};
+			
 			return {
 				duplicated : (/bookmarked-confirm/).test(res.responseText),
+				recommended : $x(
+					'id("recommend-tags")/span[@class="tag"]/text()', 
+					convertToHTMLDocument(res.responseText), 
+					true),
 				tags : map(function([tag, info]){
 					return {
 						name      : tag,
@@ -1913,6 +1936,28 @@ models.register({
 				}),
 			});
 		})
+	},
+});
+
+models.register({
+	name: 'Femo',
+	ICON: 'http://femo.jp/favicon.ico',
+	POST_URL: 'http://femo.jp/create/post',
+	
+	check: function(ps) {
+		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
+	},
+	post: function(ps) {
+		return this.addMemo(ps);
+	},
+	addMemo : function(ps){
+		return request(this.POST_URL, {
+			sendContent: {
+				title   : ps.item,
+				text    : joinText([ps.itemUrl, ps.body, ps.description], '\n'),
+				tagtext : joinText(ps.tags, ' '),
+			},
+		});
 	},
 });
 

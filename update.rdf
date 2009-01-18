@@ -2,21 +2,21 @@
 <RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
          xmlns:NC="http://home.netscape.com/NC-rdf#"
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Seq RDF:about="rdf:#$iUwd4">
-    <RDF:li RDF:resource="rdf:#$jUwd4"/>
+  <RDF:Seq RDF:about="rdf:#$RJbGT1">
+    <RDF:li RDF:resource="rdf:#$SJbGT1"/>
   </RDF:Seq>
   <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
-                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAG0SVQ/fyhfAHcXiqgB2ntyQRyJokuGszUP5C61rRL6wvdqdns50sQ1aF5xgNBNRjPtwnN8iHDjhY26WOVwslXmxsRtbxPU53rz6AxskiRftmaQEPi1ILtZa6nBQcw0K5+VOE2KQBlKpVsbzJhGw3DYn4SEO7T09RgkIQv4qWTNT">
-    <em:updates RDF:resource="rdf:#$iUwd4"/>
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAC59j1yMprZY5PVW28SYnMk/amohZjBYWGMtB4hQcUmzIWegY4/8HC2l97UpirEqJPAgH6bqqF6eMI/R9nRwI0Ow1oJ/60J0dkajr1BRPe1KMerNl2fbXjcPb92lo8z86bCk27XFxuGKV3PH585lCCwNR0yeQBJ0tbbhtIF7hTNw">
+    <em:updates RDF:resource="rdf:#$RJbGT1"/>
   </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$jUwd4"
-                   em:version="0.3.27">
-    <em:targetApplication RDF:resource="rdf:#$mUwd4"/>
+  <RDF:Description RDF:about="rdf:#$SJbGT1"
+                   em:version="0.3.28">
+    <em:targetApplication RDF:resource="rdf:#$VJbGT1"/>
   </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$mUwd4"
+  <RDF:Description RDF:about="rdf:#$VJbGT1"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="3.0"
                    em:maxVersion="3.1.*"
-                   em:updateLink="http://github.com/to/tombloo/tree/release/tombloo.xpi?raw=true"
-                   em:updateHash="sha512:822be9bca5d596970a4227dab44b618c7d8dc25e2f356cb8074e8e623e148d8da978318ecbb3ca31a02f34a4a51b59ce4158aa2932bc6814c385fc1e881550ec" />
+                   em:updateLink="http://github.com/to/tombloo/raw/release/tombloo.xpi"
+                   em:updateHash="sha512:75ffebe01e0a0ee3122f4b23ad56d6a096db6df6eefe40166dadb41c12ebaf497b7a51b95036d4197419e194af8d5305d7d7447a7506e70ea9b893af2d8473b7" />
 </RDF:RDF>

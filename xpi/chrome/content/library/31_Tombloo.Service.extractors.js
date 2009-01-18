@@ -57,7 +57,74 @@ Tombloo.Service.extractors = new Repository([
 			}
 		},
 	},
-		
+	
+	{
+		name: 'ReBlog - Clipp',
+		ICON: 'http://clipp.in/favicon.ico',
+		check: function(ctx) {
+			return this.getLink(ctx);
+		},
+		extract: function(ctx) {
+			var link = this.getLink(ctx);
+			if(!link)
+				return {};
+			
+			var self = this;
+			var endpoint = Clipp.CLIPP_URL + 'bookmarklet' + link;
+			return Clipp.getForm(endpoint).addCallback(function(form) {
+				return update({
+					type: 'link',
+					item: ctx.title,
+					itemUrl: ctx.href,
+					favorite: {
+						name: 'Clipp',
+						endpoint: endpoint,
+						form: form
+					}
+				}, self.convertToParams(form));
+			});
+		},
+		checkEntryPage: function(ctx) {
+			return (/clipp.in\/entry\/(\d+)/).test(ctx.href);
+		},
+		getLink: function(ctx) {
+			return this.checkEntryPage(ctx) ? this.getLinkByPage(currentDocument()) : this.getLinkByTarget(ctx);
+		},
+		getLinkByPage: function(doc) {
+			return $x('//a[contains(@href, "add?reblog=")]/@href', doc);
+		},
+		getLinkByTarget: function(ctx) {
+			return $x('./ancestor-or-self::div[contains(concat(" ", @class, " "), " item ")]//a[contains(@href, "add?reblog=")]/@href', ctx.target);
+		},
+		convertToParams: function(form) {
+			if (form.embed_code)
+				return {
+					type: 'video',
+					item: form.title,
+					itemUrl: form.address,
+					body: form.embed_code
+				};
+			else if (form.image_address)
+				return {
+					type: 'photo',
+					item: form.title,
+					itemUrl: form.image_address
+				};
+			else if (form.quote && form.quote != '<br>')
+				return {
+					type: 'quote',
+					item: form.title,
+					itemUrl: form.address,
+					body: form.quote
+				};
+			return {
+				type: 'link',
+				item: form.title,
+				itemUrl: form.address
+			};
+		}
+	},
+	
 	{
 		name : 'Photo - LDR(FFFFOUND!)',
 		ICON : 'http://reader.livedoor.com/favicon.ico',
@@ -240,25 +307,31 @@ Tombloo.Service.extractors = new Repository([
 			return ctx.href.match('//twitter.com/.*?/(status|statuses)/\\d+');
 		},
 		extract : function(ctx){
-			var body = ctx.selection;
-			if(!body){
-				var content = $x('(//span[@class="entry-content"])[1]');
-				$x('.//a', content, true).forEach(function(l){l.href = l.href;});
-				body = content.innerHTML.
-					replace(/ (rel|target)=".+?"/g, '').
-					replace('<a href="' + ctx.href.replace('/statuses/','/status/') + '">...</a>', '');
-			}
-			
-			return {
-				type     : 'quote',
-				item     : ctx.title.substring(0, ctx.title.indexOf(': ')),
-				itemUrl  : ctx.href,
-				body     : body.trim(),
-				favorite : {
-					name : 'Twitter',
-					id   : ctx.href.match(/(status|statuses)\/(\d+)/)[2],
-				},
-			}
+			return (ctx.selection? 
+				succeed(ctx.selection) : 
+				request(ctx.href).addCallback(function(res){
+					var doc = convertToHTMLDocument(res.responseText);
+					var content = $x('(//span[@class="entry-content"])[1]', doc);
+					
+					$x('.//a', content, true).forEach(function(l){l.href = l.href;});
+					body = content.innerHTML.
+						replace(/ (rel|target)=".+?"/g, '').
+						replace('<a href="' + ctx.href.replace('/statuses/','/status/') + '">...</a>', '');
+					
+					return body;
+				})
+			).addCallback(function(body){
+				return {
+					type     : 'quote',
+					item     : ctx.title.substring(0, ctx.title.indexOf(': ')),
+					itemUrl  : ctx.href,
+					body     : body.trim(),
+					favorite : {
+						name : 'Twitter',
+						id   : ctx.href.match(/(status|statuses)\/(\d+)/)[2],
+					},
+				};
+			});
 		},
 	},
 	
@@ -465,6 +538,21 @@ Tombloo.Service.extractors = new Repository([
 		},
 	},
 	
+  {
+    name: 'ReBlog - Dashboard iPhone',
+    ICON: 'chrome://tombloo/skin/reblog.ico',
+    check: function(ctx){
+      return (/(tumblr\.com)\/iphone/).test(ctx.href) && this.getLink(ctx);
+    },
+    extract : function(ctx){
+      return Tombloo.Service.extractors.ReBlog.extractByLink(ctx, this.getLink(ctx));
+    },
+    getLink : function(ctx){
+      var link = $x('./ancestor-or-self::li[starts-with(normalize-space(@id), "post")]//a[contains(concat(" ",normalize-space(@class)," ")," permalink ")]', ctx.target);
+      return link && link.href;
+    }
+  },
+  
 	{
 		name : 'ReBlog - Mosaic',
 		ICON : 'chrome://tombloo/skin/reblog.ico',
@@ -493,7 +581,7 @@ Tombloo.Service.extractors = new Repository([
 		
 		RE : new RegExp('^http://(?:.+?.)?static.flickr.com/\\d+?/(\\d+?)_.*'),
 		getImageId : function(ctx){
-			if(ctx.host == 'flickr.com' && ctx.target.src.match('spaceball.gif')){
+			if(/flickr\.com/.test(ctx.host) && ctx.target.src.match('spaceball.gif')){
 				removeElement(ctx.target);
 				
 				if(currentDocument().elementFromPoint){
@@ -667,7 +755,7 @@ Tombloo.Service.extractors = new Repository([
 		name : 'Photo - Picasa',
 		ICON : 'http://picasaweb.google.com/favicon.ico',
 		check : function(ctx){
-			return ctx.host == 'picasaweb.google.com' && ctx.onImage;
+			return (/picasaweb\.google\./).test(ctx.host) && ctx.onImage;
 		},
 		extract : function(ctx){
 			var item = $x('//span[@class="gphoto-context-current"]/text()') || $x('//div[@class="lhcl_albumtitle"]/text()') || '';
@@ -831,12 +919,11 @@ Tombloo.Service.extractors = new Repository([
 			return ctx.href.match(/share-image\.com\/gallery\//) && this.getImage();
 		},
 		extract : function(ctx){
-			return request(this.getImage()).addCallback(function(res){
-				return {
-					type    : 'photo',
-					item    : ctx.title,
-					itemUrl : res.channel.URI.spec, 
+			return request(this.getImage()).addBoth(function(res){
+				ctx.target = {
+					src : (res instanceof Error? res.message : res).channel.URI.spec,
 				}
+				return Tombloo.Service.extractors['Photo - Upload from Cache'].extract(ctx);
 			});
 		},
 		getImage : function(){
@@ -945,6 +1032,7 @@ Tombloo.Service.extractors = new Repository([
 			'keep4u.ru/imgs/',
 			'/www.toofly.com/userGallery/',
 			'/www.dru.pl/',
+			'adugle.com/shareimagebig/',
 		],
 		check : function(ctx){
 			return ctx.onImage;

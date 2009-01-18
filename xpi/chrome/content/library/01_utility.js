@@ -12,10 +12,11 @@ var KEY_ACCEL = (AppInfo.OS == 'Darwin')? 'META' : 'CTRL';
 var grobal = this;
 disconnectAll(grobal);
 
-// リロードによっって変更されない領域を用意する
+// リロードによって変更されない領域を用意する
 // イベントに安定してフックするためなどに使われる
 if(typeof(constant)=='undefined')
 	constant = {};
+
 
 // ----[XPCOM]-------------------------------------------------
 function evalInSandbox(js, url){
@@ -274,6 +275,20 @@ function putContents(file, text, charset){
 		stream.write(text, text.length);
 	});
 }
+	
+/**
+ * チャンネルにクッキーを付加する。
+ * Firefox 3.1でnetwork.cookie.cookieBehaviorの値に関わらずクッキーが設定されなくなった。
+ * 詳細調査中。
+ *
+ * @param {nsIHttpChannel} channel
+ */
+function setCookie(channel){
+	if(!(channel instanceof Ci.nsIHttpChannel))
+		return;
+	
+	channel.setRequestHeader('Cookie', getCookieString(channel.originalURI.host), true);
+}
 
 /**
  * POST/GETの通信を行う。
@@ -294,14 +309,6 @@ function putContents(file, text, charset){
  */
 function request(url, opts){
 	var d = new Deferred();
-	
-	function setCookie(channel){
-		// サードパーティのクッキーを送信するか?
-		if(getPrefValue('network.cookie.cookieBehavior') != 1)
-			return;
-		
-		channel.setRequestHeader('Cookie', getCookieString(channel.originalURI.host), true);
-	}
 	
 	opts = opts || {};
 	
@@ -417,8 +424,7 @@ function request(url, opts){
 				return;
 			}
 			
-			// パフォーマンスを考慮しbroadを使わない
-			setCookie(newChannel.QueryInterface(Ci.nsIHttpChannel));
+			setCookie(newChannel);
 		},
 		
 		// nsIStreamListener
@@ -1015,13 +1021,24 @@ function addAround(target, methodNames, advice){
 	});
 }
 
+/**
+ * 配列を結合し文字列を作成する。
+ * 空要素は除外される。
+ * 配列が空の場合は、空文字列が返される。
+ * 配列の入れ子は直列化される。
+ * 
+ * @param {Array} txts 文字列配列。
+ * @param {String} delm 区切り文字列。
+ * @param {Boolean} trimTag 各文字列からHTMLタグを除外するか。
+ * @return {String} 結合された文字列。
+ */
 function joinText(txts, delm, trimTag){
 	if(!txts)
 		return '';
 	
 	if(delm==null)
 		delm = ',';
-	txts = flattenArray(txts.filter(operator.truth));
+	txts = flattenArray([].concat(txts).filter(operator.truth));
 	return (trimTag? txts.map(methodcaller('trimTag')) : txts).join(delm);
 }
 
@@ -1040,6 +1057,43 @@ function validateFileName(fileName){
 	}
 	
 	return fileName.replace(/[\/]+/g, "_");
+}
+
+/**
+ * Windows上でWSHを実行する。
+ * スクリプト内でWScript.echoなどで出力された文字列も返り値に含まれる。
+ * 
+ * @param {Function} func WSHスクリプト。
+ * @param {Array} args WSHスクリプトの引数。 
+ * @return {String} WSHスクリプトの実行結果。
+ */
+function executeWSH(func, args){
+	args = args || [];
+	
+	var bat = getTempFile('bat');
+	var script = getTempFile();
+	var out = new LocalFile(script.path + '.out');
+	
+	putContents(bat, [
+		'cscript //E:JScript //Nologo', 
+		script.path.quote(), 
+		'>', 
+		out.path.quote()].join(' '));
+	putContents(script, 
+		args.map(function(a, i){return 'var ARG_' + i + ' = ' + uneval(a) + ';'}).join('\n') + 
+		'WScript.echo(' + func.toSource() + '(' + 
+		args.map(function(a, i){return 'ARG_' + i}).join(',') + 
+		'));');
+	
+	new Process(bat).run(true, [], 0);
+	
+	var res = getContents(out, 'Shift-JIS').replace(/\s+$/, '');
+	
+	bat.remove(false);
+	script.remove(false);
+	out.remove(false);
+	
+	return res;
 }
 
 
@@ -1133,17 +1187,13 @@ Repository.prototype = {
 	},
 	
 	get names(){
-		return reduce(function(memo, i){
-			memo.push(i[0]);
-			return memo;
-		}, this, []);
+		return this.values.map(itemgetter('name'));
 	},
 	
 	get values(){
-		return reduce(function(memo, i){
-			memo.push(i[1]);
-			return memo;
-		}, this, []);
+		return map(itemgetter(1), this).filter(function(v){
+			return v.name;
+		});
 	},
 	
 	clear : function(){
@@ -1174,6 +1224,12 @@ Repository.prototype = {
 		}, this.values, []);
 	},
 	
+	/**
+	 * 新しい定義を追加する。
+	 * 
+	 * @param {Array} defs
+	 * @param {String} target 追加対象。この名前の前に追加される。
+	 */
 	register : function(defs, target){
 		if(!defs)
 			return;
@@ -1802,6 +1858,7 @@ AbstractSessionService = {
 		delete this.cookie;
 		delete this.user;
 		delete this.token;
+		delete this.password;
 		
 		if(!cookie)
 			return 'none';

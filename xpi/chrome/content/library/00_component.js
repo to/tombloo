@@ -280,7 +280,7 @@ function getInterfaces(obj){
 function broad(obj, ifcs){
 	ifcs = ifcs || INTERFACES;
 	for(var i=0,len=ifcs.length ; i<len ; i++)
-		if(obj instanceof ifcs[i]);
+    if(obj instanceof ifcs[i]);
 	return obj;
 };
 

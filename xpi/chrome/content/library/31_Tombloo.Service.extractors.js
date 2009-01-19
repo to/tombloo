@@ -956,14 +956,18 @@ Tombloo.Service.extractors = new Repository([
 			return ctx.onLink && 
 				hasElementClass(ctx.document.body, 'mediawiki') && 
 				/wiki\/.+:/.test(ctx.link.href) && 
-				(/\.(png|gif|jpe?g)$/i).test(ctx.link.href);
+				(/\.(svg|png|gif|jpe?g)$/i).test(ctx.link.href);
 		},
 		extract : function(ctx){
+			if ((/\.svg$/i).test(ctx.link.href))
 			return request(ctx.link.href).addCallback(function(res){
+				var xp = (/\.svg$/i).test(ctx.link.href)?
+							 'id("file")/a/img/@src':
+							 'id("file")/a/@href'; // SVG は直接置けないサービスが多いので
 				return {
 					type	: 'photo',
 					item	: ctx.title,
-					itemUrl : $x('id("file")/a/@href', convertToHTMLDocument(res.responseText)),
+					itemUrl : $x(xp, convertToHTMLDocument(res.responseText))
 				};
 			});
 		}

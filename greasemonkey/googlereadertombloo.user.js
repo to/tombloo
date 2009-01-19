@@ -34,7 +34,8 @@ window.addEventListener('load', function(e){
   }, false);
 
   function share(){
-    var item = new get_current_item();
+    var item = get_current_item();
+    if(!item) return;
     // for Tombloo
     var ctx = update({
       document  : doc,
@@ -84,13 +85,28 @@ function addClass(e, cl){
     : (e.className = cl);
 }
 function get_current_item(){
+  var item = {
+    parent: null,
+    body: null,
+    target: null,
+    feed: {
+      channel: {
+        link: null
+      }
+    }
+  }, link;
   try {
-    this.parent = $x('id("current-entry")/descendant::div[contains(concat(" ", normalize-space(@class), " "), " entry-container ")]');
-    this.body = $x('id("current-entry")/descendant::div[contains(concat(" ", normalize-space(@class), " "), " item-body ")]');
-    this.target = $x('id("current-entry")/descendant::a[contains(concat(" ", normalize-space(@class), " "), " entry-title-link ")]');
-    this.feed = { channel:{ } };
-    this.feed.channel.link = decodeURIComponent($x('id("current-entry")/descendant::a[contains(concat(" ", normalize-space(@class), " "), " entry-source-title ")]').href.replace(/^.*\/(?=http)/, ''));
+    item.parent = $x('id("current-entry")/descendant::div[contains(concat(" ", normalize-space(@class), " "), " entry-container ")]') || null;
+    item.body = $x('id("current-entry")/descendant::div[contains(concat(" ", normalize-space(@class), " "), " item-body ")]') || null;
+    item.target = $x('id("current-entry")/descendant::a[contains(concat(" ", normalize-space(@class), " "), " entry-title-link ")]') || null;
+    link = $x('id("current-entry")/descendant::a[contains(concat(" ", normalize-space(@class), " "), " entry-source-title ")]') || null;
+    if(link &&  link.href) item.feed.channel.link = decodeURIComponent(link.href.replace(/^.*\/(?=http)/, ''));
+    if(!item.parent || !item.body || !item.target || !item.feed.channel.link){
+      throw 'get_current_item error';
+    } else {
+      return item;
+    }
   } catch (e) {
-    alert(e);
+    return null;
   }
 }

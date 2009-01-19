@@ -7,19 +7,19 @@ models.register({
 	check : function(ps){
 		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
-
+	
 	getAuthCookie : function(){
 		return getCookieString('friendfeed.com', 'U');
 	},
-
+	
 	getToken : function(){
 		return getCookieString('friendfeed.com', 'AT').split('=').pop();
 	},
-
+	
 	post : function(ps){
 		if(!this.getAuthCookie())
 			throw new Error(getMessage('error.notLoggedin'));
-
+		
 		var self = this;
 		return request('https://friendfeed.com/share/publish', {
 			redirectionLimit : 0,
@@ -38,12 +38,12 @@ models.register({
 models.register({
 	name : 'Mento',
 	ICON : 'http://www.mento.info/favicon.ico',
-
+	
 	check : function(ps){
 		// キャプチャ(file)はAPIキーを入手後に対応(現在未公開)
 		return (/(photo|quote|link)/).test(ps.type) && !ps.file;
 	},
-
+	
 	post : function(ps){
 		return this.save({
 			title       : ps.page,
@@ -54,26 +54,26 @@ models.register({
 			description : joinText([ps.body? ps.body.wrap('"') : '', ps.description], '\n', true),
 		});
 	},
-
+	
 	getCurrentUser : function(){
 		var cookie = getCookies('mento.info', 'mxtu')[0];
 		if(!cookie)
 			throw new Error(getMessage('error.notLoggedin'));
-
+			
 		return cookie.value;
 	},
-
+	
 	save : function(ps){
 		Mento.getCurrentUser();
-
+		
 		if(ps.image){
 			ps.image0 = ps.media = ps.image;
 			delete ps.image;
 		}
-
+		
 		// quick APIはプライベートなどを保存できなかった
 		// http://www.mento.info/post/save/v1/quick
-
+		
 		return request('http://www.mento.info/post/save', {
 			sendContent : update(ps, {
 				src        : 'tombloo',
@@ -86,10 +86,10 @@ models.register({
 			}),
 		});
 	},
-
+	
 	getLocalTimestamp : function(){
 		with(new Date())
-			return [getSeconds(), getMinutes(), getHours(), getDate(), getMonth()+1, getFullYear()].join('-');
+			return [getSeconds(), getMinutes(), getHours(), getDate(), getMonth()+1, getFullYear()].join('-'); 
 	},
 });
 
@@ -98,17 +98,17 @@ models.register({
 	name : 'FFFFOUND',
 	ICON : 'http://ffffound.com/favicon.ico',
 	URL : 'http://FFFFOUND.com/',
-
+	
 	getToken : function(){
 		return request(FFFFOUND.URL + 'bookmarklet.js').addCallback(function(res){
 			return res.responseText.match(/token='(.*?)'/)[1];
 		});
 	},
-
+	
 	check : function(ps){
 		return ps.type == 'photo' && !ps.file;
 	},
-
+	
 	post : function(ps){
 		return this.getToken().addCallback(function(token){
 			return request(FFFFOUND.URL + 'add_asset', {
@@ -122,17 +122,17 @@ models.register({
 			}).addCallback(function(res){
 				if(res.responseText.match('(FAILED:|ERROR:) +(.*?)</span>'))
 					throw new Error(RegExp.$2.trim());
-
+				
 				if(res.responseText.match('login'))
 					throw new Error(getMessage('error.notLoggedin'));
 			});
 		});
 	},
-
+	
 	favor : function(ps){
 		return this.iLoveThis(ps.favorite.id)
 	},
-
+	
 	remove : function(id){
 		return request(FFFFOUND.URL + 'gateway/in/api/remove_asset', {
 			referrer : FFFFOUND.URL,
@@ -141,7 +141,7 @@ models.register({
 			},
 		});
 	},
-
+	
 	iLoveThis : function(id){
 		return request(FFFFOUND.URL + 'gateway/in/api/add_asset', {
 			referrer : FFFFOUND.URL,
@@ -153,7 +153,7 @@ models.register({
 			var error = res.responseText.extract(/"error":"(.*?)"/);
 			if(error == 'AUTH_FAILED')
 				throw new Error(getMessage('error.notLoggedin'));
-
+			
 			// NOT_FOUND / EXISTS / TOO_BIG
 			if(error)
 				throw new Error(RegExp.$1.trim());
@@ -177,20 +177,20 @@ models.register({
 			var xml = convertToXML(res.responseText);
 			if(xml.Error.length())
 				throw res;
-
+			
 			return new Amazon.Item(xml.Items.Item);
 		});
 	},
-
+	
 	normalizeUrl : function(asin){
-		return  'http://amazon.co.jp/o/ASIN/' + asin +
+		return  'http://amazon.co.jp/o/ASIN/' + asin + 
 			(this.affiliateId ? '/' + this.affiliateId + '/ref=nosim' : '');
 	},
-
+	
 	get affiliateId(){
 		return getPref('amazonAffiliateId');
 	},
-
+	
 	Item : function(item){
 		return {
 			get title(){
@@ -198,7 +198,7 @@ models.register({
 			},
 			get creators(){
 				var creators = [];
-
+				
 				// '原著'以外
 				for each(var creator in item.ItemAttributes.Creator.(@Role != '\u539F\u8457'))
 					creators.push(''+creator);
@@ -218,11 +218,11 @@ models.register({
 			},
 		}
 	},
-
+	
 	Image : function(img){
 		if(!img.length())
 			return;
-
+		
 		return {
 			get size(){
 				return (''+img.name()).slice(0, -5).toLowerCase();
@@ -240,17 +240,17 @@ models.register({
 	},
 });
 
-// Flickr API Documentation
+// Flickr API Documentation 
 // http://www.flickr.com/services/api/
 models.register(update({
 	name : 'Flickr',
 	ICON : 'http://www.flickr.com/favicon.ico',
 	API_KEY : 'ecf21e55123e4b31afa8dd344def5cc5',
-
+	
 	check : function(ps){
 		return ps.type == 'photo';
 	},
-
+	
 	post : function(ps){
 		return (ps.file? succeed(ps.file) : download(ps.itemUrl, getTempFile())).addCallback(function(file){
 			return models.Flickr.upload({
@@ -262,11 +262,11 @@ models.register(update({
 			});
 		});
 	},
-
+	
 	favor : function(ps){
 		return this.addFavorite(ps.favorite.id);
 	},
-
+	
 	callMethod : function(ps){
 		return request('http://flickr.com/services/rest/', {
 			queryString : update({
@@ -281,12 +281,12 @@ models.register(update({
 			return json;
 		});
 	},
-
+	
 	callAuthMethod : function(ps){
 		return this.getToken().addCallback(function(page){
 			if(ps.method=='flickr.photos.upload')
 				delete ps.method;
-
+			
 			update(ps, page.token);
 			ps.cb = new Date().getTime(),
 			ps.api_sig = (page.secret + keys(ps).sort().filter(function(key){
@@ -295,7 +295,7 @@ models.register(update({
 			}).map(function(key){
 				return key + ps[key]
 			}).join('')).md5();
-
+			
 			return request('http://flickr.com/services/' + (ps.method? 'rest/' : 'upload/'), {
 				sendContent : ps,
 			});
@@ -304,23 +304,23 @@ models.register(update({
 			if(res.@stat!='ok'){
 				var err = new Error(''+res.err.@msg)
 				err.code = res.err.@code;
-
+				
 				throw err;
 			}
 			return res;
 		});
 	},
-
+	
 	getToken : function(){
 		var status = this.updateSession();
 		switch (status){
 		case 'none':
 			throw new Error(getMessage('error.notLoggedin'));
-
+			
 		case 'same':
 			if(this.token)
 				return succeed(this.token);
-
+			
 		case 'changed':
 			var self = this;
 			return request('http://www.flickr.com/').addCallback(function(res){
@@ -336,7 +336,7 @@ models.register(update({
 			});
 		}
 	},
-
+	
 	addFavorite : function(id){
 		return this.callAuthMethod({
 			method   : 'flickr.favorites.add',
@@ -346,18 +346,18 @@ models.register(update({
 			case 'Photo is already in favorites': // code = 3
 				return;
 			}
-
+			
 			throw err;
 		});
 	},
-
+	
 	removeFavorite : function(id){
 		return this.callAuthMethod({
 			method   : 'flickr.favorites.remove',
 			photo_id : id,
 		});
 	},
-
+	
 	getSizes : function(id){
 		return this.callMethod({
 			method   : 'flickr.photos.getSizes',
@@ -366,7 +366,7 @@ models.register(update({
 			return res.sizes.size;
 		});
 	},
-
+	
 	getInfo : function(id){
 		return this.callMethod({
 			method   : 'flickr.photos.getInfo',
@@ -375,7 +375,7 @@ models.register(update({
 			return res.photo;
 		});
 	},
-
+	
 	// photo
 	// title (optional)
 	// description (optional)
@@ -391,7 +391,7 @@ models.register(update({
 			return ''+res.photoid;
 		});
 	},
-
+	
 	getAuthCookie : function(){
 		return getCookieString('flickr.com', 'cookie_accid');
 	},
@@ -401,15 +401,15 @@ models.register({
 	name : 'WeHeartIt',
 	ICON : 'http://weheartit.com/img/favicon.ico',
 	URL : 'http://weheartit.com/',
-
+	
 	check : function(ps){
 		return ps.type == 'photo' && !ps.file;
 	},
-
+	
 	post : function(ps){
 		if(!this.getAuthCookie())
 			return fail(new Error(getMessage('error.notLoggedin')));
-
+		
 		return request(this.URL + 'add.php', {
 			redirectionLimit : 0,
 			referrer : ps.pageUrl,
@@ -420,15 +420,15 @@ models.register({
 			},
 		});
 	},
-
+	
 	favor : function(ps){
 		return this.iHeartIt(ps.favorite.id);
 	},
-
+	
 	iHeartIt : function(id){
 		if(!this.getAuthCookie())
 			return fail(new Error(getMessage('error.notLoggedin')));
-
+		
 		return request(this.URL + 'inc_heartedby.php', {
 			redirectionLimit : 0,
 			referrer : this.URL,
@@ -438,7 +438,7 @@ models.register({
 			},
 		});
 	},
-
+	
 	getAuthCookie : function(){
 		// クッキーの動作が不安定なため2つをチェックし真偽値を返す
 		return getCookieString('weheartit.com', 'password') && getCookieString('weheartit.com', 'name');
@@ -448,13 +448,13 @@ models.register({
 models.register({
 	name : '4u',
 	ICON : 'http://www.straightline.jp/html/common/static/favicon.ico',
-
+	
 	URL : 'http://4u.straightline.jp/',
-
+	
 	check : function(ps){
 		return ps.type == 'photo' && !ps.file;
 	},
-
+	
 	post : function(ps){
 		return request(this.URL + 'power/manage/register', {
 			referrer : ps.pageUrl,
@@ -470,11 +470,11 @@ models.register({
 				throw new Error(getMessage('error.notLoggedin'));
 		});
 	},
-
+	
 	favor : function(ps){
 		return this.iLoveHer(ps.favorite.id);
 	},
-
+	
 	iLoveHer : function(id){
 		return request(this.URL + 'user/manage/do_register', {
 			redirectionLimit : 0,
@@ -492,11 +492,11 @@ models.register({
 models.register({
 	name : 'Gyazo',
 	ICON : 'chrome://tombloo/skin/item.ico',
-
+	
 	check : function(ps){
 		return ps.type=='photo' && ps.file;
 	},
-
+	
 	getId : function(){
 		var id = getPref('model.gyazo.id');
 		if(!id){
@@ -509,7 +509,7 @@ models.register({
 		}
 		return id;
 	},
-
+	
 	post : function(ps){
 		return request('http://gyazo.com/upload.cgi', {
 			sendContent : {
@@ -525,11 +525,11 @@ models.register({
 models.register({
 	name : 'Local',
 	ICON : 'chrome://tombloo/skin/local.ico',
-
+	
 	check : function(ps){
 		return (/(regular|photo|quote|link)/).test(ps.type);
 	},
-
+	
 	post : function(ps){
 		if(ps.type=='photo'){
 			return this.Photo.post(ps);
@@ -537,21 +537,21 @@ models.register({
 			return Local.append(getDataDir(ps.type + '.txt'), ps);
 		}
 	},
-
+	
 	append : function(file, ps){
 		putContents(file, joinText([
-			joinText([joinText(ps.tags, ' '), ps.item, ps.itemUrl, ps.body, ps.description], '\n\n', true),
+			joinText([joinText(ps.tags, ' '), ps.item, ps.itemUrl, ps.body, ps.description], '\n\n', true), 
 			getContents(file)
 		], '\n\n\n'));
-
+		
 		return succeed();
 	},
-
+	
 	Photo : {
 		post : function(ps){
 			var file = getDataDir('photo');
 			createDir(file);
-
+			
 			if(ps.file){
 				file.append(ps.file.leafName);
 			} else {
@@ -560,7 +560,7 @@ models.register({
 				file.append(fileName);
 			}
 			clearCollision(file);
-
+			
 			return succeed().addCallback(function(){
 				if(ps.file){
 					ps.file.copyTo(file.parent, file.leafName);
@@ -571,20 +571,20 @@ models.register({
 			}).addCallback(function(file){
 				if(AppInfo.OS == 'Darwin'){
 					var script = getTempDir('setcomment.scpt');
-
+					
 					putContents(script, [
 						'set aFile to POSIX file ("' + file.path + '" as Unicode text)',
 						'set cmtStr to ("' + ps.pageUrl + '" as Unicode text)',
 						'tell application "Finder" to set comment of (file aFile) to cmtStr'
 					].join('\n'), 'UTF-16');
-
+					
 					var process = new Process(new LocalFile('/usr/bin/osascript'));
 					process.run(false, [script.path], 1);
 				}
 			});
 		},
 	},
-
+	
 });
 
 models.register({
@@ -594,7 +594,7 @@ models.register({
 	check : function(ps){
 		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
-
+	
 	post : function(ps){
 		// ログインせずにポストしてもエラーが発生しない
 		// クッキーでログインを判別できない
@@ -602,7 +602,7 @@ models.register({
 			// 未ログインか?
 			if(res.channel.URI.path == '/login/')
 				throw new Error(getMessage('error.notLoggedin'));
-
+			
 			return request('http://ping.fm/post/', {
 				sendContent : {
 					message : joinText([ps.item, ps.itemUrl, ps.body, ps.description], ' ', true),
@@ -615,11 +615,11 @@ models.register({
 models.register({
 	name : 'Twitter',
 	ICON : 'http://twitter.com/favicon.ico',
-
+	
 	check : function(ps){
 		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
-
+	
 	post : function(ps){
 		return Twitter.getToken().addCallback(function(token){
 			// FIXME: 403が発生することがあったため redirectionLimit:0 を外す
@@ -629,25 +629,25 @@ models.register({
 			}));
 		});
 	},
-
+	
 	favor : function(ps){
 		return this.addFavorite(ps.favorite.id);
 	},
-
-
+	
+	
 	getToken : function(){
 		return request('http://twitter.com/account/settings').addCallback(function(res){
 			var html = res.responseText;
 			if(~html.indexOf('class="signin"'))
 				throw new Error(getMessage('error.notLoggedin'));
-
+			
 			return {
 				authenticity_token : html.extract(/authenticity_token.+value="(.+?)"/),
 				siv                : html.extract(/logout\?siv=(.+?)"/),
 			}
 		});
 	},
-
+	
 	remove : function(id){
 		return Twitter.getToken().addCallback(function(ps){
 			ps._method = 'delete';
@@ -658,7 +658,7 @@ models.register({
 			});
 		});
 	},
-
+	
 	addFavorite : function(id){
 		return Twitter.getToken().addCallback(function(ps){
 			return request('http://twitter.com/favourings/create/' + id, {
@@ -674,23 +674,23 @@ models.register({
 models.register({
 	name : 'Jaiku',
 	ICON : 'http://jaiku.com/favicon.ico',
-
+	
 	URL : 'http://jaiku.com/',
-
+	
 	check : function(ps){
 		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
-
+	
 	getCurrentUser : function(){
 		if(getCookieString('jaiku.com').match(/jaikuuser_.+?=(.+?);/))
 			return RegExp.$1;
-
+		
 		throw new Error(getMessage('error.notLoggedin'));
 	},
-
+	
 	post : function(ps){
 		this.getCurrentUser();
-
+		
 		return request(Jaiku.URL).addCallback(function(res){
 			var form =  formContents(convertToHTMLDocument(res.responseText));
 			return request(Jaiku.URL, {
@@ -711,11 +711,11 @@ models.register(update({}, AbstractSessionService, {
 	check : function(ps){
 		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
-
+	
 	post : function(ps){
 		return Rejaw.shout(joinText([ps.item, ps.itemUrl, ps.body, ps.description], '\n', true));
 	},
-
+	
 	shout : function(text){
 		return Rejaw.getToken().addCallback(function(token){
 			return request('http://rejaw.com/v1/conversation/shout.json', {
@@ -726,21 +726,21 @@ models.register(update({}, AbstractSessionService, {
 			});
 		});
 	},
-
+	
 	getAuthCookie : function(){
 		return getCookieString('rejaw.com', 'signin_email') || getCookieString('rejaw.com', 'signin_openid_url');
 	},
-
+	
 	getToken : function(){
 		var status = this.updateSession();
 		switch (status){
 		case 'none':
 			throw new Error(getMessage('error.notLoggedin'));
-
+			
 		case 'same':
 			if(this.token)
 				return succeed(this.token);
-
+			
 		case 'changed':
 			var self = this;
 			return request('http://rejaw.com/').addCallback(function(res){
@@ -759,14 +759,14 @@ models.register(update({
 	check : function(ps){
 		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
-
+	
 	post : function(ps){
 		return Plurk.addPlurk(
 			':',
 			joinText([ps.item, ps.itemUrl, ps.body, ps.description], ' ', true)
 		);
 	},
-
+	
 	addPlurk : function(qualifier, content){
 		return Plurk.getToken().addCallback(function(token){
 			return request('http://www.plurk.com/TimeLine/addPlurk', {
@@ -778,21 +778,21 @@ models.register(update({
 			});
 		});
 	},
-
+	
 	getAuthCookie : function(){
 		return getCookieString('plurk.com', 'plurkcookie').extract(/user_id=(.+)/);
 	},
-
+	
 	getToken : function(){
 		var status = this.updateSession();
 		switch (status){
 		case 'none':
 			throw new Error(getMessage('error.notLoggedin'));
-
+			
 		case 'same':
 			if(this.token)
 				return succeed(this.token);
-
+			
 		case 'changed':
 			var self = this;
 			return request('http://www.plurk.com/').addCallback(function(res){
@@ -813,7 +813,7 @@ models.register({
 models.register({
 	name : 'GoogleWebHistory',
 	ICON : models.Google.ICON,
-
+	
 	getCh : function(url){
 		function r(x,y){
 			return Math.floor((x/y-Math.floor(x/y))*y+.1);
@@ -825,10 +825,10 @@ models.register({
 				c[r(i,3)]=(c[r(i,3)]-c[r(i+1,3)]-j)^(r(i,3)==1?j<<s[i]:j>>>s[i]);
 			}
 		}
-
+		
 		return (this.getCh = function(url){
 			url='info:'+url;
-
+			
 			var c = [0x9E3779B9,0x9E3779B9,0xE6359A60],i,j,k=0,l,f=Math.floor;
 			for(l=url.length ; l>=12 ; l-=12){
 				for(i=0 ; i<16 ; i+=1){
@@ -838,15 +838,15 @@ models.register({
 				k+=12;
 			}
 			c[2]+=url.length;
-
+			
 			for(i=l;i>0;i--)
 				c[f((i-1)/4)]+=url.charCodeAt(k+i-1)<<(r(i-1,4)+(i>8?1:0))*8;
 			m(c);
-
+			
 			return'6'+c[2];
 		})(url);
 	},
-
+	
 	post : function(url){
 		return request('http://www.google.com/search?client=navclient-auto&ch=' + GoogleWebHistory.getCh(url) + '&features=Rank&q=info:' + escape(url));
 	},
@@ -855,11 +855,11 @@ models.register({
 models.register({
 	name : 'GoogleBookmarks',
 	ICON : models.Google.ICON,
-
+	
 	check : function(ps){
 		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
-
+	
 	post : function(ps){
 		return request('http://www.google.com/bookmarks/mark', {
 			queryString :	{
@@ -869,7 +869,7 @@ models.register({
 			var doc = convertToHTMLDocument(res.responseText);
 			if(doc.getElementById('gaia_loginform'))
 				throw new Error(getMessage('error.notLoggedin'));
-
+			
 			var fs = formContents(doc);
 			return request('http://www.google.com'+$x('//form[@name="add_bkmk_form"]/@action', doc), {
 				redirectionLimit : 0,
@@ -889,7 +889,7 @@ models.register({
 models.register({
 	name : 'Delicious',
 	ICON : 'http://delicious.com/favicon.ico',
-
+	
 	/**
 	 * ユーザーの利用しているタグ一覧を取得する。
 	 *
@@ -911,7 +911,7 @@ models.register({
 			}, tags, []);
 		});
 	},
-
+	
 	/**
 	 * タグ、おすすめタグ、ネットワークなどを取得する。
 	 * ブックマーク済みでも取得することができる。
@@ -926,7 +926,7 @@ models.register({
 			suggestions : succeed().addCallback(function(){
 				// ログインをチェックする
 				self.getCurrentUser();
-
+				
 				// ブックマークレット用画面の削除リンクを使い既ブックマークを判定する
 				return request('http://delicious.com/save', {
 					queryString : {
@@ -936,7 +936,7 @@ models.register({
 				});
 			}).addCallback(function(res){
 				var doc = convertToHTMLDocument(res.responseText);
-
+				
 				function getTags(part){
 					return $x('id("save-' + part + '-tags")//a[contains(@class, "tag-list-tag")]/text()', doc, true);
 				}
@@ -948,38 +948,38 @@ models.register({
 						tags        : $x('id("tags")', doc).value.split(' '),
 						private     : $x('id("share")', doc).checked,
 					},
-
+					
 					duplicated : !!doc.getElementById('delete'),
-					recommended : getTags('reco'),
+					recommended : getTags('reco'), 
 					popular : getTags('pop'),
 					network : getTags('net'),
 				}
 			})
 		};
-
+		
 		return new DeferredHash(ds).addCallback(function(ress){
 			// エラーチェック
 			for each(var [success, res] in ress)
 				if(!success)
 					throw res;
-
+			
 			var res = ress.suggestions[1];
 			res.tags = ress.tags[1];
 			return res;
 		});
 	},
-
+	
 	getCurrentUser : function(){
 		if(decodeURIComponent(getCookieString('delicious.com', '_user')).match(/user=(.*?) /))
 			return RegExp.$1;
-
+		
 		throw new Error(getMessage('error.notLoggedin'));
 	},
-
+	
 	check : function(ps){
 		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
-
+	
 	post : function(ps){
 		return request('http://delicious.com/post/', {
 			queryString :	{
@@ -990,7 +990,7 @@ models.register({
 			var doc = convertToHTMLDocument(res.responseText);
 			if(!doc.getElementById('saveitem'))
 				throw new Error(getMessage('error.notLoggedin'));
-
+			
 			return request('http://delicious.com'+$x('id("saveitem")/@action', doc), {
 				redirectionLimit : 0,
 				sendContent : update(formContents(doc), {
@@ -1008,34 +1008,34 @@ models.register({
 models.register({
 	name : 'Digg',
 	ICON : 'http://digg.com/favicon.ico',
-
+	
 	check : function(ps){
 		return ps.type=='link';
 	},
-
+	
 	post : function(ps){
 		return Digg.dig(ps.item, ps.itemUrl);
 	},
-
+	
 	dig : function(title, url){
 		var url = 'http://digg.com/submit?' + queryString({
 			phase : 2,
 			url   : url,
-			title : title,
+			title : title, 
 		});
-
+		
 		return request(url).addCallback(function(res){
 			if(res.channel.URI.asciiSpec.match('digg.com/register/'))
 				throw new Error(getMessage('error.notLoggedin'));
-
+			
 			var html = res.responseText;
 			var pagetype = html.extract(/var pagetype ?= ?"(.+?)";/);
-
+			
 			// 誰もdigしていなかったらフォームを開く(CAPTCHAがあるため)
 			// 一定時間後にページ遷移するためdescriptionを設定するのが難しい
 			if(pagetype=='other')
 				return addTab(url, true);
-
+			
 			var matches = (/javascript:dig\((.+?),(.+?),'(.+?)'\)/).exec(html);
 			return request('http://digg.com/diginfull', {
 				sendContent : {
@@ -1053,20 +1053,20 @@ models.register({
 models.register(update({}, AbstractSessionService, {
 	name : 'StumbleUpon',
 	ICON : 'http://www.stumbleupon.com/favicon.ico',
-
+	
 	check : function(ps){
 		return ps.type=='link';
 	},
-
+	
 	post : function(ps){
 		return this.iLikeIt(ps.item, ps.itemUrl, ps.description);
 	},
-
+	
 	iLikeIt : function(title, url, comment){
 		var username;
 		return StumbleUpon.getCurrentId().addCallback(function(id){
 			username = id;
-
+			
 			return StumbleUpon.getCurrentPassword();
 		}).addCallback(function(password){
 			return request('http://www.stumbleupon.com/rate.php', {
@@ -1102,11 +1102,11 @@ models.register(update({}, AbstractSessionService, {
 				});
 		});
 	},
-
+	
 	getAuthCookie : function(){
 		return getCookieString('stumbleupon.com', 'PHPSESSID');
 	},
-
+	
 	getCurrentUser : function(){
 		return this.getSessionValue('user', function(){
 			return request('http://www.stumbleupon.com/').addCallback(function(res){
@@ -1114,12 +1114,12 @@ models.register(update({}, AbstractSessionService, {
 				var user = $x('id("t-home")/a/@href', doc).extract('http://(.+?)\.stumbleupon\.com');
 				if(user=='www')
 					throw new Error(getMessage('error.notLoggedin'));
-
+				
 				return user;
 			});
 		});
 	},
-
+	
 	getCurrentId : function(){
 		return this.getSessionValue('id', function(){
 			var ps = {};
@@ -1127,11 +1127,11 @@ models.register(update({}, AbstractSessionService, {
 				return StumbleUpon.getCurrentUser();
 			}).addCallback(function(user){
 				ps.username = user;
-
+				
 				return StumbleUpon.getCurrentPassword();
 			}).addCallback(function(password){
 				ps.password = password;
-
+				
 				return request('https://www.stumbleupon.com/userexists.php', {
 					sendContent : ps,
 				});
@@ -1140,14 +1140,14 @@ models.register(update({}, AbstractSessionService, {
 			});
 		});
 	},
-
+	
 	getCurrentPassword : function(user){
 		return this.getSessionValue('password', function(){
 			return StumbleUpon.getCurrentUser().addCallback(function(user){
 				var passwords = getPasswords('http://www.stumbleupon.com', user);
 				if(!passwords.length)
 					throw new Error(getMessage('error.passwordNotFound'));
-
+				
 				return passwords[0].password;
 			});
 		});
@@ -1160,34 +1160,34 @@ if(NavBookmarksService){
 		name : 'FirefoxBookmark',
 		ICON : 'chrome://tombloo/skin/firefox.ico',
 		ANNO_DESCRIPTION : 'bookmarkProperties/description',
-
+		
 		check : function(ps){
 			return ps.type == 'link';
 		},
-
+		
 		post : function(ps){
 			return succeed(this.addBookmark(ps.itemUrl, ps.item, ps.tags, ps.description));
 		},
-
+		
 		addBookmark : function(uri, title, tags, description){
 			uri = createURI(uri);
 			tags = tags || [];
-
+			
 			if(this.isBookmarked(uri))
 				return;
-
+			
 			var folders = [NavBookmarksService.unfiledBookmarksFolder].concat(tags.map(bind('createTag', this)));
 			folders.forEach(function(folder){
 				NavBookmarksService.insertBookmark(
-					folder,
+					folder, 
 					uri,
 					NavBookmarksService.DEFAULT_INDEX,
 					title);
 			});
-
+			
 			this.setDescription(uri, description);
 		},
-
+		
 		getBookmark : function(uri){
 			uri = createURI(uri);
 			var item = this.getBookmarkId(uri);
@@ -1198,32 +1198,32 @@ if(NavBookmarksService){
 					description : this.getDescription(item),
 				};
 		},
-
+		
 		isBookmarked : function(uri){
 			return NavBookmarksService.isBookmarked(createURI(uri));
 		},
-
+		
 		removeBookmark : function(uri){
 			uri = createURI(uri);
 			NavBookmarksService.getBookmarkIdsForURI(uri, {}).forEach(function(item){
 				NavBookmarksService.removeItem(item);
 			});
 		},
-
+		
 		getBookmarkId : function(uri){
 			if(typeof(uri)=='number')
 				return uri;
-
+			
 			uri = createURI(uri);
 			return NavBookmarksService.getBookmarkIdsForURI(uri, {}).filter(function(item){
 				while(item = NavBookmarksService.getFolderIdForItem(item))
 					if(item == NavBookmarksService.tagsFolder)
 						return false;
-
+				
 				return true;
 			})[0];
 		},
-
+		
 		getDescription : function(uri){
 			try{
 				return AnnotationService.getItemAnnotation(this.getBookmarkId(uri), this.ANNO_DESCRIPTION);
@@ -1231,21 +1231,21 @@ if(NavBookmarksService){
 				return '';
 			}
 		},
-
+		
 		setDescription : function(uri, description){
 			description = description || '';
 			try{
-				AnnotationService.setItemAnnotation(this.getBookmarkId(uri), this.ANNO_DESCRIPTION, description,
+				AnnotationService.setItemAnnotation(this.getBookmarkId(uri), this.ANNO_DESCRIPTION, description, 
 					0, AnnotationService.EXPIRE_NEVER);
 			} catch(e){}
 		},
-
+		
 		createTag : function(name){
 			return this.createFolder(NavBookmarksService.tagsFolder, name);
 		},
-
+		
 		createFolder : function(parent, name){
-			return NavBookmarksService.getChildFolder(parent, name) ||
+			return NavBookmarksService.getChildFolder(parent, name) || 
 				NavBookmarksService.createFolder(parent, name, NavBookmarksService.DEFAULT_INDEX);
 		},
 	});
@@ -1287,7 +1287,7 @@ models.register(update({
 // http://www.kawa.net/works/ajax/romanize/japanese.html
 models.register({
 	name : 'Kawa',
-
+	
 	getRomaReadings : function(text){
 		return request('http://www.kawa.net/works/ajax/romanize/romanize.cgi', {
 			queryString : {
@@ -1298,7 +1298,7 @@ models.register({
 				q : text,
 			},
 		}).addCallback(function(res){
-			return map(function(s){
+			return map(function(s){	
 				return ''+s.@title || ''+s;
 			}, convertToXML(res.responseText).li.span);
 		});
@@ -1310,7 +1310,7 @@ models.register({
 models.register({
 	name : 'Yahoo',
 	APP_ID : '16y9Ex6xg64GBDD.tmwF.WIdXURG0iTT25NUQ72RLF_Jzt2_MfXDDZfKehYkX6dPZqk-',
-
+	
 	parse : function(ps){
 		ps.appid = this.APP_ID;
 		return request('http://api.jlp.yahoo.co.jp/MAService/V1/parse', {
@@ -1320,7 +1320,7 @@ models.register({
 			return convertToXML(res.responseText);
 		});
 	},
-
+	
 	getKanaReadings : function(str){
 		return this.parse({
 			sentence : str,
@@ -1329,7 +1329,7 @@ models.register({
 			return list(res.ma_result.word_list.word.reading);
 		});
 	},
-
+	
 	getRomaReadings : function(str){
 		return this.getKanaReadings(str).addCallback(function(rs){
 			return rs.join('\u0000').toRoma().split('\u0000');
@@ -1341,16 +1341,16 @@ models.register({
 models.register({
 	name : 'YahooBookmarks',
 	ICON : 'http://bookmarks.yahoo.co.jp/favicon.ico',
-
+	
 	check : function(ps){
 		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
-
+	
 	post : function(ps){
 		return request('http://bookmarks.yahoo.co.jp/action/post').addCallback(function(res){
 			if(res.responseText.indexOf('login_form')!=-1)
 				throw new Error(getMessage('error.notLoggedin'));
-
+			
 			return formContents($x('(id("addbookmark")//form)[1]', convertToHTMLDocument(res.responseText)));
 		}).addCallback(function(fs){
 			return request('http://bookmarks.yahoo.co.jp/action/post/done', {
@@ -1366,7 +1366,7 @@ models.register({
 			});
 		});
 	},
-
+	
 	/**
 	 * タグ、おすすめタグを取得する。
 	 * ブックマーク済みでも取得することができる。
@@ -1383,11 +1383,11 @@ models.register({
 			var doc = convertToHTMLDocument(res.responseText);
 			if(!$x('id("bmtsave")', doc))
 				throw new Error(getMessage('error.notLoggedin'));
-
+			
 			function getTags(part){
 				return evalInSandbox(unescapeHTML(res.responseText.extract(RegExp('^' + part + ' ?= ?(.+)(;|$)', 'm'))), 'http://bookmarks.yahoo.co.jp/') || [];
 			}
-
+			
 			return {
 				duplicated : !!$x('//input[@name="docid"]', doc),
 				popular : getTags('rectags'),
@@ -1405,7 +1405,7 @@ models.register({
 models.register({
 	name : 'Faves',
 	ICON : 'http://faves.com/favicon.ico',
-
+	
 	/**
 	 * タグを取得する。
 	 *
@@ -1429,17 +1429,17 @@ models.register({
 			};
 		});
 	},
-
+	
 	check : function(ps){
 		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
-
+	
 	post : function(ps){
 		return request('https://secure.faves.com/v1/posts/add', {
 			queryString : {
 				url         : ps.itemUrl,
 				description : ps.item,
-				shared      : ps.private? 'no' : '',
+				shared      : ps.private? 'no' : '',  
 				tags        : ps.tags ? ps.tags.join(' ') : '',
 				extended    : joinText([ps.body, ps.description], ' ', true),
 			},
@@ -1450,7 +1450,7 @@ models.register({
 models.register({
 	name : 'Magnolia',
 	ICON : 'http://ma.gnolia.com/favicon.ico',
-
+	
 	getCurrentUser : function(){
 		return request('https://ma.gnolia.com/').addCallback(function(res){
 			var doc = convertToHTMLDocument(res.responseText);
@@ -1459,16 +1459,16 @@ models.register({
 			return user;
 		});
 	},
-
+	
 	getApiKey : function(){
 		var self = this;
 		return request('http://ma.gnolia.com/account/applications').addCallback(function(res){
 			return self.apikey = $x(
-				'id("api_key")/text()',
+				'id("api_key")/text()', 
 				convertToHTMLDocument(res.responseText)).replace(/[\n\r]+/g, '');
 		});
 	},
-
+	
 	/**
 	 * タグを取得する。
 	 *
@@ -1494,11 +1494,11 @@ models.register({
 			});
 		});
 	},
-
+	
 	check : function(ps){
 		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
-
+	
 	post : function(ps){
 		return Magnolia.getApiKey().addCallback(function(apikey){
 			return request('http://ma.gnolia.com/api/rest/1/bookmarks_add', {
@@ -1519,11 +1519,11 @@ models.register({
 models.register({
 	name : 'Snipshot',
 	ICON : 'http://snipshot.com/favicon.ico',
-
+	
 	check : function(ps){
 		return ps.type=='photo';
 	},
-
+	
 	post : function(ps){
 		return request('http://services.snipshot.com/', {
 			sendContent : {
@@ -1543,11 +1543,11 @@ models.register({
 models.register(update({
 	name : 'Hatena',
 	ICON : 'http://www.hatena.ne.jp/favicon.ico',
-
+	
 	getPasswords : function(){
 		return getPasswords('https://www.hatena.ne.jp');
 	},
-
+	
 	login : function(user, password){
 		var self = this;
 		return (this.getAuthCookie()? this.logout() : succeed()).addCallback(function(){
@@ -1564,24 +1564,24 @@ models.register(update({
 			self.user = user;
 		});
 	},
-
+	
 	logout : function(){
 		return request('http://www.hatena.ne.jp/logout');
 	},
-
+	
 	getAuthCookie : function(){
 		return getCookieString('.hatena.ne.jp', 'rk');
 	},
-
+	
 	getToken : function(){
 		switch (this.updateSession()){
 		case 'none':
 			throw new Error(getMessage('error.notLoggedin'));
-
+			
 		case 'same':
 			if(this.token)
 				return succeed(this.token);
-
+			
 		case 'changed':
 			var self = this;
 			return request('http://d.hatena.ne.jp/edit').addCallback(function(res){
@@ -1590,26 +1590,26 @@ models.register(update({
 			});
 		}
 	},
-
+	
 	getCurrentUser : function(){
 		switch (this.updateSession()){
 		case 'none':
 			return succeed('');
-
+			
 		case 'same':
 			if(this.user)
 				return succeed(this.user);
-
+			
 		case 'changed':
 			var self = this;
 			return request('http://www.hatena.ne.jp/my').addCallback(function(res){
 				return self.user = $x(
-					'(//*[@class="username"]//strong)[1]/text()',
+					'(//*[@class="username"]//strong)[1]/text()', 
 					convertToHTMLDocument(res.responseText));
 			});
 		}
 	},
-
+	
 	reprTags: function (tags) {
 		return tags ? tags.map(function(t){
 			return '[' + t + ']';
@@ -1620,11 +1620,11 @@ models.register(update({
 models.register({
 	name : 'HatenaFotolife',
 	ICON : 'http://f.hatena.ne.jp/favicon.ico',
-
+	
 	check : function(ps){
 		return ps.type=='photo';
 	},
-
+	
 	post : function(ps){
 		// 拡張子を指定しないとアップロードに失敗する(エラーは起きない)
 		return (ps.file? succeed(ps.file) : download(ps.itemUrl, getTempFile(createURI(ps.itemUrl).fileExtension))).addCallback(function(file){
@@ -1634,13 +1634,13 @@ models.register({
 			});
 		});
 	},
-
+	
 	// image1 - image5
 	// fototitle1 - fototitle5 (optional)
 	upload : function(ps){
 		return Hatena.getToken().addCallback(function(token){
 			ps.rkm = token;
-
+			
 			return Hatena.getCurrentUser();
 		}).addCallback(function(user){
 			return request('http://f.hatena.ne.jp/'+user+'/up', {
@@ -1655,31 +1655,31 @@ models.register({
 models.register(update({
 	name : 'HatenaBookmark',
 	ICON : 'http://b.hatena.ne.jp/favicon.ico',
-
+	
 	POST_URL : 'http://b.hatena.ne.jp/add',
-
+	
 	check : function(ps){
 		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
-
+	
 	post : function(ps){
 		// タイトルは共有されているため送信しない
 		return this.addBookmark(ps.itemUrl, null, ps.tags, joinText([ps.body, ps.description], ' ', true));
 	},
-
+	
 	getAuthCookie : function(){
 		return Hatena.getAuthCookie();
 	},
-
+	
 	getToken : function(){
 		switch (this.updateSession()){
 		case 'none':
 			throw new Error(getMessage('error.notLoggedin'));
-
+			
 		case 'same':
 			if(this.token)
 				return succeed(this.token);
-
+			
 		case 'changed':
 			var self = this;
 			return request(HatenaBookmark.POST_URL).addCallback(function(res){
@@ -1688,7 +1688,7 @@ models.register(update({
 			});
 		}
 	},
-
+	
 	addBookmark : function(url, title, tags, description){
 		return HatenaBookmark.getToken().addCallback(function(token){
 			return request('http://b.hatena.ne.jp/bookmarklet.edit', {
@@ -1698,13 +1698,13 @@ models.register(update({
 					url     : url.replace(/%[0-9a-f]{2}/g, function(s){
 						return s.toUpperCase();
 					}),
-					title   : title,
+					title   : title, 
 					comment : Hatena.reprTags(tags) + description.replace(/[\n\r]+/g, ' '),
 				},
 			});
 		});
 	},
-
+	
 	/**
 	 * タグ、おすすめタグ、キーワードを取得する
 	 * ページURLが空の場合、タグだけが返される。
@@ -1716,7 +1716,7 @@ models.register(update({
 		return succeed().addCallback(function(){
 			if(!Hatena.getAuthCookie())
 				throw new Error(getMessage('error.notLoggedin'));
-
+			
 			return request(HatenaBookmark.POST_URL, {
 				sendContent : {
 					mode : 'confirm',
@@ -1725,14 +1725,14 @@ models.register(update({
 			})
 		}).addCallback(function(res){
 			var tags = evalInSandbox(
-				'(' + res.responseText.extract(/var tags =(.*);$/m) + ')',
+				'(' + res.responseText.extract(/var tags =(.*);$/m) + ')', 
 				HatenaBookmark.POST_URL) || {};
-
+			
 			return {
 				duplicated : (/bookmarked-confirm/).test(res.responseText),
 				recommended : $x(
-					'id("recommend-tags")/span[@class="tag"]/text()',
-					convertToHTMLDocument(res.responseText),
+					'id("recommend-tags")/span[@class="tag"]/text()', 
+					convertToHTMLDocument(res.responseText), 
 					true),
 				tags : map(function([tag, info]){
 					return {
@@ -1749,7 +1749,7 @@ models.register( {
 	name: 'HatenaDiary',
 	ICON: 'http://d.hatena.ne.jp/favicon.ico',
 	POST_URL : 'http://d.hatena.ne.jp',
-
+	
 	/*
 	check : function(ps){
 		return (/(regular|photo|quote|link)/).test(ps.type) && !ps.file;
@@ -1794,7 +1794,7 @@ models.register( {
 models.register({
 	name : 'HatenaStar',
 	ICON : 'http://s.hatena.ne.jp/favicon.ico',
-
+	
 	getToken : function(){
 		return request('http://s.hatena.ne.jp/entries.json').addCallback(function(res){
 			if(!res.responseText.match(/"rks":"(.*?)"/))
@@ -1802,11 +1802,11 @@ models.register({
 			return RegExp.$1;
 		})
 	},
-
+	
 	check : function(ps){
 		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
-
+	
 	post : function(ps){
 		return HatenaStar.getToken().addCallback(function(token){
 			return request('http://s.hatena.ne.jp/star.add.json', {
@@ -1821,7 +1821,7 @@ models.register({
 			});
 		});
 	},
-
+	
 	remove : function(ps){
 		return HatenaStar.getToken().addCallback(function(token){
 			return request('http://s.hatena.ne.jp/star.delete.json', {
@@ -1844,7 +1844,7 @@ models.register(update({
 	check : function(ps){
 		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
-
+	
 	post : function(ps){
 		return LivedoorClip.getToken().addCallback(function(token){
 			var content = {
@@ -1862,15 +1862,15 @@ models.register(update({
 			});
 		});
 	},
-
+	
 	getAuthCookie : function(){
 		return getCookieString('livedoor.com', '.LRC');
 	},
-
+	
 	getSuggestions : function(url){
 		if(!this.getAuthCookie())
 			return fail(new Error(getMessage('error.notLoggedin')));
-
+		
 		// 何かのURLを渡す必要がある
 		return request(LivedoorClip.POST_URL, {
 			queryString : {
@@ -1889,16 +1889,16 @@ models.register(update({
 			}
 		});
 	},
-
+	
 	getToken : function(){
 		switch (this.updateSession()){
 		case 'none':
 			throw new Error(getMessage('error.notLoggedin'));
-
+		
 		case 'same':
 			if(this.token)
 				return succeed(this.token);
-
+		
 		case 'changed':
 			var self = this;
 				return request(LivedoorClip.POST_URL+'?link=http%3A%2F%2Ftombloo/').addCallback(function(res){
@@ -1915,19 +1915,20 @@ models.register(update({
 models.register({
 	name : 'Wassr',
 	ICON : 'http://wassr.jp/favicon.ico',
-
+	
 	check : function(ps){
 		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
-
+	
 	post : function(ps){
 		return this.addMessage(joinText([ps.item, ps.itemUrl, ps.body, ps.description], ' ', true));
 	},
-
+	
 	addMessage : function(message){
 		return request('http://wassr.jp/my/').addCallback(function(res){
 			if(!res.channel.URI.asciiSpec.match('http://wassr.jp/my/'))
-			   throw new Error(getMessage('error.notLoggedin'));
+				throw new Error(getMessage('error.notLoggedin'));
+			
 			return request('http://wassr.jp/my/status/add', {
 				redirectionLimit : 0,
 				sendContent : update(formContents(convertToHTMLDocument(res.responseText)), {
@@ -1942,24 +1943,25 @@ models.register({
 	name: 'Femo',
 	ICON: 'http://femo.jp/favicon.ico',
 	POST_URL: 'http://femo.jp/create/post',
-
+	
 	check: function(ps) {
 		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
+	
 	post: function(ps) {
 		return this.addMemo(ps);
 	},
+	
 	addMemo : function(ps){
 		return request(this.POST_URL, {
 			sendContent: {
 				title   : ps.item,
 				text    : joinText([ps.itemUrl, ps.body, ps.description], '\n'),
-				tagtext : joinText(ps.tags, ' ')
+				tagtext : joinText(ps.tags, ' '),
 			},
 		});
 	},
 });
-
 
 models.register({
 	name : 'MediaMarker',
@@ -1967,36 +1969,35 @@ models.register({
 	check : function(ps){
 		return ps.type == 'link' && !ps.file;
 	},
-
-        getAuthCookie : function(){
-            return getCookieString('mediamarker.net', 'PHPSESSID');
+	
+	getAuthCookie : function(){
+		return getCookieString('mediamarker.net', 'mediax_ss');
 	},
-
-
+	
 	post : function(ps){
-            if (!this.getAuthCookie())
-                throw new Error(getMessage('error.notLoggedin'));
-	    return request('http://mediamarker.net/reg', {
-		queryString : {
-                    mode : 'marklet',
-                    url  : ps.itemUrl,
-                    comment : ps.description
-	        }
-	    }).addCallback(function(res){
-		var doc = convertToHTMLDocument(res.responseText);
-                if ( ! $x('//td[contains(@class,"menu")]/a/@href', doc).match('http://mediamarker.net/u/') )
-	            throw new Error(getMessage('error.notLoggedin'));
-		var url = $x('id("reg")/@action', doc); // フォーム取得
-		if(!url)
-                    return true; // 既に登録されているとき＝フォームが出ないときはポストせずに終了
-		return request(url, {
-		    redirectionLimit : 0,
-		    sendContent : update(formContents(doc), {
-                        title : ps.item,
-		        tag :  joinText(ps.tags, "\n")
-		    })
-                });
-            });
+		if(!this.getAuthCookie())
+			throw new Error(getMessage('error.notLoggedin'));
+		
+		return request('http://mediamarker.net/reg', {
+			queryString : {
+				mode    : 'marklet',
+				url     : ps.itemUrl,
+				comment : ps.description,
+			}
+		}).addCallback(function(res){
+			var doc = convertToHTMLDocument(res.responseText);
+			var url = $x('id("reg")/@action', doc);
+			if(!url)
+				throw new Error(getMessage('error.alreadyExsits'));
+			
+			return request(url, {
+				redirectionLimit : 0,
+				sendContent : update(formContents(doc), {
+					title : ps.item,
+					tag   : joinText(ps.tags, '\n'),
+				})
+			});
+		});
 	}
 });
 
@@ -2040,7 +2041,7 @@ models.copyTo(this);
 
 /**
  * ポストを受け取ることができるサービスのリストを取得する。
- *
+ * 
  * @param {Object} ps ポスト情報。
  * @return {Array}
  */
@@ -2076,7 +2077,7 @@ models.getEnables = function(ps){
 	var config = eval(getPref('postConfig'));
 	return this.check(ps).filter(function(m){
 		m.config = (m.config || {});
-
+		
 		// クイックポストフォームにて、取得後にデフォルトなのか利用可能なのかを
 		// 判定する必要があったため、サービスに設定値を保存し返す
 		var val = m.config[ps.type] = models.getPostConfig(config, m.name, ps);
@@ -2086,7 +2087,7 @@ models.getEnables = function(ps){
 
 /**
  * ポスト設定値を文字列で取得する。
- *
+ * 
  * @param {Object} config ポスト設定。
  * @param {String} name サービス名。
  * @param {Object} ps ポスト情報。

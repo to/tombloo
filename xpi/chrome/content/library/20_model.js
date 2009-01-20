@@ -1463,9 +1463,13 @@ models.register({
 	getApiKey : function(){
 		var self = this;
 		return request('http://ma.gnolia.com/account/applications').addCallback(function(res){
-			return self.apikey = $x(
-				'id("api_key")/text()', 
-				convertToHTMLDocument(res.responseText)).replace(/[\n\r]+/g, '');
+			try {
+				return self.apikey = $x(
+					'id("api_key")/text()', 
+					convertToHTMLDocument(res.responseText)).replace(/[\n\r]+/g, '');
+			} catch(e) {
+				throw new Error(getMessage('error.notLoggedin'));
+			}
 		});
 	},
 	

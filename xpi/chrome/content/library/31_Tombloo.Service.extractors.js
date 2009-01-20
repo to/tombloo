@@ -950,7 +950,7 @@ Tombloo.Service.extractors = new Repository([
 	},
 	
 	{
-		name : 'Photo - Mediawiki Thumbnail',
+		name : 'Photo - MediaWiki Thumbnail',
 		ICON : 'http://www.mediawiki.org/favicon.ico',
 		check : function(ctx){
 			return ctx.onLink && 
@@ -959,15 +959,16 @@ Tombloo.Service.extractors = new Repository([
 				(/\.(svg|png|gif|jpe?g)$/i).test(ctx.link.href);
 		},
 		extract : function(ctx){
-			if ((/\.svg$/i).test(ctx.link.href))
 			return request(ctx.link.href).addCallback(function(res){
-				var xp = (/\.svg$/i).test(ctx.link.href)?
-							 'id("file")/a/img/@src':
-							 'id("file")/a/@href'; // SVG は直接置けないサービスが多いので
+				// SVGの場合サムネイルを取得する
+				var xpath = (/\.svg$/i).test(ctx.link.href)?
+					'id("file")/a/img/@src':
+					'id("file")/a/@href';
+				
 				return {
-					type	: 'photo',
-					item	: ctx.title,
-					itemUrl : $x(xp, convertToHTMLDocument(res.responseText))
+					type	  : 'photo',
+					item	  : ctx.title,
+					itemUrl : $x(xpath, convertToHTMLDocument(res.responseText))
 				};
 			});
 		}

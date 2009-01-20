@@ -323,7 +323,7 @@ models.register(update({
 			
 		case 'changed':
 			var self = this;
-			return request('http://www.flickr.com/').addCallback(function(res){
+			return request('http://flickr.com/').addCallback(function(res){
 				var html = res.responseText;
 				return self.token = {
 					secret : html.extract(/global_flickr_secret[ =]+'(.*?)'/),

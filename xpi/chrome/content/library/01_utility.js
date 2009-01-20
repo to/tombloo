@@ -284,10 +284,14 @@ function putContents(file, text, charset){
  * @param {nsIHttpChannel} channel
  */
 function setCookie(channel){
-	if(!(channel instanceof Ci.nsIHttpChannel))
+	if(!channel.QueryInterface(Ci.nsIHttpChannel))
 		return;
 	
-	channel.setRequestHeader('Cookie', getCookieString(channel.originalURI.host), true);
+	// Firefox 3.1で第二引数にchannelを渡すとリダイレクト時にクッキーが返らないためnullにする
+	channel.setRequestHeader(
+		'Cookie', 
+		CookieService.getCookieString(channel.URI, null), 
+		true);
 }
 
 /**
@@ -388,6 +392,10 @@ function request(url, opts){
 			'nsIHttpEventSink', 
 			'nsIInterfaceRequestor', 
 			'nsIChannelEventSink']),
+		
+		isAppOfType : function(val){
+			// FIXME: Firefox 3.1でasyncOpen時に要求されるようになった(詳細不明)
+		},
 		
 		// nsIProgressEventSink
 		onProgress : function(req, ctx, progress, progressMax){},

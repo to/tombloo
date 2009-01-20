@@ -385,7 +385,7 @@ function request(url, opts){
 	}
 	
 	var redirectionCount = 0;
-	var listner = {
+	var listener = {
 		QueryInterface : createQueryInterface([
 			'nsIStreamListener', 
 			'nsIProgressEventSink', 
@@ -394,7 +394,17 @@ function request(url, opts){
 			'nsIChannelEventSink']),
 		
 		isAppOfType : function(val){
-			// FIXME: Firefox 3.1でasyncOpen時に要求されるようになった(詳細不明)
+			// http://hg.mozilla.org/mozilla-central/file/FIREFOX_3_1b2_RELEASE/docshell/base/nsILoadContext.idl#l78
+			//
+			// 本リスナが特定のアプリケーション目的で使用され、その
+			// アプリケーション種別に対して動作可能かを返す。
+			// val にはアプリケーション種別を示す nsIDocShell の
+			// APP_TYPE_XXX が渡される。
+			//
+			//   APP_TYPE_UNKNOWN 0
+			//   APP_TYPE_MAIL    1
+			//   APP_TYPE_EDITOR  2
+			return (val == 0);
 		},
 		
 		// nsIProgressEventSink
@@ -479,11 +489,11 @@ function request(url, opts){
 	channel.requestMethod = 
 		(opts.method)? opts.method : 
 		(opts.sendContent)? 'POST' : 'GET';
-	channel.notificationCallbacks = listner;
-	channel.asyncOpen(listner, null);
+	channel.notificationCallbacks = listener;
+	channel.asyncOpen(listener, null);
 	
 	// 確実にガベージコレクトされるように解放する
-	listner = null;
+	listener = null;
 	channel = null;
 	
 	return d;

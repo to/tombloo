@@ -315,7 +315,7 @@ try {
 	
 	// Cookie
 	ok(getCookies('www.tumblr.com').length > 2, 'Tumblrのログイン情報が取得できるか(未ログインの場合エラー)');
-	ok(getCookieString('del.icio.us', '_user'));
+	ok(getCookieString('delicious.com', '_user'));
 	
 	// Password
 	ok(getPasswords('http://www.tumblr.com').length);

@@ -1077,6 +1077,7 @@ function PostersPanel(){
 				disabled : disabled,
 			}));
 			image.name = name;
+			image.setAttribute('tooltiptext', name);
 			
 			self.setIcon(image, poster, !disabled);
 		});
@@ -1091,9 +1092,13 @@ function PostersPanel(){
 	
 	this.elmAllOff.addEventListener('click', bind('allOff', this), true);
 	
-	// マウスオーバーですぐに表示されるよう自前で用意する
-	this.elmPanel.addEventListener('mouseover', bind('showTooltip', this), true);
-	this.elmPanel.addEventListener('mouseout', bind('hideTooltip', this), true);
+	// OSXでopenPopupさせるとmouseout/mouseoverイベントが二重に発生して誤動作する
+	if (AppInfo.OS != 'Darwin')
+	{
+		// マウスオーバーですぐに表示されるよう自前で用意する
+		this.elmPanel.addEventListener('mouseover', bind('showTooltip', this), true);
+		this.elmPanel.addEventListener('mouseout', bind('hideTooltip', this), true);
+	}
 	
 	new ChekboxPanel(this.elmPanel, this);
 }

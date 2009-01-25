@@ -27,6 +27,16 @@ function wrappedObject(obj){
 	return obj.wrappedJSObject || obj;
 }
 
+/**
+ * 相対パスを解決する。
+ *
+ * @param {String} relativePath 相対パス。
+ * @param {String || nsIFile || nsIURI} basePath 基点となるパス。
+ */
+function resolveRelativePath(relativePath, basePath){
+	return createURI(basePath).resolve(relativePath);
+}
+
 function getCookies(host, name){
 	host = '' + host;
 	return filter(function(c){

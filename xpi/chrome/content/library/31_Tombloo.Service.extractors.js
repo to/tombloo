@@ -313,7 +313,9 @@ Tombloo.Service.extractors = new Repository([
 					var doc = convertToHTMLDocument(res.responseText);
 					var content = $x('(//span[@class="entry-content"])[1]', doc);
 					
-					$x('.//a', content, true).forEach(function(l){l.href = l.href;});
+					$x('.//a', content, true).forEach(function(l){
+						l.href = resolveRelativePath(l.href, ctx.href);
+					});
 					body = content.innerHTML.
 						replace(/ (rel|target)=".+?"/g, '').
 						replace('<a href="' + ctx.href.replace('/statuses/','/status/') + '">...</a>', '');

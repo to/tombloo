@@ -44,7 +44,7 @@ try {
 	is('abcdefg'.extract(/(bc(de))/, 2), 'de');
 	is('abcdefg'.extract(/bc(de)(fg)/, 2), 'fg');
 	
-	// autoReload();
+	
 	CONNECT_TEST = false;
 	
 	if(CONNECT_TEST){
@@ -77,6 +77,11 @@ try {
 	
 	is('hello world'.md5(), '5eb63bbbe01eeed093cb22bb8f5acdc3');
 	
+	// resolveRelativePath
+	is(resolveRelativePath('/fuba', 'http://twitter.com/fuba/status/1234'), 'http://twitter.com/fuba')
+	is(resolveRelativePath('./3456', 'http://twitter.com/fuba/status/1234'), 'http://twitter.com/fuba/status/3456')
+	is(resolveRelativePath('../favorites', 'http://twitter.com/fuba/status/1234'), 'http://twitter.com/fuba/favorites')
+	is(resolveRelativePath('http://google.com/', 'http://twitter.com/fuba/status/1234'), 'http://google.com/')
 	
 	// Firebug無効時はエラーコンソールに出力
 	log('LOG TEST');

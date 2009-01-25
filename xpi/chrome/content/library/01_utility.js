@@ -28,9 +28,11 @@ function wrappedObject(obj){
 }
 
 function getCookies(host, name){
-	var re = new RegExp(host + '$');
+	host = '' + host;
 	return filter(function(c){
-		return (c.host.search(re) != -1) && 
+		// ホストの末尾が同一か?
+		var len = Math.min(c.host.length, host.length);
+		return (c.host.slice(-len) == host.slice(-len)) && 
 			(name? c.name == name : true);
 	}, CookieManager.enumerator);
 }
@@ -278,20 +280,17 @@ function putContents(file, text, charset){
 	
 /**
  * チャンネルにクッキーを付加する。
- * Firefox 3.1でnetwork.cookie.cookieBehaviorの値に関わらずクッキーが設定されなくなった。
- * 詳細調査中。
  *
  * @param {nsIHttpChannel} channel
  */
 function setCookie(channel){
-	if(!channel.QueryInterface(Ci.nsIHttpChannel))
-		return;
+	// サードパーティのクッキーを送信するか?
+	if(!channel.QueryInterface(Ci.nsIHttpChannel) || getPrefValue('network.cookie.cookieBehavior') != 1)
+		return channel;
 	
-	// Firefox 3.1で第二引数にchannelを渡すとリダイレクト時にクッキーが返らないためnullにする
-	channel.setRequestHeader(
-		'Cookie', 
-		CookieService.getCookieString(channel.URI, null), 
-		true);
+	channel.setRequestHeader('Cookie', getCookieString(channel.originalURI.host), true);
+	
+	return channel;
 }
 
 /**

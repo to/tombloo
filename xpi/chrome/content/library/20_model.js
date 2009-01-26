@@ -706,7 +706,7 @@ models.register({
 
 models.register(update({}, AbstractSessionService, {
 	name : 'Rejaw',
-	ICON : 'http://rejaw.com/images/logo/favicon.ico',
+	ICON : 'http://rejaw.com/favicon.ico',
 
 	check : function(ps){
 		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;

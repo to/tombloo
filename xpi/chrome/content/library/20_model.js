@@ -936,6 +936,8 @@ models.register({
 				});
 			}).addCallback(function(res){
 				var doc = convertToHTMLDocument(res.responseText);
+				if(!doc.getElementById('title'))
+					throw new Error(getMessage('error.notLoggedin'));
 				
 				function getTags(part){
 					return $x('id("save-' + part + '-tags")//a[contains(@class, "tag-list-tag")]/text()', doc, true);
@@ -943,10 +945,10 @@ models.register({
 				return {
 					editPage : editPage = 'http://delicious.com/save?url=' + url,
 					form : {
-						item        : $x('id("title")', doc).value,
-						description : $x('id("notes")', doc).value,
-						tags        : $x('id("tags")', doc).value.split(' '),
-						private     : $x('id("share")', doc).checked,
+						item        : doc.getElementById('title').value,
+						description : doc.getElementById('notes').value,
+						tags        : doc.getElementById('tags').value.split(' '),
+						private     : doc.getElementById('share').checked,
 					},
 					
 					duplicated : !!doc.getElementById('delete'),
@@ -970,6 +972,7 @@ models.register({
 	},
 	
 	getCurrentUser : function(){
+		// FIXME: 判定不完全、_userが取得できて、かつ、ログアウトしている状態がありうる
 		if(decodeURIComponent(getCookieString('delicious.com', '_user')).match(/user=(.*?) /))
 			return RegExp.$1;
 		

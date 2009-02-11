@@ -127,32 +127,25 @@ try {
 		ok(token);
 	});
 	*/
-	ok(Hatena.getPasswords().length, 'Hatena: アカウント情報を取得できているか');
-	ok(Hatena.getAuthCookie(), 'Hatena: ログインしているか(未ログインの場合エラー)');
-	
 	
 	/*
 	// HatenaBookmark
-	d.addCallback(bind('getUserTags', HatenaBookmark));;
-	d.addCallback(function(tags){
-		var tag = tags[0];
-		ok(tag.name.length > 0, 'HatenaBookmark: タグの名前を取得できているか');
-		ok(tag.frequency!=null, 'HatenaBookmark: タグの利用回数を取得できているか');
-	});
+	ok(Hatena.getPasswords().length, 'Hatena: アカウント情報を取得できているか');
+	ok(Hatena.getAuthCookie(), 'Hatena: ログインしているか(未ログインの場合エラー)');
 	
-	d.addCallback(bind('getToken', HatenaBookmark));
-	d.addCallback(function(token){
-		ok(token, 'HatenaBookmark: トークン取得');
+	d.addCallback(function(){
+		return HatenaBookmark.getToken();
+	}).addCallback(function(token){
+		log(token);
+		ok(token);
 	});
 	
 	d.addCallback(function(){
 		return HatenaBookmark.getSuggestions('http://www.hatena.ne.jp/');
 	});
 	d.addCallback(function(res){
-		ok(! res.duplicated);
+		ok(! res.duplicated, 'HatenaBookmark: ブックマーク済みでないか');
 		ok(res.tags.length);
-		ok(res.popular.length);
-		ok(res.keywords.length);
 	});
 	
 	d.addCallback(bind('post', HatenaBookmark), {

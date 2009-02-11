@@ -7,13 +7,16 @@ var CHROME_CONTENT_DIR = CHROME_DIR + '/content';
 
 var EXTENSION_ID = 'tombloo@brasil.to';
 
+var KEY_ACCEL = (AppInfo.OS == 'Darwin')? 'META' : 'CTRL';
+
 var grobal = this;
 disconnectAll(grobal);
 
-// リロードによっって変更されない領域を用意する
+// リロードによって変更されない領域を用意する
 // イベントに安定してフックするためなどに使われる
 if(typeof(constant)=='undefined')
 	constant = {};
+
 
 // ----[XPCOM]-------------------------------------------------
 function evalInSandbox(js, url){
@@ -24,10 +27,22 @@ function wrappedObject(obj){
 	return obj.wrappedJSObject || obj;
 }
 
+/**
+ * 相対パスを解決する。
+ *
+ * @param {String} relativePath 相対パス。
+ * @param {String || nsIFile || nsIURI} basePath 基点となるパス。
+ */
+function resolveRelativePath(relativePath, basePath){
+	return createURI(basePath).resolve(relativePath);
+}
+
 function getCookies(host, name){
-	var re = new RegExp(host + '$');
+	host = '' + host;
 	return filter(function(c){
-		return (c.host.search(re) != -1) && 
+		// ホストの末尾が同一か?
+		var len = Math.min(c.host.length, host.length);
+		return (c.host.slice(-len) == host.slice(-len)) && 
 			(name? c.name == name : true);
 	}, CookieManager.enumerator);
 }
@@ -272,6 +287,21 @@ function putContents(file, text, charset){
 		stream.write(text, text.length);
 	});
 }
+	
+/**
+ * チャンネルにクッキーを付加する。
+ *
+ * @param {nsIHttpChannel} channel
+ */
+function setCookie(channel){
+	// サードパーティのクッキーを送信するか?
+	if(!channel.QueryInterface(Ci.nsIHttpChannel) || getPrefValue('network.cookie.cookieBehavior') != 1)
+		return channel;
+	
+	channel.setRequestHeader('Cookie', getCookieString(channel.originalURI.host), true);
+	
+	return channel;
+}
 
 /**
  * POST/GETの通信を行う。
@@ -292,14 +322,6 @@ function putContents(file, text, charset){
  */
 function request(url, opts){
 	var d = new Deferred();
-	
-	function setCookie(channel){
-		// サードパーティのクッキーを送信するか?
-		if(getPrefValue('network.cookie.cookieBehavior') != 1)
-			return;
-		
-		channel.setRequestHeader('Cookie', getCookieString(channel.originalURI.host), true);
-	}
 	
 	opts = opts || {};
 	
@@ -372,13 +394,27 @@ function request(url, opts){
 	}
 	
 	var redirectionCount = 0;
-	var listner = {
+	var listener = {
 		QueryInterface : createQueryInterface([
 			'nsIStreamListener', 
 			'nsIProgressEventSink', 
 			'nsIHttpEventSink', 
 			'nsIInterfaceRequestor', 
 			'nsIChannelEventSink']),
+		
+		isAppOfType : function(val){
+			// http://hg.mozilla.org/mozilla-central/file/FIREFOX_3_1b2_RELEASE/docshell/base/nsILoadContext.idl#l78
+			//
+			// 本リスナが特定のアプリケーション目的で使用され、その
+			// アプリケーション種別に対して動作可能かを返す。
+			// val にはアプリケーション種別を示す nsIDocShell の
+			// APP_TYPE_XXX が渡される。
+			//
+			//   APP_TYPE_UNKNOWN 0
+			//   APP_TYPE_MAIL    1
+			//   APP_TYPE_EDITOR  2
+			return (val == 0);
+		},
 		
 		// nsIProgressEventSink
 		onProgress : function(req, ctx, progress, progressMax){},
@@ -415,8 +451,7 @@ function request(url, opts){
 				return;
 			}
 			
-			// パフォーマンスを考慮しbroadを使わない
-			setCookie(newChannel.QueryInterface(Ci.nsIHttpChannel));
+			setCookie(newChannel);
 		},
 		
 		// nsIStreamListener
@@ -463,11 +498,11 @@ function request(url, opts){
 	channel.requestMethod = 
 		(opts.method)? opts.method : 
 		(opts.sendContent)? 'POST' : 'GET';
-	channel.notificationCallbacks = listner;
-	channel.asyncOpen(listner, null);
+	channel.notificationCallbacks = listener;
+	channel.asyncOpen(listener, null);
 	
 	// 確実にガベージコレクトされるように解放する
-	listner = null;
+	listener = null;
 	channel = null;
 	
 	return d;
@@ -1013,13 +1048,24 @@ function addAround(target, methodNames, advice){
 	});
 }
 
+/**
+ * 配列を結合し文字列を作成する。
+ * 空要素は除外される。
+ * 配列が空の場合は、空文字列が返される。
+ * 配列の入れ子は直列化される。
+ * 
+ * @param {Array} txts 文字列配列。
+ * @param {String} delm 区切り文字列。
+ * @param {Boolean} trimTag 各文字列からHTMLタグを除外するか。
+ * @return {String} 結合された文字列。
+ */
 function joinText(txts, delm, trimTag){
 	if(!txts)
 		return '';
 	
 	if(delm==null)
 		delm = ',';
-	txts = flattenArray(txts.filter(operator.truth));
+	txts = flattenArray([].concat(txts).filter(operator.truth));
 	return (trimTag? txts.map(methodcaller('trimTag')) : txts).join(delm);
 }
 
@@ -1038,6 +1084,43 @@ function validateFileName(fileName){
 	}
 	
 	return fileName.replace(/[\/]+/g, "_");
+}
+
+/**
+ * Windows上でWSHを実行する。
+ * スクリプト内でWScript.echoなどで出力された文字列も返り値に含まれる。
+ * 
+ * @param {Function} func WSHスクリプト。
+ * @param {Array} args WSHスクリプトの引数。 
+ * @return {String} WSHスクリプトの実行結果。
+ */
+function executeWSH(func, args){
+	args = args || [];
+	
+	var bat = getTempFile('bat');
+	var script = getTempFile();
+	var out = new LocalFile(script.path + '.out');
+	
+	putContents(bat, [
+		'cscript //E:JScript //Nologo', 
+		script.path.quote(), 
+		'>', 
+		out.path.quote()].join(' '));
+	putContents(script, 
+		args.map(function(a, i){return 'var ARG_' + i + ' = ' + uneval(a) + ';'}).join('\n') + 
+		'WScript.echo(' + func.toSource() + '(' + 
+		args.map(function(a, i){return 'ARG_' + i}).join(',') + 
+		'));');
+	
+	new Process(bat).run(true, [], 0);
+	
+	var res = getContents(out, 'Shift-JIS').replace(/\s+$/, '');
+	
+	bat.remove(false);
+	script.remove(false);
+	out.remove(false);
+	
+	return res;
 }
 
 
@@ -1131,17 +1214,13 @@ Repository.prototype = {
 	},
 	
 	get names(){
-		return reduce(function(memo, i){
-			memo.push(i[0]);
-			return memo;
-		}, this, []);
+		return this.values.map(itemgetter('name'));
 	},
 	
 	get values(){
-		return reduce(function(memo, i){
-			memo.push(i[1]);
-			return memo;
-		}, this, []);
+		return map(itemgetter(1), this).filter(function(v){
+			return v.name;
+		});
 	},
 	
 	clear : function(){
@@ -1172,6 +1251,12 @@ Repository.prototype = {
 		}, this.values, []);
 	},
 	
+	/**
+	 * 新しい定義を追加する。
+	 * 
+	 * @param {Array} defs
+	 * @param {String} target 追加対象。この名前の前に追加される。
+	 */
 	register : function(defs, target){
 		if(!defs)
 			return;
@@ -1379,7 +1464,7 @@ function keyString(e){
 	return (keyString = function(e){
 		var code = e.keyCode;
 		var res = [];
-		(e.metaKey  || code==KeyEvent.DOM_VK_META)    && res.push('CTRL');
+		(e.metaKey  || code==KeyEvent.DOM_VK_META)    && res.push('META');
 		(e.ctrlKey  || code==KeyEvent.DOM_VK_CONTROL) && res.push('CTRL');
 		(e.shiftKey || code==KeyEvent.DOM_VK_SHIFT)   && res.push('SHIFT');
 		(e.altKey   || code==KeyEvent.DOM_VK_ALT)     && res.push('ALT');
@@ -1800,6 +1885,7 @@ AbstractSessionService = {
 		delete this.cookie;
 		delete this.user;
 		delete this.token;
+		delete this.password;
 		
 		if(!cookie)
 			return 'none';

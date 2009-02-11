@@ -127,7 +127,7 @@ resizer[dir="bottomright"] {
 }
 
 #titlebar .widget{
-	cursor: default !important;
+	cursor: default;
 	margin-left: 10px;
 }
 

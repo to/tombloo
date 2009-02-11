@@ -323,7 +323,7 @@ models.register(update({
 			
 		case 'changed':
 			var self = this;
-			return request('http://www.flickr.com/').addCallback(function(res){
+			return request('http://flickr.com/').addCallback(function(res){
 				var html = res.responseText;
 				return self.token = {
 					secret : html.extract(/global_flickr_secret[ =]+'(.*?)'/),
@@ -563,7 +563,8 @@ models.register({
 			
 			return succeed().addCallback(function(){
 				if(ps.file){
-					return ps.file.copyTo(file.parent, file.leafName);
+					ps.file.copyTo(file.parent, file.leafName);
+					return file;
 				} else {
 					return download(ps.itemUrl, file);
 				}
@@ -705,7 +706,7 @@ models.register({
 
 models.register(update({}, AbstractSessionService, {
 	name : 'Rejaw',
-	ICON : 'http://rejaw.com/images/logo/favicon.ico',
+	ICON : 'http://rejaw.com/favicon.ico',
 
 	check : function(ps){
 		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
@@ -935,12 +936,21 @@ models.register({
 				});
 			}).addCallback(function(res){
 				var doc = convertToHTMLDocument(res.responseText);
+				if(!doc.getElementById('title'))
+					throw new Error(getMessage('error.notLoggedin'));
 				
 				function getTags(part){
 					return $x('id("save-' + part + '-tags")//a[contains(@class, "tag-list-tag")]/text()', doc, true);
 				}
-				
 				return {
+					editPage : editPage = 'http://delicious.com/save?url=' + url,
+					form : {
+						item        : doc.getElementById('title').value,
+						description : doc.getElementById('notes').value,
+						tags        : doc.getElementById('tags').value.split(' '),
+						private     : doc.getElementById('share').checked,
+					},
+					
 					duplicated : !!doc.getElementById('delete'),
 					recommended : getTags('reco'), 
 					popular : getTags('pop'),
@@ -962,6 +972,7 @@ models.register({
 	},
 	
 	getCurrentUser : function(){
+		// FIXME: 判定不完全、_userが取得できて、かつ、ログアウトしている状態がありうる
 		if(decodeURIComponent(getCookieString('delicious.com', '_user')).match(/user=(.*?) /))
 			return RegExp.$1;
 		
@@ -1243,28 +1254,37 @@ if(NavBookmarksService){
 	});
 }
 
-models.register({
+
+models.register(update({
 	name : 'Instapaper',
 	ICON : 'chrome://tombloo/skin/instapaper.ico',
-	
+	POST_URL: 'http://www.instapaper.com/edit',
 	check : function(ps){
-		return (/(quote|link)/).test(ps.type) && !ps.file;
+		return (/(quote|link)/).test(ps.type);
 	},
-	
+	getAuthCookie : function(){
+		return getCookieString('www.instapaper.com', 'pfu');
+	},
 	post : function(ps){
-		return request('http://www.instapaper.com/edit', {
-			redirectionLimit : 0,
-			sendContent : {
-				'bookmark[title]' : ps.item, 
-				'bookmark[url]' : ps.itemUrl,
-				'bookmark[selection]' : joinText([ps.body, ps.description], '\n', true),
-			},
-		}).addCallback(function(res){
-			if(res.channel.URI.asciiSpec.match('login'))
-				throw new Error(getMessage('error.notLoggedin'));
+		var url = this.POST_URL;
+		return this.getSessionValue('token', function(){
+			return request(url).addCallback(function(res){
+				var doc = convertToHTMLDocument(res.responseText);
+				return $x('//input[@id="form_key"]/@value', doc);
+			});
+		}).addCallback(function(token){
+			return request(url, {
+				redirectionLimit: 0,
+				sendContent: {
+					'form_key': token,
+					'bookmark[url]': ps.itemUrl,
+					'bookmark[title]': ps.item,
+					'bookmark[selection]': joinText([ps.body, ps.description])
+				}
+			});
 		});
-	},
-});
+	}
+}, AbstractSessionService));
 
 
 // http://www.kawa.net/works/ajax/romanize/japanese.html
@@ -1386,6 +1406,124 @@ models.register({
 });
 
 models.register({
+	name : 'Faves',
+	ICON : 'http://faves.com/favicon.ico',
+	
+	/**
+	 * タグを取得する。
+	 *
+	 * @param {String} url 関連情報を取得する対象のページURL。
+	 * @return {Object}
+	 */
+	getSuggestions : function(url){
+		// 同期でエラーが起きないようにする
+		return succeed().addCallback(function(){
+			return request('https://secure.faves.com/v1/tags/get');
+		}).addCallback(function(res){
+			return {
+				duplicated : false,
+				tags : reduce(function(memo, tag){
+					memo.push({
+						name      : tag.@tag,
+						frequency : tag.@count,
+					});
+					return memo;
+				}, convertToXML(res.responseText).tag, []),
+			};
+		});
+	},
+	
+	check : function(ps){
+		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
+	},
+	
+	post : function(ps){
+		return request('https://secure.faves.com/v1/posts/add', {
+			queryString : {
+				url         : ps.itemUrl,
+				description : ps.item,
+				shared      : ps.private? 'no' : '',  
+				tags        : ps.tags ? ps.tags.join(' ') : '',
+				extended    : joinText([ps.body, ps.description], ' ', true),
+			},
+		});
+	},
+});
+
+models.register({
+	name : 'Magnolia',
+	ICON : 'http://ma.gnolia.com/favicon.ico',
+	
+	getCurrentUser : function(){
+		return request('https://ma.gnolia.com/').addCallback(function(res){
+			var doc = convertToHTMLDocument(res.responseText);
+			var user = $x('//meta[@name="session-userid"]/@content', doc)
+			if(user=='') throw new Error(getMessage('error.notLoggedin'));
+			return user;
+		});
+	},
+	
+	getApiKey : function(){
+		var self = this;
+		return request('http://ma.gnolia.com/account/applications').addCallback(function(res){
+			try {
+				return self.apikey = $x(
+					'id("api_key")/text()', 
+					convertToHTMLDocument(res.responseText)).replace(/[\n\r]+/g, '');
+			} catch(e) {
+				throw new Error(getMessage('error.notLoggedin'));
+			}
+		});
+	},
+	
+	/**
+	 * タグを取得する。
+	 *
+	 * @param {String} url 関連情報を取得する対象のページURL。
+	 * @return {Object}
+	 */
+	getSuggestions : function(url){
+		// 同期でエラーが起きないようにする
+		return succeed().addCallback(function(){
+			return Magnolia.getCurrentUser().addCallback(function(user){
+				return request('https://ma.gnolia.com/people/' + user + '/tags');
+			}).addCallback(function(res){
+				var doc = convertToHTMLDocument(res.responseText);
+				return {
+					duplicated : false,
+					tags : $x('id("tag_cloud_1")/div/a/text()', doc, true).map(function(tag){
+						return {
+							name      : tag,
+							frequency : -1,
+						};
+					}),
+				}
+			});
+		});
+	},
+	
+	check : function(ps){
+		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
+	},
+	
+	post : function(ps){
+		return Magnolia.getApiKey().addCallback(function(apikey){
+			return request('http://ma.gnolia.com/api/rest/1/bookmarks_add', {
+				queryString : {
+					api_key     : apikey,
+					url         : ps.itemUrl,
+					title       : ps.item,
+					description : ps.description,
+					private     : ps.private ? 1 : 0,
+					tags        : ps.tags ? ps.tags.join(' ') : '',
+					rating      : 0,
+				},
+			});
+		});
+	},
+});
+
+models.register({
 	name : 'Snipshot',
 	ICON : 'http://snipshot.com/favicon.ico',
 	
@@ -1452,10 +1590,9 @@ models.register(update({
 				return succeed(this.token);
 			
 		case 'changed':
-			// 画面要素やDBアクセスが少なそうなためブックマーク入力画面から取得する
 			var self = this;
-			return request(HatenaBookmark.POST_URL).addCallback(function(res){
-				if(res.responseText.match(/Hatena\.rkm\s*=\s*['"](.+?)['"]/))
+			return request('http://d.hatena.ne.jp/edit').addCallback(function(res){
+				if(res.responseText.match(/\srkm\s*:\s*['"](.+?)['"]/))
 					return self.token = RegExp.$1;
 			});
 		}
@@ -1514,7 +1651,6 @@ models.register({
 			return Hatena.getCurrentUser();
 		}).addCallback(function(user){
 			return request('http://f.hatena.ne.jp/'+user+'/up', {
-				redirectionLimit : 0,
 				sendContent : update({
 					mode : 'enter',
 				}, ps),
@@ -1523,7 +1659,7 @@ models.register({
 	},
 });
 
-models.register({
+models.register(update({
 	name : 'HatenaBookmark',
 	ICON : 'http://b.hatena.ne.jp/favicon.ico',
 	
@@ -1538,14 +1674,37 @@ models.register({
 		return this.addBookmark(ps.itemUrl, null, ps.tags, joinText([ps.body, ps.description], ' ', true));
 	},
 	
+	getAuthCookie : function(){
+		return Hatena.getAuthCookie();
+	},
+	
+	getToken : function(){
+		switch (this.updateSession()){
+		case 'none':
+			throw new Error(getMessage('error.notLoggedin'));
+			
+		case 'same':
+			if(this.token)
+				return succeed(this.token);
+			
+		case 'changed':
+			var self = this;
+			return request(HatenaBookmark.POST_URL).addCallback(function(res){
+				if(res.responseText.extract(/new Hatena.Bookmark.User\('.*?',\s.*'(.*?)'\)/))
+					return self.token = RegExp.$1;
+			});
+		}
+	},
+	
 	addBookmark : function(url, title, tags, description){
-		return Hatena.getToken().addCallback(function(token){
-			return request(HatenaBookmark.POST_URL, {
+		return HatenaBookmark.getToken().addCallback(function(token){
+			return request('http://b.hatena.ne.jp/bookmarklet.edit', {
 				redirectionLimit : 0,
 				sendContent : {
-					mode    : 'enter',
-					rkm     : token,
-					url     : url,
+					rks     : token,
+					url     : url.replace(/%[0-9a-f]{2}/g, function(s){
+						return s.toUpperCase();
+					}),
 					title   : title, 
 					comment : Hatena.reprTags(tags) + description.replace(/[\n\r]+/g, ' '),
 				},
@@ -1572,24 +1731,26 @@ models.register({
 				},
 			})
 		}).addCallback(function(res){
-			function getTags(part){
-				return evalInSandbox(res.responseText.extract(RegExp('var ' + part + ' ?=(.*);')), HatenaBookmark.POST_URL) || [];
-			}
+			var tags = evalInSandbox(
+				'(' + res.responseText.extract(/var tags =(.*);$/m) + ')', 
+				HatenaBookmark.POST_URL) || {};
 			
 			return {
-				duplicated : !(/var tags ?=/).test(res.responseText),
-				popular    : getTags('otherTags'),
-				keywords   : getTags('keywords'),
-				tags       : getTags('tags').map(function(tag){
+				duplicated : (/bookmarked-confirm/).test(res.responseText),
+				recommended : $x(
+					'id("recommend-tags")/span[@class="tag"]/text()', 
+					convertToHTMLDocument(res.responseText), 
+					true),
+				tags : map(function([tag, info]){
 					return {
 						name      : tag,
-						frequency : -1,
-					};
-				}),
-			};
+						frequency : info.count,
+					}
+				}, items(tags)),
+			}
 		});
 	},
-});
+}, AbstractSessionService));
 
 models.register( {
 	name: 'HatenaDiary',
@@ -1772,7 +1933,7 @@ models.register({
 	
 	addMessage : function(message){
 		return request('http://wassr.jp/my/').addCallback(function(res){
-			if(res.channel.URI.asciiSpec != 'http://wassr.jp/my/')
+			if(!res.channel.URI.asciiSpec.match('http://wassr.jp/my/'))
 				throw new Error(getMessage('error.notLoggedin'));
 			
 			return request('http://wassr.jp/my/status/add', {
@@ -1783,6 +1944,103 @@ models.register({
 			});
 		})
 	},
+});
+
+models.register({
+	name: 'Femo',
+	ICON: 'http://femo.jp/favicon.ico',
+	POST_URL: 'http://femo.jp/create/post',
+	
+	check: function(ps) {
+		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
+	},
+	
+	post: function(ps) {
+		return this.addMemo(ps);
+	},
+	
+	addMemo : function(ps){
+		return request(this.POST_URL, {
+			sendContent: {
+				title   : ps.item,
+				text    : joinText([ps.itemUrl, ps.body, ps.description], '\n'),
+				tagtext : joinText(ps.tags, ' '),
+			},
+		});
+	},
+});
+
+models.register({
+	name : 'MediaMarker',
+	ICON : 'http://mediamarker.net/favicon.ico',
+	check : function(ps){
+		return ps.type == 'link' && !ps.file;
+	},
+	
+	getAuthCookie : function(){
+		return getCookieString('mediamarker.net', 'mediax_ss');
+	},
+	
+	post : function(ps){
+		if(!this.getAuthCookie())
+			throw new Error(getMessage('error.notLoggedin'));
+		
+		return request('http://mediamarker.net/reg', {
+			queryString : {
+				mode    : 'marklet',
+				url     : ps.itemUrl,
+				comment : ps.description,
+			}
+		}).addCallback(function(res){
+			var doc = convertToHTMLDocument(res.responseText);
+			var url = $x('id("reg")/@action', doc);
+			if(!url)
+				throw new Error(getMessage('error.alreadyExsits'));
+			
+			return request(url, {
+				redirectionLimit : 0,
+				sendContent : update(formContents(doc), {
+					title : ps.item,
+					tag   : joinText(ps.tags, '\n'),
+				})
+			});
+		});
+	}
+});
+
+models.register({
+	name : 'LibraryThing',
+	ICON : 'http://www.librarything.com/favicon.ico',
+	check : function(ps){
+		return ps.type == 'link' && !ps.file;
+	},
+	
+	getAuthCookie : function(){
+		return getCookieString('librarything.com', 'LTAnonSessionID');
+	},
+	
+	post : function(ps){
+		if(!this.getAuthCookie())
+			throw new Error(getMessage('error.notLoggedin'));
+		
+		return request('http://www.librarything.com/import_submit.php', {
+			sendContent : {
+				form_textbox : ps.itemUrl,
+			},
+		}).addCallback(function(res){
+			var err = res.channel.URI.asciiSpec.extract('http://www.librarything.com/import.php?pastealert=(.*)');
+			if(err)
+				throw new Error(err);
+			
+			var doc = convertToHTMLDocument(res.responseText);
+			return request('http://www.librarything.com/import_questions_submit.php', {
+				redirectionLimit : 0,
+				sendContent : update(formContents(doc), {
+					masstags :	joinText(ps.tags, ','),
+				}),
+			});
+		});
+	}
 });
 
 

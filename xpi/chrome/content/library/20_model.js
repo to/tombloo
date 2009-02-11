@@ -1287,6 +1287,61 @@ models.register(update({
 }, AbstractSessionService));
 
 
+models.register({
+	name : 'Remember The Milk',
+	ICON : 'http://www.rememberthemilk.com/favicon.ico',
+	POST_URL: 'http://www.rememberthemilk.com/services/ext/addtask.rtm',
+	
+	check : function(ps){
+		return (/(regular|link)/).test(ps.type) && !ps.file;
+	},
+	
+	post : function(ps){
+		return this.addSimpleTask(
+			joinText([ps.item, ps.body, ps.description], ' ', true), 
+			ps.date, ps.tags);
+	},
+	
+	/**
+	 * 簡単なタスクを追加する。
+	 * ブックマークレットのフォーム相当の機能を持つ。
+	 *
+	 * @param {String} task タスク名。
+	 * @param {Date} due 期日。未指定の場合、当日になる。
+	 * @param {Array} tags タグ。
+	 * @param {String || Number} list 
+	 *        追加先のリスト。リスト名またはリストID。未指定の場合、デフォルトのリストとなる。
+	 */
+	addSimpleTask : function(task, due, tags, list){
+		var self = this;
+		return request(self.POST_URL).addCallback(function(res){
+			var doc = convertToHTMLDocument(res.responseText);
+			if(!doc.getElementById('miniform'))
+				throw new Error(getMessage('error.notLoggedin'));
+			
+			var form = formContents(doc);
+			if(list){
+				forEach($x('id("l")/option', doc, true), function(option){
+					if(option.textContent == list){
+						list = option.value;
+						throw StopIteration;
+					}
+				})
+				form.l = list;
+			}
+			
+			return request(self.POST_URL, {
+				sendContent : update(form, {
+					't'  : task,
+					'tx' : joinText(tags, ','),
+					'd'  : (due || new Date()).toLocaleFormat('%Y-%m-%d'),
+				}),
+			});
+		});
+	}
+});
+
+
 // http://www.kawa.net/works/ajax/romanize/japanese.html
 models.register({
 	name : 'Kawa',
@@ -1301,7 +1356,7 @@ models.register({
 				q : text,
 			},
 		}).addCallback(function(res){
-			return map(function(s){	
+			return map(function(s){
 				return ''+s.@title || ''+s;
 			}, convertToXML(res.responseText).li.span);
 		});

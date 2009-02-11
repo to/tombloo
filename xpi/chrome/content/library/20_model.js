@@ -1908,7 +1908,11 @@ models.register(update({
 		
 		case 'changed':
 			var self = this;
-				return request(LivedoorClip.POST_URL+'?link=http%3A%2F%2Ftombloo/').addCallback(function(res){
+				return request(LivedoorClip.POST_URL, {
+					queryString : {
+						link : 'http://tombloo/',
+					},
+				}).addCallback(function(res){
 					if(res.responseText.match(/"postkey" value="(.*)"/)){
 						self.token = RegExp.$1;
 						return self.token;

@@ -328,7 +328,7 @@ function convertFromByteArray(arr, charset){
 /**
  * URIを生成する。
  *
- * @param {String || nsIFile || nsIURI} path URLまたはファイル。nsIURIの場合、そのまま返す。
+ * @param {String || nsIFile || nsIURI} path URLまたはファイルまたはディレクトリパス。nsIURIの場合、そのまま返す。
  */
 function createURI(path){
 	if(!path)
@@ -354,6 +354,7 @@ function createURI(path){
  *
  * @param {String || nsIFile || nsIURI} uri 
  *        URI。file:またはchrome:から始まるアドレスを指定する。
+ *        c:\のようなパスも動作する。
  *        nsIFileの場合、そのまま返す。
  */
 function getLocalFile(uri){

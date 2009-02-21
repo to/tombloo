@@ -2102,6 +2102,23 @@ models.register({
 	}
 });
 
+models.register({
+	name : '8tracks',
+	ICON : 'http://8tracks.com/favicon.ico',
+	URL  : 'http://8tracks.com',
+	
+	upload : function(file){
+		return request(this.URL + '/tracks', {
+			redirectionLimit : 0,
+			sendContent : {
+				'attachment_data[]' : getLocalFile(file),
+			},
+		}).addBoth(function(res){
+			log(res);
+		});
+	}
+});
+
 
 // 全てのサービスをグローバルコンテキストに置く(後方互換)
 models.copyTo(this);

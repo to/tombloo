@@ -99,7 +99,7 @@ Tombloo.Service = {
 				var [success, res] = ress[name];
 				if(!success){
 					var msg = name + ': ' + 
-						(res.message.status? 'HTTP Status Code ' + res.message.status : self.reprError(res).indent(4));
+						(res.message.status? 'HTTP Status Code ' + res.message.status : '\n' + self.reprError(res).indent(4));
 					
 					if(!ignoreError || !msg.match(ignoreError))
 						errs.push(msg);
@@ -141,7 +141,7 @@ Tombloo.Service = {
 			msg.push(p + ' : ' + val);
 		}
 		
-		return '\n'+msg.join('\n');
+		return msg.join('\n');
 	},
 	
 	/**
@@ -154,7 +154,7 @@ Tombloo.Service = {
 	alertError : function(msg, page, pageUrl){
 		error(msg);
 		
-		if(confirm(getMessage('error.post', this.reprError(msg).indent(8), page, pageUrl))){
+		if(confirm(getMessage('error.post', '\n' + this.reprError(msg).indent(8), page, pageUrl))){
 			addTab(pageUrl);
 		}
 	},

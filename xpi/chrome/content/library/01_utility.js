@@ -1092,10 +1092,11 @@ function validateFileName(fileName){
  * 
  * @param {Function} func WSHスクリプト。
  * @param {Array} args WSHスクリプトの引数。 
+ * @param {Boolean} async 非同期で実行するか。 
  * @return {String} WSHスクリプトの実行結果。
  */
-function executeWSH(func, args){
-	args = args || [];
+function executeWSH(func, args, async){
+	args = (args==null)? [] : [].concat(args);
 	
 	var bat = getTempFile('bat');
 	var script = getTempFile();
@@ -1104,21 +1105,25 @@ function executeWSH(func, args){
 	putContents(bat, [
 		'cscript //E:JScript //Nologo', 
 		script.path.quote(), 
-		'>', 
-		out.path.quote()].join(' '));
+		(async)? '' : ('> ' + out.path.quote())
+	].join(' '));
 	putContents(script, 
 		args.map(function(a, i){return 'var ARG_' + i + ' = ' + uneval(a) + ';'}).join('\n') + 
 		'WScript.echo(' + func.toSource() + '(' + 
 		args.map(function(a, i){return 'ARG_' + i}).join(',') + 
 		'));');
 	
-	new Process(bat).run(true, [], 0);
+	new Process(bat).run(!async, [], 0);
+	
+	// FIXME: 非同期時、スクリプトが終了していないためファイルを消せない
+	if(async)
+		return;
 	
 	var res = getContents(out, 'Shift-JIS').replace(/\s+$/, '');
 	
+	out.remove(false);
 	bat.remove(false);
 	script.remove(false);
-	out.remove(false);
 	
 	return res;
 }

@@ -9,11 +9,12 @@ Tombloo.Service.extractors = new Repository([
 			if(!item)
 				return;
 			
+			var channel = $x('id("right_body")/div[@class="channel"]//a');
 			var res = {
 				author : ($x('div[@class="item_info"]/*[@class="author"]/text()', item) || '').extract(/by (.*)/),
 				title  : $x('div[@class="item_header"]//a/text()', item) || '',
-				feed   : $x('id("right_body")/div[@class="channel"]//a/text()'),
-				href   : $x('(div[@class="item_info"]/a)[1]/@href', item).replace(/[?&;](fr?(om)?|track|ref|FM)=(r(ss(all)?|df)|atom)([&;].*)?/,''),
+				feed   : channel.textContent,
+				href   : $x('(div[@class="item_info"]/a)[1]/@href', item).replace(/[?&;](fr?(om)?|track|ref|FM)=(r(ss(all)?|df)|atom)([&;].*)?/,'') || channel.href,
 			};
 			
 			if(!getOnly){

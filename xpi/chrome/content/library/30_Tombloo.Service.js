@@ -158,7 +158,15 @@ Tombloo.Service = {
 	alertError : function(msg, page, pageUrl, ps){
 		error(msg);
 		
-		QuickPostForm.show(ps, null, getMessage('error.post', this.reprError(msg).indent(2), page, pageUrl));
+		msg = getMessage('error.post', this.reprError(msg).indent(2), page, pageUrl);
+		if(ps){
+			// ポスト内容があればフォームを再表示する。
+			QuickPostForm.show(ps, null, msg);
+		} else {
+			if(confirm(msg + '\n' + getMessage('message.reopen'))){
+				addTab(pageUrl);
+			}
+		}
 	},
 	
 	/**

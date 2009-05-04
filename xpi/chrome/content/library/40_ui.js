@@ -119,6 +119,33 @@ QuickPostForm.dialog = {
 		left : false,
 	},
 };
+QuickPostForm.descriptionContextMenu = [
+	{
+		name : 'is.gd',
+		icon : models['is.gd'].ICON,
+		
+		execute : function(elmText){
+			var reUrl = /https?[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+/g;
+			var value = elmText.value;
+			if(!reUrl.test(value))
+				return;
+				
+			var urls = value.match(reUrl);
+			gatherResults(urls.map(function(url){
+				return models['is.gd'].shorten(url);
+			})).addCallback(function(ress){
+				zip(urls, ress).forEach(function([url, res]){
+					value = value.replace(url, res);
+				});
+				
+				elmText.value = value;
+			});
+		},
+	},
+	{
+		name : '----',
+	},
+]
 
 
 // ----[Shortcutkey]-------------------------------------------------
@@ -332,25 +359,8 @@ connect(grobal, 'browser-load', function(e){
 	}, true);
 	
 	menuAction.addEventListener('command', function(e){
-		Tombloo.Service.actions[e.originalTarget.getAttribute("label")].execute();
+		Tombloo.Service.actions[e.originalTarget.getAttribute('label')].execute();
 	}, true);
-	
-	
-	// FIXME: docを解決し汎用に
-	function appendMenuItem(menu, label, image){
-		if((/^----/).test(label))
-			return menu.appendChild(doc.createElement('menuseparator'));
-		
-		var item = menu.appendChild(doc.createElement('menuitem'));
-		item.setAttribute('label', label);
-		
-		if(image){
-			item.setAttribute('class', 'menuitem-iconic');
-			item.setAttribute('image', image);
-		}
-		
-		return item;
-	}
 });
 
 function reload(){

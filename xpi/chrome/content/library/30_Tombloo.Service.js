@@ -163,7 +163,7 @@ Tombloo.Service = {
 			// ポスト内容があればフォームを再表示する。
 			QuickPostForm.show(ps, null, msg);
 		} else {
-			if(confirm(msg + '\n' + getMessage('message.reopen'))){
+			if(confirm(msg + '\n\n' + getMessage('message.reopen'))){
 				addTab(pageUrl);
 			}
 		}

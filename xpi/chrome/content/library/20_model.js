@@ -2114,8 +2114,26 @@ models.register({
 			sendContent : {
 				'attachment_data[]' : getLocalFile(file),
 			},
-		}).addBoth(function(res){
-			log(res);
+		});
+	}
+});
+
+models.register({
+	name : 'is.gd',
+	ICON : 'http://is.gd/favicon.ico',
+	URL  : 'http://is.gd/',
+	
+	shorten : function(url){
+		if((/\/\/is\.gd\//).test(url))
+			return url;
+		
+		return request(this.URL + '/api.php', {
+			redirectionLimit : 0,
+			queryString : {
+				longurl : url,
+			},
+		}).addCallback(function(res){
+			return res.responseText;
 		});
 	}
 });

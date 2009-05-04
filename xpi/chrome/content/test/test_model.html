@@ -23,7 +23,6 @@ try {
 	
 	var d = succeed();
 	
-	
 	/*
 	.addBoth(function(res){
 		console.log(res);
@@ -32,7 +31,17 @@ try {
 	
 	
 	/*
-	FriendFeed
+	// is.gd
+	d.addCallback(function(){
+		return models['is.gd'].shorten('http://www.example.com');
+	}).addCallback(function(url){
+		is(url, 'http://is.gd/Rt');
+	});
+	*/
+	
+	
+	/*
+	// FriendFeed
 	d.addCallback(function(){
 		return FriendFeed.post({
 			type        : 'photo',

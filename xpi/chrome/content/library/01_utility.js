@@ -1460,6 +1460,22 @@ function convertToXULElement(str){
 	return result;
 }
 
+function appendMenuItem(menu, label, image){
+	var doc = menu.ownerDocument;
+	if((/^----/).test(label))
+		return menu.appendChild(doc.createElement('menuseparator'));
+	
+	var item = menu.appendChild(doc.createElement('menuitem'));
+	item.setAttribute('label', label);
+	
+	if(image){
+		item.setAttribute('class', 'menuitem-iconic');
+		item.setAttribute('image', image);
+	}
+	
+	return item;
+}
+
 function keyString(e){
 	// 初回呼び出し時にキーテーブルを作成する
 	var table = [];

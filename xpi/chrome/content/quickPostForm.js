@@ -967,6 +967,22 @@ DescriptionBox.prototype = {
 		
 		// input要素の取得が終わったら初期設定の非表示状態に戻す
 		this.elmBox.hidden = this.hidden;
+		
+		this.loadExtensionMenu();
+	},
+	
+	loadExtensionMenu : function(){
+		this.elmContext = document.getAnonymousElementByAttribute(
+			this.elmInput.parentNode, 'anonid', 'input-box-contextmenu');
+		
+		var df = document.createDocumentFragment();
+		QuickPostForm.descriptionContextMenu.forEach(function(menu){
+			var elmItem = appendMenuItem(df, menu.name, menu.icon);
+			if(menu.execute)
+				elmItem.addEventListener('command', partial(menu.execute, this.elmDescription), true);
+		}, this);
+		
+		this.elmContext.insertBefore(df, this.elmContext.firstChild);
 	},
 	
 	set value(value){

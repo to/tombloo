@@ -54,6 +54,12 @@ Tombloo.Service.actions = new Repository([
 		name : '----',
 	},
 	{
+		name : getMessage('label.action.reloadTombloo'),
+		execute : function(){
+			reload();
+		},
+	},
+	{
 		name : getMessage('label.action.tomblooOptions'),
 		execute : function(){
 			openDialog('chrome://tombloo/content/prefs.xul', 'resizable,centerscreen');

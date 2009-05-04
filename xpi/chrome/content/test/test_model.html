@@ -14,6 +14,7 @@
 <script type="text/javascript" src="../library/00_component.js"></script>
 <script type="text/javascript" src="../library/01_utility.js"></script>
 <script type="text/javascript" src="../library/20_model.js"></script>
+<script type="text/javascript" src="../library/20_Wedata.js"></script>
 <script type="text/javascript">
 try {
 	// chrome://tombloo/content/test/test_model.html
@@ -27,6 +28,22 @@ try {
 	.addBoth(function(res){
 		console.log(res);
 	})
+	*/
+	
+	
+	/*
+	// TextConversionServices
+	d.addCallback(function(){
+		return TextConversionServices.convert('ありがとう', 'ペンパン(kkshow)');
+	}).addCallback(function(res){
+		is(res, 'パピパポプ ');
+	});
+	
+	d.addCallback(function(){
+		return TextConversionServices.convert('ありがとう', '大阪弁');
+	}).addCallback(function(res){
+		is(res, 'おおきに');
+	});
 	*/
 	
 	

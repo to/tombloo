@@ -2138,6 +2138,75 @@ models.register({
 	}
 });
 
+models.register({
+	name : 'TextConversionServices',
+	DATABASE_NAME : 'Text Conversion Services',
+	
+	actions : {
+		replace : function(original, str) {
+			return str;
+		},
+		prepend : function(original, str) {
+			return [str, original].join(' ');
+		},
+		append : function(original, str) {
+			return [original, str].join(' ');
+		}
+	},
+	
+	charsets : {
+		sjis : 'Shift_JIS',
+		euc  : 'EUC-JP',
+		jis  : 'iso-2022-jp',
+		utf8 : 'utf-8',
+	},
+	
+	getServices : function(){
+		if(this.services)
+			return succeed(this.services);
+		
+		var self = this;
+		return Wedata.Item.findByDatabase(this.DATABASE_NAME).addCallback(function(services){
+			return self.services = services;
+		});
+	},
+	
+	getService : function(name){
+		return this.getServices().addCallback(function(services){
+			return ifilter(function(service){
+				return service.getMetaInfo().name == name;
+			}, services).next();
+		});
+	},
+	
+	convert : function(str, name){
+		var service;
+		var self = this;
+		
+		return this.getService(name).addCallback(function(res){
+			service = res;
+			
+			charset = self.charsets[service.charset];
+			if(charset != 'utf-8')
+				str = escape(str.convertFromUnicode(charset));
+			
+			return request(service.url.replace(/%s/, str), {
+				charset : charset,
+			});
+		}).addCallback(function(res){
+			res = res.responseText;
+			
+			if(service.xpath){
+				var doc = convertToHTMLDocument(res);
+				res = $x(service.xpath, doc);
+				res = (res.textContent || res).replace(/\n+/g, '');
+			}
+			
+			return self.actions[service.action || 'replace'](str, res);
+		});
+	},
+});
+
 
 // 全てのサービスをグローバルコンテキストに置く(後方互換)
 models.copyTo(this);

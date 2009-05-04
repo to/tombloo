@@ -1409,7 +1409,7 @@ function convertToDOM(xml){
 }
 
 function convertToHTMLDocument(html, doc) {
-	html = html.replace(/<!DOCTYPE.*?>/, '').replace(/<html.*?>/, '').replace(/<\/html>.*/, '')
+	html = html.replace(/<!DOCTYPE.*?>/, '').replace(/<html.*?>/, '').replace(/<\/html>.*/, '');
 	
 	doc = doc || currentDocument() || document;
 	var xsl = (new DOMParser()).parseFromString(

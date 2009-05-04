@@ -1358,6 +1358,9 @@ Tombloo.Service.extractors = new Repository([
 ]);
 
 Tombloo.Service.extractors.extract = function(ctx, ext){
+	if(!ctx.title)
+		ctx.title = createURI(ctx.href).fileBaseName;
+	
 	return withWindow(ctx.window, function(){
 		return maybeDeferred(ext.extract(ctx)).addCallback(function(ps){
 			return ps && update({

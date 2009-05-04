@@ -131,12 +131,16 @@ forEach({
 		var doc = win.document;
 		win = win.wrappedJSObject || win;
 		
-		QuickPostForm.show({
-			type    : 'link',
-			page    : doc.title,
-			pageUrl : win.location.href,
-			item    : doc.title,
-			itemUrl : win.location.href,
+		var ctx = update({
+			document  : doc,
+			window    : win,
+			title     : doc.title,
+		}, win.location);
+		Tombloo.Service.extractors.extract(
+			ctx, 
+			Tombloo.Service.extractors.Link
+		).addCallback(function(ps){
+			QuickPostForm.show(ps);
 		});
 	},
 	'shortcutkey.quickPost.regular' : function(e){

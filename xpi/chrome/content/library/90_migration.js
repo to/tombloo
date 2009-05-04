@@ -1,4 +1,4 @@
-// 2008/8/17 0.3.11ˆÚs
+// 2008/8/17 0.3.11ç§»è¡Œ
 (function(){
 	var json = getPref('postConfig');
 	if(!/reblog:/.test(json))
@@ -14,7 +14,7 @@
 		delete config.reblog;
 		
 		items(config).forEach(function([type, value]){
-			// ‚Ğ‚Æ‚Â‚Å‚àdefault‚Éw’è‚³‚ê‚Ä‚¢‚½‚çfavorite‚àdefault‚Æ‚·‚é
+			// ã²ã¨ã¤ã§ã‚‚defaultã«æŒ‡å®šã•ã‚Œã¦ã„ãŸã‚‰favoriteã‚‚defaultã¨ã™ã‚‹
 			if(favor && value)
 				config.favorite = 'default';
 			
@@ -22,12 +22,12 @@
 				(value === '')? 'disabled' : 'enabled';
 		});
 		
-		// favorite‚ª–¢İ’è‚È‚çenabled‚Æ‚·‚é
+		// favoriteãŒæœªè¨­å®šãªã‚‰enabledã¨ã™ã‚‹
 		if(favor && !config.favorite)
 			config.favorite = 'enabled';
 	});
 	
-	// 0.3.11‚Å‚Ífavorite‚ÌˆÓ–¡‚µ‚©‚È‚©‚Á‚½‚½‚ß‚»‚Ì‚Ü‚ÜˆÚs‚µ‚È‚¢
+	// 0.3.11ã§ã¯favoriteã®æ„å‘³ã—ã‹ãªã‹ã£ãŸãŸã‚ãã®ã¾ã¾ç§»è¡Œã—ãªã„
 	if(configs.Flickr.photo == 'default')
 		configs.Flickr.photo = 'enabled';
 	

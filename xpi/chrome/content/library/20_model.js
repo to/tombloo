@@ -1513,7 +1513,8 @@ models.register({
 		return request('https://ma.gnolia.com/').addCallback(function(res){
 			var doc = convertToHTMLDocument(res.responseText);
 			var user = $x('//meta[@name="session-userid"]/@content', doc)
-			if(user=='') throw new Error(getMessage('error.notLoggedin'));
+			if(user=='')
+				throw new Error(getMessage('error.notLoggedin'));
 			return user;
 		});
 	},

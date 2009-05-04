@@ -1128,6 +1128,21 @@ function executeWSH(func, args, async){
 	return res;
 }
 
+function getDocumentTitle(doc){
+	var title;
+	if(typeof(doc.title) == 'string'){
+		title = doc.title;
+	} else {
+		title = $x('//title/text()', doc);
+	}
+	
+	if(!title)
+		title = createURI(doc.location.href).fileBaseName;
+	
+	return title.trim();
+}
+	
+
 
 // ----[State]-------------------------------------------------
 var State = {

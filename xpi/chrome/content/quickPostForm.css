@@ -324,6 +324,27 @@ div{
 	background: #666;
 }
 
+#message {
+	-moz-appearance: none;
+	-moz-border-radius: 2px;
+	display : none;
+	color: #333;
+	
+	padding: 0.7em;
+	margin: 0.8em 2px 0 2px;
+	
+	background: #FFFF99;
+	border: 1px solid #F0D67C;
+	-moz-border-top-colors:    #F0D67C;
+	-moz-border-bottom-colors: #F0D67C;
+	-moz-border-right-colors:  #F0D67C;
+	-moz-border-left-colors:   #F0D67C;
+}
+
+#message *|textarea {
+	overflow: hidden;
+}
+
 #post {
 	margin-top: 0.8em;
 }

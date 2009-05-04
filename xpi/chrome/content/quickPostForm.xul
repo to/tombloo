@@ -49,6 +49,7 @@
 					
 					<vbox id="control" >
 						<description id="posters" pack="top" align="top" />
+						<textbox id="message" multiline="true" wrap="off" readonly="true"/>
 						<button id="post" label="Post" />
 					</vbox>
 				</vbox>
@@ -82,10 +83,11 @@ env.extend(this, env, false);
 
 var ps = arguments[0];
 var position = arguments[1];
+var message = arguments[2];
 
 env.signal(env, 'form-open', window);
 
-var dialogPanel = new DialogPanel(position);
+var dialogPanel = new DialogPanel(position, message);
 
 ]]></script>
 </window>

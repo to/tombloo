@@ -103,10 +103,10 @@ function Pagebar(opt){
 
 
 var QuickPostForm = {
-	show : function(ps, position){
+	show : function(ps, position, message){
 		openDialog(
 			'chrome://tombloo/content/quickPostForm.xul', 
-			'chrome,alwaysRaised=yes,resizable=yes,titlebar=no,dependent=yes', ps, position);
+			'chrome,alwaysRaised=yes,resizable=yes,titlebar=no,dependent=yes', ps, position, message);
 	},
 };
 

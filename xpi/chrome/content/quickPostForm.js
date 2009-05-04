@@ -10,7 +10,7 @@ function getElement(id){
 
 
 // ----[DialogPanel]----------------------------------------------------
-function DialogPanel(position){
+function DialogPanel(position, message){
 	var self = this;
 	window.addEventListener('unload', function(){
 		disconnectAll(self);
@@ -18,6 +18,14 @@ function DialogPanel(position){
 	
 	this.elmWindow = getElement('window');
 	this.elmBase = getElement('base');
+	if(message){
+		// 横に伸びすぎずテキストも選択できるためtextbox要素を使う
+		this.elmMessage = getElement('message');
+		
+		this.elmMessage.setAttribute('rows', message.split('\n').length);
+		this.elmMessage.style.display = 'inherit';
+		this.elmMessage.value = message;
+	}
 	
 	this.formPanel = new FormPanel(this);
 	this.formPanel.show();

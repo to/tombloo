@@ -32,15 +32,9 @@
 			onclick="openURL('http://code.google.com/p/tombloo/')" 
 			class="text-link" />
 		
-		<label class="sectionTitle">&creator.label;</label>
-		<vbox class="boxIndent" >
-			<label value="to" 
-				onclick="openURL('http://github.com/to')" 
-				class="text-link" />
-		</vbox>
-			
 		<label class="sectionTitle">&developers.label;</label>
 		<vbox class="boxIndent">
+			<label value="to"            class="text-link" onclick="openURL('http://github.com/to')" />
 			<label value="ku"            class="text-link" onclick="openURL('http://ido.nu/kuma/')" />
 			<label value="mattn"         class="text-link" onclick="openURL('http://mattn.kaoriya.net/')" />
 			<label value="youpy"         class="text-link" onclick="openURL('http://github.com/youpy')" />

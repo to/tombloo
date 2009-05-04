@@ -134,7 +134,6 @@ forEach({
 		var ctx = update({
 			document  : doc,
 			window    : win,
-			title     : getDocumentTitle(doc),
 		}, win.location);
 		Tombloo.Service.extractors.extract(
 			ctx, 
@@ -152,7 +151,7 @@ forEach({
 		
 		QuickPostForm.show({
 			type    : 'regular',
-			page    : getDocumentTitle(doc),
+			page    : doc.title,
 			pageUrl : win.location.href,
 		});
 	},
@@ -170,7 +169,6 @@ forEach({
 		var ctx = update({
 			document  : doc,
 			window    : win,
-			title     : getDocumentTitle(doc),
 			selection : ''+win.getSelection(),
 			target    : e.originalTarget,
 			mouse     : {
@@ -265,7 +263,6 @@ connect(grobal, 'browser-load', function(e){
 		context = update({}, cwin.gContextMenu, win.location, {
 			document  : doc,
 			window    : win,
-			title     : getDocumentTitle(doc),
 			selection : ''+win.getSelection(),
 			target    : wrappedObject(cwin.gContextMenu.target),
 			mouse     : {

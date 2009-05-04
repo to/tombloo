@@ -1358,6 +1358,25 @@ Tombloo.Service.extractors = new Repository([
 ]);
 
 Tombloo.Service.extractors.extract = function(ctx, ext){
+	var doc = ctx.document;
+	
+	// ドキュメントタイトルを取得する
+	var title;
+	if(typeof(doc.title) == 'string'){
+		title = doc.title;
+	} else {
+		// idがtitleの要素を回避する
+		title = $x('//title/text()', doc);
+	}
+	
+	if(!title)
+		title = createURI(doc.location.href).fileBaseName;
+	
+	ctx.title = title.trim();
+	
+	// canonicalが設定されていれば使う
+	ctx.href = $x('//link[@rel="canonical"]/@href', doc) || ctx.href;
+	
 	return withWindow(ctx.window, function(){
 		return maybeDeferred(ext.extract(ctx)).addCallback(function(ps){
 			return ps && update({

@@ -259,8 +259,9 @@ connect(grobal, 'browser-load', function(e){
 		
 	var context;
 	var menuContext = doc.getElementById('contentAreaContextMenu');
-	var menuShare = doc.getElementById('tombloo-menu-share');
-	var menuSelect = doc.getElementById('tombloo-menu-select');
+	var menuShare   = doc.getElementById('tombloo-menu-share');
+	var menuSelect  = doc.getElementById('tombloo-menu-select');
+	var menuAction  = doc.getElementById('tombloo-menu-action');
 	
 	menuShare.setAttribute('accesskey', getPref('accesskey.share'));
 	
@@ -283,7 +284,7 @@ connect(grobal, 'browser-load', function(e){
 			
 			return;
 		}
-		
+
 		// [FIXME] selection文字列化再検討
 		// command時にはクリック箇所などの情報が失われるためコンテキストを保持しておく
 		context = update({}, cwin.gContextMenu, win.location, {
@@ -299,6 +300,18 @@ connect(grobal, 'browser-load', function(e){
 			menu      : cwin.gContextMenu,
 		});
 		
+		// アクションメニューを作成する
+		forEach(Tombloo.Service.actions, function([name, action]){
+			if(!/context/.test(action.type))
+				return;
+				
+			if(action.check && !action.check(context))
+				return;
+			
+			var elmItem = appendMenuItem(menuAction, name);
+			elmItem.action = action;
+		});
+		
 		var exts = Tombloo.Service.check(context);
 		menuShare.label = 'Share - ' + exts[0].name;
 		menuShare.extractor = exts[0].name;
@@ -311,9 +324,9 @@ connect(grobal, 'browser-load', function(e){
 			
 			for(var i=0 ; i<exts.length ; i++){
 				var ext = exts[i];
-				var item = appendMenuItem(menuSelect, ext.name, ext.ICON || 'chrome://tombloo/skin/empty.png');
-				item.extractor = ext.name;
-				item.showForm = true;
+				var elmItem = appendMenuItem(menuSelect, ext.name, ext.ICON || 'chrome://tombloo/skin/empty.png');
+				elmItem.extractor = ext.name;
+				elmItem.showForm = true;
 			}
 		}
 	}, true);
@@ -324,15 +337,24 @@ connect(grobal, 'browser-load', function(e){
 		
 		context = null;
 		
+		clearChildren(menuAction);
 		clearChildren(menuSelect);
 	}, true);
 	
 	menuContext.addEventListener('command', function(e){
-		if(!e.target.extractor)
+		var target = e.target;
+		if(target.extractor){
+			var svc = Tombloo.Service;
+			svc.share(context, svc.extractors[target.extractor], target.showForm);
+			
 			return;
+		}
 		
-		var svc = Tombloo.Service;
-		svc.share(context, svc.extractors[e.target.extractor], e.target.showForm);
+		if(target.action){
+			target.action.execute(context);
+			
+			return;
+		}
 	}, true);
 	
 	// clickイベントはマウス座標が異常
@@ -346,16 +368,18 @@ connect(grobal, 'browser-load', function(e){
 		}
 	}, true);
 	
-	var menuAction = doc.getElementById('tombloo-menu-main');
-	menuAction.addEventListener('popupshowing', function(e){
-		clearChildren(menuAction);
+	var menuMain = doc.getElementById('tombloo-menu-main');
+	menuMain.addEventListener('popupshowing', function(e){
+		clearChildren(menuMain);
 		
-		Tombloo.Service.actions.names.forEach(function(name){
-			appendMenuItem(menuAction, name);
+		forEach(Tombloo.Service.actions, function([name, action]){
+			// 後方互換のためtypeが存在しないものも可とする
+			if(!action.type || /menu/.test(action.type))
+				appendMenuItem(menuMain, name);
 		});
 	}, true);
 	
-	menuAction.addEventListener('command', function(e){
+	menuMain.addEventListener('command', function(e){
 		Tombloo.Service.actions[e.originalTarget.getAttribute('label')].execute();
 	}, true);
 });

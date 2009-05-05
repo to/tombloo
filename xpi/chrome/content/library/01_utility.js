@@ -88,7 +88,22 @@ function getMessage(key){
 	}
 }
 
+/**
+ * 簡単なフォームを表示しユーザーの入力を得る。
+ * 以下の形式のフォームを定義できる。
+ *  - チェックボックス + OK/キャンセル
+ *  - テキストボックス + チェックボックス
+ *  - リストボックス
+ *
+ * @param {Object} form フォーム定義。
+ * @param {String} title ウィンドウタイトル。
+ */
 function input(form, title){
+	function m(key){
+		return getMessage(key) || key || '';
+	}
+	
+	// リストボックス形式のフォームか?
 	var pair;
 	if(some(form, function(p){
 		pair = p;
@@ -96,33 +111,41 @@ function input(form, title){
 	})){
 		var selected = {};
 		var [msg, list] = pair;
-		if(!PromptService.select(null, title || '', msg, list.length, list, selected))
+		if(!PromptService.select(null, m(title), m(msg), list.length, list, selected))
 			return;
 		
 		return list[selected.value];
-	} else {
-		var args = [null, title || ''];
-		for(var msg in form){
+	}
+	
+	var vals = values(form);
+	var method = (vals[0] == null && typeof(vals[1]) == 'boolean')? 'confirmCheck' : 'prompt';
+	
+	var args = [null, m(title)];
+	for(var msg in form){
+		args.push(m(msg));
+		
+		// 値を一時的にオブジェクトに変換する
+		if(form[msg] != null){
 			var val = {value : form[msg]};
 			form[msg] = val;
-			args.push(msg);
 			args.push(val);
 		}
-		
-		if(!PromptService.prompt.apply(PromptService, args))
-			return;
-		
-		for(var msg in form)
-			form[msg] = form[msg].value;
-		
-		return form;
 	}
+	
+	if(!PromptService[method].apply(PromptService, args))
+		return;
+	
+	// 返り値を取り出す
+	for(var msg in form)
+		form[msg] = form[msg] && form[msg].value;
+	
+	return form;
 }
 
 function download(sourceURL, targetFile){
 	var d = new Deferred();
 	var targetURI = IOService.newFileURI(targetFile);
-	var sourceURI = IOService.newURI(sourceURL, null, null);
+	var sourceURI = createURI(sourceURL);
 	
 	var persist = WebBrowserPersist();
 	with(persist){

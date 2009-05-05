@@ -636,6 +636,8 @@ Tombloo.Service.extractors = new Repository([
 						id   : id,
 					},
 				}
+			}).addErrback(function(err){
+				return Tombloo.Service.extractors['Photo'].extract(ctx);
 			});
 		},
 	},

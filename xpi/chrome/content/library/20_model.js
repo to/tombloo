@@ -2077,6 +2077,37 @@ models.register({
 });
 
 models.register({
+	name : '\u7D76\u5BFE\u5FA9\u7FD2',
+	URL  : 'http://www.takao7.net',
+	ICON : 'chrome://tombloo/skin/item.ico',
+	
+	check: function(ps) {
+		return (/(regular|link|quote)/).test(ps.type) && !ps.file;
+	},
+	
+	post: function(ps) {
+		return this.add(ps.item, joinText([ps.itemUrl, ps.body, ps.description], '\n'), ps.tags);
+	},
+	
+	add : function(title, description, tags){
+		var self = this;
+		return request(this.URL + '/brushup/reminders/new').addCallback(function(res){
+			var doc = convertToHTMLDocument(res.responseText);
+			var form = formContents(doc);
+			
+			return request(self.URL + $x('id("new_reminder")/@action', doc), {
+				redirectionLimit : 0,
+				sendContent : update(form, {
+					'reminder[title]'    : title,
+					'reminder[body]'     : description,
+					'reminder[tag_list]' : joinText(tags, ' '),
+				}),
+			});
+		});
+	},
+});
+
+models.register({
 	name: 'Femo',
 	ICON: 'http://femo.jp/favicon.ico',
 	POST_URL: 'http://femo.jp/create/post',

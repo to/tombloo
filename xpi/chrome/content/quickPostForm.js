@@ -1122,7 +1122,12 @@ function PostersPanel(){
 				disabled : disabled,
 			}));
 			image.name = name;
-			image.setAttribute('tooltiptext', name);
+			
+			// OSXではオリジナルのツールチップを利用する
+			// FIXME: 表示位置が悪いだけでは(未確認)
+			if(AppInfo.OS == 'Darwin'){
+				image.setAttribute('tooltiptext', name);
+			}
 			
 			self.setIcon(image, poster, !disabled);
 		});
@@ -1138,8 +1143,7 @@ function PostersPanel(){
 	this.elmAllOff.addEventListener('click', bind('allOff', this), true);
 	
 	// OSXでopenPopupさせるとmouseout/mouseoverイベントが二重に発生して誤動作する
-	if (AppInfo.OS != 'Darwin')
-	{
+	if(AppInfo.OS != 'Darwin'){
 		// マウスオーバーですぐに表示されるよう自前で用意する
 		this.elmPanel.addEventListener('mouseover', bind('showTooltip', this), true);
 		this.elmPanel.addEventListener('mouseout', bind('hideTooltip', this), true);
@@ -1199,13 +1203,7 @@ PostersPanel.prototype = {
 			return;
 		
 		this.elmTooltip.label = name;
-		
-		// Firefox 3
-		if(this.elmTooltip.openPopup){
-			this.elmTooltip.openPopup(e.target, 'end_before', 4, 30, false);
-		} else {
-			this.elmTooltip.showPopup(null, e.screenX + 16, e.screenY + 16, 'tooltip');
-		}
+		this.elmTooltip.openPopup(e.target, 'end_before', 4, 4, false);
 	},
 	
 	hideTooltip : function(e){

@@ -24,9 +24,27 @@ try {
 	
 	var d = succeed();
 	
+
 	/*
 	.addBoth(function(res){
-		console.log(res);
+		log(res);
+	})
+	*/
+	
+	
+	/*
+	// 絶対復習
+	d.addCallback(function(){
+		return models['絶対復習'].post({
+			item        : 'タイトル',
+			body        : 'ボディ',
+			description : '内容',
+			itemUrl     : 'http://www.takao7.net/brushup/',
+			tags        : ['memo1', 'memo2'],
+		});
+	})
+	d.addCallback(function(){
+		return models['絶対復習'].add('件名', '詳細', ['tag1', 'tag2']);
 	})
 	*/
 	

@@ -1667,7 +1667,7 @@ models.register(update({
 			var self = this;
 			return request('http://www.hatena.ne.jp/my').addCallback(function(res){
 				return self.user = $x(
-					'(//*[@class="username"]//strong)[1]/text()', 
+					'id("simple-header-body")//li[@class="welcome"]//a/text()', 
 					convertToHTMLDocument(res.responseText));
 			});
 		}

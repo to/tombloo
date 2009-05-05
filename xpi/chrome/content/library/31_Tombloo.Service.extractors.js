@@ -634,6 +634,31 @@ Tombloo.Service.extractors = new Repository([
 	},
 	
 	{
+		name : 'Photo - Google Book Search',
+		ICON : models.Google.ICON,
+		check : function(ctx){
+			if(!(/^books.google./).test(ctx.host))
+				return;
+			
+			return !!this.getImage(ctx);
+		},
+		extract : function(ctx){
+			ctx.target = this.getImage(ctx);
+			
+			return {
+				type    : 'photo',
+				item    : ctx.title,
+				itemUrl : ctx.target.src,
+			};
+		},
+		getImage : function(ctx){
+			var img = $x('.//img', ctx.target.parentNode)
+			if(img && img.src.match('//books.google.'))
+				return img;
+		},
+	},
+	
+	{
 		name : 'Photo - 4u',
 		ICON : models['4u'].ICON,
 		check : function(ctx){

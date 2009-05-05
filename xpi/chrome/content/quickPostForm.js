@@ -976,11 +976,32 @@ DescriptionBox.prototype = {
 			this.elmInput.parentNode, 'anonid', 'input-box-contextmenu');
 		
 		var df = document.createDocumentFragment();
-		QuickPostForm.descriptionContextMenu.forEach(function(menu){
-			var elmItem = appendMenuItem(df, menu.name, menu.icon);
-			if(menu.execute)
-				elmItem.addEventListener('command', partial(menu.execute, this.elmDescription), true);
-		}, this);
+		var self = this;
+		(function(menus, parent){
+			var me = arguments.callee;
+			menus.forEach(function(menu){
+				var elmItem = appendMenuItem(parent, menu.name, menu.icon, !!menu.children);
+				if(menu.execute){
+					elmItem.addEventListener('command', function(){
+						var d = menu.execute(self.elmDescription);
+						
+						// 非同期処理の場合、カーソルを砂時計にする
+						if(d instanceof Deferred){
+							self.elmInput.style.cursor = 'wait';
+							d.addBoth(function(){
+								self.elmInput.style.cursor = '';
+							});
+						}
+					}, true);
+				}
+				
+				// サブメニューがあるか?
+				if(menu.children)
+					me(menu.children, elmItem.appendChild(document.createElement('menupopup')));
+			});
+		})(QuickPostForm.descriptionContextMenus, df);
+		
+		appendMenuItem(df, '----');
 		
 		this.elmContext.insertBefore(df, this.elmContext.firstChild);
 	},

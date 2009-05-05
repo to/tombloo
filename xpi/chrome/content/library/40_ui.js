@@ -119,7 +119,7 @@ QuickPostForm.dialog = {
 		left : false,
 	},
 };
-QuickPostForm.descriptionContextMenu = [
+QuickPostForm.descriptionContextMenus = [
 	{
 		name : 'is.gd',
 		icon : models['is.gd'].ICON,
@@ -141,9 +141,6 @@ QuickPostForm.descriptionContextMenu = [
 				elmText.value = value;
 			});
 		},
-	},
-	{
-		name : '----',
 	},
 ]
 
@@ -275,12 +272,12 @@ connect(grobal, 'browser-load', function(e){
 		var doc = wrappedObject(cwin.gContextMenu.target.ownerDocument);
 		var win = wrappedObject(doc.defaultView);
 		try{
-			// about:config などで無効にする
 			win.location.host;
 			
 			menuShare.disabled = false;
 			menuSelect.parentNode.disabled = false;
 		}catch(e){
+			// about:config などのページで無効にする
 			menuShare.disabled = true;
 			menuSelect.parentNode.disabled = true;
 			

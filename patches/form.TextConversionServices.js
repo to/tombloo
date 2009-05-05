@@ -1,15 +1,19 @@
 TextConversionServices.getServices().addCallback(function(services){
-	var menu = QuickPostForm.descriptionContextMenu;
+	var menus = [];
 	services.forEach(function(service){
 		var name = service.getMetaInfo().name;
-		menu.push({
+		menus.push({
 			name : name,
 			execute : function(elmText){
-				TextConversionServices.convert(elmText.value, name).addCallback(function(res){
+				return TextConversionServices.convert(elmText.value, name).addCallback(function(res){
 					elmText.value = res;
 				});
 			},
 		});
 	});
-	menu.push({name : '----'});
+	
+	QuickPostForm.descriptionContextMenus.push({
+		name : 'TextConversionServices',
+		children : menus,
+	});
 });

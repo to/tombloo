@@ -1460,12 +1460,12 @@ function convertToXULElement(str){
 	return result;
 }
 
-function appendMenuItem(menu, label, image){
+function appendMenuItem(menu, label, image, hasChildren){
 	var doc = menu.ownerDocument;
 	if((/^----/).test(label))
 		return menu.appendChild(doc.createElement('menuseparator'));
 	
-	var item = menu.appendChild(doc.createElement('menuitem'));
+	var item = menu.appendChild(doc.createElement(hasChildren? 'menu' : 'menuitem'));
 	item.setAttribute('label', label);
 	
 	if(image){

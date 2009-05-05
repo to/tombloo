@@ -364,6 +364,7 @@ Tombloo.Service.extractors = new Repository([
 			return  Amazon.getItem(asin).addCallback(function(item){
 				ctx.href  = Amazon.normalizeUrl(asin);
 				ctx.title = item.title + (item.creators.length? ' / ' + item.creators.join(', ') : '');
+				
 				return item;
 			});
 		},
@@ -428,7 +429,13 @@ Tombloo.Service.extractors = new Repository([
 		extract : function(ctx){
 			var exts = Tombloo.Service.extractors;
 			return exts.Amazon.extract(ctx).addCallback(function(item){
-				return exts.Link.extract(ctx);
+				var releaseDate = item.releaseDate;
+				return {
+					type    : 'link',
+					item    : ctx.title,
+					itemUrl : ctx.href,
+					date    : (new Date() < releaseDate)? releaseDate : null,
+				}
 			});
 		},
 	},

@@ -170,7 +170,7 @@ models.register({
 				Service        : 'AWSECommerceService',
 				SubscriptionId : '0DCQFXHRBNT9GN9Z64R2',
 				Operation      : 'ItemLookup',
-				ResponseGroup  : 'Small,Images',
+				ResponseGroup  : 'Medium,Images',
 				ItemId         : asin,
 			},
 		}).addCallback(function(res){
@@ -193,6 +193,9 @@ models.register({
 	
 	Item : function(item){
 		return {
+			get _source(){
+				return item;
+			},
 			get title(){
 				return ''+item.ItemAttributes.Title;
 			},
@@ -215,6 +218,13 @@ models.register({
 			},
 			get smallImage(){
 				return new Amazon.Image(item.SmallImage);
+			},
+			get releaseDate() {
+				var date = (''+item.ItemAttributes.PublicationDate || ''+item.ItemAttributes.ReleaseDate);
+				if(date.split('-').length == 2)
+					date += '-1';
+				
+				return new Date(date.replace(/-/g, '/'));
 			},
 		}
 	},
@@ -887,35 +897,64 @@ models.register({
 });
 
 models.register({
-	name : 'Google Calendar',
+	name : 'GoogleCalendar',
 	ICON : 'http://calendar.google.com/googlecalendar/images/favicon.ico',
 	
 	check : function(ps){
-		return ps.type=='regular';
+		return (/(regular|link)/).test(ps.type) && !ps.file;
+	},
+	
+	getAuthCookie : function(){
+		return getCookieString('www.google.com', 'secid').split('=').pop();
 	},
 	
 	post : function(ps){
-		return request('http://www.google.com/calendar/m', {
+		if(ps.item && (ps.itemUrl || ps.description)){
+			return this.addSchedule(ps.item, joinText([ps.itemUrl, ps.body, ps.description], '\n'), ps.date);
+		} else {
+			return this.addSimpleSchedule(ps.description);
+		}
+	},
+	
+	addSimpleSchedule : function(description){
+		if(!this.getAuthCookie())
+			throw new Error(getMessage('error.notLoggedin'));
+		
+		var endpoint = 'http://www.google.com/calendar/m';
+		return request(endpoint, {
 			queryString : {
 				hl : 'en',
 			},
 		}).addCallback(function(res){
-			var doc = convertToHTMLDocument(res.responseText);
-			if(doc.getElementById('gaia_loginform'))
-				throw new Error(getMessage('error.notLoggedin'));
-			
-			var form = formContents(doc);
-			return request('http://www.google.com/calendar/m', {
+			// form.secidはクッキー内のsecidとは異なる
+			var form = formContents(res.responseText);
+			return request(endpoint, {
 				redirectionLimit : 0,
 				sendContent: {
-					ctext  : ps.description,
+					ctext  : description,
 					secid  : form.secid,
 					as_sdt : form.as_sdt,
 				},
 			});
 		});
 	},
+	
+	addSchedule : function(title, description, from, to){
+		from = from || new Date();
+		to = to || new Date(from.getTime() + (86400 * 1000));
+		
+		return request('http://www.google.com/calendar/event', {
+				queryString : {
+					action  : 'CREATE', 
+					secid   : this.getAuthCookie(), 
+					dates   : from.toLocaleFormat('%Y%m%d') + '/' + to.toLocaleFormat('%Y%m%d'),
+					text    : title, 
+					details : description,
+				}
+		});
+	},
 });
+
 
 models.register({
 	name : 'Delicious',

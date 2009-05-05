@@ -32,6 +32,20 @@ try {
 	
 	
 	/*
+	// GoogleCalendar
+	d.addCallback(function(){
+		return GoogleCalendar.addSimpleSchedule('開発 2009/5/10');
+	});
+	
+	ok(GoogleCalendar.getAuthCookie());
+	
+	d.addCallback(function(){
+		return GoogleCalendar.addSchedule('開発', '詳細', new Date('2009/5/10'));
+	});
+	*/
+	
+	
+	/*
 	// TextConversionServices
 	d.addCallback(function(){
 		return TextConversionServices.convert('ありがとう', 'ペンパン(kkshow)');
@@ -392,22 +406,28 @@ try {
 		function(e){
 			is(e.message, 'EXISTS', 'ポスト失敗: 重複')
 		});
+	*/
 	
-	d.addCallback(bind('getItem', Amazon), '4894716933');
+	
+	/*
+	// Amazon
+	d.addCallback(function(){
+		return Amazon.getItem('4894716933');
+	});
 	d.addCallback(function(item){
-		log(item);
-		is(item.title, 'アナリシスパターン―再利用可能なオブジェクトモデル (Object Technology Series)')
-		is(item.creators.join(), '堀内 一,友野 晶夫,児玉 公信,大脇 文雄')
-		is(item.largestImage.size, 'large')
-		is(item.largestImage.width, 367)
-		is(item.largestImage.height, 475)
-		is(item.largestImage.url, 'http://ecx.images-amazon.com/images/I/51TJA4VW1GL.jpg')
+		is(item.releaseDate.toLocaleFormat('%Y%m%d'), '20020401');
+		is(item.title, 'アナリシスパターン―再利用可能なオブジェクトモデル (Object Technology Series)');
+		is(item.creators.join(), '堀内 一,友野 晶夫,児玉 公信,大脇 文雄');
+		is(item.largestImage.size, 'large');
+		is(item.largestImage.width, 367);
+		is(item.largestImage.height, 475);
+		is(item.largestImage.url, 'http://ecx.images-amazon.com/images/I/51TJA4VW1GL.jpg');
 	});
 	*/
 	
 	
 	/*
-	Wassr
+	// Wassr
 	d.addCallback(function(){
 		return Wassr.post({
 			itemUrl     : 'http://www.goo.ne.jp/',
@@ -419,7 +439,7 @@ try {
 	
 	
 	/*
-	Jaiku
+	// Jaiku
 	d.addCallback(function(){
 		return Jaiku.post({
 			itemUrl     : 'http://www.goo.ne.jp/',

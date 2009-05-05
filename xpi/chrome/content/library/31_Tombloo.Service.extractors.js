@@ -650,22 +650,24 @@ Tombloo.Service.extractors = new Repository([
 			return !!this.getImage(ctx);
 		},
 		extract : function(ctx){
-			return {
-				type    : 'photo',
-				item    : ctx.title,
-				itemUrl : this.getImage(ctx),
-			};
+			ctx.target = this.getImage(ctx);
+			
+			return Tombloo.Service.extractors['Photo - Upload from Cache'].extract(ctx);
 		},
 		getImage : function(ctx){
 			// 標準モード
 			var img = $x('.//img', ctx.target.parentNode);
 			if(img && img.src.match('//books.google.'))
-				return img.src;
+				return img;
 			
 			// HTMLモード
 			var div = $x('./ancestor::div[@class="html_page_image"]', ctx.target);
-			if(div)
-				return getStyle(div, 'background-image').replace(/url\((.*)\)/, '$1');
+			if(div){
+				var img = new Image();
+				img.src = getStyle(div, 'background-image').replace(/url\((.*)\)/, '$1');
+				
+				return img;
+			}
 		},
 	},
 	

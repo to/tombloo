@@ -1203,7 +1203,7 @@ PostersPanel.prototype = {
 			return;
 		
 		this.elmTooltip.label = name;
-		this.elmTooltip.openPopup(e.target, 'end_before', 4, 4, false);
+		this.elmTooltip.openPopup(e.target, 'end_before', 0, 26, false);
 	},
 	
 	hideTooltip : function(e){

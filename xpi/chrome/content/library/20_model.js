@@ -790,7 +790,7 @@ models.register(update({
 	},
 	
 	getAuthCookie : function(){
-		return getCookieString('plurk.com', 'plurkcookie').extract(/user_id=(.+)/);
+		return getCookieString('plurk.com', 'plurkcookiea').extract(/user_id=(.+)/);
 	},
 	
 	getToken : function(){

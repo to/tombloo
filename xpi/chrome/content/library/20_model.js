@@ -887,6 +887,37 @@ models.register({
 });
 
 models.register({
+	name : 'Google Calendar',
+	ICON : 'http://calendar.google.com/googlecalendar/images/favicon.ico',
+	
+	check : function(ps){
+		return ps.type=='regular';
+	},
+	
+	post : function(ps){
+		return request('http://www.google.com/calendar/m', {
+			queryString : {
+				hl : 'en',
+			},
+		}).addCallback(function(res){
+			var doc = convertToHTMLDocument(res.responseText);
+			if(doc.getElementById('gaia_loginform'))
+				throw new Error(getMessage('error.notLoggedin'));
+			
+			var form = formContents(doc);
+			return request('http://www.google.com/calendar/m', {
+				redirectionLimit : 0,
+				sendContent: {
+					ctext  : ps.description,
+					secid  : form.secid,
+					as_sdt : form.as_sdt,
+				},
+			});
+		});
+	},
+});
+
+models.register({
 	name : 'Delicious',
 	ICON : 'http://delicious.com/favicon.ico',
 	

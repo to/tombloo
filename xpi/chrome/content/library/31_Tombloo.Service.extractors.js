@@ -468,7 +468,7 @@ Tombloo.Service.extractors = new Repository([
 		},
 		
 		getFrameUrl : function(doc){
-			return $x('//iframe[starts-with(@src, "http://www.tumblr.com/dashboard/iframe")]/@src', doc);
+			return $x('//iframe[starts-with(@src, "http://www.tumblr.com/dashboard/iframe") and contains(@src, "pid=")]/@src', doc);
 		},
 		
 		convertToParams	: function(form){

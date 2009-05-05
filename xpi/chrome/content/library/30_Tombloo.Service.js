@@ -159,7 +159,7 @@ Tombloo.Service = {
 		error(msg);
 		
 		msg = getMessage('error.post', this.reprError(msg).indent(2), page, pageUrl);
-		if(ps){
+		if(ps && ps.type){
 			// ポスト内容があればフォームを再表示する。
 			QuickPostForm.show(ps, null, msg);
 		} else {

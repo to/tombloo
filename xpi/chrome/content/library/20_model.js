@@ -2076,10 +2076,15 @@ models.register({
 	},
 });
 
+// 絶対復習
 models.register({
 	name : '\u7D76\u5BFE\u5FA9\u7FD2',
 	URL  : 'http://www.takao7.net',
 	ICON : 'chrome://tombloo/skin/item.ico',
+	
+	getAuthCookie : function(){
+		return getCookieString('www.takao7.net', 'brushup_auth_token').split('=').pop();
+	},
 	
 	check: function(ps) {
 		return (/(regular|link|quote)/).test(ps.type) && !ps.file;
@@ -2092,6 +2097,9 @@ models.register({
 	add : function(title, description, tags){
 		var self = this;
 		return request(this.URL + '/brushup/reminders/new').addCallback(function(res){
+			if(res.channel.URI.asciiSpec.match('login'))
+				throw new Error(getMessage('error.notLoggedin'));
+			
 			var doc = convertToHTMLDocument(res.responseText);
 			var form = formContents(doc);
 			

@@ -1483,6 +1483,20 @@ function convertToXULElement(str){
 	return result;
 }
 
+function addStyle(css, doc) {
+	doc = doc || currentDocument() || document;
+	
+	var head = doc.getElementsByTagName('head')[0];
+	if (!head)
+		return;
+	
+	var style = doc.createElement('style');
+	style.type = 'text/css';
+	style.innerHTML = css;
+	
+	head.appendChild(style);
+}
+
 function appendMenuItem(menu, label, image, hasChildren){
 	var doc = menu.ownerDocument;
 	if((/^----/).test(label))

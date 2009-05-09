@@ -2234,7 +2234,7 @@ models.register({
 	
 	shorten : function(url){
 		if((/\/\/is\.gd\//).test(url))
-			return url;
+			return succeed(url);
 		
 		return request(this.URL + '/api.php', {
 			redirectionLimit : 0,
@@ -2243,6 +2243,39 @@ models.register({
 			},
 		}).addCallback(function(res){
 			return res.responseText;
+		});
+	}
+});
+
+models.register({
+	name : 'bit.ly',
+	ICON : 'http://bit.ly/static/images/favicon.png',
+	URL  : 'http://api.bit.ly',
+	API_KEY : 'R_8d078b93e8213f98c239718ced551fad',
+	USER    : 'to',
+	
+	// FIXME: 複数URL対応(is.gdなど揃える)
+	shorten : function(url){
+		var self = this;
+		if((/\/\/bit\.ly/).test(url))
+			return succeed(url);
+		
+		return request(this.URL + '/shorten', {
+			queryString : {
+				version : '2.0.1',
+				longUrl : url,
+				login   : this.USER,
+				apiKey  : this.API_KEY,
+			},
+		}).addCallback(function(res){
+			res = evalInSandbox('(' + res.responseText + ')', self.URL);
+			if(res.errorCode){
+				var error = new Error([res.statusCode, res.errorCode, res.errorMessage].join(': '))
+				error.detail = res;
+				throw error;
+			}
+			
+			return res.results[url].shortUrl;
 		});
 	}
 });

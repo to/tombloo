@@ -2260,25 +2260,42 @@ models.register({
 });
 
 models.register({
-	name : 'bit.ly',
-	ICON : 'http://bit.ly/static/images/favicon.png',
-	URL  : 'http://api.bit.ly',
+	name    : 'bit.ly',
+	ICON    : 'http://bit.ly/static/images/favicon.png',
+	URL     : 'http://api.bit.ly',
 	API_KEY : 'R_8d078b93e8213f98c239718ced551fad',
 	USER    : 'to',
+	VERSION : '2.0.1',
 	
-	// FIXME: 複数URL対応(is.gdなど揃える)
 	shorten : function(url){
 		var self = this;
 		if((/\/\/bit\.ly/).test(url))
 			return succeed(url);
 		
-		return request(this.URL + '/shorten', {
-			queryString : {
-				version : '2.0.1',
-				longUrl : url,
+		return this.callMethod('shorten', {
+			longUrl : url,
+		}).addCallback(function(res){
+			return res[url].shortUrl;
+		});
+	},
+	
+	expand : function(url){
+		var hash = url.split('/').pop();
+		return this.callMethod('expand', {
+			hash : hash,
+		}).addCallback(function(res){
+			return res[hash].longUrl;
+		});
+	},
+	
+	callMethod : function(method, ps){
+		var self = this;
+		return request(this.URL + '/' + method, {
+			queryString : update({
+				version : this.VERSION,
 				login   : this.USER,
 				apiKey  : this.API_KEY,
-			},
+			}, ps),
 		}).addCallback(function(res){
 			res = evalInSandbox('(' + res.responseText + ')', self.URL);
 			if(res.errorCode){
@@ -2287,9 +2304,9 @@ models.register({
 				throw error;
 			}
 			
-			return res.results[url].shortUrl;
+			return res.results;
 		});
-	}
+	},
 });
 
 models.register({

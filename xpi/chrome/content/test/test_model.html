@@ -88,14 +88,21 @@ try {
 	});
 	*/
 	
+	
 	/*
 	// bit.ly
 	d.addCallback(function(){
-		return models['bit.ly'].shorten('http://cnn.com');
+		return models['bit.ly'].shorten('http://cnn.com/');
 	}).addCallback(function(url){
 		is(url, 'http://bit.ly/eBZKT');
 	});
+	d.addCallback(function(){
+		return models['bit.ly'].expand('http://bit.ly/eBZKT');
+	}).addCallback(function(url){
+		is(url, 'http://cnn.com/');
+	});
 	*/
+	
 	
 	/*
 	// FriendFeed
@@ -288,6 +295,20 @@ try {
 		ok(recipients[0].name);
 	});
 	*/
+	
+	
+	/*
+	//Plurk
+	d.addCallback(function(){
+		return Plurk.post({
+			description : 'こんにちは',
+		});
+	});
+	d.addCallback(function(res){
+		log(res);
+	});
+	*/
+	
 	
 	/*
 	// Delicious

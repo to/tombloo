@@ -968,22 +968,31 @@ DescriptionBox.prototype = {
 		// input要素の取得が終わったら初期設定の非表示状態に戻す
 		this.elmBox.hidden = this.hidden;
 		
-		this.loadExtensionMenu();
-	},
-	
-	loadExtensionMenu : function(){
 		this.elmContext = document.getAnonymousElementByAttribute(
 			this.elmInput.parentNode, 'anonid', 'input-box-contextmenu');
+		this.elmContext.addEventListener('popupshowing', bind('onPopupShowing', this), true);
+	},
+	
+	onPopupShowing : function(event){
+		if(event.eventPhase != Event.AT_TARGET)
+			return;
+		
+		var self = this;
+		
+		if(this.customMenus)
+			forEach(this.customMenus, removeElement);
+		this.customMenus = [];
 		
 		var df = document.createDocumentFragment();
-		var self = this;
 		(function(menus, parent){
 			var me = arguments.callee;
 			menus.forEach(function(menu){
 				var elmItem = appendMenuItem(parent, menu.name, menu.icon, !!menu.children);
+				self.customMenus.push(elmItem);
+				
 				if(menu.execute){
 					elmItem.addEventListener('command', function(){
-						var d = menu.execute(self.elmDescription);
+						var d = menu.execute(self.elmDescription, self);
 						
 						// 非同期処理の場合、カーソルを砂時計にする
 						if(d instanceof Deferred){
@@ -1000,8 +1009,7 @@ DescriptionBox.prototype = {
 					me(menu.children, elmItem.appendChild(document.createElement('menupopup')));
 			});
 		})(QuickPostForm.descriptionContextMenus, df);
-		
-		appendMenuItem(df, '----');
+		self.customMenus.push(appendMenuItem(df, '----'));
 		
 		this.elmContext.insertBefore(df, this.elmContext.firstChild);
 	},
@@ -1012,6 +1020,18 @@ DescriptionBox.prototype = {
 	
 	get value(){
 		return this.elmDescription.value;
+	},
+	
+	replaceSelection : function(text){
+		var elm = this.elmDescription;
+		var value = elm.value;
+		var start = elm.selectionStart;
+		
+		elm.value = 
+			value.substr(0, elm.selectionStart) + 
+			text + 
+			value.substr(elm.selectionEnd);
+		elm.selectionStart = elm.selectionEnd = start + text.length;
 	},
 	
 	refreshLength : function(){
@@ -1083,20 +1103,11 @@ DescriptionBox.prototype = {
 		if(sel.isCollapsed || reason != ISelectionListener.MOUSEUP_REASON)
 			return;
 		
-		var elm = this.elmDescription;
-		var value = elm.value;
-		var start = elm.selectionStart;
-		sel = sel.toString().trim();
-		
-		elm.value = 
-			value.substr(0, elm.selectionStart) + 
-			sel + 
-			value.substr(elm.selectionEnd);
-		elm.selectionStart = elm.selectionEnd = start + sel.length;
+		this.replaceSelection(sel.toString().trim());
 		
 		// 別ウィンドウのため一度ウィンドウのフォーカスも戻す
 		window.focus();
-		elm.focus();
+		this.elmDescription.focus();
 		
 		// valueを変えると先頭に戻ってしまうため最後に移動し直す
 		this.elmInput.scrollTop = this.elmInput.scrollHeight;

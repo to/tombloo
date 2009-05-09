@@ -625,16 +625,18 @@ models.register({
 models.register({
 	name : 'Twitter',
 	ICON : 'http://twitter.com/favicon.ico',
+	URL  : 'http://twitter.com',
 	
 	check : function(ps){
 		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
 	
 	post : function(ps){
+		var self = this;
 		return Twitter.getToken().addCallback(function(token){
 			// FIXME: 403が発生することがあったため redirectionLimit:0 を外す
 			token.status = joinText([ps.item, ps.itemUrl, ps.body, ps.description], ' ', true);
-			return request('http://twitter.com/status/update', update({
+			return request(self.URL + '/status/update', update({
 				sendContent : token,
 			}));
 		});
@@ -644,9 +646,8 @@ models.register({
 		return this.addFavorite(ps.favorite.id);
 	},
 	
-	
 	getToken : function(){
-		return request('http://twitter.com/account/settings').addCallback(function(res){
+		return request(this.URL + '/account/settings').addCallback(function(res){
 			var html = res.responseText;
 			if(~html.indexOf('class="signin"'))
 				throw new Error(getMessage('error.notLoggedin'));
@@ -659,23 +660,34 @@ models.register({
 	},
 	
 	remove : function(id){
+		var self = this;
 		return Twitter.getToken().addCallback(function(ps){
 			ps._method = 'delete';
-			return request('http://twitter.com/status/destroy/' + id, {
+			return request(self.URL + '/status/destroy/' + id, {
 				redirectionLimit : 0,
-				referrer : 'http://twitter.com/home',
+				referrer : self.URL + '/',
 				sendContent : ps,
 			});
 		});
 	},
 	
 	addFavorite : function(id){
+		var self = this;
 		return Twitter.getToken().addCallback(function(ps){
-			return request('http://twitter.com/favourings/create/' + id, {
+			return request(self.URL + '/favourings/create/' + id, {
 				redirectionLimit : 0,
-				referrer : 'http://twitter.com/home',
+				referrer : self.URL + '/',
 				sendContent : ps,
 			});
+		});
+	},
+	
+	getRecipients : function(){
+		var self = this;
+		return request(this.URL + '/direct_messages/recipients_list?twttr=true').addCallback(function(res){
+			return map(function([id, name]){
+				return {id:id, name:name};
+			}, evalInSandbox('(' + res.responseText + ')', self.URL));
 		});
 	},
 });

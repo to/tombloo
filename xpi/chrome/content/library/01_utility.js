@@ -1071,6 +1071,53 @@ function addAround(target, methodNames, advice){
 	});
 }
 
+function cache(fn, ms){
+	var executed;
+	var res;
+	
+	var deferred = false;
+	var waiting = false;
+	var pendings;
+	return function(){
+		// キャッシュが利用できるか?
+		var now = Date.now();
+		if(executed && (executed + ms) > now){
+			// Deferredの結果が未確定か?
+			if(waiting){
+				var d = new Deferred();
+				pendings.push(d);
+				
+				return d;
+			}
+			
+			return deferred? succeed(res) : res;
+		}
+		
+		executed = now;
+		res = fn.apply(null, arguments)
+		
+		if(res instanceof Deferred){
+			deferred = true;
+			waiting  = true;
+			pendings = [];
+			
+			return res.addCallback(function(result){
+				res = result;
+				waiting = false;
+				
+				// 結果の確定待ちがあればそれらを先に呼び出す(順序が逆転する)
+				pendings.forEach(function(d){
+					d.callback(res);
+				});
+				
+				return res;
+			});
+		} else {
+			return res;
+		}
+	}
+}
+
 /**
  * 配列を結合し文字列を作成する。
  * 空要素は除外される。
@@ -1506,7 +1553,7 @@ function appendMenuItem(menu, label, image, hasChildren){
 	item.setAttribute('label', label);
 	
 	if(image){
-		item.setAttribute('class', 'menuitem-iconic');
+		item.setAttribute('class', hasChildren? 'menu-iconic' : 'menuitem-iconic');
 		item.setAttribute('image', image);
 	}
 	

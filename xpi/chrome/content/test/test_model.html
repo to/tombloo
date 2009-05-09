@@ -276,8 +276,16 @@ try {
 			description : 'ポータルサイト',
 		});
 	});
+	
 	d.addCallback(function(){
 		return Twitter.remove(847473592);
+	});
+	d.addCallback(function(){
+		return Twitter.getRecipients();
+	});
+	d.addCallback(function(recipients){
+		ok(recipients.length > 3);
+		ok(recipients[0].name);
 	});
 	*/
 	

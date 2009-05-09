@@ -25,7 +25,7 @@ models.register({
 			redirectionLimit : 0,
 			sendContent : {
 				at      : self.getToken(),
-				url     : ps.pageUrl,
+				link    : ps.pageUrl,
 				title   : ps.page,
 				image0  : ps.type == 'photo'? ps.itemUrl : '',
 				comment : joinText([ps.body, ps.description], ' ', true),

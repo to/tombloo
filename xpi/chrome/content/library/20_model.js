@@ -21,13 +21,13 @@ models.register({
 			throw new Error(getMessage('error.notLoggedin'));
 		
 		var self = this;
-		return request('https://friendfeed.com/share/publish', {
+		return request('https://friendfeed.com/a/bookmarklet', {
 			redirectionLimit : 0,
 			sendContent : {
-				at  : self.getToken(),
-				url : ps.pageUrl,
-				title : ps.page,
-				image0 : ps.type == 'photo'? ps.itemUrl : '',
+				at      : self.getToken(),
+				url     : ps.pageUrl,
+				title   : ps.page,
+				image0  : ps.type == 'photo'? ps.itemUrl : '',
 				comment : joinText([ps.body, ps.description], ' ', true),
 			},
 		});

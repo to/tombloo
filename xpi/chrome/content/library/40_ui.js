@@ -384,13 +384,6 @@ connect(grobal, 'browser-load', function(e){
 	}, true);
 });
 
-function reload(){
-	signal(grobal, 'context-reload');
-	
-	loadAllSubScripts();
-	getWindows().forEach(connectToBrowser);
-}
-
 function connectToBrowser(win){
 	// パフォーマンスを考慮しconnectしているものがいなければウォッチしない
 	// リロードや設定変更により繰り返し呼ばれたときに多重フックしないようにチェック

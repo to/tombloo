@@ -17,6 +17,33 @@ disconnectAll(grobal);
 if(typeof(constant)=='undefined')
 	constant = {};
 
+updatePatchChromeManifest();
+
+function updatePatchChromeManifest(){
+	var DELIMITER = '# GENERATED';
+	
+	var dataDir = createURI(getDataDir()).spec;
+	var line = 'content tombloo-patch ' + dataDir;
+	var manifest = getChromeManifestFile();
+	var contents = getContents(manifest);
+	var updated = 
+		contents.split(DELIMITER).shift() + 
+		DELIMITER + '\n' + 
+		line + '\n';
+	
+	if(contents != updated){
+		putContents(manifest, updated);
+		ChromeRegistry.checkForNewChrome();
+	}
+}
+
+function reload(){
+	signal(grobal, 'context-reload');
+	
+	loadAllSubScripts();
+	getWindows().forEach(connectToBrowser);
+}
+
 
 // ----[XPCOM]-------------------------------------------------
 function evalInSandbox(js, url){
@@ -227,6 +254,35 @@ function getTempFile(ext){
 	file.append(joinText(['tombloo_' + (new Date()).getTime(), ext], '.'));
 	
 	return file;
+}
+
+function getChromeManifestFile(){
+	var manifest = getExtensionDir(EXTENSION_ID);
+	manifest.append('chrome.manifest');
+	
+	return manifest;
+}
+
+function addChromeManifest(line){
+	var manifest = getChromeManifestFile();
+	var re = new RegExp('^' + line + '\n?', 'm');
+	var contents = getContents(manifest);
+	if(re.test(contents))
+		return;
+	
+	putContents(manifest, contents + line + '\n');
+	ChromeRegistry.checkForNewChrome();
+}
+
+function removeChromeManifest(line){
+	var manifest = getChromeManifestFile();
+	var re = new RegExp('^' + line + '\n?', 'm');
+	var contents = getContents(manifest);
+	if(!re.test(contents))
+		return;
+	
+	putContents(manifest, contents.replace(re, ''));
+	ChromeRegistry.checkForNewChrome();
 }
 
 /**

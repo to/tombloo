@@ -2256,7 +2256,15 @@ models.register({
 		}).addCallback(function(res){
 			return res.responseText;
 		});
-	}
+	},
+	
+	expand : function(url){
+		return request(url, {
+			redirectionLimit : 0,
+		}).addCallback(function(res){
+			return res.channel.URI.spec;
+		});
+	},
 });
 
 models.register({

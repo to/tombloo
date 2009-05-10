@@ -82,9 +82,15 @@ try {
 	/*
 	// is.gd
 	d.addCallback(function(){
-		return models['is.gd'].shorten('http://www.example.com');
+		return models['is.gd'].shorten('http://www.example.com/');
 	}).addCallback(function(url){
 		is(url, 'http://is.gd/Rt');
+	});
+	
+	d.addCallback(function(){
+		return models['is.gd'].expand('http://is.gd/Rt');
+	}).addCallback(function(url){
+		is(url, 'http://www.example.com/');
 	});
 	*/
 	

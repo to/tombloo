@@ -13,10 +13,15 @@
 			<fileset dir="./xpi">
 				<include name="**/**" />
 				
+				<exclude name="chrome.manifest" />
 				<exclude name="chrome/content/test/**" />
 				<exclude name="chrome/content/work/**" />
 			</fileset>
 		</copy>
+		
+		<move 
+			file="dest/build/chrome.original.manifest" 
+			tofile="dest/build/chrome.manifest"/>
 		
 		<zip destfile="dest/${project}.xpi" basedir="dest/build" />
 		

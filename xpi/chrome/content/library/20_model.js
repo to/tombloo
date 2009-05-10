@@ -626,20 +626,33 @@ models.register({
 	name : 'Twitter',
 	ICON : 'http://twitter.com/favicon.ico',
 	URL  : 'http://twitter.com',
+	SHORTEN_SERVICE : 'bit.ly',
 	
 	check : function(ps){
 		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
 	
 	post : function(ps){
+		return this.update(joinText([ps.item, ps.itemUrl, ps.body, ps.description], ' ', true));
+	},
+	
+	update : function(status){
 		var self = this;
-		return Twitter.getToken().addCallback(function(token){
-			// FIXME: 403が発生することがあったため redirectionLimit:0 を外す
-			token.status = joinText([ps.item, ps.itemUrl, ps.body, ps.description], ' ', true);
-			return request(self.URL + '/status/update', update({
-				sendContent : token,
-			}));
-		});
+		return maybeDeferred((status.length < 140)? 
+			status : 
+			shortenUrls(status, models[this.SHORTEN_SERVICE])
+		).addCallback(function(status){
+			alert(status);
+			
+			return Twitter.getToken().addCallback(function(token){
+				// FIXME: 403が発生することがあったため redirectionLimit:0 を外す
+				token.status = status;
+				return request(self.URL + '/status/update', update({
+					sendContent : token,
+				}));
+			});
+		})
+		
 	},
 	
 	favor : function(ps){
@@ -2448,4 +2461,22 @@ models.getEnables = function(ps){
 models.getPostConfig = function(config, name, ps){
 	var c = config[name] || {};
 	return (ps.favorite && ps.favorite.name==name)? c.favorite : c[ps.type];
+}
+
+
+function shortenUrls(text, model){
+	var reUrl = /https?[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+/g;
+	if(!reUrl.test(text))
+		return;
+		
+	var urls = text.match(reUrl);
+	return gatherResults(urls.map(function(url){
+		return model.shorten(url);
+	})).addCallback(function(ress){
+		zip(urls, ress).forEach(function([url, res]){
+			text = text.replace(url, res);
+		});
+		
+		return text;
+	});
 }

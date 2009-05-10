@@ -125,19 +125,7 @@ QuickPostForm.descriptionContextMenus = [
 		icon : models['is.gd'].ICON,
 		
 		execute : function(elmText){
-			var reUrl = /https?[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+/g;
-			var value = elmText.value;
-			if(!reUrl.test(value))
-				return;
-				
-			var urls = value.match(reUrl);
-			gatherResults(urls.map(function(url){
-				return models['is.gd'].shorten(url);
-			})).addCallback(function(ress){
-				zip(urls, ress).forEach(function([url, res]){
-					value = value.replace(url, res);
-				});
-				
+			shortenUrls(elmText.value, models['is.gd']).addCallback(function(value){
 				elmText.value = value;
 			});
 		},

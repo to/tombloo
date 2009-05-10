@@ -124,7 +124,7 @@ var Tumblr = update({}, AbstractSessionService, {
 	remove : function(id){
 		var self = this;
 		return this.getToken().addCallback(function(token){
-			return request(self.TUMBLR_URL+'delete', {
+			return request(Tumblr.TUMBLR_URL+'delete', {
 				redirectionLimit : 0,
 				referrer    : Tumblr.TUMBLR_URL,
 				sendContent : {
@@ -188,12 +188,13 @@ var Tumblr = update({}, AbstractSessionService, {
 	 * @return {Deferred}
 	 */
 	post : function(ps){
+		var self = this;
 		var endpoint = Tumblr.TUMBLR_URL + 'new/' + ps.type;
 		return this.postForm(function(){
-			return Tumblr.getForm(endpoint).addCallback(function(form){
+			return self.getForm(endpoint).addCallback(function(form){
 				update(form, Tumblr[ps.type.capitalize()].convertToForm(ps));
 				
-				Tumblr.appendTags(form, ps);
+				self.appendTags(form, ps);
 				
 				return request(endpoint, {sendContent : form});
 			});
@@ -208,6 +209,7 @@ var Tumblr = update({}, AbstractSessionService, {
 	 * @return {Deferred}
 	 */
 	getForm : function(url){
+		var self = this;
 		return request(url).addCallback(function(res){
 			var doc = convertToHTMLDocument(res.responseText);
 			var form = formContents(doc);
@@ -215,7 +217,7 @@ var Tumblr = update({}, AbstractSessionService, {
 			form.redirect_to = Tumblr.TUMBLR_URL+'dashboard';
 			
 			if(form.reblog_post_id){
-				Tumblr.trimReblogInfo(form);
+				self.trimReblogInfo(form);
 				
 				// Tumblrから他サービスへポストするため画像URLを取得しておく
 				if(form['post[type]']=='photo')
@@ -258,7 +260,7 @@ var Tumblr = update({}, AbstractSessionService, {
 			form[name] += '\n\n' + value;
 		});
 		
-		Tumblr.appendTags(form, ps);
+		this.appendTags(form, ps);
 		
 		return this.postForm(function(){
 			return request(ps.favorite.endpoint, {sendContent : form})
@@ -273,6 +275,7 @@ var Tumblr = update({}, AbstractSessionService, {
 	 * @return {Deferred}
 	 */
 	postForm : function(fn){
+		var self = this;
 		var d = succeed();
 		d.addCallback(fn);
 		d.addCallback(function(res){
@@ -333,7 +336,7 @@ var Tumblr = update({}, AbstractSessionService, {
 	
 	login : function(user, password){
 		var self = this;
-		return request(this.TUMBLR_URL+'login', {
+		return request(Tumblr.TUMBLR_URL+'login', {
 			sendContent : {
 				email : user,
 				password : password,
@@ -345,7 +348,7 @@ var Tumblr = update({}, AbstractSessionService, {
 	},
 	
 	logout : function(){
-		return request(this.TUMBLR_URL+'logout');
+		return request(Tumblr.TUMBLR_URL+'logout');
 	},
 	
 	getAuthCookie : function(){
@@ -370,7 +373,7 @@ var Tumblr = update({}, AbstractSessionService, {
 			
 		case 'changed':
 			var self = this;
-			return request(this.TUMBLR_URL+'preferences').addCallback(function(res){
+			return request(Tumblr.TUMBLR_URL+'preferences').addCallback(function(res){
 				var doc = convertToHTMLDocument(res.responseText);
 				return self.user = $x('id("user_email")/@value', doc);
 			});
@@ -393,7 +396,7 @@ var Tumblr = update({}, AbstractSessionService, {
 			
 		case 'changed':
 			var self = this;
-			return request(this.TUMBLR_URL+'customize').addCallback(function(res){
+			return request(Tumblr.TUMBLR_URL+'customize').addCallback(function(res){
 				var doc = convertToHTMLDocument(res.responseText);
 				return self.id = $x('id("edit_tumblelog_name")/@value', doc);
 			});
@@ -417,11 +420,23 @@ var Tumblr = update({}, AbstractSessionService, {
 			
 		case 'changed':
 			var self = this;
-			return request(this.TUMBLR_URL+'new/text').addCallback(function(res){
+			return request(Tumblr.TUMBLR_URL+'new/text').addCallback(function(res){
 				var doc = convertToHTMLDocument(res.responseText);
 				return self.token = $x('id("form_key")/@value', doc);
 			});
 		}
+	},
+	
+	getTumblelogs : function(){
+		return request(Tumblr.TUMBLR_URL+'new/text').addCallback(function(res){
+			var doc = convertToHTMLDocument(res.responseText);
+			return $x('id("channel_id")//option[@value!=0]', doc, true).map(function(opt){
+				return {
+					id : opt.value,
+					name : opt.textContent,
+				}
+			});
+		});
 	},
 });
 

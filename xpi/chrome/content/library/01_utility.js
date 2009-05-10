@@ -1387,9 +1387,10 @@ Repository.prototype = {
 	 * 新しい定義を追加する。
 	 * 
 	 * @param {Array} defs
-	 * @param {String} target 追加対象。この名前の前に追加される。
+	 * @param {String} target 追加対象。この名前の前後に追加される。
+	 * @param {Boolean} after 追加対象の前に追加するか否か(後か)。
 	 */
-	register : function(defs, target){
+	register : function(defs, target, after){
 		if(!defs)
 			return;
 		
@@ -1402,7 +1403,7 @@ Repository.prototype = {
 				if(vals[i].name == target)
 					break;
 			
-			vals.splice.apply(vals, [i, 0].concat(defs));
+			vals.splice.apply(vals, [(after? i+1 : i), 0].concat(defs));
 			defs = vals;
 		}
 		

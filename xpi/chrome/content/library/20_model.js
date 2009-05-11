@@ -2203,29 +2203,36 @@ models.register({
 models.register({
 	name : 'LibraryThing',
 	ICON : 'http://www.librarything.com/favicon.ico',
+	
 	check : function(ps){
 		return ps.type == 'link' && !ps.file;
 	},
 	
 	getAuthCookie : function(){
-		return getCookieString('librarything.com', 'LTAnonSessionID');
+		return getCookies('librarything.com', 'cookie_userid');
+	},
+	
+	getHost : function(){
+		var cookies = this.getAuthCookie();
+		if(!cookies.length)
+			throw new Error(getMessage('error.notLoggedin'));
+		
+		return cookies[0].host;
 	},
 	
 	post : function(ps){
-		if(!this.getAuthCookie())
-			throw new Error(getMessage('error.notLoggedin'));
-		
-		return request('http://www.librarything.com/import_submit.php', {
+		var self = this;
+		return request('http://' + self.getHost() + '/import_submit.php', {
 			sendContent : {
 				form_textbox : ps.itemUrl,
 			},
 		}).addCallback(function(res){
-			var err = res.channel.URI.asciiSpec.extract('http://www.librarything.com/import.php?pastealert=(.*)');
+			var err = res.channel.URI.asciiSpec.extract('http://' + self.getHost() + '/import.php?pastealert=(.*)');
 			if(err)
 				throw new Error(err);
 			
 			var doc = convertToHTMLDocument(res.responseText);
-			return request('http://www.librarything.com/import_questions_submit.php', {
+			return request('http://' + self.getHost() + '/import_questions_submit.php', {
 				redirectionLimit : 0,
 				sendContent : update(formContents(doc), {
 					masstags :	joinText(ps.tags, ','),

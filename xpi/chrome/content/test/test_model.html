@@ -530,6 +530,16 @@ try {
 	
 	
 	/*
+	//LibraryThing
+	d.addCallback(function(){
+		return LibraryThing.post({
+			itemUrl : 'http://amazon.co.jp/o/ASIN/4334032060',
+		});
+	});
+	*/
+
+	
+	/*
 	d.addCallback(function(){
 		return LivedoorClip.getToken();
 	});
@@ -554,8 +564,8 @@ try {
 	d.addCallback(function(res){
 		ok(res.tags.length);
 	});
-	*/
 	ok(LivedoorClip.getAuthCookie(), 'LivedoorClip: ログインしているか(未ログインの場合エラー)');
+	*/
 	
 	
 	if(models.FirefoxBookmark){

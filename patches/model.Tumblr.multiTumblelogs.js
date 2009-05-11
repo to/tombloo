@@ -6,6 +6,9 @@ Tumblr.getTumblelogs().addCallback(function(blogs){
 			form.channel_id = blog.id;
 		});
 		
+		// アカウント切り換えに表示されないように
+		delete model.getPasswords;
+		
 		models.register(model, 'Tumblr', true);
 	});
 });

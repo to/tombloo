@@ -1587,6 +1587,16 @@ function convertToXULElement(str){
 	return result;
 }
 
+function makeOpaqueFlash(doc){
+	doc = doc || currentDocument() || document;
+
+	$x('//*[self::object or self::embed][contains(@type, "flash")][boolean(@wmode)=false or (@wmode!="opaque" and @wmode!="transparent")]', doc, true).forEach(function(flash){
+		flash.setAttribute('wmode', 'opaque');
+		flash = swapDOM(flash, flash.cloneNode(false));
+		flash.offsetWidth;
+	});
+}
+
 function addStyle(css, doc) {
 	doc = doc || currentDocument() || document;
 	

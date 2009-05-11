@@ -549,7 +549,7 @@ Tombloo.Service.extractors = new Repository([
 	},
 	
 	{
-		name: 'ReBlog - Dashboard iPhone',
+		name: 'ReBlog - Tumblr Dashboard for iPhone',
 		ICON: 'chrome://tombloo/skin/reblog.ico',
 		check: function(ctx){
 			return (/(tumblr\.com)\/iphone/).test(ctx.href) && this.getLink(ctx);
@@ -1352,6 +1352,8 @@ Tombloo.Service.extractors = new Repository([
 				return;
 			
 			var win = ctx.window;
+			makeOpaqueFlash();
+			
 			return succeed().addCallback(function(){
 				switch (type){
 				case 'Region':

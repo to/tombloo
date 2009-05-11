@@ -1,3 +1,10 @@
+update(Date, {
+	TIME_SECOND : 1000,
+	TIME_MINUTE : 1000 * 60,
+	TIME_HOUR   : 1000 * 60 * 60,
+	TIME_DAY    : 1000 * 60 * 60 * 24,
+})
+
 if(typeof(update)=='undefined'){
 	function update(t, s){
 		for(var p in s)

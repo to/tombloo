@@ -1,11 +1,39 @@
 Tombloo.Service.actions = new Repository([
 	{
+		type : 'context',
+		name : getMessage('label.action.installPatch'),
+		check : function(ctx){
+			return ctx.onLink && (createURI(ctx.linkURL).fileExtension == 'js');
+		},
+		execute : function(ctx){
+			var res = input({
+				'message.installWarning' : null,
+				'label.agreeAndInstall' : false,
+			}, 'message.warning');
+			if(!res || !res['label.agreeAndInstall'])
+				return;
+			
+			var uri = createURI(ctx.linkURL);
+			var file = getPatchDir();
+			file.append(uri.fileName);
+			
+			return download(uri, file).addCallback(function(){
+				// 異常なスクリプトが含まれているとここで停止する
+				reload();
+				
+				alert(getMessage('message.success'));
+			});
+		},
+	},
+	{
+		type : 'menu,context',
 		name : getMessage('label.action.changeAcount'),
 		execute : function(){
 			openDialog('chrome://tombloo/content/library/login.xul', 'resizable,centerscreen');
 		},
 	},
 	{
+		type : 'menu',
 		name : getMessage('label.action.downloadPosts'),
 		execute : function(){
 			var users = getPref('updateUsers') || '';
@@ -45,15 +73,25 @@ Tombloo.Service.actions = new Repository([
 		},
 	},
 	{
+		type : 'menu',
 		name : 'Mosaic',
 		execute : function(){
 			addTab('chrome://tombloo/content/library/Mosaic.html');
 		},
 	},
 	{
+		type : 'menu,context',
 		name : '----',
 	},
 	{
+		type : 'menu',
+		name : getMessage('label.action.reloadTombloo'),
+		execute : function(){
+			reload();
+		},
+	},
+	{
+		type : 'menu,context',
 		name : getMessage('label.action.tomblooOptions'),
 		execute : function(){
 			openDialog('chrome://tombloo/content/prefs.xul', 'resizable,centerscreen');

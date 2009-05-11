@@ -10,7 +10,7 @@ function getElement(id){
 
 
 // ----[DialogPanel]----------------------------------------------------
-function DialogPanel(position){
+function DialogPanel(position, message){
 	var self = this;
 	window.addEventListener('unload', function(){
 		disconnectAll(self);
@@ -18,6 +18,14 @@ function DialogPanel(position){
 	
 	this.elmWindow = getElement('window');
 	this.elmBase = getElement('base');
+	if(message){
+		// 横に伸びすぎずテキストも選択できるためtextbox要素を使う
+		this.elmMessage = getElement('message');
+		
+		this.elmMessage.setAttribute('rows', message.split('\n').length);
+		this.elmMessage.style.display = 'inherit';
+		this.elmMessage.value = message;
+	}
 	
 	this.formPanel = new FormPanel(this);
 	this.formPanel.show();
@@ -959,6 +967,51 @@ DescriptionBox.prototype = {
 		
 		// input要素の取得が終わったら初期設定の非表示状態に戻す
 		this.elmBox.hidden = this.hidden;
+		
+		this.elmContext = document.getAnonymousElementByAttribute(
+			this.elmInput.parentNode, 'anonid', 'input-box-contextmenu');
+		this.elmContext.addEventListener('popupshowing', bind('onPopupShowing', this), true);
+	},
+	
+	onPopupShowing : function(event){
+		if(event.eventPhase != Event.AT_TARGET)
+			return;
+		
+		var self = this;
+		
+		if(this.customMenus)
+			forEach(this.customMenus, removeElement);
+		this.customMenus = [];
+		
+		var df = document.createDocumentFragment();
+		(function(menus, parent){
+			var me = arguments.callee;
+			menus.forEach(function(menu){
+				var elmItem = appendMenuItem(parent, menu.name, menu.icon, !!menu.children);
+				self.customMenus.push(elmItem);
+				
+				if(menu.execute){
+					elmItem.addEventListener('command', function(){
+						var d = menu.execute(self.elmDescription, self);
+						
+						// 非同期処理の場合、カーソルを砂時計にする
+						if(d instanceof Deferred){
+							self.elmInput.style.cursor = 'wait';
+							d.addBoth(function(){
+								self.elmInput.style.cursor = '';
+							});
+						}
+					}, true);
+				}
+				
+				// サブメニューがあるか?
+				if(menu.children)
+					me(menu.children, elmItem.appendChild(document.createElement('menupopup')));
+			});
+		})(QuickPostForm.descriptionContextMenus, df);
+		self.customMenus.push(appendMenuItem(df, '----'));
+		
+		this.elmContext.insertBefore(df, this.elmContext.firstChild);
 	},
 	
 	set value(value){
@@ -967,6 +1020,18 @@ DescriptionBox.prototype = {
 	
 	get value(){
 		return this.elmDescription.value;
+	},
+	
+	replaceSelection : function(text){
+		var elm = this.elmDescription;
+		var value = elm.value;
+		var start = elm.selectionStart;
+		
+		elm.value = 
+			value.substr(0, elm.selectionStart) + 
+			text + 
+			value.substr(elm.selectionEnd);
+		elm.selectionStart = elm.selectionEnd = start + text.length;
 	},
 	
 	refreshLength : function(){
@@ -1038,20 +1103,11 @@ DescriptionBox.prototype = {
 		if(sel.isCollapsed || reason != ISelectionListener.MOUSEUP_REASON)
 			return;
 		
-		var elm = this.elmDescription;
-		var value = elm.value;
-		var start = elm.selectionStart;
-		sel = sel.toString().trim();
-		
-		elm.value = 
-			value.substr(0, elm.selectionStart) + 
-			sel + 
-			value.substr(elm.selectionEnd);
-		elm.selectionStart = elm.selectionEnd = start + sel.length;
+		this.replaceSelection(sel.toString().trim());
 		
 		// 別ウィンドウのため一度ウィンドウのフォーカスも戻す
 		window.focus();
-		elm.focus();
+		this.elmDescription.focus();
 		
 		// valueを変えると先頭に戻ってしまうため最後に移動し直す
 		this.elmInput.scrollTop = this.elmInput.scrollHeight;
@@ -1078,6 +1134,12 @@ function PostersPanel(){
 			}));
 			image.name = name;
 			
+			// OSXではオリジナルのツールチップを利用する
+			// FIXME: 表示位置が悪いだけでは(未確認)
+			if(AppInfo.OS == 'Darwin'){
+				image.setAttribute('tooltiptext', name);
+			}
+			
 			self.setIcon(image, poster, !disabled);
 		});
 		
@@ -1091,9 +1153,12 @@ function PostersPanel(){
 	
 	this.elmAllOff.addEventListener('click', bind('allOff', this), true);
 	
-	// マウスオーバーですぐに表示されるよう自前で用意する
-	this.elmPanel.addEventListener('mouseover', bind('showTooltip', this), true);
-	this.elmPanel.addEventListener('mouseout', bind('hideTooltip', this), true);
+	// OSXでopenPopupさせるとmouseout/mouseoverイベントが二重に発生して誤動作する
+	if(AppInfo.OS != 'Darwin'){
+		// マウスオーバーですぐに表示されるよう自前で用意する
+		this.elmPanel.addEventListener('mouseover', bind('showTooltip', this), true);
+		this.elmPanel.addEventListener('mouseout', bind('hideTooltip', this), true);
+	}
 	
 	new ChekboxPanel(this.elmPanel, this);
 }
@@ -1149,13 +1214,7 @@ PostersPanel.prototype = {
 			return;
 		
 		this.elmTooltip.label = name;
-		
-		// Firefox 3
-		if(this.elmTooltip.openPopup){
-			this.elmTooltip.openPopup(e.target, 'end_before', 4, 30, false);
-		} else {
-			this.elmTooltip.showPopup(null, e.screenX + 16, e.screenY + 16, 'tooltip');
-		}
+		this.elmTooltip.openPopup(e.target, 'end_before', 0, 26, false);
 	},
 	
 	hideTooltip : function(e){

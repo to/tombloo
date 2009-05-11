@@ -14,6 +14,7 @@
 <script type="text/javascript" src="../library/00_component.js"></script>
 <script type="text/javascript" src="../library/01_utility.js"></script>
 <script type="text/javascript" src="../library/20_model.js"></script>
+<script type="text/javascript" src="../library/20_Wedata.js"></script>
 <script type="text/javascript">
 try {
 	// chrome://tombloo/content/test/test_model.html
@@ -26,13 +27,91 @@ try {
 	
 	/*
 	.addBoth(function(res){
-		console.log(res);
+		log(res);
 	})
 	*/
 	
 	
 	/*
-	FriendFeed
+	// 絶対復習
+	d.addCallback(function(){
+		return models['絶対復習'].post({
+			item        : 'タイトル',
+			body        : 'ボディ',
+			description : '内容',
+			itemUrl     : 'http://www.takao7.net/brushup/',
+			tags        : ['memo1', 'memo2'],
+		});
+	})
+	d.addCallback(function(){
+		return models['絶対復習'].add('件名', '詳細', ['tag1', 'tag2']);
+	})
+	*/
+	
+	
+	/*
+	// GoogleCalendar
+	d.addCallback(function(){
+		return GoogleCalendar.addSimpleSchedule('開発 2009/5/10');
+	});
+	
+	ok(GoogleCalendar.getAuthCookie());
+	
+	d.addCallback(function(){
+		return GoogleCalendar.addSchedule('開発', '詳細', new Date('2009/5/10'));
+	});
+	*/
+	
+	
+	/*
+	// TextConversionServices
+	d.addCallback(function(){
+		return TextConversionServices.convert('ありがとう', 'ペンパン(kkshow)');
+	}).addCallback(function(res){
+		is(res, 'パピパポプ ');
+	});
+	
+	d.addCallback(function(){
+		return TextConversionServices.convert('ありがとう', '大阪弁');
+	}).addCallback(function(res){
+		is(res, 'おおきに');
+	});
+	*/
+	
+	
+	/*
+	// is.gd
+	d.addCallback(function(){
+		return models['is.gd'].shorten('http://www.example.com/');
+	}).addCallback(function(url){
+		is(url, 'http://is.gd/Rt');
+	});
+	
+	d.addCallback(function(){
+		return models['is.gd'].expand('http://is.gd/Rt');
+	}).addCallback(function(url){
+		is(url, 'http://www.example.com/');
+	});
+	*/
+	
+	
+	/*
+	// bit.ly
+	d.addCallback(function(){
+		return models['bit.ly'].shorten('http://cnn.com/');
+	}).addCallback(function(url){
+		is(url, 'http://bit.ly/eBZKT');
+	});
+	d.addCallback(function(){
+		return models['bit.ly'].expand('http://bit.ly/eBZKT');
+	}).addCallback(function(url){
+		is(url, 'http://cnn.com/');
+	});
+	*/
+	
+	
+	/*
+	// FriendFeed
 	d.addCallback(function(){
 		return FriendFeed.post({
 			type        : 'photo',
@@ -210,10 +289,32 @@ try {
 			description : 'ポータルサイト',
 		});
 	});
+	
 	d.addCallback(function(){
 		return Twitter.remove(847473592);
 	});
+	d.addCallback(function(){
+		return Twitter.getRecipients();
+	});
+	d.addCallback(function(recipients){
+		ok(recipients.length > 3);
+		ok(recipients[0].name);
+	});
 	*/
+	
+	
+	/*
+	//Plurk
+	d.addCallback(function(){
+		return Plurk.post({
+			description : 'こんにちは',
+		});
+	});
+	d.addCallback(function(res){
+		log(res);
+	});
+	*/
+	
 	
 	/*
 	// Delicious
@@ -366,22 +467,28 @@ try {
 		function(e){
 			is(e.message, 'EXISTS', 'ポスト失敗: 重複')
 		});
+	*/
 	
-	d.addCallback(bind('getItem', Amazon), '4894716933');
+	
+	/*
+	// Amazon
+	d.addCallback(function(){
+		return Amazon.getItem('4894716933');
+	});
 	d.addCallback(function(item){
-		log(item);
-		is(item.title, 'アナリシスパターン―再利用可能なオブジェクトモデル (Object Technology Series)')
-		is(item.creators.join(), '堀内 一,友野 晶夫,児玉 公信,大脇 文雄')
-		is(item.largestImage.size, 'large')
-		is(item.largestImage.width, 367)
-		is(item.largestImage.height, 475)
-		is(item.largestImage.url, 'http://ecx.images-amazon.com/images/I/51TJA4VW1GL.jpg')
+		is(item.releaseDate.toLocaleFormat('%Y%m%d'), '20020401');
+		is(item.title, 'アナリシスパターン―再利用可能なオブジェクトモデル (Object Technology Series)');
+		is(item.creators.join(), '堀内 一,友野 晶夫,児玉 公信,大脇 文雄');
+		is(item.largestImage.size, 'large');
+		is(item.largestImage.width, 367);
+		is(item.largestImage.height, 475);
+		is(item.largestImage.url, 'http://ecx.images-amazon.com/images/I/51TJA4VW1GL.jpg');
 	});
 	*/
 	
 	
 	/*
-	Wassr
+	// Wassr
 	d.addCallback(function(){
 		return Wassr.post({
 			itemUrl     : 'http://www.goo.ne.jp/',
@@ -393,7 +500,7 @@ try {
 	
 	
 	/*
-	Jaiku
+	// Jaiku
 	d.addCallback(function(){
 		return Jaiku.post({
 			itemUrl     : 'http://www.goo.ne.jp/',
@@ -417,6 +524,16 @@ try {
 			tags        : ['便利', 'dictionary', 'english'], 
 			description : '辞書',
 			private     : false,
+		});
+	});
+	*/
+	
+	
+	/*
+	//LibraryThing
+	d.addCallback(function(){
+		return LibraryThing.post({
+			itemUrl : 'http://amazon.co.jp/o/ASIN/4334032060',
 		});
 	});
 	*/
@@ -447,8 +564,8 @@ try {
 	d.addCallback(function(res){
 		ok(res.tags.length);
 	});
-	*/
 	ok(LivedoorClip.getAuthCookie(), 'LivedoorClip: ログインしているか(未ログインの場合エラー)');
+	*/
 	
 	
 	if(models.FirefoxBookmark){

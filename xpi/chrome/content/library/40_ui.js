@@ -103,10 +103,10 @@ function Pagebar(opt){
 
 
 var QuickPostForm = {
-	show : function(ps, position){
+	show : function(ps, position, message){
 		openDialog(
 			'chrome://tombloo/content/quickPostForm.xul', 
-			'chrome,alwaysRaised=yes,resizable=yes,titlebar=no,dependent=yes', ps, position);
+			'chrome,alwaysRaised=yes,resizable=yes,titlebar=no,dependent=yes', ps, position, message);
 	},
 };
 
@@ -119,6 +119,18 @@ QuickPostForm.dialog = {
 		left : false,
 	},
 };
+QuickPostForm.descriptionContextMenus = [
+	{
+		name : 'is.gd',
+		icon : models['is.gd'].ICON,
+		
+		execute : function(elmText){
+			shortenUrls(elmText.value, models['is.gd']).addCallback(function(value){
+				elmText.value = value;
+			});
+		},
+	},
+]
 
 
 // ----[Shortcutkey]-------------------------------------------------
@@ -131,12 +143,16 @@ forEach({
 		var doc = win.document;
 		win = win.wrappedJSObject || win;
 		
-		QuickPostForm.show({
-			type    : 'link',
-			page    : doc.title,
-			pageUrl : win.location.href,
-			item    : doc.title,
-			itemUrl : win.location.href,
+		var ctx = update({
+			document  : doc,
+			window    : win,
+			title     : doc.title,
+		}, win.location);
+		Tombloo.Service.extractors.extract(
+			ctx, 
+			Tombloo.Service.extractors.Link
+		).addCallback(function(ps){
+			QuickPostForm.show(ps);
 		});
 	},
 	'shortcutkey.quickPost.regular' : function(e){
@@ -231,8 +247,9 @@ connect(grobal, 'browser-load', function(e){
 		
 	var context;
 	var menuContext = doc.getElementById('contentAreaContextMenu');
-	var menuShare = doc.getElementById('tombloo-menu-share');
-	var menuSelect = doc.getElementById('tombloo-menu-select');
+	var menuShare   = doc.getElementById('tombloo-menu-share');
+	var menuSelect  = doc.getElementById('tombloo-menu-select');
+	var menuAction  = doc.getElementById('tombloo-menu-action');
 	
 	menuShare.setAttribute('accesskey', getPref('accesskey.share'));
 	
@@ -244,24 +261,24 @@ connect(grobal, 'browser-load', function(e){
 		var doc = wrappedObject(cwin.gContextMenu.target.ownerDocument);
 		var win = wrappedObject(doc.defaultView);
 		try{
-			// about:config などで無効にする
 			win.location.host;
 			
 			menuShare.disabled = false;
 			menuSelect.parentNode.disabled = false;
 		}catch(e){
+			// about:config などのページで無効にする
 			menuShare.disabled = true;
 			menuSelect.parentNode.disabled = true;
 			
 			return;
 		}
-		
+
 		// [FIXME] selection文字列化再検討
 		// command時にはクリック箇所などの情報が失われるためコンテキストを保持しておく
 		context = update({}, cwin.gContextMenu, win.location, {
 			document  : doc,
 			window    : win,
-			title     : ''+doc.title || '',
+			title     : doc.title,
 			selection : ''+win.getSelection(),
 			target    : wrappedObject(cwin.gContextMenu.target),
 			mouse     : {
@@ -269,6 +286,18 @@ connect(grobal, 'browser-load', function(e){
 				screen : {x : e.screenX, y : e.screenY},
 			},
 			menu      : cwin.gContextMenu,
+		});
+		
+		// アクションメニューを作成する
+		forEach(Tombloo.Service.actions, function([name, action]){
+			if(!/context/.test(action.type))
+				return;
+				
+			if(action.check && !action.check(context))
+				return;
+			
+			var elmItem = appendMenuItem(menuAction, name);
+			elmItem.action = action;
 		});
 		
 		var exts = Tombloo.Service.check(context);
@@ -283,9 +312,9 @@ connect(grobal, 'browser-load', function(e){
 			
 			for(var i=0 ; i<exts.length ; i++){
 				var ext = exts[i];
-				var item = appendMenuItem(menuSelect, ext.name, ext.ICON || 'chrome://tombloo/skin/empty.png');
-				item.extractor = ext.name;
-				item.showForm = true;
+				var elmItem = appendMenuItem(menuSelect, ext.name, ext.ICON || 'chrome://tombloo/skin/empty.png');
+				elmItem.extractor = ext.name;
+				elmItem.showForm = true;
 			}
 		}
 	}, true);
@@ -296,15 +325,24 @@ connect(grobal, 'browser-load', function(e){
 		
 		context = null;
 		
+		clearChildren(menuAction);
 		clearChildren(menuSelect);
 	}, true);
 	
 	menuContext.addEventListener('command', function(e){
-		if(!e.target.extractor)
+		var target = e.target;
+		if(target.extractor){
+			var svc = Tombloo.Service;
+			svc.share(context, svc.extractors[target.extractor], target.showForm);
+			
 			return;
+		}
 		
-		var svc = Tombloo.Service;
-		svc.share(context, svc.extractors[e.target.extractor], e.target.showForm);
+		if(target.action){
+			target.action.execute(context);
+			
+			return;
+		}
 	}, true);
 	
 	// clickイベントはマウス座標が異常
@@ -318,43 +356,21 @@ connect(grobal, 'browser-load', function(e){
 		}
 	}, true);
 	
-	var menuAction = doc.getElementById('tombloo-menu-main');
-	menuAction.addEventListener('popupshowing', function(e){
-		clearChildren(menuAction);
+	var menuMain = doc.getElementById('tombloo-menu-main');
+	menuMain.addEventListener('popupshowing', function(e){
+		clearChildren(menuMain);
 		
-		Tombloo.Service.actions.names.forEach(function(name){
-			appendMenuItem(menuAction, name);
+		forEach(Tombloo.Service.actions, function([name, action]){
+			// 後方互換のためtypeが存在しないものも可とする
+			if(!action.type || /menu/.test(action.type))
+				appendMenuItem(menuMain, name);
 		});
 	}, true);
 	
-	menuAction.addEventListener('command', function(e){
-		Tombloo.Service.actions[e.originalTarget.getAttribute("label")].execute();
+	menuMain.addEventListener('command', function(e){
+		Tombloo.Service.actions[e.originalTarget.getAttribute('label')].execute();
 	}, true);
-	
-	
-	// FIXME: docを解決し汎用に
-	function appendMenuItem(menu, label, image){
-		if((/^----/).test(label))
-			return menu.appendChild(doc.createElement('menuseparator'));
-		
-		var item = menu.appendChild(doc.createElement('menuitem'));
-		item.setAttribute('label', label);
-		
-		if(image){
-			item.setAttribute('class', 'menuitem-iconic');
-			item.setAttribute('image', image);
-		}
-		
-		return item;
-	}
 });
-
-function reload(){
-	signal(grobal, 'context-reload');
-	
-	loadAllSubScripts();
-	getWindows().forEach(connectToBrowser);
-}
 
 function connectToBrowser(win){
 	// パフォーマンスを考慮しconnectしているものがいなければウォッチしない

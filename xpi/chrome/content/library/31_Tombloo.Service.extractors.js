@@ -9,11 +9,12 @@ Tombloo.Service.extractors = new Repository([
 			if(!item)
 				return;
 			
+			var channel = $x('id("right_body")/div[@class="channel"]//a');
 			var res = {
 				author : ($x('div[@class="item_info"]/*[@class="author"]/text()', item) || '').extract(/by (.*)/),
 				title  : $x('div[@class="item_header"]//a/text()', item) || '',
-				feed   : $x('id("right_body")/div[@class="channel"]//a/text()'),
-				href   : $x('(div[@class="item_info"]/a)[1]/@href', item).replace(/[?&;](fr?(om)?|track|ref|FM)=(r(ss(all)?|df)|atom)([&;].*)?/,''),
+				feed   : channel.textContent,
+				href   : $x('(div[@class="item_info"]/a)[1]/@href', item).replace(/[?&;](fr?(om)?|track|ref|FM)=(r(ss(all)?|df)|atom)([&;].*)?/,'') || channel.href,
 			};
 			
 			if(!getOnly){
@@ -363,6 +364,7 @@ Tombloo.Service.extractors = new Repository([
 			return  Amazon.getItem(asin).addCallback(function(item){
 				ctx.href  = Amazon.normalizeUrl(asin);
 				ctx.title = item.title + (item.creators.length? ' / ' + item.creators.join(', ') : '');
+				
 				return item;
 			});
 		},
@@ -427,7 +429,13 @@ Tombloo.Service.extractors = new Repository([
 		extract : function(ctx){
 			var exts = Tombloo.Service.extractors;
 			return exts.Amazon.extract(ctx).addCallback(function(item){
-				return exts.Link.extract(ctx);
+				var releaseDate = item.releaseDate;
+				return {
+					type    : 'link',
+					item    : ctx.title,
+					itemUrl : ctx.href,
+					date    : (new Date() < releaseDate)? releaseDate : null,
+				}
 			});
 		},
 	},
@@ -467,7 +475,7 @@ Tombloo.Service.extractors = new Repository([
 		},
 		
 		getFrameUrl : function(doc){
-			return $x('//iframe[starts-with(@src, "http://www.tumblr.com/dashboard/iframe")]/@src', doc);
+			return $x('//iframe[starts-with(@src, "http://www.tumblr.com/dashboard/iframe") and contains(@src, "pid=")]/@src', doc);
 		},
 		
 		convertToParams	: function(form){
@@ -541,7 +549,7 @@ Tombloo.Service.extractors = new Repository([
 	},
 	
 	{
-		name: 'ReBlog - Dashboard iPhone',
+		name: 'ReBlog - Tumblr Dashboard for iPhone',
 		ICON: 'chrome://tombloo/skin/reblog.ico',
 		check: function(ctx){
 			return (/(tumblr\.com)\/iphone/).test(ctx.href) && this.getLink(ctx);
@@ -628,7 +636,40 @@ Tombloo.Service.extractors = new Repository([
 						id   : id,
 					},
 				}
+			}).addErrback(function(err){
+				return Tombloo.Service.extractors['Photo'].extract(ctx);
 			});
+		},
+	},
+	
+	{
+		name : 'Photo - Google Book Search',
+		ICON : models.Google.ICON,
+		check : function(ctx){
+			if(!(/^books.google./).test(ctx.host))
+				return;
+			
+			return !!this.getImage(ctx);
+		},
+		extract : function(ctx){
+			ctx.target = this.getImage(ctx);
+			
+			return Tombloo.Service.extractors['Photo - Upload from Cache'].extract(ctx);
+		},
+		getImage : function(ctx){
+			// 標準モード
+			var img = $x('.//img', ctx.target.parentNode);
+			if(img && img.src.match('//books.google.'))
+				return img;
+			
+			// HTMLモード
+			var div = $x('./ancestor::div[@class="html_page_image"]', ctx.target);
+			if(div){
+				var img = new Image();
+				img.src = getStyle(div, 'background-image').replace(/url\((.*)\)/, '$1');
+				
+				return img;
+			}
 		},
 	},
 	
@@ -1311,6 +1352,8 @@ Tombloo.Service.extractors = new Repository([
 				return;
 			
 			var win = ctx.window;
+			makeOpaqueFlash();
+			
 			return succeed().addCallback(function(){
 				switch (type){
 				case 'Region':
@@ -1357,6 +1400,25 @@ Tombloo.Service.extractors = new Repository([
 ]);
 
 Tombloo.Service.extractors.extract = function(ctx, ext){
+	var doc = ctx.document;
+	
+	// ドキュメントタイトルを取得する
+	var title;
+	if(typeof(doc.title) == 'string'){
+		title = doc.title;
+	} else {
+		// idがtitleの要素を回避する
+		title = $x('//title/text()', doc);
+	}
+	
+	if(!title)
+		title = createURI(doc.location.href).fileBaseName;
+	
+	ctx.title = title.trim();
+	
+	// canonicalが設定されていれば使う
+	ctx.href = $x('//link[@rel="canonical"]/@href', doc) || ctx.href;
+	
 	return withWindow(ctx.window, function(){
 		return maybeDeferred(ext.extract(ctx)).addCallback(function(ps){
 			return ps && update({

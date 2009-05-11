@@ -14,6 +14,12 @@
 			label="Share...">
 			<menupopup id="tombloo-menu-select"/>
 		</menu>
+		<menu 
+			class="menuitem-iconic"
+			insertbefore="context-bookmarklink" 
+			label="Tombloo" >
+			<menupopup id="tombloo-menu-action"/>
+		</menu>
 		<menuseparator insertbefore="context-bookmarklink" />
 	</popup>
 	<menupopup id="menu_ToolsPopup">

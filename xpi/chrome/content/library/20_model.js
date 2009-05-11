@@ -21,13 +21,13 @@ models.register({
 			throw new Error(getMessage('error.notLoggedin'));
 		
 		var self = this;
-		return request('https://friendfeed.com/share/publish', {
+		return request('https://friendfeed.com/a/bookmarklet', {
 			redirectionLimit : 0,
 			sendContent : {
-				at  : self.getToken(),
-				url : ps.pageUrl,
-				title : ps.page,
-				image0 : ps.type == 'photo'? ps.itemUrl : '',
+				at      : self.getToken(),
+				link    : ps.pageUrl,
+				title   : ps.page,
+				image0  : ps.type == 'photo'? ps.itemUrl : '',
 				comment : joinText([ps.body, ps.description], ' ', true),
 			},
 		});
@@ -170,7 +170,7 @@ models.register({
 				Service        : 'AWSECommerceService',
 				SubscriptionId : '0DCQFXHRBNT9GN9Z64R2',
 				Operation      : 'ItemLookup',
-				ResponseGroup  : 'Small,Images',
+				ResponseGroup  : 'Medium,Images',
 				ItemId         : asin,
 			},
 		}).addCallback(function(res){
@@ -193,6 +193,9 @@ models.register({
 	
 	Item : function(item){
 		return {
+			get _source(){
+				return item;
+			},
 			get title(){
 				return ''+item.ItemAttributes.Title;
 			},
@@ -215,6 +218,13 @@ models.register({
 			},
 			get smallImage(){
 				return new Amazon.Image(item.SmallImage);
+			},
+			get releaseDate() {
+				var date = (''+item.ItemAttributes.PublicationDate || ''+item.ItemAttributes.ReleaseDate);
+				if(date.split('-').length == 2)
+					date += '-1';
+				
+				return new Date(date.replace(/-/g, '/'));
 			},
 		}
 	},
@@ -615,28 +625,40 @@ models.register({
 models.register({
 	name : 'Twitter',
 	ICON : 'http://twitter.com/favicon.ico',
+	URL  : 'http://twitter.com',
+	SHORTEN_SERVICE : 'bit.ly',
 	
 	check : function(ps){
 		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
 	
 	post : function(ps){
-		return Twitter.getToken().addCallback(function(token){
-			// FIXME: 403が発生することがあったため redirectionLimit:0 を外す
-			token.status = joinText([ps.item, ps.itemUrl, ps.body, ps.description], ' ', true);
-			return request('http://twitter.com/status/update', update({
-				sendContent : token,
-			}));
-		});
+		return this.update(joinText([ps.item, ps.itemUrl, ps.body, ps.description], ' ', true));
+	},
+	
+	update : function(status){
+		var self = this;
+		return maybeDeferred((status.length < 140)? 
+			status : 
+			shortenUrls(status, models[this.SHORTEN_SERVICE])
+		).addCallback(function(status){
+			return Twitter.getToken().addCallback(function(token){
+				// FIXME: 403が発生することがあったため redirectionLimit:0 を外す
+				token.status = status;
+				return request(self.URL + '/status/update', update({
+					sendContent : token,
+				}));
+			});
+		})
+		
 	},
 	
 	favor : function(ps){
 		return this.addFavorite(ps.favorite.id);
 	},
 	
-	
 	getToken : function(){
-		return request('http://twitter.com/account/settings').addCallback(function(res){
+		return request(this.URL + '/account/settings').addCallback(function(res){
 			var html = res.responseText;
 			if(~html.indexOf('class="signin"'))
 				throw new Error(getMessage('error.notLoggedin'));
@@ -649,23 +671,34 @@ models.register({
 	},
 	
 	remove : function(id){
+		var self = this;
 		return Twitter.getToken().addCallback(function(ps){
 			ps._method = 'delete';
-			return request('http://twitter.com/status/destroy/' + id, {
+			return request(self.URL + '/status/destroy/' + id, {
 				redirectionLimit : 0,
-				referrer : 'http://twitter.com/home',
+				referrer : self.URL + '/',
 				sendContent : ps,
 			});
 		});
 	},
 	
 	addFavorite : function(id){
+		var self = this;
 		return Twitter.getToken().addCallback(function(ps){
-			return request('http://twitter.com/favourings/create/' + id, {
+			return request(self.URL + '/favourings/create/' + id, {
 				redirectionLimit : 0,
-				referrer : 'http://twitter.com/home',
+				referrer : self.URL + '/',
 				sendContent : ps,
 			});
+		});
+	},
+	
+	getRecipients : function(){
+		var self = this;
+		return request(this.URL + '/direct_messages/recipients_list?twttr=true').addCallback(function(res){
+			return map(function([id, name]){
+				return {id:id, name:name};
+			}, evalInSandbox('(' + res.responseText + ')', self.URL));
 		});
 	},
 });
@@ -780,7 +813,7 @@ models.register(update({
 	},
 	
 	getAuthCookie : function(){
-		return getCookieString('plurk.com', 'plurkcookie').extract(/user_id=(.+)/);
+		return getCookieString('plurk.com', 'plurkcookiea').extract(/user_id=(.+)/);
 	},
 	
 	getToken : function(){
@@ -885,6 +918,66 @@ models.register({
 		});
 	},
 });
+
+models.register({
+	name : 'GoogleCalendar',
+	ICON : 'http://calendar.google.com/googlecalendar/images/favicon.ico',
+	
+	check : function(ps){
+		return (/(regular|link)/).test(ps.type) && !ps.file;
+	},
+	
+	getAuthCookie : function(){
+		return getCookieString('www.google.com', 'secid').split('=').pop();
+	},
+	
+	post : function(ps){
+		if(ps.item && (ps.itemUrl || ps.description)){
+			return this.addSchedule(ps.item, joinText([ps.itemUrl, ps.body, ps.description], '\n'), ps.date);
+		} else {
+			return this.addSimpleSchedule(ps.description);
+		}
+	},
+	
+	addSimpleSchedule : function(description){
+		if(!this.getAuthCookie())
+			throw new Error(getMessage('error.notLoggedin'));
+		
+		var endpoint = 'http://www.google.com/calendar/m';
+		return request(endpoint, {
+			queryString : {
+				hl : 'en',
+			},
+		}).addCallback(function(res){
+			// form.secidはクッキー内のsecidとは異なる
+			var form = formContents(res.responseText);
+			return request(endpoint, {
+				redirectionLimit : 0,
+				sendContent: {
+					ctext  : description,
+					secid  : form.secid,
+					as_sdt : form.as_sdt,
+				},
+			});
+		});
+	},
+	
+	addSchedule : function(title, description, from, to){
+		from = from || new Date();
+		to = to || new Date(from.getTime() + (86400 * 1000));
+		
+		return request('http://www.google.com/calendar/event', {
+				queryString : {
+					action  : 'CREATE', 
+					secid   : this.getAuthCookie(), 
+					dates   : from.toLocaleFormat('%Y%m%d') + '/' + to.toLocaleFormat('%Y%m%d'),
+					text    : title, 
+					details : description,
+				}
+		});
+	},
+});
+
 
 models.register({
 	name : 'Delicious',
@@ -1287,6 +1380,61 @@ models.register(update({
 }, AbstractSessionService));
 
 
+models.register({
+	name : 'Remember The Milk',
+	ICON : 'http://www.rememberthemilk.com/favicon.ico',
+	POST_URL: 'http://www.rememberthemilk.com/services/ext/addtask.rtm',
+	
+	check : function(ps){
+		return (/(regular|link)/).test(ps.type) && !ps.file;
+	},
+	
+	post : function(ps){
+		return this.addSimpleTask(
+			joinText([ps.item, ps.body, ps.description], ' ', true), 
+			ps.date, ps.tags);
+	},
+	
+	/**
+	 * 簡単なタスクを追加する。
+	 * ブックマークレットのフォーム相当の機能を持つ。
+	 *
+	 * @param {String} task タスク名。
+	 * @param {Date} due 期日。未指定の場合、当日になる。
+	 * @param {Array} tags タグ。
+	 * @param {String || Number} list 
+	 *        追加先のリスト。リスト名またはリストID。未指定の場合、デフォルトのリストとなる。
+	 */
+	addSimpleTask : function(task, due, tags, list){
+		var self = this;
+		return request(self.POST_URL).addCallback(function(res){
+			var doc = convertToHTMLDocument(res.responseText);
+			if(!doc.getElementById('miniform'))
+				throw new Error(getMessage('error.notLoggedin'));
+			
+			var form = formContents(doc);
+			if(list){
+				forEach($x('id("l")/option', doc, true), function(option){
+					if(option.textContent == list){
+						list = option.value;
+						throw StopIteration;
+					}
+				})
+				form.l = list;
+			}
+			
+			return request(self.POST_URL, {
+				sendContent : update(form, {
+					't'  : task,
+					'tx' : joinText(tags, ','),
+					'd'  : (due || new Date()).toLocaleFormat('%Y-%m-%d'),
+				}),
+			});
+		});
+	}
+});
+
+
 // http://www.kawa.net/works/ajax/romanize/japanese.html
 models.register({
 	name : 'Kawa',
@@ -1301,7 +1449,7 @@ models.register({
 				q : text,
 			},
 		}).addCallback(function(res){
-			return map(function(s){	
+			return map(function(s){
 				return ''+s.@title || ''+s;
 			}, convertToXML(res.responseText).li.span);
 		});
@@ -1458,7 +1606,8 @@ models.register({
 		return request('https://ma.gnolia.com/').addCallback(function(res){
 			var doc = convertToHTMLDocument(res.responseText);
 			var user = $x('//meta[@name="session-userid"]/@content', doc)
-			if(user=='') throw new Error(getMessage('error.notLoggedin'));
+			if(user=='')
+				throw new Error(getMessage('error.notLoggedin'));
 			return user;
 		});
 	},
@@ -1611,7 +1760,7 @@ models.register(update({
 			var self = this;
 			return request('http://www.hatena.ne.jp/my').addCallback(function(res){
 				return self.user = $x(
-					'(//*[@class="username"]//strong)[1]/text()', 
+					'id("simple-header-body")//li[@class="welcome"]//a/text()', 
 					convertToHTMLDocument(res.responseText));
 			});
 		}
@@ -1908,7 +2057,11 @@ models.register(update({
 		
 		case 'changed':
 			var self = this;
-				return request(LivedoorClip.POST_URL+'?link=http%3A%2F%2Ftombloo/').addCallback(function(res){
+				return request(LivedoorClip.POST_URL, {
+					queryString : {
+						link : 'http://tombloo/',
+					},
+				}).addCallback(function(res){
 					if(res.responseText.match(/"postkey" value="(.*)"/)){
 						self.token = RegExp.$1;
 						return self.token;
@@ -1943,6 +2096,45 @@ models.register({
 				}),
 			});
 		})
+	},
+});
+
+// 絶対復習
+models.register({
+	name : '\u7D76\u5BFE\u5FA9\u7FD2',
+	URL  : 'http://www.takao7.net',
+	ICON : 'chrome://tombloo/skin/item.ico',
+	
+	getAuthCookie : function(){
+		return getCookieString('www.takao7.net', 'brushup_auth_token').split('=').pop();
+	},
+	
+	check: function(ps) {
+		return (/(regular|link|quote)/).test(ps.type) && !ps.file;
+	},
+	
+	post: function(ps) {
+		return this.add(ps.item, joinText([ps.itemUrl, ps.body, ps.description], '\n'), ps.tags);
+	},
+	
+	add : function(title, description, tags){
+		var self = this;
+		return request(this.URL + '/brushup/reminders/new').addCallback(function(res){
+			if(res.channel.URI.asciiSpec.match('login'))
+				throw new Error(getMessage('error.notLoggedin'));
+			
+			var doc = convertToHTMLDocument(res.responseText);
+			var form = formContents(doc);
+			
+			return request(self.URL + $x('id("new_reminder")/@action', doc), {
+				redirectionLimit : 0,
+				sendContent : update(form, {
+					'reminder[title]'    : title,
+					'reminder[body]'     : description,
+					'reminder[tag_list]' : joinText(tags, ' '),
+				}),
+			});
+		});
 	},
 });
 
@@ -2011,29 +2203,36 @@ models.register({
 models.register({
 	name : 'LibraryThing',
 	ICON : 'http://www.librarything.com/favicon.ico',
+	
 	check : function(ps){
 		return ps.type == 'link' && !ps.file;
 	},
 	
 	getAuthCookie : function(){
-		return getCookieString('librarything.com', 'LTAnonSessionID');
+		return getCookies('librarything.com', 'cookie_userid');
+	},
+	
+	getHost : function(){
+		var cookies = this.getAuthCookie();
+		if(!cookies.length)
+			throw new Error(getMessage('error.notLoggedin'));
+		
+		return cookies[0].host;
 	},
 	
 	post : function(ps){
-		if(!this.getAuthCookie())
-			throw new Error(getMessage('error.notLoggedin'));
-		
-		return request('http://www.librarything.com/import_submit.php', {
+		var self = this;
+		return request('http://' + self.getHost() + '/import_submit.php', {
 			sendContent : {
 				form_textbox : ps.itemUrl,
 			},
 		}).addCallback(function(res){
-			var err = res.channel.URI.asciiSpec.extract('http://www.librarything.com/import.php?pastealert=(.*)');
+			var err = res.channel.URI.asciiSpec.extract('http://' + self.getHost() + '/import.php?pastealert=(.*)');
 			if(err)
 				throw new Error(err);
 			
 			var doc = convertToHTMLDocument(res.responseText);
-			return request('http://www.librarything.com/import_questions_submit.php', {
+			return request('http://' + self.getHost() + '/import_questions_submit.php', {
 				redirectionLimit : 0,
 				sendContent : update(formContents(doc), {
 					masstags :	joinText(ps.tags, ','),
@@ -2041,6 +2240,168 @@ models.register({
 			});
 		});
 	}
+});
+
+models.register({
+	name : '8tracks',
+	ICON : 'http://8tracks.com/favicon.ico',
+	URL  : 'http://8tracks.com',
+	
+	upload : function(file){
+		return request(this.URL + '/tracks', {
+			redirectionLimit : 0,
+			sendContent : {
+				'attachment_data[]' : getLocalFile(file),
+			},
+		});
+	}
+});
+
+models.register({
+	name : 'is.gd',
+	ICON : 'http://is.gd/favicon.ico',
+	URL  : 'http://is.gd/',
+	
+	shorten : function(url){
+		if((/\/\/is\.gd\//).test(url))
+			return succeed(url);
+		
+		return request(this.URL + '/api.php', {
+			redirectionLimit : 0,
+			queryString : {
+				longurl : url,
+			},
+		}).addCallback(function(res){
+			return res.responseText;
+		});
+	},
+	
+	expand : function(url){
+		return request(url, {
+			redirectionLimit : 0,
+		}).addCallback(function(res){
+			return res.channel.URI.spec;
+		});
+	},
+});
+
+models.register({
+	name    : 'bit.ly',
+	ICON    : 'http://bit.ly/static/images/favicon.png',
+	URL     : 'http://api.bit.ly',
+	API_KEY : 'R_8d078b93e8213f98c239718ced551fad',
+	USER    : 'to',
+	VERSION : '2.0.1',
+	
+	shorten : function(url){
+		var self = this;
+		if((/\/\/bit\.ly/).test(url))
+			return succeed(url);
+		
+		return this.callMethod('shorten', {
+			longUrl : url,
+		}).addCallback(function(res){
+			return res[url].shortUrl;
+		});
+	},
+	
+	expand : function(url){
+		var hash = url.split('/').pop();
+		return this.callMethod('expand', {
+			hash : hash,
+		}).addCallback(function(res){
+			return res[hash].longUrl;
+		});
+	},
+	
+	callMethod : function(method, ps){
+		var self = this;
+		return request(this.URL + '/' + method, {
+			queryString : update({
+				version : this.VERSION,
+				login   : this.USER,
+				apiKey  : this.API_KEY,
+			}, ps),
+		}).addCallback(function(res){
+			res = evalInSandbox('(' + res.responseText + ')', self.URL);
+			if(res.errorCode){
+				var error = new Error([res.statusCode, res.errorCode, res.errorMessage].join(': '))
+				error.detail = res;
+				throw error;
+			}
+			
+			return res.results;
+		});
+	},
+});
+
+models.register({
+	name : 'TextConversionServices',
+	DATABASE_NAME : 'Text Conversion Services',
+	
+	actions : {
+		replace : function(original, str) {
+			return str;
+		},
+		prepend : function(original, str) {
+			return [str, original].join(' ');
+		},
+		append : function(original, str) {
+			return [original, str].join(' ');
+		}
+	},
+	
+	charsets : {
+		sjis : 'Shift_JIS',
+		euc  : 'EUC-JP',
+		jis  : 'iso-2022-jp',
+		utf8 : 'utf-8',
+	},
+	
+	getServices : function(){
+		if(this.services)
+			return succeed(this.services);
+		
+		var self = this;
+		return Wedata.Item.findByDatabase(this.DATABASE_NAME).addCallback(function(services){
+			return self.services = services;
+		});
+	},
+	
+	getService : function(name){
+		return this.getServices().addCallback(function(services){
+			return ifilter(function(service){
+				return service.getMetaInfo().name == name;
+			}, services).next();
+		});
+	},
+	
+	convert : function(str, name){
+		var service;
+		var self = this;
+		
+		return this.getService(name).addCallback(function(res){
+			service = res;
+			
+			charset = self.charsets[service.charset];
+			if(charset != 'utf-8')
+				str = escape(str.convertFromUnicode(charset));
+			
+			return request(service.url.replace(/%s/, str), {
+				charset : charset,
+			});
+		}).addCallback(function(res){
+			res = res.responseText;
+			
+			if(service.xpath){
+				var doc = convertToHTMLDocument(res);
+				res = $x(service.xpath, doc);
+				res = (res.textContent || res).replace(/\n+/g, '');
+			}
+			
+			return self.actions[service.action || 'replace'](str, res);
+		});
+	},
 });
 
 
@@ -2105,4 +2466,22 @@ models.getEnables = function(ps){
 models.getPostConfig = function(config, name, ps){
 	var c = config[name] || {};
 	return (ps.favorite && ps.favorite.name==name)? c.favorite : c[ps.type];
+}
+
+
+function shortenUrls(text, model){
+	var reUrl = /https?[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+/g;
+	if(!reUrl.test(text))
+		return;
+		
+	var urls = text.match(reUrl);
+	return gatherResults(urls.map(function(url){
+		return model.shorten(url);
+	})).addCallback(function(ress){
+		zip(urls, ress).forEach(function([url, res]){
+			text = text.replace(url, res);
+		});
+		
+		return text;
+	});
 }

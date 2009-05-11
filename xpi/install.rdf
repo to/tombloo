@@ -6,7 +6,7 @@
 		<em:id>tombloo@brasil.to</em:id>
 		<em:type>2</em:type>
 		<em:name>Tombloo</em:name>
-		<em:version>0.3.28</em:version>
+		<em:version>0.4.1</em:version>
 		<em:creator>to</em:creator>
 		<em:description></em:description>
 		<em:optionsURL>chrome://tombloo/content/prefs.xul</em:optionsURL>
@@ -18,7 +18,7 @@
 			<Description>
 				<em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
 				<em:minVersion>3.0</em:minVersion>
-				<em:maxVersion>3.1.*</em:maxVersion>
+				<em:maxVersion>3.5.*</em:maxVersion>
 			</Description>
 		</em:targetApplication>
 	</Description>

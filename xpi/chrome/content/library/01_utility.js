@@ -17,6 +17,33 @@ disconnectAll(grobal);
 if(typeof(constant)=='undefined')
 	constant = {};
 
+updatePatchChromeManifest();
+
+function updatePatchChromeManifest(){
+	var DELIMITER = '# GENERATED';
+	
+	var dataDir = createURI(getDataDir()).spec;
+	var line = 'content tombloo-patch ' + dataDir;
+	var manifest = getChromeManifestFile();
+	var contents = getContents(manifest);
+	var updated = 
+		contents.split(DELIMITER).shift() + 
+		DELIMITER + '\n' + 
+		line + '\n';
+	
+	if(contents != updated){
+		putContents(manifest, updated);
+		ChromeRegistry.checkForNewChrome();
+	}
+}
+
+function reload(){
+	signal(grobal, 'context-reload');
+	
+	loadAllSubScripts();
+	getWindows().forEach(connectToBrowser);
+}
+
 
 // ----[XPCOM]-------------------------------------------------
 function evalInSandbox(js, url){
@@ -88,7 +115,22 @@ function getMessage(key){
 	}
 }
 
+/**
+ * 簡単なフォームを表示しユーザーの入力を得る。
+ * 以下の形式のフォームを定義できる。
+ *  - チェックボックス + OK/キャンセル
+ *  - テキストボックス + チェックボックス
+ *  - リストボックス
+ *
+ * @param {Object} form フォーム定義。
+ * @param {String} title ウィンドウタイトル。
+ */
 function input(form, title){
+	function m(key){
+		return getMessage(key) || key || '';
+	}
+	
+	// リストボックス形式のフォームか?
 	var pair;
 	if(some(form, function(p){
 		pair = p;
@@ -96,33 +138,41 @@ function input(form, title){
 	})){
 		var selected = {};
 		var [msg, list] = pair;
-		if(!PromptService.select(null, title || '', msg, list.length, list, selected))
+		if(!PromptService.select(null, m(title), m(msg), list.length, list, selected))
 			return;
 		
 		return list[selected.value];
-	} else {
-		var args = [null, title || ''];
-		for(var msg in form){
+	}
+	
+	var vals = values(form);
+	var method = (vals[0] == null && typeof(vals[1]) == 'boolean')? 'confirmCheck' : 'prompt';
+	
+	var args = [null, m(title)];
+	for(var msg in form){
+		args.push(m(msg));
+		
+		// 値を一時的にオブジェクトに変換する
+		if(form[msg] != null){
 			var val = {value : form[msg]};
 			form[msg] = val;
-			args.push(msg);
 			args.push(val);
 		}
-		
-		if(!PromptService.prompt.apply(PromptService, args))
-			return;
-		
-		for(var msg in form)
-			form[msg] = form[msg].value;
-		
-		return form;
 	}
+	
+	if(!PromptService[method].apply(PromptService, args))
+		return;
+	
+	// 返り値を取り出す
+	for(var msg in form)
+		form[msg] = form[msg] && form[msg].value;
+	
+	return form;
 }
 
 function download(sourceURL, targetFile){
 	var d = new Deferred();
 	var targetURI = IOService.newFileURI(targetFile);
-	var sourceURI = IOService.newURI(sourceURL, null, null);
+	var sourceURI = createURI(sourceURL);
 	
 	var persist = WebBrowserPersist();
 	with(persist){
@@ -204,6 +254,35 @@ function getTempFile(ext){
 	file.append(joinText(['tombloo_' + (new Date()).getTime(), ext], '.'));
 	
 	return file;
+}
+
+function getChromeManifestFile(){
+	var manifest = getExtensionDir(EXTENSION_ID);
+	manifest.append('chrome.manifest');
+	
+	return manifest;
+}
+
+function addChromeManifest(line){
+	var manifest = getChromeManifestFile();
+	var re = new RegExp('^' + line + '\n?', 'm');
+	var contents = getContents(manifest);
+	if(re.test(contents))
+		return;
+	
+	putContents(manifest, contents + line + '\n');
+	ChromeRegistry.checkForNewChrome();
+}
+
+function removeChromeManifest(line){
+	var manifest = getChromeManifestFile();
+	var re = new RegExp('^' + line + '\n?', 'm');
+	var contents = getContents(manifest);
+	if(!re.test(contents))
+		return;
+	
+	putContents(manifest, contents.replace(re, ''));
+	ChromeRegistry.checkForNewChrome();
 }
 
 /**
@@ -1048,6 +1127,53 @@ function addAround(target, methodNames, advice){
 	});
 }
 
+function cache(fn, ms){
+	var executed;
+	var res;
+	
+	var deferred = false;
+	var waiting = false;
+	var pendings;
+	return function(){
+		// キャッシュが利用できるか?
+		var now = Date.now();
+		if(executed && (executed + ms) > now){
+			// Deferredの結果が未確定か?
+			if(waiting){
+				var d = new Deferred();
+				pendings.push(d);
+				
+				return d;
+			}
+			
+			return deferred? succeed(res) : res;
+		}
+		
+		executed = now;
+		res = fn.apply(null, arguments)
+		
+		if(res instanceof Deferred){
+			deferred = true;
+			waiting  = true;
+			pendings = [];
+			
+			return res.addCallback(function(result){
+				res = result;
+				waiting = false;
+				
+				// 結果の確定待ちがあればそれらを先に呼び出す(順序が逆転する)
+				pendings.forEach(function(d){
+					d.callback(res);
+				});
+				
+				return res;
+			});
+		} else {
+			return res;
+		}
+	}
+}
+
 /**
  * 配列を結合し文字列を作成する。
  * 空要素は除外される。
@@ -1092,10 +1218,11 @@ function validateFileName(fileName){
  * 
  * @param {Function} func WSHスクリプト。
  * @param {Array} args WSHスクリプトの引数。 
+ * @param {Boolean} async 非同期で実行するか。 
  * @return {String} WSHスクリプトの実行結果。
  */
-function executeWSH(func, args){
-	args = args || [];
+function executeWSH(func, args, async){
+	args = (args==null)? [] : [].concat(args);
 	
 	var bat = getTempFile('bat');
 	var script = getTempFile();
@@ -1104,24 +1231,29 @@ function executeWSH(func, args){
 	putContents(bat, [
 		'cscript //E:JScript //Nologo', 
 		script.path.quote(), 
-		'>', 
-		out.path.quote()].join(' '));
+		(async)? '' : ('> ' + out.path.quote())
+	].join(' '));
 	putContents(script, 
 		args.map(function(a, i){return 'var ARG_' + i + ' = ' + uneval(a) + ';'}).join('\n') + 
 		'WScript.echo(' + func.toSource() + '(' + 
 		args.map(function(a, i){return 'ARG_' + i}).join(',') + 
 		'));');
 	
-	new Process(bat).run(true, [], 0);
+	new Process(bat).run(!async, [], 0);
+	
+	// FIXME: 非同期時、スクリプトが終了していないためファイルを消せない
+	if(async)
+		return;
 	
 	var res = getContents(out, 'Shift-JIS').replace(/\s+$/, '');
 	
+	out.remove(false);
 	bat.remove(false);
 	script.remove(false);
-	out.remove(false);
 	
 	return res;
 }
+	
 
 
 // ----[State]-------------------------------------------------
@@ -1255,9 +1387,10 @@ Repository.prototype = {
 	 * 新しい定義を追加する。
 	 * 
 	 * @param {Array} defs
-	 * @param {String} target 追加対象。この名前の前に追加される。
+	 * @param {String} target 追加対象。この名前の前後に追加される。
+	 * @param {Boolean} after 追加対象の前に追加するか否か(後か)。
 	 */
-	register : function(defs, target){
+	register : function(defs, target, after){
 		if(!defs)
 			return;
 		
@@ -1270,7 +1403,7 @@ Repository.prototype = {
 				if(vals[i].name == target)
 					break;
 			
-			vals.splice.apply(vals, [i, 0].concat(defs));
+			vals.splice.apply(vals, [(after? i+1 : i), 0].concat(defs));
 			defs = vals;
 		}
 		
@@ -1403,7 +1536,7 @@ function convertToDOM(xml){
 }
 
 function convertToHTMLDocument(html, doc) {
-	html = html.replace(/<!DOCTYPE.*?>/, '').replace(/<html.*?>/, '').replace(/<\/html>.*/, '')
+	html = html.replace(/<!DOCTYPE.*?>/, '').replace(/<html.*?>/, '').replace(/<\/html>.*/, '');
 	
 	doc = doc || currentDocument() || document;
 	var xsl = (new DOMParser()).parseFromString(
@@ -1452,6 +1585,46 @@ function convertToXULElement(str){
 	}
 
 	return result;
+}
+
+function makeOpaqueFlash(doc){
+	doc = doc || currentDocument() || document;
+
+	$x('//*[self::object or self::embed][contains(@type, "flash")][boolean(@wmode)=false or (@wmode!="opaque" and @wmode!="transparent")]', doc, true).forEach(function(flash){
+		flash.setAttribute('wmode', 'opaque');
+		flash = swapDOM(flash, flash.cloneNode(false));
+		flash.offsetWidth;
+	});
+}
+
+function addStyle(css, doc) {
+	doc = doc || currentDocument() || document;
+	
+	var head = doc.getElementsByTagName('head')[0];
+	if (!head)
+		return;
+	
+	var style = doc.createElement('style');
+	style.type = 'text/css';
+	style.innerHTML = css;
+	
+	head.appendChild(style);
+}
+
+function appendMenuItem(menu, label, image, hasChildren){
+	var doc = menu.ownerDocument;
+	if((/^----/).test(label))
+		return menu.appendChild(doc.createElement('menuseparator'));
+	
+	var item = menu.appendChild(doc.createElement(hasChildren? 'menu' : 'menuitem'));
+	item.setAttribute('label', label);
+	
+	if(image){
+		item.setAttribute('class', hasChildren? 'menu-iconic' : 'menuitem-iconic');
+		item.setAttribute('image', image);
+	}
+	
+	return item;
 }
 
 function keyString(e){

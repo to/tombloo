@@ -57,6 +57,7 @@ var WindowWatcher       = getService('/embedcomp/window-watcher;1', Ci.nsIWindow
 var ClipboardHelper     = getService('/widget/clipboardhelper;1', Ci.nsIClipboardHelper);
 var NavHistoryService   = getService('/browser/nav-history-service;1', Ci.nsINavHistoryService);
 var FaviconService      = getService('/browser/favicon-service;1', Ci.nsIFaviconService);
+var StyleSheetService   = getService('/content/style-sheet-service;1', Ci.nsIStyleSheetService);
 
 
 var PrefBranch = 
@@ -328,7 +329,7 @@ function convertFromByteArray(arr, charset){
 /**
  * URIを生成する。
  *
- * @param {String || nsIFile || nsIURI} path URLまたはファイル。nsIURIの場合、そのまま返す。
+ * @param {String || nsIFile || nsIURI} path URLまたはファイルまたはディレクトリパス。nsIURIの場合、そのまま返す。
  */
 function createURI(path){
 	if(!path)
@@ -342,11 +343,9 @@ function createURI(path){
 		return IOService.newFileURI(path)	;
 	}catch(e){}
 	
-	try{
-		return IOService.newURI(path, null, null).QueryInterface(Ci.nsIURL);
-	}catch(e){
-		// javascript:などで発生するエラーを無視する
-	}
+	var uri = IOService.newURI(path, null, null);
+	uri instanceof Ci.nsIURL;
+	return uri;
 }
 
 /**
@@ -354,6 +353,7 @@ function createURI(path){
  *
  * @param {String || nsIFile || nsIURI} uri 
  *        URI。file:またはchrome:から始まるアドレスを指定する。
+ *        c:\のようなパスも動作する。
  *        nsIFileの場合、そのまま返す。
  */
 function getLocalFile(uri){
@@ -566,4 +566,22 @@ function sanitizeHTML(html){
 
 function serializeToString(xml){
 	return (new XMLSerializer()).serializeToString(xml);
+}
+
+function registerSheet(css){
+	var sss = StyleSheetService;
+	var uri = (css instanceof IURI)? css : createURI(('data:text/css,' + css).replace(/[\n\r\t ]+/g, ' '));
+	
+	if(!sss.sheetRegistered(uri, sss.AGENT_SHEET))
+		sss.loadAndRegisterSheet(uri, sss.AGENT_SHEET);
+	
+	return partial(unregisterSheet, uri);
+}
+
+function unregisterSheet(uri){
+	var sss = StyleSheetService;
+	var uri = (css instanceof IURI)? css : createURI(('data:text/css,' + css).replace(/[\n\r\t ]+/g, ' '));
+	
+	if(sss.sheetRegistered(uri, sss.AGENT_SHEET))
+		sss.unregisterSheet(uri, sss.AGENT_SHEET);
 }

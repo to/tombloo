@@ -33,6 +33,8 @@ Tombloo.Service = {
 		return succeed().addCallback(function(){
 			return Tombloo.Service.extractors.extract(ctx, ext);
 		}).addCallback(function(ps){
+			ctx.ps = ps;
+			
 			// 予期せずに連続してquoteをポストしてしまうのを避けるため選択を解除する
 			if(ps.type == 'quote'&& ctx.window.getSelection().rangeCount)
 				ctx.window.getSelection().collapseToStart();
@@ -43,6 +45,7 @@ Tombloo.Service = {
 				return succeed({});
 			
 			if(showForm){
+				// 利用可能なサービスがあるか？
 				if(models.getEnables(ps).length){
 					QuickPostForm.show(ps, (ctx.mouse && (ctx.mouse.post || ctx.mouse.screen)));
 				} else {
@@ -64,7 +67,7 @@ Tombloo.Service = {
 			if(err instanceof CancelledError)
 				return;
 			
-			Tombloo.Service.alertError(err, ctx.title, ctx.href);
+			Tombloo.Service.alertError(err, ctx.title, ctx.href, ctx.ps);
 		});
 	},
 	
@@ -99,7 +102,7 @@ Tombloo.Service = {
 				var [success, res] = ress[name];
 				if(!success){
 					var msg = name + ': ' + 
-						(res.message.status? 'HTTP Status Code ' + res.message.status : self.reprError(res).indent(4));
+						(res.message.status? 'HTTP Status Code ' + res.message.status : '\n' + self.reprError(res).indent(4));
 					
 					if(!ignoreError || !msg.match(ignoreError))
 						errs.push(msg);
@@ -107,9 +110,9 @@ Tombloo.Service = {
 			}
 			
 			if(errs.length)
-				self.alertError(errs.join('\n'), ps.page, ps.pageUrl);
+				self.alertError(errs.join('\n'), ps.page, ps.pageUrl, ps);
 		}).addErrback(function(err){
-			self.alertError(err, ps.page, ps.pageUrl);
+			self.alertError(err, ps.page, ps.pageUrl, ps);
 		});
 	},
 	
@@ -141,21 +144,28 @@ Tombloo.Service = {
 			msg.push(p + ' : ' + val);
 		}
 		
-		return '\n'+msg.join('\n');
+		return msg.join('\n');
 	},
 	
 	/**
-	 * 元ページを開きなおせるエラーダイアログを表示する。
+	 * エラーメッセージ付きでポストフォームを再表示する。
 	 *
 	 * @param {String || Error} msg エラー、または、エラーメッセージ。
 	 * @param {String} page エラー発生ページタイトル。
 	 * @param {String} pageUrl エラー発生ページURL。
+	 * @param {Object} ps ポスト内容。
 	 */
-	alertError : function(msg, page, pageUrl){
+	alertError : function(msg, page, pageUrl, ps){
 		error(msg);
 		
-		if(confirm(getMessage('error.post', this.reprError(msg).indent(8), page, pageUrl))){
-			addTab(pageUrl);
+		msg = getMessage('error.post', this.reprError(msg).indent(2), page, pageUrl);
+		if(ps && ps.type){
+			// ポスト内容があればフォームを再表示する。
+			QuickPostForm.show(ps, null, msg);
+		} else {
+			if(confirm(msg + '\n\n' + getMessage('message.reopen'))){
+				addTab(pageUrl);
+			}
 		}
 	},
 	

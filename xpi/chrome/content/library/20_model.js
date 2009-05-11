@@ -642,8 +642,6 @@ models.register({
 			status : 
 			shortenUrls(status, models[this.SHORTEN_SERVICE])
 		).addCallback(function(status){
-			alert(status);
-			
 			return Twitter.getToken().addCallback(function(token){
 				// FIXME: 403が発生することがあったため redirectionLimit:0 を外す
 				token.status = status;

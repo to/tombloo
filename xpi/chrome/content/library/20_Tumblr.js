@@ -235,9 +235,11 @@ var Tumblr = update({}, AbstractSessionService, {
 	 * @return {Deferred}
 	 */
 	appendTags : function(form, ps){
+		if(ps.private!=null)
+			form['post[state]'] = (ps.private)? 'private' : 0;
+		
 		return update(form, {
 			'post[tags]' : (ps.tags && ps.tags.length)? joinText(ps.tags, ',') : '',
-			'post[is_private]' : ps.private==null? form['post[is_private]'] : (ps.private? 1 : 0),
 		});
 	},
 	

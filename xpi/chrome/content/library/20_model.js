@@ -2405,6 +2405,22 @@ models.register({
 });
 
 
+models.register({
+	name    : 'Sharebee.com',
+	URL     : 'http://sharebee.com/',
+	
+	decrypt : function(url){
+		return request(url.startsWith(this.URL)? url : this.URL + url).addCallback(function(res){
+			var doc = convertToHTMLDocument(res.responseText);
+			return {
+				fileName : $x('//h2/span[@title]/@title', doc),
+				links    : $x('//table[@class="links"]//a/@href', doc, true),
+			}
+		});
+	},
+});
+
+
 // 全てのサービスをグローバルコンテキストに置く(後方互換)
 models.copyTo(this);
 

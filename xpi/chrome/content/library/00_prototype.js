@@ -22,6 +22,10 @@ Number.prototype.toHexString = function(){
 };
 
 update(String.prototype, {
+	startsWith : function(s){
+		return this.indexOf(s) == 0;
+	},
+	
 	pad :function(len, ch){
 		len = len-this.length;
 		if(len<=0) return this;

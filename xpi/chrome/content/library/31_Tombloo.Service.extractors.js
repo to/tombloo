@@ -1435,7 +1435,8 @@ Tombloo.Service.extractors.extract = function(ctx, ext){
 	ctx.title = title.trim();
 	
 	// canonicalが設定されていれば使う
-	ctx.href = $x('//link[@rel="canonical"]/@href', doc) || ctx.href;
+	// セキュリティ上の懸念から一時コメントアウト
+	// ctx.href = $x('//link[@rel="canonical"]/@href', doc) || ctx.href;
 	
 	return withWindow(ctx.window, function(){
 		return maybeDeferred(ext.extract(ctx)).addCallback(function(ps){

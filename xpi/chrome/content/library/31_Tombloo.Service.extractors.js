@@ -674,6 +674,24 @@ Tombloo.Service.extractors = new Repository([
 	},
 	
 	{
+		name : 'Photo - Kiva',
+		check : function(ctx){
+			var imgUrl = '^http://www.kiva.org/img/';
+			return (ctx.onImage && ctx.target.src.match(imgUrl)) || 
+				(ctx.onLink && ctx.link.href.match(imgUrl));
+		},
+		extract : function(ctx){
+			return getFinalUrl(ctx.onLink? ctx.link.href : ctx.target.src).addCallback(function(url){
+				return {
+					type    : 'photo',
+					item    : ctx.title,
+					itemUrl : url,
+				}
+			});
+		},
+	},
+	
+	{
 		name : 'Photo - 4u',
 		ICON : models['4u'].ICON,
 		check : function(ctx){

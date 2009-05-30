@@ -1004,6 +1004,14 @@ function isEmpty(obj){
 	return true;
 }
 
+function uniq(a){
+	return Array.reduce(a, function(e, r){
+		if(e.indexOf(r) == -1)
+			e.push(r);
+		return e;
+	}, []);
+}
+
 function populateForm(form, values){
 	for(var name in values){
 		var control = $x('//*[@name="' + name + '"]', form);
@@ -1253,8 +1261,12 @@ function executeWSH(func, args, async){
 	
 	return res;
 }
-	
 
+function getFinalUrl(url){
+	return request(url).addCallback(function(res){
+		return res.channel.URI.spec;
+	});
+}
 
 // ----[State]-------------------------------------------------
 var State = {

@@ -362,13 +362,19 @@ connect(grobal, 'browser-load', function(e){
 		
 		forEach(Tombloo.Service.actions, function([name, action]){
 			// 後方互換のためtypeが存在しないものも可とする
-			if(!action.type || /menu/.test(action.type))
-				appendMenuItem(menuMain, name);
+			if(action.type && !/menu/.test(action.type))
+				return;
+			
+			if(action.check && !action.check())
+				return;
+			
+			var elmItem = appendMenuItem(menuMain, action.name);
+			elmItem.action = action;
 		});
 	}, true);
 	
 	menuMain.addEventListener('command', function(e){
-		Tombloo.Service.actions[e.originalTarget.getAttribute('label')].execute();
+		e.target.action.execute(context);
 	}, true);
 });
 

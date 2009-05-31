@@ -1,7 +1,7 @@
 if(AppInfo.OS.startsWith('WIN')){
 	Tombloo.Service.actions.register({
 		name : 'iTunes - EQ Toggle',
-		type : 'context',
+		type : 'menu',
 		check : function(){
 			var enabled = executeWSH(function(msg){
 				return WScript.CreateObject('iTunes.Application').EQEnabled;

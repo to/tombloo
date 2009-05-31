@@ -296,7 +296,7 @@ connect(grobal, 'browser-load', function(e){
 			if(action.check && !action.check(context))
 				return;
 			
-			var elmItem = appendMenuItem(menuAction, name);
+			var elmItem = appendMenuItem(menuAction, action.name);
 			elmItem.action = action;
 		});
 		

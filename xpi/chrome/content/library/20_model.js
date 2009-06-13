@@ -1598,6 +1598,7 @@ models.register({
 	},
 });
 
+/*
 models.register({
 	name : 'Magnolia',
 	ICON : 'http://ma.gnolia.com/favicon.ico',
@@ -1625,12 +1626,6 @@ models.register({
 		});
 	},
 	
-	/**
-	 * タグを取得する。
-	 *
-	 * @param {String} url 関連情報を取得する対象のページURL。
-	 * @return {Object}
-	 */
 	getSuggestions : function(url){
 		// 同期でエラーが起きないようにする
 		return succeed().addCallback(function(){
@@ -1671,10 +1666,12 @@ models.register({
 		});
 	},
 });
+*/
 
 models.register({
 	name : 'Snipshot',
-	ICON : 'http://snipshot.com/favicon.ico',
+	// ICON : 'http://snipshot.com/favicon.ico',
+	ICON : "data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%10%00%00%00%10%08%06%00%00%00%1F%F3%FFa%00%00%00%04gAMA%00%00%AF%C87%05%8A%E9%00%00%00%19tEXtSoftware%00Adobe%20ImageReadyq%C9e%3C%00%00%01%E9IDATx%DAbd%00%82%D0%5D%92%FF%BF%FF%F9%C2%80%0E%D8%988%18%D6%BA%BFbX%7F%7F%12%C3%BC%1B5%60%B1%CD%9E%9F%18%7C%B7%F31%B01s2%ACs%7F%C5%08%10%40LA%3B%C5%B0j%06%01G%E9%080%BD%F2N%17%5C%EC%DB%9F%CF%0C%12%5C%0A%0C%BF%FE~%07%5B%0C%10%40L%20%06.%F0%FA%FBc0%9D%A0%D1%04%A6%F9%D8%84%19%B8Xx%19%3E%FC%7C%05%E6%83%2C%06%08%20%16%06%3C%E0%DC%9B%BD%60%DAC6%09%8CA%E0%F4%EB%9D%0C%3F%FE~%83%AB%01%08%20%BC%06%04*%E6%C1%D9w%3E%5E%60%98z5%8F%C1X%C4%0D%1C%0E0%00%10%40x%0DH%D2h%81%B3%0B%8F%D9%01%F9%AD%40Cs%19%EE%7F%BE%CC0%FFF-%83%81%88%23%03%40%00%E14%C0K.%05%85o!%EE%03%D6%FC%F7%FF%1F%86%BC%23%D6%60%B1%F3o%F61%00%04%10%E3%EA%BB%BD%FF%AD%25%02%19%24%B9%141%0CYv%BB%1Dl%5B%B5%D12%B8%D8%A5%B7%87%18%AAO%F9%C0%F9%00%01%C4%12%A2T%84%D3%0B%20%CD%8A%BC%BA(bz%C2v(%7C%80%00b%F8O%00%BC%FF%F1%F2%FF%EA%BB%7D%FF%5B%CFF%FD%7F%FA%E5%0E%5C%1C%E4%F2k%EFN%FC%07%08%20F%10%07d%D3%AD%0Fg%C1%CEcabe(%D4%9B%09%B7%20%ED%A0%01%C3%F3o%F7%E0%FC%D5n%CF%198%98%B9%E1%7C%80%00b%01%25KdPk%BC%12%CE%FE%F1%F7%2B%8Afh%B2g%90%E2Vf%10%E3%90c%B8%F0v%3F%03%40%00%A1%C4%02%2B%13%3B%83%99%98'%9C%BF%E4V3%D6%B0y%F6%F5.%18%83%00%40%001!K%14%EB%CFFQ%B8%F1%C14%06B%00%20%80%98%40%B9%0A%06%AC%25%02%E0%EC%ED%8F%E6%12%D4%CC%C9%C2%C3%00%10%40L%A0%2C%09b%C4%AB7%A2HN%BBZ%88W3%C8b%60%802%02%04%18%00%B1%97%D3qL%D5*%FC%00%00%00%00IEND%AEB%60%82",
 	
 	check : function(ps){
 		return ps.type=='photo';

@@ -2,21 +2,21 @@
 <RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
          xmlns:NC="http://home.netscape.com/NC-rdf#"
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Description RDF:about="rdf:#$4kPos1"
+  <RDF:Description RDF:about="rdf:#$ce2Na1"
+                   em:version="0.4.2">
+    <em:targetApplication RDF:resource="rdf:#$fe2Na1"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$fe2Na1"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="3.0"
                    em:maxVersion="3.5.*"
                    em:updateLink="http://github.com/to/tombloo/raw/release/tombloo.xpi"
-                   em:updateHash="sha512:9696c1ca7233e51a21e06b4ebda73f550b2e4368cb5e06dbe082e96597c013d745c740cfa6fd48bec0c356f20c5412f04b1be2c41c1cd64c5fb264a308dad905" />
-  <RDF:Seq RDF:about="rdf:#$0kPos1">
-    <RDF:li RDF:resource="rdf:#$1kPos1"/>
+                   em:updateHash="sha512:1a8086ffb9d4c80e1f36abddc188660d7e71fd23f6565d22f967d01cdb45c8405fdf89e8884b2fd1a504e435d9713e71c81fe870d45b71dc396c7f2a925cc756" />
+  <RDF:Seq RDF:about="rdf:#$be2Na1">
+    <RDF:li RDF:resource="rdf:#$ce2Na1"/>
   </RDF:Seq>
-  <RDF:Description RDF:about="rdf:#$1kPos1"
-                   em:version="0.4.1">
-    <em:targetApplication RDF:resource="rdf:#$4kPos1"/>
-  </RDF:Description>
   <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
-                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAJNP3+IGMs6QBmPK8nwA1tLaRT6fkE2YjtJmHjKyQyTDjuP4s46vR7FwznyQhUfHgn76eaNKEz56gE0ajOEL0dYXEQBdD7H+Et3be6uVU5NcVBuAHj/P5q8ulTe4lbImoHOoKJjJFI9+JnANuU3WCi2NauEok08/8PxemHl8NiOm">
-    <em:updates RDF:resource="rdf:#$0kPos1"/>
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAAWL71AwMtCb2904QY5bAuJKwcmOpkFFnKZfTpq/Cq7Sch2Q89I8imUdxgWBCmXUQoUKfQ01nOAJjQ5jbe97qhbIN77EUR3s6llgAvEJu6AwfArsnhqIKrIMDTtJRwlMzTTABvLuOjq6BKWs5i+4wPzA+2kMmZCvCRPyNBsblMq4">
+    <em:updates RDF:resource="rdf:#$be2Na1"/>
   </RDF:Description>
 </RDF:RDF>

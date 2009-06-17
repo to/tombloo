@@ -435,7 +435,7 @@ FormPanel.prototype = {
 			});
 			
 			if(ps.hasPrivateMode){
-				elm = elmForm.appendChild(CHECKBOX({label : 'Private'}));
+				elm = elmForm.appendChild(CHECKBOX({label : 'Private', checked : !!ps.private }));
 				elm.addEventListener('click', function(e) { ps.private = !e.target.checked; }, false);
 			}
 		});

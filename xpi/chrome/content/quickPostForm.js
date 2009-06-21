@@ -590,7 +590,7 @@ function TagsPanel(elmPanel, formPanel){
 			
 			self.elmToggleSuggestion.addEventListener('click', bind('toggleSuggestion', self), true);
 			
-			new ChekboxPanel(self.elmSuggestion, self);
+			new CheckboxPanel(self.elmSuggestion, self);
 		}
 		
 		// linkタイプの場合、既ブックマークかの判定も行うため必ずタグを取得する
@@ -829,7 +829,7 @@ TagsPanel.prototype = {
 		}
 	},
 	
-	// ChekboxPanel
+	// CheckboxPanel
 	onCheck : function(e){
 		if(e.target.tagName!='label')
 			return;
@@ -1160,7 +1160,7 @@ function PostersPanel(){
 		this.elmPanel.addEventListener('mouseout', bind('hideTooltip', this), true);
 	}
 	
-	new ChekboxPanel(this.elmPanel, this);
+	new CheckboxPanel(this.elmPanel, this);
 }
 
 PostersPanel.prototype = {
@@ -1221,7 +1221,7 @@ PostersPanel.prototype = {
 		this.elmTooltip.hidePopup();
 	},
 	
-	// ChekboxPanel
+	// CheckboxPanel
 	onCheck : function(e){
 		if((/description|label/).test(e.target.tagName))
 			return true;
@@ -1238,8 +1238,8 @@ PostersPanel.prototype = {
 }
 
 
-// ----[ChekboxPanel]-------------------------------------------------
-function ChekboxPanel(elmPanel, handler){
+// ----[CheckboxPanel]-------------------------------------------------
+function CheckboxPanel(elmPanel, handler){
 	this.handler = handler;
 	
 	elmPanel.addEventListener('mousedown', dynamicBind('onMouseDown', this), true);
@@ -1248,7 +1248,7 @@ function ChekboxPanel(elmPanel, handler){
 	elmPanel.addEventListener('mouseout', dynamicBind('onMouseOut', this), true);
 }
 
-State.make(ChekboxPanel, {
+State.make(CheckboxPanel, {
 	mouseoutDelay : 500,
 	
 	normal : {

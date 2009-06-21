@@ -1,6 +1,6 @@
 // connectされるオブジェクト(signalを送る方)は必ずunload時にdisconnectAllをしてオブサーバーをクリアする
 // ----[utility]-------------------------------------------------
-'BOX VBOX HBOX SPACER LABEL TEXTBOX IMAGE DESCRIPTION TOOLTIP BUTTON CHECKBOX'.split(' ').forEach(function(tag){
+'BOX VBOX HBOX SPACER LABEL TEXTBOX IMAGE DESCRIPTION TOOLTIP BUTTON'.split(' ').forEach(function(tag){
 	this[tag] = bind(E, null, tag.toLowerCase());
 });
 
@@ -433,11 +433,6 @@ FormPanel.prototype = {
 					});
 				}
 			});
-			
-			if(ps.hasPrivateMode){
-				elm = elmForm.appendChild(CHECKBOX({label : 'Private', checked : !!ps.private }));
-				elm.addEventListener('click', function(e) { ps.private = !e.target.checked; }, false);
-			}
 		});
 	},
 	

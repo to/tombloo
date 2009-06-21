@@ -38,7 +38,6 @@ models.register({
 models.register({
 	name : 'Mento',
 	ICON : 'http://www.mento.info/favicon.ico',
-	hasPrivateMode : true,
 	
 	check : function(ps){
 		// キャプチャ(file)はAPIキーを入手後に対応(現在未公開)
@@ -257,7 +256,6 @@ models.register(update({
 	name : 'Flickr',
 	ICON : 'http://www.flickr.com/favicon.ico',
 	API_KEY : 'ecf21e55123e4b31afa8dd344def5cc5',
-	hasPrivateMode : true,
 	
 	check : function(ps){
 		return ps.type == 'photo';
@@ -984,7 +982,6 @@ models.register({
 models.register({
 	name : 'Delicious',
 	ICON : 'http://delicious.com/favicon.ico',
-	hasPrivateMode : true,
 	
 	/**
 	 * ユーザーの利用しているタグ一覧を取得する。
@@ -1495,7 +1492,6 @@ models.register({
 models.register({
 	name : 'YahooBookmarks',
 	ICON : 'http://bookmarks.yahoo.co.jp/favicon.ico',
-	hasPrivateMode : true,
 	
 	check : function(ps){
 		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
@@ -1560,7 +1556,6 @@ models.register({
 models.register({
 	name : 'Faves',
 	ICON : 'http://faves.com/favicon.ico',
-	hasPrivateMode : true,
 	
 	/**
 	 * タグを取得する。
@@ -1607,7 +1602,6 @@ models.register({
 models.register({
 	name : 'Magnolia',
 	ICON : 'http://ma.gnolia.com/favicon.ico',
-	hasPrivateMode : true,
 	
 	getCurrentUser : function(){
 		return request('https://ma.gnolia.com/').addCallback(function(res){
@@ -1999,7 +1993,6 @@ models.register(update({
 	name : 'LivedoorClip',
 	ICON : 'http://clip.livedoor.com/favicon.ico',
 	POST_URL : 'http://clip.livedoor.com/clip/add',
-	hasPrivateMode : true,
 
 	check : function(ps){
 		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
@@ -2437,10 +2430,8 @@ models.copyTo(this);
  */
 models.check = function(ps){
 	return this.values.filter(function(m){
-		if((ps.favorite && ps.favorite.name==m.name) || (m.check && m.check(ps))) {
-			if(m.hasPrivateMode) ps.hasPrivateMode = true;
+		if((ps.favorite && ps.favorite.name==m.name) || (m.check && m.check(ps)))
 			return true;
-		}
 	});
 }
 

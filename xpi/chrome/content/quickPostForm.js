@@ -403,13 +403,7 @@ FormPanel.prototype = {
 					field = self.descriptionBox = new DescriptionBox(elm, def.attributes, self.dialogPanel);
 					
 				} else if(name == 'private'){
-					field = elm = elmForm.appendChild(CHECKBOX(attrs, {
-						label : label, 
-						checked : !!ps.private, 
-						value : !!ps.private, 
-						hidden : !self.postersPanel.hasPrivateMode
-					}));
-					elm.addEventListener('click' , function(e){ e.target.value = !e.target.checked }, false);
+					elm = field = self.privateCheckbox = new PrivateCheckbox(attrs, self);
 					
 				} else {
 					switch(def.type){
@@ -1129,6 +1123,38 @@ DescriptionBox.prototype = {
 	},
 }
 
+// ----[PrivateCheckbox]-------------------------------------------------
+function PrivateCheckbox(attrs, formPanel){
+	var self = this;
+	this.formPanel = formPanel;
+	withDocument(document, function(){
+		self.elmCheckbox = formPanel.elmForm.appendChild(CHECKBOX(attrs, {
+			label : attrs.emptytext,
+			checked : !!ps.private,
+		}));
+	});
+	this.hidden = attrs.hidden;
+}
+
+PrivateCheckbox.prototype = {
+	set hidden(hide){
+		this._hidden = hide;
+		var hasPrivateMode = this.formPanel.postersPanel.hasPrivateMode;
+		this.elmCheckbox.hidden = (!hide && hasPrivateMode) ? false : true;
+	},
+	
+	get hidden(){
+		return !!this._hidden;
+	},
+	
+	get value(){
+		return this.elmCheckbox.checked;
+	},
+	
+	redraw : function(){
+		this.hidden = this.hidden;
+	},
+}
 
 // ----[PostersPanel]-------------------------------------------------
 function PostersPanel(){
@@ -1263,8 +1289,8 @@ PostersPanel.prototype = {
 		this._privateModeCount = this.checked.filter(function(poster) {
 			return !!poster.hasPrivateMode;
 		}).length;
-		var checkbox = getElement('private');
-		if(checkbox) checkbox.hidden = !this.hasPrivateMode;
+		if(dialogPanel)
+			dialogPanel.formPanel.privateCheckbox.redraw();
 	},
 }
 

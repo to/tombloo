@@ -1,6 +1,6 @@
 // connectされるオブジェクト(signalを送る方)は必ずunload時にdisconnectAllをしてオブサーバーをクリアする
 // ----[utility]-------------------------------------------------
-'BOX VBOX HBOX SPACER LABEL TEXTBOX IMAGE DESCRIPTION TOOLTIP BUTTON'.split(' ').forEach(function(tag){
+'BOX VBOX HBOX SPACER LABEL TEXTBOX IMAGE DESCRIPTION TOOLTIP BUTTON CHECKBOX'.split(' ').forEach(function(tag){
 	this[tag] = bind(E, null, tag.toLowerCase());
 });
 
@@ -282,6 +282,7 @@ FormPanel.prototype = {
 		itemUrl     : 'URL',
 		tags        : 'Tags',
 		description : 'Description',
+		private     : 'Private',
 	},
 	
 	types : {
@@ -291,12 +292,14 @@ FormPanel.prototype = {
 			description : {
 				attributes : {rows : 7},
 			},
+			private     : {},
 		},
 		link : {
 			item        : {type : 'label'},
 			itemUrl     : {toggle : true},
 			tags        : {},
 			description : {},
+			private     : {},
 		},
 		quote : {
 			item        : {toggle : true},
@@ -309,18 +312,21 @@ FormPanel.prototype = {
 			},
 			tags        : {toggle : true},
 			description : {toggle : true},
+			private     : {},
 		},
 		photo : {
 			item        : {toggle : true},
 			itemUrl     : {type : 'photo'},
 			tags        : {toggle : true},
 			description : {toggle : true},
+			private     : {},
 		},
 		video : {
 			item        : {type : 'label'},
 			itemUrl     : {toggle : true},
 			tags        : {toggle : true},
 			description : {toggle : true},
+			private     : {},
 		},
 	},
 	
@@ -395,6 +401,15 @@ FormPanel.prototype = {
 				} else if(name == 'description'){
 					elm = elmForm.appendChild(VBOX(attrs, {flex : 1}));
 					field = self.descriptionBox = new DescriptionBox(elm, def.attributes, self.dialogPanel);
+					
+				} else if(name == 'private'){
+					field = elm = elmForm.appendChild(CHECKBOX(attrs, {
+						label : label, 
+						checked : !!ps.private, 
+						value : !!ps.private, 
+						hidden : !self.postersPanel.hasPrivateMode
+					}));
+					elm.addEventListener('click' , function(e){ e.target.value = !e.target.checked }, false);
 					
 				} else {
 					switch(def.type){
@@ -1160,6 +1175,9 @@ function PostersPanel(){
 		this.elmPanel.addEventListener('mouseout', bind('hideTooltip', this), true);
 	}
 	
+	this._privateModeCount = 0;
+	this.checkPrivateMode();
+	
 	new CheckboxPanel(this.elmPanel, this);
 }
 
@@ -1169,6 +1187,10 @@ PostersPanel.prototype = {
 		return $x('.//*[@disabled="false"]', this.elmPanel, true).map(function(elm){
 			return self.posters[elm.name];
 		});
+	},
+	
+	get hasPrivateMode(){
+		return this._privateModeCount > 0;
 	},
 	
 	setIcon : function(image, poster, enabled){
@@ -1206,6 +1228,7 @@ PostersPanel.prototype = {
 	
 	toggleDisabled : function(image){
 		this.setDisabled(image, !(image.getAttribute('disabled')=='true'));
+		this.checkPrivateMode();
 	},
 	
 	showTooltip : function(e){
@@ -1234,6 +1257,14 @@ PostersPanel.prototype = {
 	onCarry : function(e){
 		if(!(/description|label/).test(e.target.tagName))
 			this.toggleDisabled(e.target);
+	},
+	
+	checkPrivateMode : function() {
+		this._privateModeCount = this.checked.filter(function(poster) {
+			return !!poster.hasPrivateMode;
+		}).length;
+		var checkbox = getElement('private');
+		if(checkbox) checkbox.hidden = !this.hasPrivateMode;
 	},
 }
 

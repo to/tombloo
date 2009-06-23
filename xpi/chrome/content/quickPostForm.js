@@ -1151,6 +1151,10 @@ PrivateCheckbox.prototype = {
 		return this.elmCheckbox.checked;
 	},
 	
+	set value(value){
+		this.elmCheckbox.checked = value;
+	},
+	
 	redraw : function(){
 		this.hidden = this.hidden;
 	},

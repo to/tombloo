@@ -292,14 +292,14 @@ FormPanel.prototype = {
 			description : {
 				attributes : {rows : 7},
 			},
-			private     : {},
+			private     : {toggle : true},
 		},
 		link : {
 			item        : {type : 'label'},
 			itemUrl     : {toggle : true},
 			tags        : {},
 			description : {},
-			private     : {},
+			private     : {toggle : true},
 		},
 		quote : {
 			item        : {toggle : true},
@@ -312,21 +312,21 @@ FormPanel.prototype = {
 			},
 			tags        : {toggle : true},
 			description : {toggle : true},
-			private     : {},
+			private     : {toggle : true},
 		},
 		photo : {
 			item        : {toggle : true},
 			itemUrl     : {type : 'photo'},
 			tags        : {toggle : true},
 			description : {toggle : true},
-			private     : {},
+			private     : {toggle : true},
 		},
 		video : {
 			item        : {type : 'label'},
 			itemUrl     : {toggle : true},
 			tags        : {toggle : true},
 			description : {toggle : true},
-			private     : {},
+			private     : {toggle : true},
 		},
 	},
 	

@@ -1816,6 +1816,7 @@ models.register(update({
 	ICON : 'http://b.hatena.ne.jp/favicon.ico',
 	
 	POST_URL : 'http://b.hatena.ne.jp/add',
+	hasPrivateMode : false,
 	
 	check : function(ps){
 		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
@@ -1823,7 +1824,7 @@ models.register(update({
 	
 	post : function(ps){
 		// タイトルは共有されているため送信しない
-		return this.addBookmark(ps.itemUrl, null, ps.tags, joinText([ps.body, ps.description], ' ', true));
+		return this.addBookmark(ps.itemUrl, null, ps.tags, joinText([ps.body, ps.description], ' ', true), ps.private);
 	},
 	
 	getAuthCookie : function(){
@@ -1848,7 +1849,8 @@ models.register(update({
 		}
 	},
 	
-	addBookmark : function(url, title, tags, description){
+	addBookmark : function(url, title, tags, description, private){
+		private = private && this.hasPrivateMode;
 		return HatenaBookmark.getToken().addCallback(function(token){
 			return request('http://b.hatena.ne.jp/bookmarklet.edit', {
 				redirectionLimit : 0,
@@ -1859,6 +1861,8 @@ models.register(update({
 					}),
 					title   : title, 
 					comment : Hatena.reprTags(tags) + description.replace(/[\n\r]+/g, ' '),
+					private : (private) ? '1' : '',
+					with_status_op : (private) ? '1' : '',
 				},
 			});
 		});

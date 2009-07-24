@@ -1244,6 +1244,7 @@ PostersPanel.prototype = {
 		$x('.//xul:image', this.elmPanel, true).forEach(function(image){
 			self.setDisabled(image, true);
 		});
+		this.checkPrivateMode();
 	},
 	
 	setDisabled : function(image, disabled){

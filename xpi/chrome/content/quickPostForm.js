@@ -282,7 +282,7 @@ FormPanel.prototype = {
 		itemUrl     : 'URL',
 		tags        : 'Tags',
 		description : 'Description',
-		private     : 'Private',
+		private     : getMessage('label.private'),
 	},
 	
 	types : {

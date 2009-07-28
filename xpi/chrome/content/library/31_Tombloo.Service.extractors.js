@@ -977,25 +977,6 @@ Tombloo.Service.extractors = new Repository([
 	},
 	
 	{
-		name : 'Photo - Share-image.com',
-		ICON : 'http://www.share-image.com/favicon.ico',
-		check : function(ctx){
-			return ctx.href.match(/share-image\.com\/gallery\//) && this.getImage();
-		},
-		extract : function(ctx){
-			return request(this.getImage()).addBoth(function(res){
-				ctx.target = {
-					src : (res instanceof Error? res.message : res).channel.URI.spec,
-				}
-				return Tombloo.Service.extractors['Photo - Upload from Cache'].extract(ctx);
-			});
-		},
-		getImage : function(){
-			return $x('//img[starts-with(@src, "http://www.share-image.com/pictures/big/")]/@src');
-		},
-	},
-	
-	{
 		name : 'Photo - Frostdesign.net',
 		ICON : 'http://mfrost.typepad.com/favicon.ico',
 		check : function(ctx){
@@ -1122,6 +1103,7 @@ Tombloo.Service.extractors = new Repository([
 			'/www.dru.pl/',
 			'adugle.com/shareimagebig/',
 			'/awkwardfamilyphotos.com/',
+			'share-image.com/pictures/big/'
 		],
 		check : function(ctx){
 			return ctx.onImage;

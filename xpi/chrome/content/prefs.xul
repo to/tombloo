@@ -251,9 +251,15 @@
 		
 		
 		var tagProvider = document.getElementsByAttribute('preference', 'tagProvider')[0];
-		for(var name in models)
-			if(models[name].getSuggestions)
-				tagProvider.appendItem(name, name).setAttribute('src', models[name].ICON);
+		for(var name in models){
+			if(models[name].getSuggestions){
+				var elmRadio = tagProvider.appendItem(name, name);
+				
+				// ロード後にアイコンを設定するために保持する
+				// (アイコンのロードに失敗すると設定画面が開かないため)
+				elmRadio.src = models[name].ICON;
+			}
+		}
 		
 		window.addEventListener('load', function(){
 			// スクリプト実行時点でprefpaneのコンストラクターからvalueが先に与えられているため、
@@ -261,6 +267,12 @@
 			// またロード中はradiogroup._getRadioChildrenに反映されていないため、
 			// valueの変更でチェックをつけることもできない。
 			tagProvider.value = tagProvider.value;
+			
+			// 準備していたアイコンを設定する
+			// (Firefox側で問題が修正された後はこのコードは不要)
+			forEach(tagProvider.getElementsByTagName('radio'), function(elmRadio){
+				elmRadio.setAttribute('src', elmRadio.src);
+			});
 		}, true)
 		
 		
@@ -286,7 +298,6 @@
 		
 		PosterTree.prototype = extend(new AbstractTreeView(), {
 			TYPES : 'regular photo quote link video conversation favorite'.split(' '),
-			
 			
 			resetData : function(rows){
 				// ロード以前はboxが存在しない
@@ -379,7 +390,7 @@
 			onClick : function(e){
 				// ドラッグ後のマウスアップではないか?
 				var pos = this.getCellAt(e);
-				if(!pos || (this.downed.row!=pos.row || this.downed.col!=pos.col))
+				if(!pos || !this.downed || (this.downed.row!=pos.row || this.downed.col!=pos.col))
 					return;
 				
 				var val = this.rows[pos.row][pos.col];

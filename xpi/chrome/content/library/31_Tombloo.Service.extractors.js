@@ -1121,6 +1121,7 @@ Tombloo.Service.extractors = new Repository([
 			'/www.toofly.com/userGallery/',
 			'/www.dru.pl/',
 			'adugle.com/shareimagebig/',
+			'/awkwardfamilyphotos.com/',
 		],
 		check : function(ctx){
 			return ctx.onImage;

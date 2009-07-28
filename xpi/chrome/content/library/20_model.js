@@ -1836,7 +1836,7 @@ models.register(update({
 		case 'changed':
 			var self = this;
 			return request(HatenaBookmark.POST_URL).addCallback(function(res){
-				if(res.responseText.extract(/new Hatena.Bookmark.User\('.*?',\s.*'(.*?)'\)/))
+				if(res.responseText.extract(/new Hatena.Bookmark.User\('.*?',\s.*'(.*?)', /))
 					return self.token = RegExp.$1;
 			});
 		}

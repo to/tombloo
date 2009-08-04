@@ -2,21 +2,21 @@
 <RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
          xmlns:NC="http://home.netscape.com/NC-rdf#"
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Seq RDF:about="rdf:#$RUvZZ1">
-    <RDF:li RDF:resource="rdf:#$SUvZZ1"/>
-  </RDF:Seq>
-  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
-                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAD+sLZpdV0q+DeeTVPNFYV+P3diDoKCFnyT4ocBiqL8bzqtRoNzjkSUaCLMoApp78ZGgD163k+50onKh0lKCfAj7FP+UP8kW7sePAwt41bHDKGzR/9yCT+FsX02iyktAXJogB1qw+qpWdECPYJgWsqYHn98iBzSuj2qVe6cy+igT">
-    <em:updates RDF:resource="rdf:#$RUvZZ1"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$VUvZZ1"
+  <RDF:Description RDF:about="rdf:#$IVeq3"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="3.0"
                    em:maxVersion="3.5.*"
                    em:updateLink="http://github.com/to/tombloo/raw/release/tombloo.xpi"
-                   em:updateHash="sha512:40619a3f4e1c7dafa340c65014822c97417ecd05503457ee971589a34e3e70b9b31e094e754b21b4ed7163e8c847c37da0f4ed3df09e69cd58023d3883d065d9" />
-  <RDF:Description RDF:about="rdf:#$SUvZZ1"
-                   em:version="0.4.3">
-    <em:targetApplication RDF:resource="rdf:#$VUvZZ1"/>
+                   em:updateHash="sha512:8436497f367b94b1b6e74e134a103a84bb10c818a17575f982cc344979cd5ad2bdc148086b988d7f83103524206cbf1edb8a45388a1939529a85145439f53289" />
+  <RDF:Seq RDF:about="rdf:#$EVeq3">
+    <RDF:li RDF:resource="rdf:#$FVeq3"/>
+  </RDF:Seq>
+  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAIFZp3BXwH3+P3cGCB8gptbY2aBWPgFbmGRmmWD3HtAem32ZkearBxTV96Mh6n7c+jsgFk3otw/BnEAF75pscUpyfhSPLVkp3iVvHyQNLXmIb+oownKau+OaAFZNQzd68ITejBQW9tgwdXrGONuJZyjKN+t2I2rVfk2o5BANHOZn">
+    <em:updates RDF:resource="rdf:#$EVeq3"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$FVeq3"
+                   em:version="0.4.4">
+    <em:targetApplication RDF:resource="rdf:#$IVeq3"/>
   </RDF:Description>
 </RDF:RDF>

@@ -54,6 +54,10 @@ function wrappedObject(obj){
 	return obj.wrappedJSObject || obj;
 }
 
+function copyString(str){
+	ClipboardHelper.copyString(str);
+}
+
 /**
  * 相対パスを解決する。
  *

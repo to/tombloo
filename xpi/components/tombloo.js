@@ -47,7 +47,7 @@ Module = {
 				Tombloo : {
 					Service : copy({}, env.Tombloo.Service, /(check|share|posters|extractors)/),
 				}
-			}, env, /(Deferred|DeferredHash)/);
+			}, env, /(Deferred|DeferredHash|copyString|notify)/);
 			
 			for(var name in env.models)
 				if(env.models.hasOwnProperty(name))

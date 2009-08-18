@@ -1465,7 +1465,7 @@ models.register({
 	
 	parse : function(ps){
 		ps.appid = this.APP_ID;
-		return request('http://api.jlp.yahoo.co.jp/MAService/V1/parse', {
+		return request('http://jlp.yahooapis.jp/MAService/V1/parse', {
 			charset     : 'utf-8',
 			sendContent : ps
 		}).addCallback(function(res){

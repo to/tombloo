@@ -2,21 +2,21 @@
 <RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
          xmlns:NC="http://home.netscape.com/NC-rdf#"
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Description RDF:about="rdf:#$IVeq3"
+  <RDF:Description RDF:about="rdf:#$rk8qZ3"
+                   em:version="0.4.5">
+    <em:targetApplication RDF:resource="rdf:#$uk8qZ3"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$uk8qZ3"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="3.0"
                    em:maxVersion="3.5.*"
                    em:updateLink="http://github.com/to/tombloo/raw/release/tombloo.xpi"
-                   em:updateHash="sha512:8436497f367b94b1b6e74e134a103a84bb10c818a17575f982cc344979cd5ad2bdc148086b988d7f83103524206cbf1edb8a45388a1939529a85145439f53289" />
-  <RDF:Seq RDF:about="rdf:#$EVeq3">
-    <RDF:li RDF:resource="rdf:#$FVeq3"/>
+                   em:updateHash="sha512:b93f9650ac16204c5be25349ce0e694df6ae4fba0cff11af6966afc512d680f471b446734c8efffe2973fc28fbf00c215e7e92a3b0b2f55f9916406dbdab2272" />
+  <RDF:Seq RDF:about="rdf:#$qk8qZ3">
+    <RDF:li RDF:resource="rdf:#$rk8qZ3"/>
   </RDF:Seq>
   <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
-                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAIFZp3BXwH3+P3cGCB8gptbY2aBWPgFbmGRmmWD3HtAem32ZkearBxTV96Mh6n7c+jsgFk3otw/BnEAF75pscUpyfhSPLVkp3iVvHyQNLXmIb+oownKau+OaAFZNQzd68ITejBQW9tgwdXrGONuJZyjKN+t2I2rVfk2o5BANHOZn">
-    <em:updates RDF:resource="rdf:#$EVeq3"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$FVeq3"
-                   em:version="0.4.4">
-    <em:targetApplication RDF:resource="rdf:#$IVeq3"/>
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBABMb9L2+e/AdbWru586qRFDkXTGovB91efaFkzsaPIxAQHNc9bJuFL0LdwkSQP/gQ8ay1CZrC6mwUQFPvKWzqhyzq6KxB4fGw2kMZriUR+2k0+TJDNSaYys26/8q52DSiOJS7ibLgHuCuAYcU4b13wznCnWBTS4n7n1YVVRLWkLh">
+    <em:updates RDF:resource="rdf:#$qk8qZ3"/>
   </RDF:Description>
 </RDF:RDF>

@@ -491,7 +491,7 @@ function Entity(def){
 					break;
 				}
 				
-				cache[name] = sql;
+				cache[method] = sql;
 			}
 			args.unshift(sql);
 			

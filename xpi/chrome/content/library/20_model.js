@@ -1087,12 +1087,13 @@ models.register({
 			},
 		}).addCallback(function(res){
 			var doc = convertToHTMLDocument(res.responseText);
-			if(!doc.getElementById('saveitem'))
+			var elmForm = doc.getElementById('saveitem');
+			if(!elmForm)
 				throw new Error(getMessage('error.notLoggedin'));
 			
-			return request('http://delicious.com'+$x('id("saveitem")/@action', doc), {
+			return request('http://delicious.com' + $x('id("saveitem")/@action', doc), {
 				redirectionLimit : 0,
-				sendContent : update(formContents(doc), {
+				sendContent : update(formContents(elmForm), {
 					description : ps.item,
 					jump        : 'no',
 					notes       : joinText([ps.body, ps.description], ' ', true),
@@ -1467,7 +1468,7 @@ models.register({
 	
 	parse : function(ps){
 		ps.appid = this.APP_ID;
-		return request('http://api.jlp.yahoo.co.jp/MAService/V1/parse', {
+		return request('http://jlp.yahooapis.jp/MAService/V1/parse', {
 			charset     : 'utf-8',
 			sendContent : ps
 		}).addCallback(function(res){
@@ -1843,7 +1844,7 @@ models.register(update({
 		case 'changed':
 			var self = this;
 			return request(HatenaBookmark.POST_URL).addCallback(function(res){
-				if(res.responseText.extract(/new Hatena.Bookmark.User\('.*?',\s.*'(.*?)'\)/))
+				if(res.responseText.extract(/new Hatena.Bookmark.User\('.*?',\s.*'(.*?)', /))
 					return self.token = RegExp.$1;
 			});
 		}

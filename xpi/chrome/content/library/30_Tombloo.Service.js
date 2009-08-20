@@ -86,7 +86,7 @@ Tombloo.Service = {
 		posters = [].concat(posters);
 		posters.forEach(function(p){
 			try{
-				ds[p.name] = (p.name == (ps.favorite && ps.favorite.name))? p.favor(ps) : p.post(ps);
+				ds[p.name] = (ps.favorite && RegExp('^' + ps.favorite.name + '(\\s|$)').test(p.name))? p.favor(ps) : p.post(ps);
 			} catch(e){
 				ds[p.name] = fail(e);
 			}

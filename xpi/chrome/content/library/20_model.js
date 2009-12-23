@@ -2246,10 +2246,17 @@ models.register({
 	URL  : 'http://8tracks.com',
 	
 	upload : function(file){
+		file = getLocalFile(file);
 		return request(this.URL + '/tracks', {
 			redirectionLimit : 0,
 			sendContent : {
-				'attachment_data[]' : getLocalFile(file),
+				'track_files[]' : {
+					file : file,
+					contentType : {
+						mp3 : 'audio/mpeg',
+						m4a : 'audio/mp4'
+					}[file.leafName.split('.').pop()],
+				},
 			},
 		});
 	}

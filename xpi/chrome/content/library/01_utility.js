@@ -989,7 +989,9 @@ function firebug(method, args){
 	
 	// Firebug 1.2~
 	if ( win.Firebug && win.Firebug.Console ) {
-		win.Firebug.Console.logFormatted.call(win.Firebug.Console, Array.slice(args), win.FirebugContext, method);
+		try {
+			win.Firebug.Console.logFormatted.call(win.Firebug.Console, Array.slice(args), win.FirebugContext, method);
+		} catch(e) {}
 		return true;
 	}
 	

@@ -404,6 +404,11 @@ try {
 	is(elm.style.display, 'none');
 	is(elm.className, 'test');
 	
+	// createDir
+	var dir = createDir('tombloo_test/c1', getDownloadDir());
+	ok(dir.exists(), '複数階層のディレクトリが作成されているか');
+	dir.parent.remove(true);
+	
 } catch (err) {
 	var s = [];
 	s.push('TEST SUITE FAILURE!');

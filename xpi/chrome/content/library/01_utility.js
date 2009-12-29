@@ -8,6 +8,7 @@ var CHROME_CONTENT_DIR = CHROME_DIR + '/content';
 var EXTENSION_ID = 'tombloo@brasil.to';
 
 var KEY_ACCEL = (AppInfo.OS == 'Darwin')? 'META' : 'CTRL';
+var PATH_DELIMITER = (navigator.appVersion.indexOf('Windows') != -1)? '\\' : '/';
 
 var grobal = this;
 disconnectAll(grobal);
@@ -198,8 +199,22 @@ function download(sourceURL, targetFile){
 	return d;
 }
 
-function createDir(dir){
-	var dir = (dir instanceof IFile) ? dir : new LocalFile(dir);
+function createDir(dir, basePath){
+	if(basePath){
+		basePath = (basePath instanceof IFile)? basePath.path : basePath;
+		
+		if(basePath.slice(-1) != PATH_DELIMITER)
+			basePath += PATH_DELIMITER;
+	} else {
+		basePath = ''; 
+	}
+	
+	dir = basePath + ((dir instanceof IFile)? dir.path : dir);
+	dir = dir.replace(/[\/\\]/g, PATH_DELIMITER);
+	
+	// 複数階層を一度に作成するため新しくインスタンスを生成する
+	dir = new LocalFile(dir);
+	
 	if(dir.exists()){
 		if(dir.isDirectory())
 			dir.permissions = 0774;
@@ -1575,7 +1590,7 @@ function convertToHTMLDocument(html, doc) {
 }
 
 function convertToXML(text){
-	return new XML(text.replace(/<\?.*\?>/gm,'').replace(/<!.*?>/gm, '').replace(/xmlns=".*?"/,''));
+	return new XML(text.replace(/<\?.*\?>/gm,'').replace(/<!.*?>/gm, '').replace(/xmlns=["'].*?["']/g,''));
 }
 
 function convertToXULElement(str){

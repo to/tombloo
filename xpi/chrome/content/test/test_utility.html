@@ -27,6 +27,8 @@
 try {
 	// chrome://tombloo/content/test/test_utility.html
 	
+	var d = succeed();
+	SimpleTest.waitForExplicitFinish();
 	
 	// toRoma
 	is('アイウエオ'.toRoma(), 'aiueo');
@@ -409,6 +411,25 @@ try {
 	ok(dir.exists(), '複数階層のディレクトリが作成されているか');
 	dir.parent.remove(true);
 	
+	// download
+	d.addCallback(function(){
+		return download('http://www.google.com/favicon.ico');
+	});
+	d.addCallback(function(){
+		var file = getDownloadDir();
+		file.append('favicon.ico');
+		ok(file.exists(), 'ダウンロード先を省略してダウンロードが可能か');
+		file.remove(false);
+	});
+	
+	
+	d.addErrback(function(e){
+		log(e)
+		ok(false);
+	});
+	d.addBoth(function(){
+		SimpleTest.finish()
+	});
 } catch (err) {
 	var s = [];
 	s.push('TEST SUITE FAILURE!');

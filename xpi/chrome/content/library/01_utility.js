@@ -176,8 +176,13 @@ function input(form, title){
 
 function download(sourceURL, targetFile){
 	var d = new Deferred();
-	var targetURI = IOService.newFileURI(targetFile);
 	var sourceURI = createURI(sourceURL);
+	
+	if(!targetFile){
+		targetFile = getDownloadDir();
+		targetFile.append(sourceURI.fileName);
+	}
+	var targetURI = IOService.newFileURI(targetFile);
 	
 	var persist = WebBrowserPersist();
 	with(persist){

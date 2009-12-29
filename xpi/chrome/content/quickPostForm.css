@@ -35,6 +35,11 @@ button,
 }
 
 
+/* it seems default value for moz-box-sizing is changed to "border-box" from fx3.6. */
+image {
+	-moz-box-sizing: content-box;
+}
+
 /* window / base */
 window {
 	font-size: 90%;

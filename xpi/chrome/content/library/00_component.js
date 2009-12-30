@@ -58,6 +58,7 @@ var ClipboardHelper     = getService('/widget/clipboardhelper;1', Ci.nsIClipboar
 var NavHistoryService   = getService('/browser/nav-history-service;1', Ci.nsINavHistoryService);
 var FaviconService      = getService('/browser/favicon-service;1', Ci.nsIFaviconService);
 var StyleSheetService   = getService('/content/style-sheet-service;1', Ci.nsIStyleSheetService);
+var FuelApplication     = getService('/fuel/application;1', Ci.fuelIApplication);
 
 
 var PrefBranch = 

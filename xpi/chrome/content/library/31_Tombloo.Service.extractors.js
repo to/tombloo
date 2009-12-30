@@ -1260,25 +1260,6 @@ Tombloo.Service.extractors = new Repository([
 	},
 	
 	{
-		name : 'Video - Rimo',
-		ICON : 'http://rimo.tv/favicon.ico',
-		check : function(ctx){
-			return ctx.host == 'rimo.tv' && this.getTag();
-		},
-		extract : function(ctx){
-			return {
-				type    : 'video',
-				item    : $x('id("play_list_title")/@value') || ctx.title.extract(/ - (.*)/),
-				itemUrl : ctx.href,
-				body    : this.getTag(),
-			};
-		},
-		getTag : function(){
-			return $x('id("player-tag-M")/@value') || $x('(//table[@class="player-embed-tags"]//input)[last()]/@value');
-		},
-	},
-	
-	{
 		name : 'Video - Nico Nico Douga',
 		ICON : 'http://www.nicovideo.jp/favicon.ico',
 		check : function(ctx){

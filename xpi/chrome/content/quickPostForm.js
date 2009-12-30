@@ -43,19 +43,8 @@ function DialogPanel(position, message){
 	window.addEventListener('keydown', bind('onKeydown', this), true);
 	
 	window.addEventListener('load', function(){
-		if(position){
-			// ポスト先の一番最初のアイコンの上にマウスカーソルがあるあたりへ移動
-			var win = getMostRecentWindow();
-			var box = self.formPanel.postersPanel.elmPanel.boxObject;
-			window.moveTo(
-				Math.min(win.screenX + win.outerWidth - window.innerWidth,  Math.max(win.screenX, position.x - (box.x + 16))), 
-				Math.min(win.screenY + win.outerHeight - window.innerHeight, Math.max(win.screenY, position.y - (box.y + (box.height / 2))))
-			);
-		} else {
-			with(QuickPostForm.dialog.snap)
-				self.snapToContentCorner(top, left);
-		}
 	}, false);
+	
 	// ロード時にはウィンドウのサイズが決定されていない
 	self.elmWindow.style.opacity = 0;
 	window.addEventListener('resize', function(){
@@ -74,6 +63,19 @@ function DialogPanel(position, message){
 			window.resizeTo(state.size.width, state.size.height);
 		
 		self.focusToFirstControl();
+		
+		if(position){
+			// ポスト先の一番最初のアイコンの上にマウスカーソルがあるあたりへ移動
+			var win = getMostRecentWindow();
+			var box = self.formPanel.postersPanel.elmPanel.boxObject;
+			window.moveTo(
+				Math.min(win.screenX + win.outerWidth - window.innerWidth,  Math.max(win.screenX, position.x - (box.x + 16))), 
+				Math.min(win.screenY + win.outerHeight - window.innerHeight, Math.max(win.screenY, position.y - (box.y + (box.height / 2))))
+			);
+		} else {
+			with(QuickPostForm.dialog.snap)
+				self.snapToContentCorner(top, left);
+		}
 		
 		self.elmWindow.style.opacity = 1;
 	}, false);

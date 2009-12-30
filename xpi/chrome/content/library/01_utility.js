@@ -1008,11 +1008,14 @@ function firebug(method, args){
 	}
 	
 	// Firebug 1.2~
-	if ( win.Firebug && win.Firebug.Console ) {
+	if( win.Firebug && win.Firebug.Console ){
 		try {
 			win.Firebug.Console.logFormatted.call(win.Firebug.Console, Array.slice(args), win.FirebugContext, method);
-		} catch(e) {}
-		return true;
+			
+			return true;
+		} catch(e) {
+			// Firebug 1.4.5でコンソールが開かれていないときに発生するエラーを抑止する
+		}
 	}
 	
 	return false;

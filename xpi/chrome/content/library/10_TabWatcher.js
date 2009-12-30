@@ -8,15 +8,12 @@ var TabWatcher = createMock('@mozilla.org/appshell/component/browser-status-filt
 	},
 	onStateChange : function(progress, request, flag, status){
 		// ページ遷移後の一番はじめの条件にマッチするステートのみ取得する
-		// layout-dummy-requestはFirefox 2のみ発生、document-onload-blockerも発生しているがその時点では遅い
-		// Firefox 3ではdocument-onload-blockerでよい
-		// STATE_IS_REQUEST STATE_START
-		if(this.locationChanged && flag==65537){
+		if(this.locationChanged && flag==(this.STATE_START | this.STATE_IS_REQUEST)){
 			var name = this.getName(request);
-			if(name && (name=='about:layout-dummy-request' || name=='about:document-onload-blocker')){
+			if(name && name=='about:document-onload-blocker'){
 				this.locationChanged = false;
 				
-				signal(grobal, 'content-ready', progress.DOMWindow.wrappedJSObject);
+				signal(grobal, 'content-ready', wrappedObject(progress.DOMWindow));
 				return;
 			}
 		}
@@ -45,7 +42,7 @@ var TabWatcher = createMock('@mozilla.org/appshell/component/browser-status-filt
 		}, false);
 	},
 	addProgressListener : function(browser){
-		browser.webProgress.addProgressListener(this, this.NOTIFY_ALL);
+		browser.webProgress.addProgressListener(this, this.NOTIFY_STATE_ALL | this.NOTIFY_STATUS | this.NOTIFY_LOCATION);
 	},
 	removeProgressListener : function(browser){
 		try{

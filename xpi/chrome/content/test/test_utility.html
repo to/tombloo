@@ -371,13 +371,20 @@ try {
 	
 	disconnectAll(obj);
 	ok(!connected(obj, 'load'));
-
-	/* 文字化けテスト(日本Googleへ接続)
-	SimpleTest.waitForExplicitFinish();
-	request('http://www.google.co.jp/').addCallback(function(res){
-		ok(res.responseText.match(/検索/), '文字化けしないか');
-	}).addBoth(function(){
-		SimpleTest.finish()
+	
+	/*
+	// 文字化けテスト(日本Googleへ接続)
+	d.addCallback(function(){
+		return request('http://www.google.co.jp/').addCallback(function(res){
+			ok(res.responseText.match(/検索/), '文字化けしないか');
+		});
+	});
+	d.addCallback(function(){
+		return request('http://google.com/tombloo').addCallback(function(){
+			ok(false, '失敗リクエスト');
+		}).addErrback(function(err){
+			is(err.message.status, 404, '失敗リクエスト');
+		});
 	});
 	*/
 	

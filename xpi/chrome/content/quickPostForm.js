@@ -613,7 +613,7 @@ function TagsPanel(elmPanel, formPanel){
 				}
 			}).addErrback(function(e){
 				setTimeout(function(){
-					alert(self.tagProvider + ': ' + e.message);
+					alert(self.tagProvider + ': ' + e.message.message);
 				}, 50);
 				error(e);
 			}).addBoth(function(){

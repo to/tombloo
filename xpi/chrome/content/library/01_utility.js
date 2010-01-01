@@ -572,22 +572,25 @@ function request(url, opts){
 			broad(req);
 			
 			var text = this.data.join('');
-			var charset = opts.charset || req.contentCharset;
-			
 			try{
+				var charset = opts.charset || req.contentCharset;
 				text = charset? text.convertToUnicode(charset) : text;
-			} catch(err){
-				// [FIXME] 調査中
-				error(err);
-				error(charset);
-				error(text);
+				
+				var res = {
+					channel      : req,
+					responseText : text,
+					status       : req.responseStatus,
+					statusText   : req.responseStatusText,
+				};
+			} catch(e) {
+				// contentCharsetなどのプロパティ取得時にNS_ERROR_NOT_AVAILABLEエラーが発生することがある
+				var res = {
+					channel      : req,
+					responseText : text,
+					status       : null,
+					statusText   : null,
+				};
 			}
-			var res = {
-				channel : req,
-				responseText : text,
-				status : req.responseStatus,
-				statusText : req.responseStatusText,
-			};
 			
 			if(Components.isSuccessCode(status) && res.status < 400){
 				d.callback(res);

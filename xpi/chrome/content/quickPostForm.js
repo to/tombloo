@@ -1037,6 +1037,8 @@ DescriptionBox.prototype = {
 			text + 
 			value.substr(elm.selectionEnd);
 		elm.selectionStart = elm.selectionEnd = start + text.length;
+		
+		this.refreshLength();
 	},
 	
 	refreshLength : function(){

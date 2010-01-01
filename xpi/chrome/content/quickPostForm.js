@@ -39,46 +39,48 @@ function DialogPanel(position, message){
 	this.elmWindow.addEventListener('mousemove', dynamicBind('onMouseMove', this), false);
 	this.elmWindow.addEventListener('mouseout', dynamicBind('onMouseOut', this), false);
 	
-	window.addEventListener('resize', bind('onWindowResize', this), true);
 	window.addEventListener('keydown', bind('onKeydown', this), true);
 	
-	window.addEventListener('load', function(){
-	}, false);
-	
-	// ロード時にはウィンドウのサイズが決定されていない
+	// 不可視にして描画を隠す
 	self.elmWindow.style.opacity = 0;
-	window.addEventListener('resize', function(){
-		window.removeEventListener('resize', arguments.callee, false);
-		
-		// FIXME: 状態の復元コードを移動
-		// 各オブジェクトが自分の状態を保存/ロードできるように
-		var state = QuickPostForm.dialog[ps.type] || {};
-		if(state.expandedForm)
-			self.formPanel.toggleDetail();
-		
-		if(state.expandedTags)
-			self.formPanel.tagsPanel.toggleSuggestion();
-		
-		if(ps.type != 'photo' && state.size)
-			window.resizeTo(state.size.width, state.size.height);
-		
-		self.focusToFirstControl();
-		
-		if(position){
-			// ポスト先の一番最初のアイコンの上にマウスカーソルがあるあたりへ移動
-			var win = getMostRecentWindow();
-			var box = self.formPanel.postersPanel.elmPanel.boxObject;
-			window.moveTo(
-				Math.min(win.screenX + win.outerWidth - window.innerWidth,  Math.max(win.screenX, position.x - (box.x + 16))), 
-				Math.min(win.screenY + win.outerHeight - window.innerHeight, Math.max(win.screenY, position.y - (box.y + (box.height / 2))))
-			);
-		} else {
-			with(QuickPostForm.dialog.snap)
-				self.snapToContentCorner(top, left);
-		}
-		
-		self.elmWindow.style.opacity = 1;
-	}, false);
+	
+	// コントロールと画像のロード後に体裁を整える
+	window.addEventListener('load', function(){
+		setTimeout(function(){
+			self.onWindowResize();
+			
+			// FIXME: 状態の復元コードを移動
+			// 各オブジェクトが自分の状態を保存/ロードできるように
+			var state = QuickPostForm.dialog[ps.type] || {};
+			if(state.expandedForm)
+				self.formPanel.toggleDetail();
+			
+			if(state.expandedTags)
+				self.formPanel.tagsPanel.toggleSuggestion();
+			
+			if(ps.type != 'photo' && state.size)
+				window.resizeTo(state.size.width, state.size.height);
+			
+			self.focusToFirstControl();
+			
+			if(position){
+				// ポスト先の一番最初のアイコンの上にマウスカーソルがあるあたりへ移動
+				var win = getMostRecentWindow();
+				var box = self.formPanel.postersPanel.elmPanel.boxObject;
+				window.moveTo(
+					Math.min(win.screenX + win.outerWidth - window.innerWidth,  Math.max(win.screenX, position.x - (box.x + 16))), 
+					Math.min(win.screenY + win.outerHeight - window.innerHeight, Math.max(win.screenY, position.y - (box.y + (box.height / 2))))
+				);
+			} else {
+				with(QuickPostForm.dialog.snap)
+					self.snapToContentCorner(top, left);
+			}
+			
+			window.addEventListener('resize', bind('onWindowResize', self), true);
+			
+			self.elmWindow.style.opacity = 1;
+		}, 0);
+	}, true);
 }
 
 DialogPanel.shortcutkeys = {};

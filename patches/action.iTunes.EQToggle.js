@@ -3,17 +3,19 @@ if(AppInfo.OS.startsWith('WIN')){
 		name : 'iTunes - EQ Toggle',
 		type : 'menu',
 		check : function(){
-			var enabled = executeWSH(function(msg){
+			var self = this;
+			runWSH(function(){
 				return WScript.CreateObject('iTunes.Application').EQEnabled;
+			}, null, true).addCallback(function(enabled){
+				enabled = !!Number(enabled);
+				
+				self.name = 'iTunes - EQ ' + ((enabled)? 'Off' : 'On');
 			});
-			enabled = !!Number(enabled);
-			
-			this.name = 'iTunes - EQ ' + ((enabled)? 'Off' : 'On');
 			
 			return true;
 		},
 		execute : function(){
-			executeWSH(function(){
+			runWSH(function(){
 				var iTunes = WScript.CreateObject('iTunes.Application');
 				iTunes.EQEnabled = !iTunes.EQEnabled;
 			});

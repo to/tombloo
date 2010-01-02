@@ -1254,7 +1254,7 @@ function validateFileName(fileName){
 
 /**
  * Windows上でWSHを実行する。
- * スクリプト内でWScript.echoなどで出力された文字列も返り値に含まれる。
+ * 将来Deferredを用いるrunWSHに移行される。
  * 
  * @param {Function} func WSHスクリプト。
  * @param {Array} args WSHスクリプトの引数。 
@@ -1262,16 +1262,40 @@ function validateFileName(fileName){
  * @return {String} WSHスクリプトの実行結果。
  */
 function executeWSH(func, args, async){
+	error('deprecated: executeWSH');
+	
+	var res;
+	runWSH(func, args, !async).addCallback(function(r){
+		res = r;
+	});
+	
+	return res;
+}
+
+/**
+ * Windows上でWSHを実行する。
+ * スクリプト内から表示された文字列はコールバックされる。
+ * 
+ * @param {Function} func WSHスクリプト。
+ * @param {Array} args WSHスクリプトの引数。 
+ * @param {Boolean} blocking 同期で実行するか。デフォルトは非同期。
+ * @return {Deferred}
+ */
+function runWSH(func, args, blocking){
 	args = (args==null)? [] : [].concat(args);
+	
+	var d = new Deferred();
 	
 	var bat = getTempFile('bat');
 	var script = getTempFile();
 	var out = new LocalFile(script.path + '.out');
 	
+	// リダイレクト結果を取得するためバッチ経由で実行する
 	putContents(bat, [
 		'cscript //E:JScript //Nologo', 
 		script.path.quote(), 
-		(async)? '' : ('> ' + out.path.quote())
+		'>',
+		out.path.quote()
 	].join(' '));
 	putContents(script, 
 		args.map(function(a, i){return 'var ARG_' + i + ' = ' + uneval(a) + ';'}).join('\n') + 
@@ -1279,19 +1303,27 @@ function executeWSH(func, args, async){
 		args.map(function(a, i){return 'ARG_' + i}).join(',') + 
 		'));');
 	
-	new Process(bat).run(!async, [], 0);
+	var end = function(){
+		var res = getContents(out, 'Shift-JIS').replace(/\s+$/, '');
+		
+		out.remove(false);
+		bat.remove(false);
+		script.remove(false);
+		
+		d.callback(res);
+	};
 	
-	// FIXME: 非同期時、スクリプトが終了していないためファイルを消せない
-	if(async)
-		return;
+	var process = new Process(bat);
+	if(blocking){
+		process.run(true, [], 0);
+		end();
+	} else {
+		process.runAsync([], 0, {
+			observe : end,
+		});
+	}
 	
-	var res = getContents(out, 'Shift-JIS').replace(/\s+$/, '');
-	
-	out.remove(false);
-	bat.remove(false);
-	script.remove(false);
-	
-	return res;
+	return d;
 }
 
 function getFinalUrl(url){

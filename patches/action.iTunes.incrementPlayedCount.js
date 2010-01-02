@@ -1,7 +1,7 @@
 Tombloo.Service.actions.register(	{
 	name : 'iTunes - Increment Played Count',
 	execute : function(){
-		executeWSH(function(msg){
+		runWSH(function(msg){
 			var iTunes = WScript.CreateObject('iTunes.Application');
 			var tracks = iTunes.selectedTracks;
 			if(!tracks)

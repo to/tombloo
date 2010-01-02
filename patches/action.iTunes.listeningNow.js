@@ -1,7 +1,7 @@
 Tombloo.Service.actions.register(	{
 	name : 'iTunes - Listening Now',
 	execute : function(){
-		var res = executeWSH(function(msg){
+		runWSH(function(msg){
 			function fix(s){
 				return s.replace(/\u0000/g, '');
 			}
@@ -19,15 +19,15 @@ Tombloo.Service.actions.register(	{
 				(track.artist? fix(track.artist) + ' - ' : '') + 
 				(track.album? fix(track.album) + ' - ' : '') + fix(track.name) +
 				(track.comment.match('^http://')? ' ' + track.comment.split(/[\n\r]/)[0] : '');
+		}).addCallback(function(res){
+			if(res){
+				QuickPostForm.show({
+					type    : 'regular',
+					description : res,
+				});
+			} else {
+				// alert("Can't get the track.");
+			}
 		});
-		
-		if(res){
-			QuickPostForm.show({
-				type    : 'regular',
-				description : res,
-			});
-		} else {
-			alert("Can't get the track.");
-		}
 	},
 }, '----');

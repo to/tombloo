@@ -121,11 +121,11 @@ QuickPostForm.dialog = {
 };
 QuickPostForm.descriptionContextMenus = [
 	{
-		name : 'is.gd',
-		icon : models['is.gd'].ICON,
+		name : 'j.mp',
+		icon : models['j.mp'].ICON,
 		
 		execute : function(elmText){
-			shortenUrls(elmText.value, models['is.gd']).addCallback(function(value){
+			shortenUrls(elmText.value, models['j.mp']).addCallback(function(value){
 				elmText.value = value;
 			});
 		},

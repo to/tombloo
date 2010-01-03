@@ -107,6 +107,17 @@ try {
 	}).addCallback(function(url){
 		is(url, 'http://cnn.com/');
 	});
+	
+	d.addCallback(function(){
+		return models['j.mp'].shorten('http://cnn.com/');
+	}).addCallback(function(url){
+		is(url, 'http://j.mp/eBZKT', 'j.mp: shorten');
+	});
+	d.addCallback(function(){
+		return models['j.mp'].expand('http://j.mp/eBZKT');
+	}).addCallback(function(url){
+		is(url, 'http://cnn.com/', 'j.mp: expand');
+	});
 	*/
 	
 	

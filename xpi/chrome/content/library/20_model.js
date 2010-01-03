@@ -2251,6 +2251,12 @@ models.register({
 	},
 });
 
+models.register(update({}, models['bit.ly'], {
+	name : 'j.mp',
+	ICON : 'http://j.mp/static/images/favicon.png',
+	URL  : 'http://api.j.mp',
+}));
+
 models.register({
 	name : 'TextConversionServices',
 	DATABASE_NAME : 'Text Conversion Services',

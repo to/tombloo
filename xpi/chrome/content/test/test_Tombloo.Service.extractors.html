@@ -91,7 +91,6 @@ try {
 		body    : 'the best way to predict the future is to invent it.', 
 	});
 	
-	
 	basicExtractorTest(
 		'Photo - Amazon', 
 		'http://www.amazon.co.jp/Master-Puppets-Metallica/dp/B000002H33/ref=sr_1_1?ie=UTF8&s=music&qid=1213360790&sr=8-1', 
@@ -99,14 +98,15 @@ try {
 			ctx.target = {
 				id    : 'prodImage', 
 				style : {},
+				src   : 'http://ecx.images-amazon.com/images/I/418MR1SQNKL._SL500_AA240_.jpg',
 			};
 			
 			return {
 				type    : 'photo',
-				page    : 'Master of Puppets',
-				pageUrl : 'http://amazon.co.jp/o/ASIN/B000002H33',
-				item    : 'Master of Puppets',
-				itemUrl : 'http://ecx.images-amazon.com/images/I/418MR1SQNKL.jpg', 
+				page    : 'Master of Puppets: Metallica',
+				pageUrl : 'http://www.amazon.co.jp/o/ASIN/B000002H33',
+				item    : 'Master of Puppets: Metallica',
+				itemUrl : 'http://ecx.images-amazon.com/images/I/418MR1SQNKL.LZZZZZZZ.jpg', 
 			}
 		});
 	

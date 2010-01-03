@@ -359,84 +359,76 @@ Tombloo.Service.extractors = new Repository([
 		getAsin : function(ctx){
 			return $x('id("ASIN")/@value');
 		},
+		normalizeUrl : function(host, asin){
+			return  'http://' + host + '/o/ASIN/' + asin + 
+				(this.affiliateId ? '/' + this.affiliateId + '/ref=nosim' : '');
+		},
+		get affiliateId(){
+			return getPref('amazonAffiliateId');
+		},
+		preCheck : function(ctx){
+			return ctx.host.match(/amazon\./) && this.getAsin(ctx);
+		},
 		extract : function(ctx){
-			var asin = this.getAsin(ctx);
-			return  Amazon.getItem(asin).addCallback(function(item){
-				ctx.href  = Amazon.normalizeUrl(asin);
-				ctx.title = item.title + (item.creators.length? ' / ' + item.creators.join(', ') : '');
-				
-				return item;
-			});
+			ctx.href = this.normalizeUrl(ctx.host, this.getAsin(ctx));
+			ctx.title = $x('id("prodImage")/@alt') + ': ' + ctx.document.title.split(/[：:] */).slice(-2).shift();
 		},
 	},
 	
 	{
 		name : 'Photo - Amazon',
-		ICON : models.Amazon.ICON,
+		ICON : 'http://www.amazon.com/favicon.ico',
 		check : function(ctx){
-			return ctx.host.match(/amazon\./) &&
-				Tombloo.Service.extractors.Amazon.getAsin(ctx) &&
-				ctx.target.id == 'prodImage';
+			return Tombloo.Service.extractors.Amazon.preCheck(ctx) && ctx.target.id == 'prodImage';
 		},
 		extract : function(ctx){
-			return Tombloo.Service.extractors.Amazon.extract(ctx).addCallback(function(item){
-				var img = item.largestImage;
-				if(!img){
-					alert('Image not found.');
-					return;
-				}
-				
-				with(ctx.target){
-					src = img.url;
-					height = '';
-					width = '';
-					style.height = 'auto';
-					style.width = 'auto';
-				}
-				
-				return {
-					type    : 'photo',
-					item    : ctx.title,
-					itemUrl : img.url,
-				};
-			});
+			Tombloo.Service.extractors.Amazon.extract(ctx);
+			
+			var url = ctx.target.src.split('.');
+			url.splice(-2, 1, 'LZZZZZZZ');
+			url = url.join('.');
+			
+			with(ctx.target){
+				src = url
+				height = '';
+				width = '';
+				style.height = 'auto';
+				style.width = 'auto';
+			}
+			
+			return {
+				type    : 'photo',
+				item    : ctx.title,
+				itemUrl : url,
+			};
 		},
 	},
 	
 	{
 		name : 'Quote - Amazon',
-		ICON : models.Amazon.ICON,
+		ICON : 'http://www.amazon.com/favicon.ico',
 		check : function(ctx){
-			return ctx.host.match(/amazon\./) &&
-				Tombloo.Service.extractors.Amazon.getAsin(ctx) &&
-				ctx.selection;
+			return Tombloo.Service.extractors.Amazon.preCheck(ctx) && ctx.selection;
 		},
 		extract : function(ctx){
-			var exts = Tombloo.Service.extractors;
-			return exts.Amazon.extract(ctx).addCallback(function(item){
-				return exts.Quote.extract(ctx);
-			});
+			with(Tombloo.Service.extractors){
+				Amazon.extract(ctx);
+				return Quote.extract(ctx);
+			}
 		},
 	},
 
 	{
 		name : 'Link - Amazon',
-		ICON : models.Amazon.ICON,
+		ICON : 'http://www.amazon.com/favicon.ico',
 		check : function(ctx){
-			return ctx.host.match(/amazon\./) &&
-				Tombloo.Service.extractors.Amazon.getAsin(ctx);
+			return Tombloo.Service.extractors.Amazon.preCheck(ctx);
 		},
 		extract : function(ctx){
-			var exts = Tombloo.Service.extractors;
-			return exts.Amazon.extract(ctx).addCallback(function(item){
-				var releaseDate = item.releaseDate;
-				return {
-					type    : 'link',
-					item    : ctx.title,
-					itemUrl : ctx.href,
-					date    : (new Date() < releaseDate)? releaseDate : null,
-				}
-			});
+			with(Tombloo.Service.extractors){
+				Amazon.extract(ctx);
+				return Link.extract(ctx);
+			}
 		},
 	},
 	

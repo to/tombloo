@@ -1828,7 +1828,11 @@ function loadImage(src){
 	}
 	
 	img.onload = function(){
-		d.callback(img);
+		try{
+			d.callback(img);
+		}catch(e){
+			// ロードが複数回呼び出されて発生するエラーを抑止する
+		}
 	};
 	
 	img.onerror = function(){

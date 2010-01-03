@@ -1256,12 +1256,16 @@ Tombloo.Service.extractors = new Repository([
 			return ctx.href.match('^http://www\.nicovideo\.jp/watch/');
 		},
 		extract : function(ctx){
-			return {
-				type    : 'video',
-				item    : ctx.title,
-				itemUrl : ctx.href,
-				body    : $x('//form[@name="form_iframe"]/input/@value'),
-			};
+			var embedUrl = resolveRelativePath($x('//a[starts-with(@href, "/embed/")]/@href'), ctx.href);
+			return request(embedUrl, {charset : 'utf-8'}).addCallback(function(res){
+				var doc = convertToHTMLDocument(res.responseText);
+				return {
+					type    : 'video',
+					item    : ctx.title,
+					itemUrl : ctx.href,
+					body    : $x('//input[@name="script_code"]/@value', doc),
+				};
+			});
 		}
 	},
 	

@@ -94,6 +94,13 @@ DialogPanel.shortcutkeys[KEY_ACCEL + ' + W'] = function(e){
 	dialogPanel.close();
 }
 
+forEach(range(1, 10), function(i){
+	DialogPanel.shortcutkeys[KEY_ACCEL + ' + ' + i] = function(){
+		var panel = dialogPanel.formPanel.postersPanel;
+		panel.toggle(panel.icons[i-1]);
+	};
+});
+
 DialogPanel.prototype = {
 	close : function(){
 		var box = this.elmBase.boxObject;
@@ -1178,6 +1185,10 @@ PostersPanel.prototype = {
 		});
 	},
 	
+	get icons(){
+		return $x('.//xul:image', this.elmPanel, true);
+	},
+	
 	setIcon : function(image, poster, enabled){
 		var prop = (enabled)? 'ICON' : 'DISABLED_ICON';
 		var src = poster[prop];
@@ -1196,7 +1207,7 @@ PostersPanel.prototype = {
 	
 	allOff : function(){
 		var self = this;
-		$x('.//xul:image', this.elmPanel, true).forEach(function(image){
+		this.icons.forEach(function(image){
 			self.setDisabled(image, true);
 		});
 	},
@@ -1211,7 +1222,7 @@ PostersPanel.prototype = {
 		this.elmButton.disabled = !this.checked.length;
 	},
 	
-	toggleDisabled : function(image){
+	toggle : function(image){
 		this.setDisabled(image, !(image.getAttribute('disabled')=='true'));
 	},
 	
@@ -1235,12 +1246,12 @@ PostersPanel.prototype = {
 		
 		// cancelをするとactive擬似クラスが有効にならずリアクションがなくなる
 		
-		this.toggleDisabled(e.target);
+		this.toggle(e.target);
 	},
 	
 	onCarry : function(e){
 		if(!(/description|label/).test(e.target.tagName))
-			this.toggleDisabled(e.target);
+			this.toggle(e.target);
 	},
 }
 

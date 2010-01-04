@@ -1037,10 +1037,11 @@ Tombloo.Service.extractors = new Repository([
 				return true;
 		},
 		extract : function(ctx){
+			var target = ctx.target;
 			return {
 				type    : 'photo',
 				item    : ctx.title,
-				itemUrl : currentDocument().elementFromPoint(ctx.mouse.page.x, ctx.mouse.page.y).src,
+				itemUrl : $x('//img[@usemap="#' + target.parentNode.name + '"]', target.ownerDocument).src,
 			}
 		},
 	},

@@ -1825,6 +1825,7 @@ models.register(update({
 	ICON : 'http://b.hatena.ne.jp/favicon.ico',
 	
 	POST_URL : 'http://b.hatena.ne.jp/add',
+	JSON_URL : 'http://b.hatena.ne.jp/my.name',
 	
 	check : function(ps){
 		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
@@ -1850,9 +1851,12 @@ models.register(update({
 			
 		case 'changed':
 			var self = this;
-			return request(HatenaBookmark.POST_URL).addCallback(function(res){
-				if(res.responseText.extract(/new Hatena.Bookmark.User\('.*?',\s.*'(.*?)', /))
-					return self.token = RegExp.$1;
+			return request(HatenaBookmark.JSON_URL).addCallback(function(res){
+				var data = JSON.parse(res.responseText);
+				if(!data["login"])
+					throw new Error(getMessage('error.notLoggedin'));
+				self.token = data['rks'];
+				return self.token;
 			});
 		}
 	},

@@ -1027,7 +1027,9 @@ DescriptionBox.prototype = {
 	},
 	
 	set value(value){
-		return this.elmDescription.value = value;
+		var res = this.elmDescription.value = value;
+		this.onInput();
+		return res;
 	},
 	
 	get value(){
@@ -1039,13 +1041,11 @@ DescriptionBox.prototype = {
 		var value = elm.value;
 		var start = elm.selectionStart;
 		
-		elm.value = 
+		this.value = 
 			value.substr(0, elm.selectionStart) + 
 			text + 
 			value.substr(elm.selectionEnd);
 		elm.selectionStart = elm.selectionEnd = start + text.length;
-		
-		this.refreshLength();
 	},
 	
 	refreshLength : function(){

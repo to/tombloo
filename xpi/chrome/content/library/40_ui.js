@@ -124,9 +124,9 @@ QuickPostForm.descriptionContextMenus = [
 		name : 'j.mp',
 		icon : models['j.mp'].ICON,
 		
-		execute : function(elmText){
-			shortenUrls(elmText.value, models['j.mp']).addCallback(function(value){
-				elmText.value = value;
+		execute : function(elmText, desc){
+			shortenUrls(desc.value, models['j.mp']).addCallback(function(value){
+				desc.value = value;
 			});
 		},
 	},

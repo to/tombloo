@@ -1009,6 +1009,20 @@ Tombloo.Service.extractors = new Repository([
 	},
 	
 	{
+		name : 'Photo - ITmedia',
+		ICON : 'http://www.itmedia.co.jp/favicon.ico',
+		check : function(ctx){
+			return ctx.onLink && ctx.link.href.match('http://image.itmedia.co.jp/l/im/');
+		},
+		extract : function(ctx){
+			ctx.target = {
+				src : ctx.link.href.replace('/l/im/', '/'),
+			};
+			return Tombloo.Service.extractors['Photo - Upload from Cache'].extract(ctx);
+		}
+	},
+	
+	{
 		name : 'Photo - covered',
 		ICON : 'chrome://tombloo/skin/photo.png',
 		check : function(ctx){

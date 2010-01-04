@@ -1332,6 +1332,12 @@ function getFinalUrl(url){
 	});
 }
 
+function getJSON(url, opts){
+	return request(url, opts).addCallback(function(res){
+		return evalInSandbox('(function(){return ' + res.responseText + '})()', url);
+	});
+}
+
 // ----[State]-------------------------------------------------
 var State = {
 	make : function(cls, stateSetName, stateSet, defaultStateName){

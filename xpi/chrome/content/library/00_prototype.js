@@ -17,9 +17,14 @@ Math.hypot = function(x, y){
 	return Math.sqrt(x*x + y*y);
 }
 
-Number.prototype.toHexString = function(){
-	return ('0' + this.toString(16)).slice(-2);
-};
+update(Number.prototype, {
+	pad : function(len, ch){
+		return ('' + this).pad(len, ch || '0');
+	},
+	toHexString : function(){
+		return ('0' + this.toString(16)).slice(-2);
+	},
+});
 
 update(String.prototype, {
 	startsWith : function(s){

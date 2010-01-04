@@ -571,7 +571,36 @@ try {
 	ok(LivedoorClip.getAuthCookie(), 'LivedoorClip: ログインしているか(未ログインの場合エラー)');
 	*/
 	
+	/*
+	// 8tracks
+	d.addCallback(function(){
+		return models['8tracks'].getPlayToken();
+	});
+	d.addCallback(function(token){
+		ok(token);
+	});
 	
+	d.addCallback(function(){
+		return models['8tracks'].getPlaylist(26179);
+	});
+	d.addCallback(function(list){
+		is(list.length, 15);
+		
+		var track = list[0];
+		is(track.mixName, '!!!may.tyo!!!');
+		is(track.mixDescription, 'tokyo');
+		is(track.photo, 'http://cf3.8tracks.us/mix_covers/000/026/179/26235.sq56.jpg');
+		is(track.referenceUrl, 'http://8tracks.com/isbsh/maytyo');
+		
+		ok(/^http.*\.mp3/.test(track.item));
+		ok(track.title);
+		ok(track.trackId);
+		ok(track.contributor);
+		is(track.allowSkip, 'true');
+	});
+	*/
+	
+	/*
 	if(models.FirefoxBookmark){
 		// FirefoxBookmark
 		var uri = 'chrome://tombloo/content/prefs.xul';
@@ -589,7 +618,7 @@ try {
 		models.FirefoxBookmark.removeBookmark(uri);
 		ok(!models.FirefoxBookmark.getBookmark(uri), 'FirefoxBookmark: ブックマークの削除');
 	}
-	
+	*/
 	
 	d.addErrback(function(e){
 		error(e.message);

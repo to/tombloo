@@ -889,7 +889,6 @@ models.register({
 	},
 });
 
-
 models.register({
 	name : 'Delicious',
 	ICON : 'http://delicious.com/favicon.ico',
@@ -2170,6 +2169,46 @@ models.register({
 				},
 			},
 		});
+	},
+	
+	getPlayToken : function(){
+		return getJSON(this.URL + '/sets/new.json').addCallback(function(res){
+			return res.play_token;
+		});
+	},
+	
+	getPlaylist : function(mixId){
+		var self = this;
+		var tracks = [];
+		var number = 0;
+		var d = new Deferred();
+		
+		self.getPlayToken().addCallback(function(token){
+			(function(){
+				var me = arguments.callee;
+				return getJSON(self.URL + '/sets/' + token + '/' + ((number==0)? 'play' : 'next')+ '.json', {
+					queryString : {
+						mix_id : mixId,
+					}
+				}).addCallback(function(res){
+					// 最後のトラック以降にはトラック個別情報が含まれない
+					if(!res.track.item){
+						d.callback(tracks);
+						return;
+					}
+					
+					res.track.number = ++number;
+					tracks.push(res.track);
+					me();
+				}).addErrback(function(e){
+					// 異常なトラックをスキップする(破損したJSONが返る)
+					if(e.message.name == 'SyntaxError')
+						me();
+				});
+			})();
+		});
+		
+		return d;
 	}
 });
 
@@ -2341,6 +2380,7 @@ models.register({
 		});
 	},
 });
+
 
 
 // 全てのサービスをグローバルコンテキストに置く(後方互換)

@@ -320,8 +320,8 @@ models.register(update({
 
 models.register({
 	name : 'WeHeartIt',
-	ICON : 'http://weheartit.com/img/favicon.ico',
-	URL : 'http://weheartit.com/',
+	ICON : 'http://weheartit.com/favicon.ico',
+	URL  : 'http://weheartit.com/',
 	
 	check : function(ps){
 		return ps.type == 'photo' && !ps.file;
@@ -368,8 +368,7 @@ models.register({
 
 models.register({
 	name : '4u',
-	ICON : 'http://www.straightline.jp/html/common/static/favicon.ico',
-	
+	ICON : 'http://4u.straightline.jp/favicon.ico',
 	URL : 'http://4u.straightline.jp/',
 	
 	check : function(ps){
@@ -636,7 +635,7 @@ models.register({
 		this.getCurrentUser();
 		
 		return request(Jaiku.URL).addCallback(function(res){
-			var form =  formContents(convertToHTMLDocument(res.responseText));
+			var form = formContents(convertToHTMLDocument(res.responseText));
 			return request(Jaiku.URL, {
 				redirectionLimit : 0,
 				sendContent : {
@@ -885,6 +884,60 @@ models.register({
 					text    : title, 
 					details : description,
 				}
+		});
+	},
+});
+
+
+models.register({
+	name     : 'Evernote',
+	ICON     : 'http://www.evernote.com/favicon.ico',
+	POST_URL : 'http://www.evernote.com/clip.action',
+	 
+	check : function(ps){
+		return (/(regular|quote|link|conversation|video)/).test(ps.type) && !ps.file;
+	},
+	
+	post : function(ps){
+		var self = this;
+		if(!this.getAuthCookie())
+			throw new Error(getMessage('error.notLoggedin'));
+		
+		return this.getToken().addCallback(function(token){
+			return request(self.POST_URL, {
+				redirectionLimit : 0,
+				sendContent : update(token, {
+					saveQuicknote : 'save',
+					format        : 'microclip',
+					
+					url      : ps.itemUrl || 'no url',
+					title    : ps.item || 'no title',
+					comment  : ps.description,
+					body     : ps.body,
+					tags     : (ps.tags)? ps.tags.join(',') : '',
+					fullPage : (ps.body)? 'true' : 'false',
+				}),
+			});
+		});
+	},
+	
+	getAuthCookie : function(){
+		return getCookieString('evernote.com', 'auth');
+	},
+	
+	getToken : function(){
+		return request(this.POST_URL, {
+			sendContent: {
+				format    : 'microclip', 
+				quicknote : 'true'
+			}
+		}).addCallback(function(res){
+			var doc = convertToHTMLDocument(res.responseText);
+			return {
+				_sourcePage   : $x('//input[@name="_sourcePage"]/@value', doc),
+				__fp          : $x('//input[@name="__fp"]/@value', doc),
+				noteBookGuide : $x('//select[@name="notebookGuid"]//option[@selected="selected"]/@value', doc),
+			};
 		});
 	},
 });

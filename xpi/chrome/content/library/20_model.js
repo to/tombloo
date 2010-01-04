@@ -319,6 +319,54 @@ models.register(update({
 }, AbstractSessionService));
 
 models.register({
+	name     : 'Twitpic',
+	ICON     : 'http://twitpic.com/favicon.ico',
+	POST_URL : 'http://twitpic.com/upload/',
+	
+	check : function(ps){
+		return ps.type=='photo';
+	},
+	
+	post : function(ps){
+		var self = this;
+		return ((ps.file)? 
+			succeed(ps.file) : 
+			download(ps.itemUrl, getTempFile(createURI(ps.itemUrl).fileExtension))
+		).addCallback(function(file){
+			return self.upload({
+				media   : file,
+				message : ps.description,
+			});
+		});
+	},
+	
+	upload : function(ps){
+		var self = this;
+		return this.getToken().addCallback(function(token){
+			return request(self.POST_URL, {
+				sendContent : update(token, {
+					do_upload : 1,
+				}, ps),
+			});
+		});
+	},
+	
+	getToken : function(){
+		var self = this;
+		return request(self.POST_URL).addCallback(function(res){
+			// 未ログインの場合トップにリダイレクトされる(クッキー判別より安全と判断)
+			if(res.channel.URI.asciiSpec != self.POST_URL)
+				throw new Error(getMessage('error.notLoggedin'));
+			
+			var doc = convertToHTMLDocument(res.responseText);
+			return {
+				form_auth : $x('//input[@name="form_auth"]/@value', doc)
+			};
+		});
+	},
+});
+
+models.register({
 	name : 'WeHeartIt',
 	ICON : 'http://weheartit.com/favicon.ico',
 	URL  : 'http://weheartit.com/',

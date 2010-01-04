@@ -1344,7 +1344,10 @@ Tombloo.Service.extractors = new Repository([
 				return;
 			
 			var win = ctx.window;
-			makeOpaqueFlash();
+			
+			// Macの場合Flashを透過しなくてもキャプチャ可能(詳細未確認)
+			if(AppInfo.OS != 'Darwin')
+				makeOpaqueFlash();
 			
 			return succeed().addCallback(function(){
 				switch (type){

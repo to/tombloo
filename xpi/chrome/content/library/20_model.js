@@ -543,7 +543,7 @@ models.register({
 	},
 	
 	post : function(ps){
-		return this.update(joinText([ps.item, ps.itemUrl, ps.body, ps.description], ' ', true));
+		return this.update(joinText([ps.description, (ps.body)? '"' + ps.body + '"' : '', ps.item, ps.itemUrl], ' ', true));
 	},
 	
 	update : function(status){
@@ -553,11 +553,14 @@ models.register({
 			shortenUrls(status, models[this.SHORTEN_SERVICE])
 		).addCallback(function(status){
 			return Twitter.getToken().addCallback(function(token){
-				// FIXME: 403が発生することがあったため redirectionLimit:0 を外す
 				token.status = status;
 				return request(self.URL + '/status/update', update({
 					sendContent : token,
-				}));
+				})).addCallback(function(res){
+					var msg = res.responseText.extract(/notification.setMessage\("(.*?)"\)/);
+					if(msg)
+						throw unescapeHTML(msg).trimTag();
+				});
 			});
 		})
 		

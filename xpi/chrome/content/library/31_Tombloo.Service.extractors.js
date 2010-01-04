@@ -308,33 +308,23 @@ Tombloo.Service.extractors = new Repository([
 			return ctx.href.match('//twitter.com/.*?/(status|statuses)/\\d+');
 		},
 		extract : function(ctx){
-			return (ctx.selection?
-				succeed(ctx.selection) :
-				request(ctx.href).addCallback(function(res){
-					var doc = convertToHTMLDocument(res.responseText);
-					var content = $x('(//span[@class="entry-content"])[1]', doc);
-					
-					$x('.//a', content, true).forEach(function(l){
-						l.href = resolveRelativePath(l.href, ctx.href);
-					});
-					body = content.innerHTML.
-						replace(/ (rel|target)=".+?"/g, '').
-						replace('<a href="' + ctx.href.replace('/statuses/','/status/') + '">...</a>', '');
-					
-					return body;
-				})
-			).addCallback(function(body){
-				return {
-					type     : 'quote',
-					item     : ctx.title.substring(0, ctx.title.indexOf(': ')),
-					itemUrl  : ctx.href,
-					body     : body.trim(),
-					favorite : {
-						name : 'Twitter',
-						id   : ctx.href.match(/(status|statuses)\/(\d+)/)[2],
-					},
-				};
-			});
+			var body = ctx.selection;
+			if(!body){
+				var content = $x('(//span[@class="entry-content"])[1]');
+				$x('.//a', content, true).forEach(function(l){l.href = l.href;});
+				body = content.innerHTML.replace(/ (rel|target)=".+?"/g, '');
+			}
+			
+			return {
+				type     : 'quote',
+				item     : ctx.title.substring(0, ctx.title.indexOf(': ')),
+				itemUrl  : ctx.href,
+				body     : body.trim(),
+				favorite : {
+					name : 'Twitter',
+					id   : ctx.href.match(/(status|statuses)\/(\d+)/)[2],
+				},
+			}
 		},
 	},
 	
@@ -1276,12 +1266,16 @@ Tombloo.Service.extractors = new Repository([
 			return ctx.href.match('^http://www\.nicovideo\.jp/watch/');
 		},
 		extract : function(ctx){
-			return {
-				type    : 'video',
-				item    : ctx.title,
-				itemUrl : ctx.href,
-				body    : $x('//form[@name="form_iframe"]/input/@value'),
-			};
+			var embedUrl = resolveRelativePath($x('//a[starts-with(@href, "/embed/")]/@href'), ctx.href);
+			return request(embedUrl, {charset : 'utf-8'}).addCallback(function(res){
+				var doc = convertToHTMLDocument(res.responseText);
+				return {
+					type    : 'video',
+					item    : ctx.title,
+					itemUrl : ctx.href,
+					body    : $x('//input[@name="script_code"]/@value', doc),
+				};
+			});
 		}
 	},
 	

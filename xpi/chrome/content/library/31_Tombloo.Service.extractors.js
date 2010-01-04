@@ -583,23 +583,26 @@ Tombloo.Service.extractors = new Repository([
 		
 		RE : new RegExp('^http://(?:.+?.)?static.flickr.com/\\d+?/(\\d+?)_.*'),
 		getImageId : function(ctx){
-			if(/flickr\.com/.test(ctx.host) && ctx.target.src.match('spaceball.gif')){
-				removeElement(ctx.target);
-				
-				if(currentDocument().elementFromPoint){
-					ctx.target = currentDocument().elementFromPoint(ctx.mouse.page.x, ctx.mouse.page.y);
-				} else {
-					ctx.target = ctx.target.previousSibling;
+			// 他サイトに貼られているFlickrにも対応する
+			if(/flickr\.com/.test(ctx.host)){
+				// ログインしているとphoto-drag-proxyが前面に表示される
+				// アノテーション上の場合はphoto_notesの孫要素となる
+				if(
+					(ctx.target.src && ctx.target.src.match('spaceball.gif')) || 
+					ctx.target.id == 'photo-drag-proxy' || 
+					$x('./ancestor-or-self::div[@id="photo_notes"]', ctx.target)
+				){
+					ctx.target = $x('//img[@class="reflect"]') || ctx.target;
 				}
 			}
 			
-			if(!ctx.target || !ctx.target.src.match(this.RE))
+			if(!ctx.target || !ctx.target.src || !ctx.target.src.match(this.RE))
 				return;
 			
 			return RegExp.$1;
 		},
 		check : function(ctx){
-			return ctx.onImage && this.getImageId(ctx);
+			return this.getImageId(ctx);
 		},
 		extract : function(ctx){
 			var id = this.getImageId(ctx);

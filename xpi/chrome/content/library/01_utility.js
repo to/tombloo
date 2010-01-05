@@ -174,7 +174,7 @@ function input(form, title){
 	return form;
 }
 
-function download(sourceURL, targetFile){
+function download(sourceURL, targetFile, useManger){
 	var d = new Deferred();
 	var sourceURI = createURI(sourceURL);
 	
@@ -184,22 +184,30 @@ function download(sourceURL, targetFile){
 	}
 	var targetURI = IOService.newFileURI(targetFile);
 	
-	var persist = WebBrowserPersist();
-	with(persist){
-		persist.progressListener = {
-			onLocationChange : function(){},
-			onProgressChange : function(){},
-			onSecurityChange : function(){},
-			onStatusChange : function(){},
-			onStateChange : function(progress, req, state, status){
-				if (state & IWebProgressListener.STATE_STOP)
-					d.callback(targetFile);
-			},
-		}
-		
-		persistFlags = PERSIST_FLAGS_FROM_CACHE;
-		saveURI(sourceURI, null, null, null, null, targetURI);
+	var p = WebBrowserPersist();
+	if(useManger)
+		var download = broad(DownloadManager.addDownload(
+			DownloadManager.DOWNLOAD_TYPE_DOWNLOAD, sourceURI, targetURI,
+			null, null, Math.round(Date.now() * 1000), null, p));
+	
+	p.progressListener = {
+		onLocationChange : (useManger)? bind('onLocationChange', download) : function(){},
+		onProgressChange : (useManger)? bind('onProgressChange', download) : function(){},
+		onSecurityChange : (useManger)? bind('onSecurityChange', download) : function(){},
+		onStatusChange   : (useManger)? bind('onStatusChange', download)   : function(){},
+		onStateChange    : function(progress, req, state, status){
+			useManger && download.onStateChange(progress, req, state, status);
+			
+			if(state & IWebProgressListener.STATE_STOP)
+				d.callback(targetFile);
+		},
 	}
+	
+	p.persistFlags = 
+		p.PERSIST_FLAGS_FROM_CACHE | 
+		p.PERSIST_FLAGS_REPLACE_EXISTING_FILES | 
+		p.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
+	p.saveURI(sourceURI, null, null, null, null, targetURI);
 	
 	return d;
 }

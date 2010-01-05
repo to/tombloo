@@ -1,6 +1,9 @@
 Tombloo.Service.actions.register(	{
 	name : 'Download 8tracks',
 	type : 'context',
+	check : function(ctx){
+		return ctx.host == '8tracks.com';
+	},
 	execute : function(ctx){
 		var self = this;
 		var win = ctx.window;
@@ -39,7 +42,7 @@ Tombloo.Service.actions.register(	{
 				var ext = track.item.split('.').pop();
 				file.append(user + ' - ' + album + ' - ' + track.number.pad(3) + '.' + ext);
 				
-				return download(track.item, file);
+				return download(track.item, file, true);
 			}).addCallback(function(){
 				playlist.moveTo(null, playlist.leafName.replace(/^_/, ''));
 				

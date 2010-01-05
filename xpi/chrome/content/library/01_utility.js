@@ -688,11 +688,19 @@ function queryString(params, question){
 		return params;
 	
 	var qeries = [];
+	var e = encodeURIComponent;
 	for(var key in params){
 		var value = params[key];
 		if(value==null)
 			continue;
-		qeries.push(encodeURIComponent(key) + '='+ encodeURIComponent(value));
+		
+		if(value instanceof Array){
+			value.forEach(function(val){
+				qeries.push(e(key) + '=' + e(val));
+			});
+		} else {
+			qeries.push(e(key) + '='+ e(value));
+		}
 	}
 	return (question? '?' : '') + qeries.join('&');
 }

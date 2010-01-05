@@ -99,6 +99,7 @@ try {
 	is(queryString({a:5}, true), '?a=5');
 	is(queryString('a=5'), 'a=5');
 	is(queryString({a:void(0)}), '');
+	is(queryString({a:[1,2,3]}), 'a=1&a=2&a=3');
 	
 	setPref('test_string', 'あいうえお');
 	is(getPref('test_string'), 'あいうえお');

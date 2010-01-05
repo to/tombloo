@@ -59,6 +59,7 @@ var NavHistoryService   = getService('/browser/nav-history-service;1', Ci.nsINav
 var FaviconService      = getService('/browser/favicon-service;1', Ci.nsIFaviconService);
 var StyleSheetService   = getService('/content/style-sheet-service;1', Ci.nsIStyleSheetService);
 var FuelApplication     = getService('/fuel/application;1', Ci.fuelIApplication);
+var PrefService         = getService('/preferences-service;1');
 
 
 var PrefBranch = 

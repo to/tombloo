@@ -97,7 +97,7 @@ models.register({
 models.register({
 	name : 'FFFFOUND',
 	ICON : 'http://ffffound.com/favicon.ico',
-	URL : 'http://FFFFOUND.com/',
+	URL  : 'http://FFFFOUND.com/',
 	
 	getToken : function(){
 		return request(FFFFOUND.URL + 'bookmarklet.js').addCallback(function(res){
@@ -317,6 +317,87 @@ models.register(update({
 		return getCookieString('flickr.com', 'cookie_accid');
 	},
 }, AbstractSessionService));
+
+models.register({
+	name : 'Picasa',
+	ICON : 'http://picasaweb.google.com/favicon.ico',
+	URL  : 'http://picasaweb.google.com',
+	
+	check : function(ps){
+		return ps.type=='photo';
+	},
+	
+	post : function(ps){
+		var self = this;
+		return ((ps.file)? 
+			succeed(ps.file) : 
+			download(ps.itemUrl, getTempFile(createURI(ps.itemUrl).fileExtension))
+		).addCallback(function(file){
+			return self.upload(file);
+		});
+	},
+	
+	/**
+	 * 画像をアップロードする。
+	 *
+	 * @param {File} files 
+	 *        画像ファイル。単数または複数(最大5ファイル)。
+	 * @param {optional String} user 
+	 *        ユーザーID。省略された場合は現在Googleアカウントでログインしていると仮定される。
+	 * @param {optional Number} album 
+	 *        アルバムID(名称ではない)。省略された場合はリスト先頭のアルバムとなる。
+	 * @param {String || nsIFile || nsIURI} basePath 基点となるパス。
+	 */
+	upload : function(files, user, album){
+		files = [].concat(files);
+		
+		var self = this;
+		var user = user || this.getCurrentUser();
+		var endpoint;
+		return maybeDeferred(album || this.getAlbums(user).addCallback(function(albums){
+			// アルバムが指定されていない場合は先頭のアルバムとする
+			return albums.feed.entry[0].gphoto$id.$t;
+		})).addCallback(function(album){
+			// トークンを取得しポスト準備をする
+			return request(self.URL + '/lh/webUpload', {
+				queryString : {
+					uname : user,
+					aid   : album,
+				}
+			}).addCallback(function(res){
+				var doc = convertToHTMLDocument(res.responseText);
+				var form = doc.getElementById('lhid_uploadFiles');
+				endpoint = resolveRelativePath(form.action, self.URL);
+				
+				return formContents(form);
+			});
+		}).addCallback(function(token){
+			var ps = {};
+			files.forEach(function(file, i){
+				ps['file' + i] = file;
+			});
+			
+			return request(endpoint, {
+				sendContent : update(token, ps, {
+					num : files.length,
+				})
+			});
+		});
+	},
+	
+	getAlbums : function(user){
+		user = user || this.getCurrentUser();
+		return getJSON('http://picasaweb.google.com/data/feed/back_compat/user/' + user + '?alt=json&kind=album');
+	},
+	
+	getCurrentUser : function(){
+		var cookie = getCookies('google.com', 'GAUSR')[0];
+		if(!cookie)
+			throw new Error(getMessage('error.notLoggedin'));
+			
+		return cookie.value.split('@').shift();
+	},
+});
 
 models.register({
 	name     : 'Twitpic',

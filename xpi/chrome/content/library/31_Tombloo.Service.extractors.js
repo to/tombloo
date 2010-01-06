@@ -1090,6 +1090,25 @@ Tombloo.Service.extractors = new Repository([
 	},
 	
 	{
+		name : 'Photo - Canvas',
+		ICON : 'chrome://tombloo/skin/photo.png',
+		check : function(ctx){
+			return ctx.target.tagName == 'CANVAS';
+		},
+		extract : function(ctx){
+			var source = ctx.target.toDataURL();
+			var uri = IOService.newURI(source, null, null);
+			var channel = IOService.newChannelFromURI(uri);
+			return {
+				type    : 'photo',
+				item    : ctx.title,
+				itemUrl : source,
+				file    : channel.open(),
+			};
+		},
+	},
+	
+	{
 		name : 'Photo',
 		ICON : 'chrome://tombloo/skin/photo.png',
 		PROTECTED_SITES : [

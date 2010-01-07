@@ -779,54 +779,6 @@ models.register({
 	},
 });
 
-models.register(update({}, AbstractSessionService, {
-	name : 'Rejaw',
-	ICON : 'http://rejaw.com/favicon.ico',
-
-	check : function(ps){
-		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
-	},
-	
-	post : function(ps){
-		return Rejaw.shout(joinText([ps.item, ps.itemUrl, ps.body, ps.description], '\n', true));
-	},
-	
-	shout : function(text){
-		return Rejaw.getToken().addCallback(function(token){
-			return request('http://rejaw.com/v1/conversation/shout.json', {
-				redirectionLimit : 0,
-				sendContent : update(token, {
-					text : text,
-				}),
-			});
-		});
-	},
-	
-	getAuthCookie : function(){
-		return getCookieString('rejaw.com', 'signin_email') || getCookieString('rejaw.com', 'signin_openid_url');
-	},
-	
-	getToken : function(){
-		var status = this.updateSession();
-		switch (status){
-		case 'none':
-			throw new Error(getMessage('error.notLoggedin'));
-			
-		case 'same':
-			if(this.token)
-				return succeed(this.token);
-			
-		case 'changed':
-			var self = this;
-			return request('http://rejaw.com/').addCallback(function(res){
-				return self.token = {
-					session : res.responseText.extract(/"session":"(.+?)"/)
-				};
-			});
-		}
-	},
-}));
-
 models.register(update({
 	name : 'Plurk',
 	ICON : 'http://www.plurk.com/static/favicon.png',
@@ -1693,76 +1645,6 @@ models.register({
 		});
 	},
 });
-
-/*
-models.register({
-	name : 'Magnolia',
-	ICON : 'http://ma.gnolia.com/favicon.ico',
-	
-	getCurrentUser : function(){
-		return request('https://ma.gnolia.com/').addCallback(function(res){
-			var doc = convertToHTMLDocument(res.responseText);
-			var user = $x('//meta[@name="session-userid"]/@content', doc)
-			if(user=='')
-				throw new Error(getMessage('error.notLoggedin'));
-			return user;
-		});
-	},
-	
-	getApiKey : function(){
-		var self = this;
-		return request('http://ma.gnolia.com/account/applications').addCallback(function(res){
-			try {
-				return self.apikey = $x(
-					'id("api_key")/text()', 
-					convertToHTMLDocument(res.responseText)).replace(/[\n\r]+/g, '');
-			} catch(e) {
-				throw new Error(getMessage('error.notLoggedin'));
-			}
-		});
-	},
-	
-	getSuggestions : function(url){
-		// 同期でエラーが起きないようにする
-		return succeed().addCallback(function(){
-			return Magnolia.getCurrentUser().addCallback(function(user){
-				return request('https://ma.gnolia.com/people/' + user + '/tags');
-			}).addCallback(function(res){
-				var doc = convertToHTMLDocument(res.responseText);
-				return {
-					duplicated : false,
-					tags : $x('id("tag_cloud_1")/div/a/text()', doc, true).map(function(tag){
-						return {
-							name      : tag,
-							frequency : -1,
-						};
-					}),
-				}
-			});
-		});
-	},
-	
-	check : function(ps){
-		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
-	},
-	
-	post : function(ps){
-		return Magnolia.getApiKey().addCallback(function(apikey){
-			return request('http://ma.gnolia.com/api/rest/1/bookmarks_add', {
-				queryString : {
-					api_key     : apikey,
-					url         : ps.itemUrl,
-					title       : ps.item,
-					description : ps.description,
-					private     : ps.private ? 1 : 0,
-					tags        : ps.tags ? ps.tags.join(' ') : '',
-					rating      : 0,
-				},
-			});
-		});
-	},
-});
-*/
 
 models.register({
 	name : 'Snipshot',

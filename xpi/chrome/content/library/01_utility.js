@@ -86,24 +86,16 @@ function getCookieString(host, name){
 }
 
 function getPasswords(host, user){
-	// Firefox 2
-	if(PasswordManager){
-		return filter(function(p){
-			return (p.host == host) && 
-				(user? p.user == user : true);
-		}, PasswordManager.enumerator);
-	} else {
-		return map(function(p){
-			return {
-				user : p.username,
-				usernameFieldName : p.usernameField,
-				password : p.password,
-				passwordFieldName : p.passwordField,
-			}
-		}, ifilter(function(p){
-			return (user? p.username == user : true);
-		}, LoginManager.findLogins({}, host, host, null)));
-	}
+	return map(function(p){
+		return {
+			user : p.username,
+			usernameFieldName : p.usernameField,
+			password : p.password,
+			passwordFieldName : p.passwordField,
+		}
+	}, ifilter(function(p){
+		return (user? p.username == user : true);
+	}, LoginManager.findLogins({}, host, host, null)));
 }
 
 var stringBundle = StringBundleService.createBundle(CHROME_DIR + '/locale/messages.properties');

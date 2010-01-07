@@ -24,11 +24,8 @@ var IURI                 = Ci.nsIURI;
 var IInputStream         = Ci.nsIInputStream;
 var ICache               = Ci.nsICache;
 var ISelectionListener   = Ci.nsISelectionListener;
-// var IAccessNode          = Ci.nsIAccessNode;
 
 
-// Firefox 2で全てのページがガベージされなくなるメモリーリークが発生したため停止中
-// const AccessibilityService = getService('/accessibilityService;1', Ci.nsIAccessibilityService);
 var ExtensionManager    = getService('/extensions/manager;1', Ci.nsIExtensionManager);
 var StorageService      = getService('/storage/service;1', Ci.mozIStorageService);
 var DirectoryService    = getService('/file/directory_service;1', Ci.nsIProperties);
@@ -306,16 +303,6 @@ notify.ICON_DOWNLOAD = 'chrome://mozapps/skin/downloads/downloadIcon.png';
 notify.ICON_INFO     = 'chrome://global/skin/console/bullet-question.png';
 notify.ICON_ERROR    = 'chrome://global/skin/console/bullet-error.png';
 notify.ICON_WORN     = 'chrome://global/skin/console/bullet-warning.png';
-
-/*
-function getElementByPosition(x, y){
-	return AccessibilityService.
-		getAccessibleFor(currentDocument()).
-		getChildAtPoint(x, y).
-		QueryInterface(IAccessNode).
-		DOMNode;
-}
-*/
 
 function convertFromUnplaceableHTML(str){
 	var arr = [];

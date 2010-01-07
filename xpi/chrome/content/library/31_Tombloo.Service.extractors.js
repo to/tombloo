@@ -1077,9 +1077,8 @@ Tombloo.Service.extractors = new Repository([
 			return ctx.onImage && ctx.target.src.match(/^data:/);
 		},
 		extract : function(ctx){
-			var source = ctx.target.src;
-			var uri = IOService.newURI(source, null, null);
-			var channel = IOService.newChannelFromURI(uri);
+			var source = ctx.target.src || ctx.target.toDataURL();
+			var channel = IOService.newChannelFromURI(createURI(source));
 			return {
 				type    : 'photo',
 				item    : ctx.title,
@@ -1093,18 +1092,10 @@ Tombloo.Service.extractors = new Repository([
 		name : 'Photo - Canvas',
 		ICON : 'chrome://tombloo/skin/photo.png',
 		check : function(ctx){
-			return ctx.target.tagName == 'CANVAS';
+			return tagName(ctx.target)=='canvas';
 		},
 		extract : function(ctx){
-			var source = ctx.target.toDataURL();
-			var uri = IOService.newURI(source, null, null);
-			var channel = IOService.newChannelFromURI(uri);
-			return {
-				type    : 'photo',
-				item    : ctx.title,
-				itemUrl : source,
-				file    : channel.open(),
-			};
+			return Tombloo.Service.extractors['Photo - Data URI'].extract(ctx);
 		},
 	},
 	

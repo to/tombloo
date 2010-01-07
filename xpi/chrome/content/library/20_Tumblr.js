@@ -7,6 +7,7 @@ var Tumblr = update({}, AbstractSessionService, {
 	MEDIA_URL : 'http://media.tumblr.com/',
 	TUMBLR_URL : 'http://www.tumblr.com/',
 	PAGE_LIMIT : 50,
+	hasPrivateMode : true,
 	
 	/**
 	 * 各Tumblrの基本情報(総件数/タイトル/タイムゾーン/名前)を取得する。

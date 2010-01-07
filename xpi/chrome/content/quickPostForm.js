@@ -1,6 +1,6 @@
 // connectされるオブジェクト(signalを送る方)は必ずunload時にdisconnectAllをしてオブサーバーをクリアする
 // ----[utility]-------------------------------------------------
-'BOX VBOX HBOX SPACER LABEL TEXTBOX IMAGE DESCRIPTION TOOLTIP BUTTON'.split(' ').forEach(function(tag){
+'BOX VBOX HBOX SPACER LABEL TEXTBOX IMAGE DESCRIPTION TOOLTIP BUTTON CHECKBOX'.split(' ').forEach(function(tag){
 	this[tag] = bind(E, null, tag.toLowerCase());
 });
 
@@ -294,6 +294,7 @@ FormPanel.prototype = {
 		itemUrl     : 'URL',
 		tags        : 'Tags',
 		description : 'Description',
+		private     : getMessage('label.private'),
 	},
 	
 	types : {
@@ -303,12 +304,14 @@ FormPanel.prototype = {
 			description : {
 				attributes : {rows : 7},
 			},
+			private     : {toggle : true},
 		},
 		link : {
 			item        : {type : 'label'},
 			itemUrl     : {toggle : true},
 			tags        : {},
 			description : {},
+			private     : {toggle : true},
 		},
 		quote : {
 			item        : {toggle : true},
@@ -321,18 +324,21 @@ FormPanel.prototype = {
 			},
 			tags        : {toggle : true},
 			description : {toggle : true},
+			private     : {toggle : true},
 		},
 		photo : {
 			item        : {toggle : true},
 			itemUrl     : {type : 'photo'},
 			tags        : {toggle : true},
 			description : {toggle : true},
+			private     : {toggle : true},
 		},
 		video : {
 			item        : {type : 'label'},
 			itemUrl     : {toggle : true},
 			tags        : {toggle : true},
 			description : {toggle : true},
+			private     : {toggle : true},
 		},
 	},
 	
@@ -407,6 +413,9 @@ FormPanel.prototype = {
 				} else if(name == 'description'){
 					elm = elmForm.appendChild(VBOX(attrs, {flex : 1}));
 					field = self.descriptionBox = new DescriptionBox(elm, def.attributes, self.dialogPanel);
+					
+				} else if(name == 'private'){
+					elm = field = self.privateCheckbox = new PrivateCheckbox(attrs, self);
 					
 				} else {
 					switch(def.type){
@@ -602,7 +611,7 @@ function TagsPanel(elmPanel, formPanel){
 			
 			self.elmToggleSuggestion.addEventListener('click', bind('toggleSuggestion', self), true);
 			
-			new ChekboxPanel(self.elmSuggestion, self);
+			new CheckboxPanel(self.elmSuggestion, self);
 		}
 		
 		// linkタイプの場合、既ブックマークかの判定も行うため必ずタグを取得する
@@ -841,7 +850,7 @@ TagsPanel.prototype = {
 		}
 	},
 	
-	// ChekboxPanel
+	// CheckboxPanel
 	onCheck : function(e){
 		if(e.target.tagName!='label')
 			return;
@@ -1128,6 +1137,42 @@ DescriptionBox.prototype = {
 	},
 }
 
+// ----[PrivateCheckbox]-------------------------------------------------
+function PrivateCheckbox(attrs, formPanel){
+	var self = this;
+	this.formPanel = formPanel;
+	withDocument(document, function(){
+		self.elmCheckbox = formPanel.elmForm.appendChild(CHECKBOX(attrs, {
+			label : attrs.emptytext,
+			checked : !!ps.private,
+		}));
+	});
+	this.hidden = attrs.hidden;
+}
+
+PrivateCheckbox.prototype = {
+	set hidden(hide){
+		this._hidden = hide;
+		var hasPrivateMode = this.formPanel.postersPanel.hasPrivateMode;
+		this.elmCheckbox.hidden = (!hide && hasPrivateMode) ? false : true;
+	},
+	
+	get hidden(){
+		return !!this._hidden;
+	},
+	
+	get value(){
+		return this.elmCheckbox.checked;
+	},
+	
+	set value(value){
+		this.elmCheckbox.checked = value;
+	},
+	
+	redraw : function(){
+		this.hidden = this.hidden;
+	},
+}
 
 // ----[PostersPanel]-------------------------------------------------
 function PostersPanel(){
@@ -1174,7 +1219,10 @@ function PostersPanel(){
 		this.elmPanel.addEventListener('mouseout', bind('hideTooltip', this), true);
 	}
 	
-	new ChekboxPanel(this.elmPanel, this);
+	this._privateModeCount = 0;
+	this.checkPrivateMode();
+	
+	new CheckboxPanel(this.elmPanel, this);
 }
 
 PostersPanel.prototype = {
@@ -1187,6 +1235,9 @@ PostersPanel.prototype = {
 	
 	get icons(){
 		return $x('.//xul:image', this.elmPanel, true);
+	},
+	get hasPrivateMode(){
+		return this._privateModeCount > 0;
 	},
 	
 	setIcon : function(image, poster, enabled){
@@ -1210,6 +1261,7 @@ PostersPanel.prototype = {
 		this.icons.forEach(function(image){
 			self.setDisabled(image, true);
 		});
+		this.checkPrivateMode();
 	},
 	
 	setDisabled : function(image, disabled){
@@ -1224,6 +1276,7 @@ PostersPanel.prototype = {
 	
 	toggle : function(image){
 		this.setDisabled(image, !(image.getAttribute('disabled')=='true'));
+		this.checkPrivateMode();
 	},
 	
 	showTooltip : function(e){
@@ -1239,7 +1292,7 @@ PostersPanel.prototype = {
 		this.elmTooltip.hidePopup();
 	},
 	
-	// ChekboxPanel
+	// CheckboxPanel
 	onCheck : function(e){
 		if((/description|label/).test(e.target.tagName))
 			return true;
@@ -1253,11 +1306,19 @@ PostersPanel.prototype = {
 		if(!(/description|label/).test(e.target.tagName))
 			this.toggle(e.target);
 	},
+	
+	checkPrivateMode : function() {
+		this._privateModeCount = this.checked.filter(function(poster) {
+			return !!poster.hasPrivateMode;
+		}).length;
+		if(dialogPanel)
+			dialogPanel.formPanel.privateCheckbox.redraw();
+	},
 }
 
 
-// ----[ChekboxPanel]-------------------------------------------------
-function ChekboxPanel(elmPanel, handler){
+// ----[CheckboxPanel]-------------------------------------------------
+function CheckboxPanel(elmPanel, handler){
 	this.handler = handler;
 	
 	elmPanel.addEventListener('mousedown', dynamicBind('onMouseDown', this), true);
@@ -1266,7 +1327,7 @@ function ChekboxPanel(elmPanel, handler){
 	elmPanel.addEventListener('mouseout', dynamicBind('onMouseOut', this), true);
 }
 
-State.make(ChekboxPanel, {
+State.make(CheckboxPanel, {
 	mouseoutDelay : 500,
 	
 	normal : {

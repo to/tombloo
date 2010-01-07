@@ -38,6 +38,7 @@ models.register({
 models.register({
 	name : 'Mento',
 	ICON : 'http://www.mento.info/favicon.ico',
+	hasPrivateMode : true,
 	
 	check : function(ps){
 		// キャプチャ(file)はAPIキーを入手後に対応(現在未公開)
@@ -167,6 +168,7 @@ models.register(update({
 	name : 'Flickr',
 	ICON : 'http://www.flickr.com/favicon.ico',
 	API_KEY : 'ecf21e55123e4b31afa8dd344def5cc5',
+	hasPrivateMode : true,
 	
 	check : function(ps){
 		return ps.type == 'photo';
@@ -1029,6 +1031,7 @@ models.register({
 models.register({
 	name : 'Delicious',
 	ICON : 'http://delicious.com/favicon.ico',
+	hasPrivateMode : true,
 	
 	/**
 	 * ユーザーの利用しているタグ一覧を取得する。
@@ -1540,6 +1543,7 @@ models.register({
 models.register({
 	name : 'YahooBookmarks',
 	ICON : 'http://bookmarks.yahoo.co.jp/favicon.ico',
+	hasPrivateMode : true,
 	
 	check : function(ps){
 		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
@@ -1604,6 +1608,7 @@ models.register({
 models.register({
 	name : 'Faves',
 	ICON : 'http://faves.com/favicon.ico',
+	hasPrivateMode : true,
 	
 	/**
 	 * タグを取得する。
@@ -1786,9 +1791,9 @@ models.register({
 models.register(update({
 	name : 'HatenaBookmark',
 	ICON : 'http://b.hatena.ne.jp/favicon.ico',
-	
 	POST_URL : 'http://b.hatena.ne.jp/add',
 	JSON_URL : 'http://b.hatena.ne.jp/my.name',
+	hasPrivateMode : false,
 	
 	check : function(ps){
 		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
@@ -1796,7 +1801,7 @@ models.register(update({
 	
 	post : function(ps){
 		// タイトルは共有されているため送信しない
-		return this.addBookmark(ps.itemUrl, null, ps.tags, joinText([ps.body, ps.description], ' ', true));
+		return this.addBookmark(ps.itemUrl, null, ps.tags, joinText([ps.body, ps.description], ' ', true), ps.private);
 	},
 	
 	getAuthCookie : function(){
@@ -1824,7 +1829,8 @@ models.register(update({
 		}
 	},
 	
-	addBookmark : function(url, title, tags, description){
+	addBookmark : function(url, title, tags, description, private){
+		private = private && this.hasPrivateMode;
 		return HatenaBookmark.getToken().addCallback(function(token){
 			return request('http://b.hatena.ne.jp/bookmarklet.edit', {
 				redirectionLimit : 0,
@@ -1835,6 +1841,8 @@ models.register(update({
 					}),
 					title   : title, 
 					comment : Hatena.reprTags(tags) + description.replace(/[\n\r]+/g, ' '),
+					private : (private) ? '1' : '',
+					with_status_op : (private) ? '1' : '',
 				},
 			});
 		});
@@ -1975,6 +1983,7 @@ models.register(update({
 	name : 'LivedoorClip',
 	ICON : 'http://clip.livedoor.com/favicon.ico',
 	POST_URL : 'http://clip.livedoor.com/clip/add',
+	hasPrivateMode : true,
 
 	check : function(ps){
 		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;

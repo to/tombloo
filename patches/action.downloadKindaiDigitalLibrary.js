@@ -2,10 +2,11 @@ Tombloo.Service.actions.register(	{
 	name : 'Download Kindai Digital Library',
 	type : 'context',
 	check : function(ctx){
-		return ctx.host == 'kindai.ndl.go.jp';
+		return ctx.host == 'kindai.ndl.go.jp' && ctx.window.top && ctx.window.top.location.href.match('http://kindai.ndl.go.jp/BIImgFrame.php');
 	},
 	execute : function(ctx){
 		const BAE_URL = 'http://kindai.ndl.go.jp/scrpt/';
+		var self = this;
 		var top = ctx.window.top;
 		var title = $x('//td[@class="titlehead"]', top.frames['W_CONTROL'].document).textContent;
 		var dir = createDir(ctx.host + '/' + title, getDownloadDir());

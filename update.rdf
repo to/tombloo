@@ -2,21 +2,21 @@
 <RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
          xmlns:NC="http://home.netscape.com/NC-rdf#"
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Description RDF:about="rdf:#$rk8qZ3"
-                   em:version="0.4.5">
-    <em:targetApplication RDF:resource="rdf:#$uk8qZ3"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$uk8qZ3"
-                   em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
-                   em:minVersion="3.0"
-                   em:maxVersion="3.5.*"
-                   em:updateLink="http://github.com/to/tombloo/raw/release/tombloo.xpi"
-                   em:updateHash="sha512:b93f9650ac16204c5be25349ce0e694df6ae4fba0cff11af6966afc512d680f471b446734c8efffe2973fc28fbf00c215e7e92a3b0b2f55f9916406dbdab2272" />
-  <RDF:Seq RDF:about="rdf:#$qk8qZ3">
-    <RDF:li RDF:resource="rdf:#$rk8qZ3"/>
+  <RDF:Seq RDF:about="rdf:#$dxyq02">
+    <RDF:li RDF:resource="rdf:#$exyq02"/>
   </RDF:Seq>
   <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
-                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBABMb9L2+e/AdbWru586qRFDkXTGovB91efaFkzsaPIxAQHNc9bJuFL0LdwkSQP/gQ8ay1CZrC6mwUQFPvKWzqhyzq6KxB4fGw2kMZriUR+2k0+TJDNSaYys26/8q52DSiOJS7ibLgHuCuAYcU4b13wznCnWBTS4n7n1YVVRLWkLh">
-    <em:updates RDF:resource="rdf:#$qk8qZ3"/>
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAJonqgxv5o9ldX/MfzLLAzxYbB8bce8k7BtSGDgyIIJrQAsaeWFZPZiPiPBszgLoki8kdeJ/2nWga7vDRS3StxQCKpPvZPt8liuUhjoPTxAoaAiKon/jpwiCI4H2n0Z8oTSEqD+mmDxz3seGrVRgIFOGQQioPL4EANQYa8ZGZEB8">
+    <em:updates RDF:resource="rdf:#$dxyq02"/>
   </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$exyq02"
+                   em:version="0.4.6">
+    <em:targetApplication RDF:resource="rdf:#$hxyq02"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$hxyq02"
+                   em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
+                   em:minVersion="3.0"
+                   em:maxVersion="3.6.*"
+                   em:updateLink="http://github.com/to/tombloo/raw/release/tombloo.xpi"
+                   em:updateHash="sha512:44adf1824c0c4de910dd286e5946eccd7651705c14e89280c81c32d4e4f9c0b21eb8b0a2656ef7bc6f08d301cc722b4bcd6f972e1bafce82dd1113deb9648820" />
 </RDF:RDF>

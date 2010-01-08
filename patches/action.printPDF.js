@@ -1,14 +1,16 @@
 Tombloo.Service.actions.register(	{
 	name : 'Print PDF',
-	type : 'context',
-	execute : function(ctx){
-		var webBrowserPrint = getMostRecentWindow().content.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebBrowserPrint);
+	execute : function(){
+		const DEEP_DIR = false;
+		
+		var win = getMostRecentWindow().content;
+		var webBrowserPrint = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIWebBrowserPrint);
 		
 		var PrintSettingsService = Components.classes['@mozilla.org/gfx/printsettings-service;1'].getService(Components.interfaces.nsIPrintSettingsService);
 		
-		var uri = createURI(ctx.window.location.href);
-		var file = createDir(uri.host + uri.directory, getDownloadDir());
-		file.append(uri.fileName.split('.').shift() + '.pdf');
+		var uri = createURI(win.location.href);
+		var file = DEEP_DIR? createDir('pdf/' + uri.host + uri.directory, getDownloadDir()) : getDownloadDir();
+		file.append(validateFileName(win.document.title || uri.fileName.split('.').shift()) + '.pdf');
 		
 		var settings = PrintSettingsService.newPrintSettings;
 		update(settings, {
@@ -29,7 +31,7 @@ Tombloo.Service.actions.register(	{
 			orientation : settings.kLandscapeOrientation,
 			*/
 			
-			printRange : ctx.window.getSelection().isCollapsed? settings.kRangeAllPages : settings.kRangeSelection,
+			printRange : win.getSelection().isCollapsed? settings.kRangeAllPages : settings.kRangeSelection,
 			printSilent : true,
 			printToFile : true,
 			outputFormat : settings.kOutputFormatPDF,

@@ -606,6 +606,8 @@ Tombloo.Service.extractors = new Repository([
 				var info = r.info[1];
 				var sizes = r.sizes[1];
 				
+				log(sizes);
+				
 				var title = info.title._content;
 				ctx.title = title + ' on Flickr'
 				ctx.href  = info.urls.url[0]._content;

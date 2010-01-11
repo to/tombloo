@@ -677,22 +677,30 @@ models.register({
 	
 	update : function(status){
 		var self = this;
+		var POST_URL = self.URL + '/status/update';
+		
 		return maybeDeferred((status.length < 140)? 
 			status : 
 			shortenUrls(status, models[this.SHORTEN_SERVICE])
-		).addCallback(function(status){
-			return Twitter.getToken().addCallback(function(token){
-				token.status = status;
-				return request(self.URL + '/status/update', update({
-					sendContent : token,
-				})).addCallback(function(res){
-					var msg = res.responseText.extract(/notification.setMessage\("(.*?)"\)/);
-					if(msg)
-						throw unescapeHTML(msg).trimTag();
-				});
+		).addCallback(function(shortend){
+			status = shortend;
+			
+			return Twitter.getToken();
+		}).addCallback(function(token){
+			token.status = status;
+			
+			return request(POST_URL, {
+				sendContent : token,
 			});
-		})
-		
+		}).addCallback(function(res){
+			// ホームにリダイレクトされなかった場合はエラー発生とみなす
+			if(res.channel.URI.asciiSpec == POST_URL)
+				throw new Error('Error');
+			
+			var msg = res.responseText.extract(/notification.setMessage\("(.*?)"\)/);
+			if(msg)
+				throw unescapeHTML(msg).trimTag();
+		});
 	},
 	
 	favor : function(ps){

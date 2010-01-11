@@ -170,10 +170,12 @@ function download(sourceURL, targetFile, useManger){
 	var d = new Deferred();
 	var sourceURI = createURI(sourceURL);
 	
-	if(!targetFile){
+	if(!targetFile)
 		targetFile = getDownloadDir();
+	
+	if(targetFile.isDirectory())
 		targetFile.append(sourceURI.fileName);
-	}
+	
 	var targetURI = IOService.newFileURI(targetFile);
 	
 	var p = WebBrowserPersist();
@@ -474,6 +476,7 @@ function request(url, opts){
 					]);
 				} else {
 					if(value.file instanceof IFile){
+						value.contentType = value.contentType || guessContentType(value.file);
 						value.fileName = value.file.leafName;
 						value.file = IOService.newChannelFromURI(createURI(value.file)).open();
 					}
@@ -614,6 +617,18 @@ function request(url, opts){
 	return d;
 }
 
+// FIXME: Firefox内の実装を探す
+function guessContentType(ext){
+	if(ext instanceof IFile)
+		ext = ext.leafName.split('.').pop();
+	
+	return {
+		mp3 : 'audio/mpeg',
+		m4a : 'audio/mp4',
+		png : 'image/png',
+		jpg : 'image/jpeg',
+	}[ext];
+}
 
 // ----[MochiKit]-------------------------------------------------
 var StopProcess = {};

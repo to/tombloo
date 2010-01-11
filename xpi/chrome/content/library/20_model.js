@@ -720,6 +720,19 @@ models.register({
 		});
 	},
 	
+	changePicture : function(url){
+		var self = this;
+		return ((url instanceof IFile)? succeed(url) : download(url, getTempDir())).addCallback(function(file){
+			return Twitter.getToken().addCallback(function(token){
+				return request(self.URL + '/account/picture', {
+					sendContent : update(token, {
+						'profile_image[uploaded_data]' : file,
+					}),
+				});
+			});
+		});
+	},
+	
 	remove : function(id){
 		var self = this;
 		return Twitter.getToken().addCallback(function(ps){

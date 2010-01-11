@@ -35,11 +35,6 @@ button,
 }
 
 
-/* it seems default value for moz-box-sizing is changed to "border-box" from fx3.6. */
-image {
-	-moz-box-sizing: content-box;
-}
-
 /* window / base */
 window {
 	font-size: 90%;
@@ -258,7 +253,7 @@ div{
 }
 
 #itemUrl image{
-	/* ウィンドウ初期サイズに揃える	*/
+	/* ウィンドウ初期サイズに揃える */
 	max-width: 22em;
 	max-height: 22em;
 }
@@ -272,6 +267,7 @@ div{
 #posters image.poster{
 	width: 16px;
 	height: 16px;
+	-moz-box-sizing: content-box;
 	
 	/*
 	横方向の調整にborderを使いマウスオーバーしない時間を減らす。

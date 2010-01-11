@@ -167,10 +167,10 @@ DialogPanel.prototype = {
 			this.elmBase.removeAttribute('flex');
 		
 		var box = this.elmBase.boxObject;
-		if(box.width != window.innerWidth || box.height != window.innerHeight)
+		if(box.width != window.innerWidth || box.height != window.innerHeight){
 			this.selfResizing = true;
-		
-		window.resizeTo(box.width, box.height);
+			window.resizeTo(box.width, box.height);
+		}
 		
 		if(shrink)
 			this.elmBase.setAttribute('flex', '1');

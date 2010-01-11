@@ -139,18 +139,20 @@ forEach({
 	'shortcutkey.quickPost.link' : function(e){
 		cancel(e);
 		
-		var win = e.currentTarget.content;
+		var win = getMostRecentWindow().content;
 		var doc = win.document;
-		win = win.wrappedJSObject || win;
 		
 		var ctx = update({
 			document  : doc,
 			window    : win,
 			title     : doc.title,
+			selection : ''+win.getSelection(),
+			target    : doc.documentElement,
 		}, win.location);
+		
 		Tombloo.Service.extractors.extract(
 			ctx, 
-			Tombloo.Service.extractors.Link
+			Tombloo.Service.check(ctx)[0]
 		).addCallback(function(ps){
 			QuickPostForm.show(ps);
 		});
@@ -158,9 +160,8 @@ forEach({
 	'shortcutkey.quickPost.regular' : function(e){
 		cancel(e);
 		
-		var win = e.currentTarget.content;
+		var win = wrappedObject(e.currentTarget.content);
 		var doc = win.document;
-		win = win.wrappedJSObject || win;
 		
 		QuickPostForm.show({
 			type    : 'regular',
@@ -172,8 +173,7 @@ forEach({
 	// 処理を行わなかった場合はtrueを返す
 	'shortcutkey.checkAndPost' : function(e){
 		var doc = e.originalTarget.ownerDocument;
-		var win = doc.defaultView;
-		win = win.wrappedJSObject || win;
+		var win = wrappedObject(doc.defaultView);
 		
 		// XULは処理しない
 		if(!doc.body)

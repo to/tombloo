@@ -1,7 +1,7 @@
 connect(grobal, 'browser-load', function(e){
 	var win = e.target.defaultView;
 	win.getBrowser().mPanelContainer.addEventListener('click', function(e){
-		if(!win.content.getSelection().isCollapsed)
+		if(!win.content.getSelection().isCollapsed && e.altKey)
 			cancel(e);
 	}, true);
 	win.addEventListener('keyup', function(e){

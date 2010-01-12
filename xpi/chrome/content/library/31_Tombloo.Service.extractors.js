@@ -606,8 +606,6 @@ Tombloo.Service.extractors = new Repository([
 				var info = r.info[1];
 				var sizes = r.sizes[1];
 				
-				log(sizes);
-				
 				var title = info.title._content;
 				ctx.title = title + ' on Flickr'
 				ctx.href  = info.urls.url[0]._content;
@@ -1158,10 +1156,7 @@ Tombloo.Service.extractors = new Repository([
 			var itemUrl = tagName(target)=='object'? target.data : target.src;
 			
 			var uri = createURI(itemUrl);
-			var file = getTempDir();
-			file.append(validateFileName(uri.fileName));
-			
-			return download(itemUrl, file).addCallback(function(file){
+			return download(itemUrl, getTempDir()).addCallback(function(file){
 				return {
 					type    : 'photo',
 					item    : ctx.title,
@@ -1198,6 +1193,8 @@ Tombloo.Service.extractors = new Repository([
 		},
 		extract : function(ctx){
 			var author = $x('id("watch-channel-stats")/a');
+			ctx.title = ctx.title.replace(/[\n\r\t]+/gm, ' ').trim();
+			
 			return {
 				type      : 'video',
 				item      : ctx.title.extract(/ - (.*)/),
@@ -1231,18 +1228,18 @@ Tombloo.Service.extractors = new Repository([
 			return ctx.host.match(/vids\.myspace\.com/) && this.getTag();
 		},
 		extract : function(ctx){
-			var tag = $x('id("links_video_code")/@value');
+			var tag = this.getTag();
 			ctx.href = tag.extract(/href="(.+?)"/);
 			
 			return {
 				type    : 'video',
-				item    : tag.extract(/>(.+?)<\/a>/),
+				item    : tag.extract(/<a.+?>(.+?)<\/a>/),
 				itemUrl : ctx.href,
 				body    : tag.extract(/(<object.+object>)/),
 			};
 		},
 		getTag : function(){
-			return $x('id("links_video_code")/@value');
+			return $x('id("tv_embedcode_embed_text")/@value');
 		},
 	},
 	
@@ -1254,20 +1251,17 @@ Tombloo.Service.extractors = new Repository([
 		},
 		extract : function(ctx){
 			var tag = this.getTag();
-			var author = tag.extract(/Uploaded by (<a.+?a>)/);
 			ctx.href = tag.extract(/href="(.+?)"/);
 			
 			return {
 				type      : 'video',
-				item      : ctx.title.extract(/Dailymotion - (.*?), a video from/),
+				item      : ctx.title.extract(/Dailymotion - (.*?) - /),
 				itemUrl   : ctx.href,
-				author    : author.extract(/>([^><]+?)</),
-				authorUrl : author.extract(/href="(.+?)"/),
 				body      : tag.extract(/(<object.+object>)/),
 			};
 		},
 		getTag : function(){
-			return $x('id("video_player_embed_code_text")/text()');
+			return $x('id("video_player_embed_code_text")/@value');
 		},
 	},
 	

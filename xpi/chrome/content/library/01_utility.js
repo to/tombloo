@@ -173,8 +173,8 @@ function download(sourceURL, targetFile, useManger){
 	if(!targetFile)
 		targetFile = getDownloadDir();
 	
-	if(targetFile.isDirectory())
-		targetFile.append(sourceURI.fileName);
+	if(targetFile.exists() && targetFile.isDirectory())
+		targetFile.append(validateFileName(sourceURI.fileName));
 	
 	var targetURI = IOService.newFileURI(targetFile);
 	
@@ -430,7 +430,7 @@ function request(url, opts){
 	
 	opts = opts || {};
 	
-	var uri = createURI(url + queryString(opts.queryString, true));
+	var uri = createURI(joinText([url, queryString(opts.queryString)], '?'));
 	var channel = broad(IOService.newChannelFromURI(uri));
 	
 	if(opts.referrer)
@@ -688,15 +688,19 @@ function formContents(elm){
 	}, zip.apply(null, MochiKit.DOM.formContents(elm)), {});
 }
 
-function queryString(params, question){
+function queryString(params, charset){
 	if(isEmpty(params))
 		return '';
 	
 	if(typeof(params)=='string')
 		return params;
 	
+	// EUCエンコードなどに対応
+	var e = (charset)? function(str){
+		return escape((''+str).convertFromUnicode(charset))
+	} : encodeURIComponent;
+	
 	var qeries = [];
-	var e = encodeURIComponent;
 	for(var key in params){
 		var value = params[key];
 		if(value==null)
@@ -710,7 +714,7 @@ function queryString(params, question){
 			qeries.push(e(key) + '='+ e(value));
 		}
 	}
-	return (question? '?' : '') + qeries.join('&');
+	return qeries.join('&');
 }
 
 registerIteratorFactory(

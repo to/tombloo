@@ -910,7 +910,7 @@ models.register({
 	
 	post : function(ps){
 		return request('http://www.google.com/bookmarks/mark', {
-			queryString :	{
+			queryString : {
 				op : 'add',
 			},
 		}).addCallback(function(res){
@@ -1967,7 +1967,7 @@ models.register({
 		return HatenaStar.getToken().addCallback(function(token){
 			return request('http://s.hatena.ne.jp/star.add.json', {
 				redirectionLimit : 0,
-				queryString :	{
+				queryString : {
 					rks      : token,
 					title    : ps.item,
 					quote    : joinText([ps.body, ps.description], ' ', true),
@@ -1982,7 +1982,7 @@ models.register({
 		return HatenaStar.getToken().addCallback(function(token){
 			return request('http://s.hatena.ne.jp/star.delete.json', {
 				redirectionLimit : 0,
-				queryString :	{
+				queryString : {
 					rks   : token,
 					uri   : ps.itemUrl,
 					quote : joinText([ps.body, ps.description], ' ', true),

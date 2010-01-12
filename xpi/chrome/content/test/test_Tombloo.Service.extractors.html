@@ -72,15 +72,13 @@ try {
 		});
 	}
 	
-	//	href  : 'http://www.tumblr.com/dashboard/iframe?src=http%3A%2F%2Fto.tumblr.com%2Fpost%2F38249621&pid=38249621&rk=exgZK6NR', 
-	/*	
 	basicExtractorTest('Quote - Twitter', 'http://twitter.com/ku/statuses/833768036', {
 		type    : 'quote',
-		page    : 'Twitter / ku: http://getfirebug.com/ does...',
+		page    : 'Twitter / ku: http://getfirebug.com/ doe ...',
 		pageUrl : 'http://twitter.com/ku/statuses/833768036',
 		item    : 'Twitter / ku',
 		itemUrl : 'http://twitter.com/ku/statuses/833768036',
-		body    : '<a href="http://getfirebug.com/">http://getfirebug.com/</a> does not respond......', 
+		body    : '<a href="http://getfirebug.com/" class="tweet-url web">http://getfirebug.com/</a> does not respond......', 
 	});
 	
 	basicExtractorTest('Quote - inyo.jp', 'http://inyo.jp/quote/4528124a65fc7d03ca14a8b073ea49c964b463a0', {
@@ -115,7 +113,7 @@ try {
 		page      : 'cat cat cat cat cat cat cat cat cat cat cat pictures from friends & fun photos on webshots',
 		pageUrl   : 'http://good-times.webshots.com/photo/2222898030101141911OEtlZo',
 		item      : 'cat cat cat cat cat cat cat cat cat cat cat',
-		itemUrl   : 'http://image16.webshots.com/16/8/98/3/2222898030101141911OEtlZo_fs.jpg', 
+		itemUrl   : 'http://community.webshots.com/photo/fullsize/2222898030101141911OEtlZo', 
 		author    : 'mosbatboys',
 		authorUrl : 'http://community.webshots.com/user/mosbatboys/profile',
 	});
@@ -130,7 +128,7 @@ try {
 			
 			return {
 				type      : 'photo',
-				page      : 'FFFFOUND!',
+				page      : 'FFFFOUND! | REDRAW CMS',
 				pageUrl   : 'http://ffffound.com/image/b7c72b4d23e1805a10441824072e0eff5790b9d0',
 				item      : 'REDRAW CMS',
 				itemUrl   : 'http://img.ffffound.com/static-data/assets/6/b7c72b4d23e1805a10441824072e0eff5790b9d0.jpg', 
@@ -147,7 +145,7 @@ try {
 			
 			return {
 				type      : 'photo',
-				page      : 'FFFFOUND!',
+				page      : 'FFFFOUND! | REDRAW CMS',
 				pageUrl   : 'http://ffffound.com/image/b7c72b4d23e1805a10441824072e0eff5790b9d0',
 				item      : 'REDRAW CMS',
 				itemUrl   : 'http://img.ffffound.com/static-data/assets/6/b7c72b4d23e1805a10441824072e0eff5790b9d0.jpg', 
@@ -186,7 +184,7 @@ try {
 	
 	basicExtractorTest('Video - MySpaceTV', 'http://vids.myspace.com/index.cfm?fuseaction=vids.individual&VideoID=21937552', {
 		type    : 'video',
-		page    : /MySpaceTV.+/,
+		page    : 'HOSOME さんが投稿した動画 Venetian Acrobat Son   - MySpace Video',
 		pageUrl : 'http://vids.myspace.com/index.cfm?fuseaction=vids.individual&videoid=21937552',
 		item    : 'Venetian Acrobat Son',
 		itemUrl : 'http://vids.myspace.com/index.cfm?fuseaction=vids.individual&videoid=21937552',
@@ -195,43 +193,22 @@ try {
 	
 	basicExtractorTest('Video - Dailymotion', 'http://www.dailymotion.com/cluster/animals/featured/video/x5oeer_last-of-the-scottish-wildcats-dvd-p_animals', {
 		type      : 'video',
-		page      : 'Dailymotion - Last of the Scottish Wildcats DVD preview trailer, a video from coffeefilms. cat, chat, chats, animal, endangered',
+		page      : 'Dailymotion - Last of the Scottish Wildcats DVD preview trailer - a Animals video',
 		pageUrl   : 'http://www.dailymotion.com/video/x5oeer_last-of-the-scottish-wildcats-dvd-p_animals',
 		item      : 'Last of the Scottish Wildcats DVD preview trailer',
 		itemUrl   : 'http://www.dailymotion.com/video/x5oeer_last-of-the-scottish-wildcats-dvd-p_animals',
-		author    : 'coffeefilms',
-		authorUrl : 'http://www.dailymotion.com/coffeefilms',
 		body      : /^<object.*object>$/,
 	});
 	
-	basicExtractorTest('Video - Rimo', 'http://rimo.tv/ja/ch/95269', {
-		type    : 'video',
-		page    : 'Rimo - 200806 Music channel',
-		pageUrl : 'http://rimo.tv/ja/ch/95269',
-		item    : '200806 Music channel',
-		itemUrl : 'http://rimo.tv/ja/ch/95269',
-		body    : /^<object.*object>$/,
-	});
-	
-	basicExtractorTest('Video - Rimo', 'http://rimo.tv/channel/show?url=http%3A%2F%2Fdocopenhagen.blogspot.com%2F2006%2F12%2Ftop-50-music-videos-of-2006.html', {
-		type    : 'video',
-		page    : '「DoCopenhagen: Top 50 Music Videos Of 2006」の動画をまとめてRimoで見る - Rimo',
-		pageUrl : 'http://rimo.tv/channel/show?url=http%3A%2F%2Fdocopenhagen.blogspot.com%2F2006%2F12%2Ftop-50-music-videos-of-2006.html',
-		item    : 'DoCopenhagen: Top 50 Music Videos Of 2006',
-		itemUrl : 'http://rimo.tv/channel/show?url=http%3A%2F%2Fdocopenhagen.blogspot.com%2F2006%2F12%2Ftop-50-music-videos-of-2006.html',
-		body    : /^<object.*object>$/,
-	});
-	
-	
 	basicExtractorTest('ReBlog - Tumblr', 'http://to.tumblr.com/post/38249621', {
-		type  : 'reblog',
+		type    : 'photo',
 		page    : 'to',
 		pageUrl : 'http://to.tumblr.com/post/38249621',
 		item    : 'to',
-		itemUrl : 'http://to.tumblr.com/post/38249621',
-		token   : {
-			token : 'exgZK6NR',
-			id    : '38249621',
+		itemUrl : 'http://6.media.tumblr.com/6hT7IIFQna5axukmGWK1Jj8q_500.jpg',
+		favorite : {
+			endpoint  : 'http://www.tumblr.com/reblog/38249621/exgZK6NR',
+			name      : 'Tumblr',
 		},
 	});
 	
@@ -242,14 +219,14 @@ try {
 			ctx.link = {href : 'http://to.tumblr.com/post/38249621'};
 			
 			return {
-				type  : 'reblog',
+				type  : 'photo',
 				page    : 'to',
 				pageUrl : 'http://to.tumblr.com/post/38249621',
 				item    : 'to',
-				itemUrl : 'http://to.tumblr.com/post/38249621',
-				token   : {
-					token : 'exgZK6NR',
-					id    : '38249621',
+				itemUrl : 'http://6.media.tumblr.com/6hT7IIFQna5axukmGWK1Jj8q_500.jpg',
+				favorite : {
+					endpoint  : 'http://www.tumblr.com/reblog/38249621/exgZK6NR',
+					name      : 'Tumblr',
 				},
 			}
 		});
@@ -267,7 +244,7 @@ try {
 				pageUrl   : 'http://www.flickr.com/photos/le_carabinier/2569321947/',
 				item      : 'awkwardfeet',
 				itemUrl   : 'http://farm4.static.flickr.com/3151/2569321947_a245340e65_o.jpg', 
-				author    : 'Sean Marc Lee 李荆山',
+				author    : '✈ Sean Marc Lee 李荆山 / 李子仁',
 				authorUrl : 'http://www.flickr.com/photos/le_carabinier/',
 			}
 		});
@@ -290,7 +267,6 @@ try {
 				file    : ILocalFile,
 			}
 		});
-	*/
 	
 	
 	d.addErrback(function(e){

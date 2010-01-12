@@ -91,7 +91,7 @@ var FileInputStream =
 
 var ConverterInputStream = 
 	createConstructor('/intl/converter-input-stream;1', 'nsIConverterInputStream', function(stream, charset, bufferSize){
-		this.init(stream, charset || 'UTF-8', bufferSize || 4096, ConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+		this.init(stream, charset || 'UTF-8', bufferSize || 8192, ConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
 	});
 
 var MIMEInputStream = 

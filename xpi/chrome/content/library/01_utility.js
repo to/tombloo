@@ -376,7 +376,7 @@ function addTab(url, background){
 function getContents(file, charset){
 	try{
 		return withStream(new FileInputStream(file, -1, 0, false), function(fis){
-			return withStream(new ConverterInputStream(fis, charset), function(cis){
+			return withStream(new ConverterInputStream(fis, charset, fis.available()), function(cis){
 				var out = {};
 				cis.readString(fis.available(), out);
 				return out.value;
@@ -720,12 +720,6 @@ function queryString(params, question){
 	return (question? '?' : '') + qeries.join('&');
 }
 
-// FIXME: 互換のため
-function doXHR(url, opts){
-	error('deprecated: doXHR');
-	return request(url, opts);
-}
-
 registerIteratorFactory(
 	'SimpleEnumerator', 
 	function(it){
@@ -913,16 +907,6 @@ function roundPosition(p){
 		Math.round(p.y));
 }
 
-// FIXME: UTF-8でスクリプトをロードするように
-function isCorruptedScript(){
-	try{
-		'ウァ'.convertToUnicode();
-		return true;
-	} catch(e) {
-		return false;
-	}
-}
-
 String.katakana = {
 	'ウァ':'wha','ウィ':'wi','ウェ':'we','ウォ':'who',
 	'キャ':'kya','キィ':'kyi','キュ':'kyu','キェ':'kye','キョ':'kyo',
@@ -971,13 +955,6 @@ String.katakana = {
 	'ヵ':'lka','ヶ':'lke','ッ':'ltu',
 	'ャ':'lya','ュ':'lyu','ョ':'lyo','ヮ':'lwa',
 	'。':".",'、':",",'ー':"-",
-}
-
-if(isCorruptedScript()){
-	String.katakana = reduce(function(memo, pair){
-		memo[pair[0].convertToUnicode()] = pair[1];
-		return memo;
-	}, String.katakana, {});
 }
 
 

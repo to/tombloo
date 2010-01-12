@@ -148,10 +148,31 @@ function loadSubScripts(files, global){
 	var global = global || function(){};
 	files = [].concat(files);
 	
-	files.forEach(function(file){
-		var uri = file instanceof ILocalFile? IOService.newFileURI(file).spec : uri;
-		ScriptLoader.loadSubScript(uri, global);
-	});
+	for(var i=0,len=files.length ; i<len ; i++){
+		// 文字化け回避のためファイル内容を取得し評価する
+		// 複数スクリプトの連結評価(30%程度の高速化)は関数定義の上書きに失敗することがあるため見送った
+		global._source = getContents(files[i]);
+		ScriptLoader.loadSubScript('chrome://tombloo/content/eval.js', global);
+	}
+}
+
+function getContents(file){
+	try{
+		var fis = Cc['@mozilla.org/network/file-input-stream;1']
+			.createInstance(Ci.nsIFileInputStream);
+		fis.init(file, -1, 0, false);
+		
+		var cis = Cc['@mozilla.org/intl/converter-input-stream;1']
+			.createInstance(Ci.nsIConverterInputStream);
+		cis.init(fis, 'UTF-8', fis.available(), Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+		
+		var out = {};
+		cis.readString(fis.available(), out);
+		return out.value;
+	} finally {
+		fis && fis.close();
+		cis && cis.close();
+	}
 }
 
 function simpleIterator(e, ifc, func){

@@ -1267,7 +1267,7 @@ Tombloo.Service.extractors = new Repository([
 	
 	{
 		name : 'Video - Nico Nico Douga',
-		ICON : 'http://www.nicovideo.jp/favicon.ico',
+		ICON : models.Nicovideo.ICON,
 		check : function(ctx){
 			return ctx.href.match('^http://www\.nicovideo\.jp/watch/');
 		},

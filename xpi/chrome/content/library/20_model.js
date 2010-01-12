@@ -2099,9 +2099,8 @@ models.register({
 	},
 });
 
-// 絶対復習
 models.register({
-	name : '\u7D76\u5BFE\u5FA9\u7FD2',
+	name : '絶対復習',
 	URL  : 'http://www.takao7.net',
 	ICON : 'chrome://tombloo/skin/item.ico',
 	
@@ -2451,10 +2450,9 @@ models.register({
 	},
 });
 
-
 models.register({
-	name    : 'Sharebee.com',
-	URL     : 'http://sharebee.com/',
+	name : 'Sharebee.com',
+	URL  : 'http://sharebee.com/',
 	
 	decrypt : function(url){
 		return request(url.startsWith(this.URL)? url : this.URL + url).addCallback(function(res){
@@ -2463,6 +2461,37 @@ models.register({
 				fileName : $x('//h2/span[@title]/@title', doc),
 				links    : $x('//table[@class="links"]//a/@href', doc, true),
 			}
+		});
+	},
+});
+
+models.register({
+	name : 'Nicovideo',
+	URL  : 'http://www.nicovideo.jp',
+	ICON : 'http://www.nicovideo.jp/favicon.ico',
+	
+	getPageInfo : function(id){
+		return request(this.URL + '/watch/' + id, {
+			charset : 'UTF-8',
+		}).addCallback(function(res){
+			var doc = convertToHTMLDocument(res.responseText);
+			return {
+				title : doc.title.extract(/(.*)‐/),
+				lists : $x('id("des_2")//a[contains(@href, "/mylist/")]/@href', doc, true),
+				links : $x('id("des_2")//a[starts-with(@href, "http") and contains(@href, "/watch/")]/@href', doc, true),
+			}
+		});
+	},
+	
+	download : function(id, title){
+		var self = this;
+		return ((title)? succeed(title) : self.getPageInfo(id).addCallback(itemgetter('title'))).addCallback(function(title){
+			return request(self.URL + '/api/getflv?v='+id).addCallback(function(res){
+				var params = parseQueryString(res.responseText);
+				var file = getDownloadDir();
+				file.append(validateFileName(title + '.flv'));
+				return download(params.url, file, true);
+			});
 		});
 	},
 });

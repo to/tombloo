@@ -476,7 +476,7 @@ function request(url, opts){
 					]);
 				} else {
 					if(value.file instanceof IFile){
-						value.contentType = value.contentType || guessContentType(value.file);
+						value.contentType = value.contentType || getMimeType(value.file);
 						value.fileName = value.file.leafName;
 						value.file = IOService.newChannelFromURI(createURI(value.file)).open();
 					}
@@ -617,17 +617,10 @@ function request(url, opts){
 	return d;
 }
 
-// FIXME: Firefox内の実装を探す
-function guessContentType(ext){
-	if(ext instanceof IFile)
-		ext = ext.leafName.split('.').pop();
-	
-	return {
-		mp3 : 'audio/mpeg',
-		m4a : 'audio/mp4',
-		png : 'image/png',
-		jpg : 'image/jpeg',
-	}[ext];
+function getMimeType(file){
+	return (file instanceof IFile)?
+		MIMEService.getTypeFromFile(file) : 
+		MIMEService.getTypeFromExtension(file)
 }
 
 // ----[MochiKit]-------------------------------------------------

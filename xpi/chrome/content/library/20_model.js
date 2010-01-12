@@ -2252,13 +2252,7 @@ models.register({
 		return request(this.URL + '/tracks', {
 			redirectionLimit : 0,
 			sendContent : {
-				'track_files[]' : {
-					file : file,
-					contentType : {
-						mp3 : 'audio/mpeg',
-						m4a : 'audio/mp4'
-					}[file.leafName.split('.').pop()],
-				},
+				'track_files[]' : file,
 			},
 		});
 	},

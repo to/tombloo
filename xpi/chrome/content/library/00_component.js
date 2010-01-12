@@ -57,6 +57,7 @@ var FaviconService      = getService('/browser/favicon-service;1', Ci.nsIFavicon
 var StyleSheetService   = getService('/content/style-sheet-service;1', Ci.nsIStyleSheetService);
 var FuelApplication     = getService('/fuel/application;1', Ci.fuelIApplication);
 var PrefService         = getService('/preferences-service;1');
+var MIMEService         = getService('/mime;1', Ci.nsIMIMEService);
 
 
 var PrefBranch = 

@@ -6,6 +6,9 @@ description {
 	padding: 0;
 }
 
+resizer {
+	background-image: none !important;
+}
 
 label,
 description{

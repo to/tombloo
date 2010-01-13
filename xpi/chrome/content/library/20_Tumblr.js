@@ -296,7 +296,9 @@ var Tumblr = update({}, AbstractSessionService, {
 					throw new Error("You've exceeded your daily post limit.");
 				
 				error(res);
-				throw new Error('Error posting entry.');
+				
+				var doc = convertToHTMLDocument(res.responseText);
+				throw new Error(doc.getElementById('errors').textContent.trim());
 			}
 		});
 		return d;

@@ -1112,6 +1112,7 @@ Tombloo.Service.extractors = new Repository([
 			'/www.toofly.com/userGallery/',
 			'/www.dru.pl/',
 			'adugle.com/shareimagebig/',
+			'gizmag.com/pictures/',
 			'/awkwardfamilyphotos.com/',
 			'share-image.com/pictures/big/'
 		],

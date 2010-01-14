@@ -150,9 +150,12 @@ forEach({
 			target    : doc.documentElement,
 		}, win.location);
 		
+		var models = Tombloo.Service.check(ctx).filter(function(model){
+			return /^Link/.test(model.name);
+		});
 		Tombloo.Service.extractors.extract(
 			ctx, 
-			Tombloo.Service.check(ctx)[0]
+			models[0]
 		).addCallback(function(ps){
 			QuickPostForm.show(ps);
 		});

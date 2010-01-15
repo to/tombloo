@@ -24,7 +24,6 @@ try {
 	
 	var d = succeed();
 	
-	
 	/*
 	.addBoth(function(res){
 		log(res);
@@ -619,6 +618,19 @@ try {
 		ok(!models.FirefoxBookmark.getBookmark(uri), 'FirefoxBookmark: ブックマークの削除');
 	}
 	*/
+	
+	is(NDrive.incrementFile('/test(2).jpg'), '/test(3).jpg');
+	is(NDrive.incrementFile('test(100).jpg'), 'test(101).jpg');
+	is(NDrive.incrementFile('te.st(100).jpg'), 'te.st(101).jpg');
+	is(NDrive.incrementFile('test(2)'), 'test(3)');
+	is(NDrive.incrementFile('/a/b/c/test(2)'), '/a/b/c/test(3)');
+	
+	is(NDrive.incrementFile('test'), 'test(2)');
+	is(NDrive.incrementFile('test.jpg'), 'test(2).jpg');
+	is(NDrive.incrementFile('/a/b/c/test'), '/a/b/c/test(2)');
+	is(NDrive.incrementFile('/a/b/c/test.jpg'), '/a/b/c/test(2).jpg');
+	is(NDrive.incrementFile('/a.1/b.2/c.3/te.st.jpg'), '/a.1/b.2/c.3/te.st(2).jpg');
+	
 	
 	d.addErrback(function(e){
 		error(e.message);

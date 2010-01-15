@@ -2496,6 +2496,178 @@ models.register({
 	},
 });
 
+models.register(update({}, AbstractSessionService, {
+	name : 'NDrive',
+	ICON : 'http://ndrive1.naver.jp/favicon.ico',
+	
+	check : function(ps){
+		return ps.type == 'photo';
+	},
+	
+	post : function(ps){
+		var self = this;
+		return (ps.file? succeed(ps.file) : download(ps.itemUrl, getTempDir())).addCallback(function(file){
+			return self.upload(file);
+		});
+	},
+	
+	getAuthCookie : function(){
+		return getCookieString('ndrive1.naver.jp', 'njid_inf');
+	},
+	
+	getUserInfo : function(){
+		return request('http://ndrive.naver.jp/').addCallback(function(res){
+			function getString(name){
+				return res.responseText.extract(RegExp('\\s' + name + '\\s*=\\s*[\'"](.+?)[\'"]'));
+			}
+			
+			return {
+				userId          : getString('userId'),
+				userIdx         : getString('userIdx'),
+				cmsServerDomain : getString('cmsServerDomain'),
+			}
+		});
+	},
+	
+	toW3CDTF : function(date){
+		with(date){
+			return getFullYear() + '-' + (getMonth()+1).pad(2) + '-' + getDate().pad(2) + 
+			'T' + getHours().pad(2) + ':' + getMinutes().pad(2) + ':' + getSeconds().pad(2) + 
+			toTimeString().split('GMT').pop().replace(/(\d{2})(\d{2})/, '$1:$2');
+		}
+	},
+	
+	/**
+	 * ファイルのアップロード可否を確認する。
+	 * ファイルが重複する場合など、そのままアップロードできない場合はエラーとなる。
+	 * 
+	 * @param {String} path 
+	 *        アップロード対象のパス。ルート(/)からはじまる相対パスで記述する。
+	 * @param {optional Number} size 
+	 *        アップロードするファイルのサイズ。
+	 * @return {Deferred} 処理結果。
+	 */
+	checkUpload : function(path, size){
+		var self = this;
+		
+		size = size || 1;
+		
+		return this.getSessionValue('user', this.getUserInfo).addCallback(function(info){
+			return request('http://' + info.cmsServerDomain + '/CheckUpload.ndrive', {
+				sendContent : {
+					userid      : info.userId,
+					useridx     : info.userIdx,
+					cookie      : getCookieString('ndrive1.naver.jp'),
+					
+					dstresource : path,
+					uploadsize  : size,
+				}
+			}).addCallback(function(res){
+				res = evalInSandbox('(' + res.responseText + ')', self.ICON);
+				
+				if(res.resultcode != 0)
+					throw res;
+				return res;
+			});
+		});
+	},
+	
+	uniqueFile : function(path){
+		var self = this;
+		return this.checkUpload(path).addCallback(function(){
+			return path;
+		}).addErrback(function(err){
+			err = err.message;
+			
+			// Duplicated File Exist以外のエラーは抜ける
+			if(err.resultcode != 9)
+				throw err;
+			
+			return self.uniqueFile(self.incrementFile(path));
+		});
+	},
+	
+	incrementFile : function(path){
+		var paths = path.split('/');
+		var name = paths.pop();
+		
+		// 既に括弧数字が含まれているか?
+		var re = /(.*\()(\d+)(\))/;
+		if(re.test(name)){
+			name = name.replace(re, function(all, left, num, right){
+				return left + (++num) + right;
+			});
+		} else {
+			name = (name.contains('.'))?
+				name.replace(/(.*)(\..*)/, '$1(2)$2') : 
+				name + '(2)';
+		}
+		
+		paths.push(name);
+		return paths.join('/');
+	},
+	
+	/**
+	 * ファイルをアップロードする。
+	 * 空要素は除外される。
+	 * 配列が空の場合は、空文字列が返される。
+	 * 配列の入れ子は直列化される。
+	 * 
+	 * @param {LocalFile || String} file 
+	 *        アップロード対象のファイル。ファイルへのURIでも可。
+	 * @param {optional String} dir 
+	 *        アップロード先のディレクトリ。省略された場合はルートになる。
+	 *        先頭および末尾のスラッシュの有無は問わない。
+	 * @param {optional String} name 
+	 *        アップロード後のファイル名。
+	 *        省略された場合は元のファイル名のままとなる。
+	 * @param {optional Boolean} overwrite 
+	 *        上書きフラグ。
+	 *        上書きせずに同名のファイルが存在した場合は末尾に括弧数字((3)など)が付加される。
+	 * @return {Deferred} 処理結果。
+	 */
+	upload : function(file, dir, name, overwrite){
+		var self = this;
+		
+		file = getLocalFile(file);
+		name = name || file.leafName;
+		
+		if(!dir)
+			dir = getPref('model.ndrive.defaultDir') || '';
+		
+		if(dir && dir.slice(-1)!='/')
+			dir += '/' ;
+		
+		if(!dir.startsWith('/'))
+			dir = '/' + dir;
+		
+		var path = dir + name;
+		
+		// 上書きしない場合はファイル名のチェックを先に行う
+		return ((overwrite)? succeed(path) : self.uniqueFile(path)).addCallback(function(fixed){
+			path = fixed;
+			
+			return self.getSessionValue('user', this.getUserInfo);
+		}).addCallback(function(info){
+			return request('http://' + info.cmsServerDomain + path, {
+				sendContent : {
+					overwrite       : overwrite? 'T' : 'F',
+					NDriveSvcType   : 'NHN/ND-WEB Ver',
+					Upload          : 'Submit Query',
+					
+					userid          : info.userId,
+					useridx         : info.userIdx,
+					cookie          : getCookieString('ndrive1.naver.jp'),
+					
+					Filename        : file.leafName,
+					filesize        : file.fileSize,
+					getlastmodified : self.toW3CDTF(new Date(file.lastModifiedTime)),
+					Filedata        : file,
+				}
+			});
+		});
+	}
+}));
 
 
 // 全てのサービスをグローバルコンテキストに置く(後方互換)

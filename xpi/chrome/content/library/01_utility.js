@@ -472,7 +472,7 @@ function request(url, opts){
 						'--' + boundary,
 						'Content-Disposition: form-data; name="' + name + '"',
 						'',
-						(value.convertFromUnicode? value.convertFromUnicode() : value),
+						encodeURIComponent(value.convertFromUnicode? value.convertFromUnicode() : value),
 					]);
 				} else {
 					if(value.file instanceof IFile){
@@ -2175,7 +2175,7 @@ AbstractSessionService = {
 				return succeed(self[key]);
 			
 		case 'changed':
-			return func().addCallback(function(value){
+			return func.apply(self).addCallback(function(value){
 				return self[key] = value;
 			});
 		}

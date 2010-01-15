@@ -27,6 +27,10 @@ update(Number.prototype, {
 });
 
 update(String.prototype, {
+	contains : function(str){
+		return this.indexOf(str) != -1;
+	},
+	
 	startsWith : function(s){
 		return this.indexOf(s) == 0;
 	},

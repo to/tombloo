@@ -375,7 +375,7 @@ function addTab(url, background){
 
 function getContents(file, charset){
 	try{
-		return withStream(new FileInputStream(file, -1, 0, false), function(fis){
+		return withStream(new FileInputStream(getLocalFile(file), -1, 0, false), function(fis){
 			return withStream(new ConverterInputStream(fis, charset, fis.available()), function(cis){
 				var out = {};
 				cis.readString(fis.available(), out);
@@ -1280,6 +1280,7 @@ function executeWSH(func, args, async){
  */
 function runWSH(func, args, blocking){
 	args = (args==null)? [] : [].concat(args);
+	args.unshift(func);
 	
 	var d = new Deferred();
 	
@@ -1294,11 +1295,16 @@ function runWSH(func, args, blocking){
 		'>',
 		out.path.quote()
 	].join(' '));
-	putContents(script, 
-		args.map(function(a, i){return 'var ARG_' + i + ' = ' + uneval(a) + ';'}).join('\n') + 
-		'WScript.echo(' + func.toSource() + '(' + 
-		args.map(function(a, i){return 'ARG_' + i}).join(',') + 
-		'));');
+	putContents(script,
+		runWSH.utility +  
+		'var ARGS = ' + uneval(args) + ';\n' + 
+		uneval(function(){
+			try{
+				WScript.echo('(' + JSON.stringify(ARGS.shift().apply(null, ARGS)) + ')');
+			} catch(e) {
+				WScript.echo('throw ' + JSON.stringify(e) + ';');
+			}
+		}) + '();');
 	
 	var end = function(){
 		var res = getContents(out, 'Shift-JIS').replace(/\s+$/, '');
@@ -1307,11 +1313,16 @@ function runWSH(func, args, blocking){
 		bat.remove(false);
 		script.remove(false);
 		
-		d.callback(res);
+		try{
+			res = eval(res);
+			d.callback(res);
+		}catch(e){
+			d.errback(e);
+		}
 	};
 	
 	var process = new Process(bat);
-	if(blocking){
+	if(!process.runAsync || blocking){
 		process.run(true, [], 0);
 		end();
 	} else {
@@ -1322,6 +1333,8 @@ function runWSH(func, args, blocking){
 	
 	return d;
 }
+
+runWSH.utility = getContents(CHROME_CONTENT_DIR + '/wsh.js');
 
 function getFinalUrl(url){
 	return request(url).addCallback(function(res){

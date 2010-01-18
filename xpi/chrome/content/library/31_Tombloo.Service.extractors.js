@@ -1114,6 +1114,7 @@ Tombloo.Service.extractors = new Repository([
 			'adugle.com/shareimagebig/',
 			'gizmag.com/pictures/',
 			'/awkwardfamilyphotos.com/',
+			'/docs.google.com/',
 			'share-image.com/pictures/big/'
 		],
 		check : function(ctx){

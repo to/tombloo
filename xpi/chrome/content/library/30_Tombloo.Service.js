@@ -129,7 +129,7 @@ Tombloo.Service = {
 		if(err.status)
 			err = err.message + '(' + err.status + ')';
 		
-		if(!err.lineNumber)
+		if(typeof(err)!='object')
 			return '' + err;
 		
 		var msg = [];

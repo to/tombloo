@@ -472,7 +472,7 @@ function request(url, opts){
 						'--' + boundary,
 						'Content-Disposition: form-data; name="' + name + '"',
 						'',
-						encodeURIComponent(value.convertFromUnicode? value.convertFromUnicode() : value),
+						value.convertFromUnicode? value.convertFromUnicode() : value,
 					]);
 				} else {
 					if(value.file instanceof IFile){
@@ -598,6 +598,8 @@ function request(url, opts){
 			if(Components.isSuccessCode(status) && res.status < 400){
 				d.callback(res);
 			}else{
+				error(res);
+				
 				res.message = getMessage('error.http.' + res.status);
 				d.errback(res);
 			}
@@ -618,9 +620,14 @@ function request(url, opts){
 }
 
 function getMimeType(file){
-	return (file instanceof IFile)?
-		MIMEService.getTypeFromFile(file) : 
-		MIMEService.getTypeFromExtension(file)
+	try{
+		return (file instanceof IFile)?
+			MIMEService.getTypeFromFile(file) : 
+			MIMEService.getTypeFromExtension(file)
+	}catch(e){
+		// 取得に失敗するとエラーが発生する(拡張子が無い場合など)
+		return '';
+	}
 }
 
 // ----[MochiKit]-------------------------------------------------

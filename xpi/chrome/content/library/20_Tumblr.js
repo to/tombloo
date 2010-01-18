@@ -295,8 +295,6 @@ var Tumblr = update({}, AbstractSessionService, {
 				if(res.responseText.match('more tomorrow'))
 					throw new Error("You've exceeded your daily post limit.");
 				
-				error(res);
-				
 				var doc = convertToHTMLDocument(res.responseText);
 				throw new Error(doc.getElementById('errors').textContent.trim());
 			}

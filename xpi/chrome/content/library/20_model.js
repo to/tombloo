@@ -2555,9 +2555,9 @@ models.register(update({}, AbstractSessionService, {
 		return this.getSessionValue('user', this.getUserInfo).addCallback(function(info){
 			return request('http://' + info.cmsServerDomain + '/CheckUpload.ndrive', {
 				sendContent : {
+					cookie      : getCookieString('ndrive1.naver.jp'),
 					userid      : info.userId,
 					useridx     : info.userIdx,
-					cookie      : getCookieString('ndrive1.naver.jp'),
 					
 					dstresource : path,
 					uploadsize  : size,
@@ -2655,9 +2655,10 @@ models.register(update({}, AbstractSessionService, {
 					NDriveSvcType   : 'NHN/ND-WEB Ver',
 					Upload          : 'Submit Query',
 					
+					// FIXME: マルチパートの場合、自動でエンコードされない(Tumblrはデコードを行わない)
+					cookie          : encodeURIComponent(getCookieString('ndrive1.naver.jp')),
 					userid          : info.userId,
 					useridx         : info.userIdx,
-					cookie          : getCookieString('ndrive1.naver.jp'),
 					
 					Filename        : file.leafName,
 					filesize        : file.fileSize,

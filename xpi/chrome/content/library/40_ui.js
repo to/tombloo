@@ -106,8 +106,7 @@ var QuickPostForm = {
 	show : function(ps, position, message){
 		openDialog(
 			'chrome://tombloo/content/quickPostForm.xul', 
-			'chrome,alwaysRaised=yes,resizable=yes,dependent=yes' + 
-				(AppInfo.OS == 'Darwin')? ',titlebar=no' : '', ps, position, message);
+			'chrome,alwaysRaised=yes,resizable=yes,dependent=yes,titlebar=no', ps, position, message);
 	},
 };
 

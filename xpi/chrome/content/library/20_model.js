@@ -2501,13 +2501,13 @@ models.register(update({}, AbstractSessionService, {
 	ICON : 'http://ndrive1.naver.jp/favicon.ico',
 	
 	check : function(ps){
-		return ps.type == 'photo';
+		return (/(photo|link)/).test(ps.type);
 	},
 	
 	post : function(ps){
 		var self = this;
 		return (ps.file? succeed(ps.file) : download(ps.itemUrl, getTempDir())).addCallback(function(file){
-			return self.upload(file);
+			return self.upload(file, null, validateFileName(ps.item));
 		});
 	},
 	
@@ -2616,7 +2616,8 @@ models.register(update({}, AbstractSessionService, {
 	 * @param {LocalFile || String} file 
 	 *        アップロード対象のファイル。ファイルへのURIでも可。
 	 * @param {optional String} dir 
-	 *        アップロード先のディレクトリ。省略された場合はルートになる。
+	 *        アップロード先のディレクトリ。
+	 *        省略された場合はmodel.ndrive.defaultDirの設定値かルートになる。
 	 *        先頭および末尾のスラッシュの有無は問わない。
 	 * @param {optional String} name 
 	 *        アップロード後のファイル名。

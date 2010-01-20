@@ -557,6 +557,10 @@ function request(url, opts){
 				return;
 			}
 			
+			// 元リクエストのメソッドを引き継ぐ(HEADからGETに変わり遅くならないように)
+			// XMLHttpRequestの挙動とは異なる
+			newChannel = broad(newChannel);
+			newChannel.requestMethod = oldChannel.requestMethod;
 			setCookie(newChannel);
 		},
 		

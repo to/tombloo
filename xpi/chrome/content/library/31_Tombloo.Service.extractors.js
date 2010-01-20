@@ -1473,11 +1473,11 @@ update(Tombloo.Service.extractors, {
 		
 		return withWindow(ctx.window, function(){
 			return maybeDeferred(ext.extract(ctx)).addCallback(function(ps){
-				return ps && update({
+				ps = update({
 					page    : ctx.title,
 					pageUrl : ctx.href,
 				}, ps);
-			}).addCallback(function(ps){
+				
 				return self.normalizeUrl(ps.itemUrl).addCallback(function(url){
 					ps.itemUrl = url;
 					return ps;

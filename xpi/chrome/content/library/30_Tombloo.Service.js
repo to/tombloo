@@ -8,7 +8,10 @@ Tombloo.Service = {
 	 */
 	check : function(ctx){
 		return withWindow(ctx.window, function(){
-			if(!ctx.menu && ctx.target){
+			// コンテキストメニューからの呼び出しの場合そちらで設定されている
+			// html要素などのルート要素も除外する
+			if(!ctx.menu && ctx.target && 
+				(ctx.target.parentNode != ctx.target.ownerDocument && ctx.target != ctx.target.ownerDocument)){
 				ctx.link = $x('.//ancestor::a', ctx.target);
 				ctx.onLink = !!ctx.link;
 				ctx.onImage = ctx.target instanceof Ci.nsIDOMHTMLImageElement;

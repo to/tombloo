@@ -96,10 +96,15 @@ function share(event){
 		ctx.target = $x('.//img[1]', body);
 	}
 	
-	var ext = tombloo.check(ctx)[0];
-	tombloo.share(ctx, ext, ext.name.match(/^Link /));
-	
 	win.addClass(parent, 'TMBL_posted');
+	
+	tombloo.extractors.normalizeUrl(item.link).addCallback(function(link){
+		if(item.link != link)
+			$x('ancestor::div[starts-with(@id, "item_count")]/div[@class="item_info"]/a', item.element).href = link;
+		
+		var ext = tombloo.check(ctx)[0];
+		tombloo.share(ctx, ext, ext.name.match(/^Link /));
+	});
 }
 
 

@@ -1106,7 +1106,7 @@ Tombloo.Service.extractors = new Repository([
 			'files.posterous.com/',
 			'image.itmedia.co.jp/',
 			'wretch.yimg.com/',
-			'pics.*\.blog.yam.com/',
+			'pics.*.blog.yam.com/',
 			'/www.imgscan.com/image_c.php',
 			'keep4u.ru/imgs/',
 			'/www.toofly.com/userGallery/',
@@ -1304,16 +1304,49 @@ Tombloo.Service.extractors = new Repository([
 	},
 	
 	{
+		name : 'Link - link',
+		ICON : 'chrome://tombloo/skin/link.png',
+		check : function(ctx){
+			return ctx.onLink;
+		},
+		extract : function(ctx){
+			// リンクテキストが無い場合はページタイトルで代替する
+			var title = ctx.target.textContent;
+			if(!title || title==ctx.target.href)
+				title = ctx.title;
+			
+			return {
+				type    : 'link',
+				item    : title,
+				itemUrl : ctx.link.href,
+			};
+		},
+	},
+	
+	{
 		name : 'Link',
 		ICON : 'chrome://tombloo/skin/link.png',
 		check : function(ctx){
 			return true;
 		},
 		extract : function(ctx){
-			return {
-				type    : 'link',
-				item    : ctx.title,
-				itemUrl : ctx.href,
+			if(ctx.onLink){
+				// リンクテキストが無い場合はページタイトルで代替する
+				var title = ctx.target.textContent;
+				if(!title || title==ctx.target.href)
+					title = ctx.title;
+				
+				return {
+					type    : 'link',
+					item    : title,
+					itemUrl : ctx.link.href,
+				};
+			} else {
+				return {
+					type    : 'link',
+					item    : ctx.title,
+					itemUrl : ctx.href,
+				}
 			}
 		},
 	},
@@ -1396,33 +1429,60 @@ Tombloo.Service.extractors = new Repository([
 	},
 ]);
 
-Tombloo.Service.extractors.extract = function(ctx, ext){
-	var doc = ctx.document;
+update(Tombloo.Service.extractors, {
+	REDIRECT_URLS : [
+		'pheedo.jp/',
+		'//feedproxy.google.com/',
+		'//bit.ly/',
+		'//j.mp/',
+		'//is.gd/',
+		'//goo.gl/',
+		'//nico.ms/',
+	].map(function(re){
+		return RegExp(re);
+	}),
 	
-	// ドキュメントタイトルを取得する
-	var title;
-	if(typeof(doc.title) == 'string'){
-		title = doc.title;
-	} else {
-		// idがtitleの要素を回避する
-		title = $x('//title/text()', doc);
-	}
+	normalizeUrl : function(url){
+		return (!url || !this.REDIRECT_URLS.some(function(re){return re.test(url)}))? 
+			succeed(url) : 
+			getFinalUrl(url);
+	},
 	
-	if(!title)
-		title = createURI(doc.location.href).fileBaseName;
-	
-	ctx.title = title.trim();
-	
-	// canonicalが設定されていれば使う
-	// セキュリティ上の懸念から一時コメントアウト
-	// ctx.href = $x('//link[@rel="canonical"]/@href', doc) || ctx.href;
-	
-	return withWindow(ctx.window, function(){
-		return maybeDeferred(ext.extract(ctx)).addCallback(function(ps){
-			return ps && update({
-				page    : ctx.title,
-				pageUrl : ctx.href,
-			}, ps);
+	extract : function(ctx, ext){
+		var doc = ctx.document;
+		var self = this;
+		
+		// ドキュメントタイトルを取得する
+		var title;
+		if(typeof(doc.title) == 'string'){
+			title = doc.title;
+		} else {
+			// idがtitleの要素を回避する
+			title = $x('//title/text()', doc);
+		}
+		
+		if(!title)
+			title = createURI(doc.location.href).fileBaseName;
+		
+		ctx.title = title.trim();
+		
+		// canonicalが設定されていれば使う
+		var canonical = $x('//link[@rel="canonical"]/@href', doc);
+		if(canonical)
+			ctx.href = resolveRelativePath(canonical, ctx.href);
+		
+		return withWindow(ctx.window, function(){
+			return maybeDeferred(ext.extract(ctx)).addCallback(function(ps){
+				return ps && update({
+					page    : ctx.title,
+					pageUrl : ctx.href,
+				}, ps);
+			}).addCallback(function(ps){
+				return self.normalizeUrl(ps.itemUrl).addCallback(function(url){
+					ps.itemUrl = url;
+					return ps;
+				});
+			});
 		});
-	});
-}
+	},
+})

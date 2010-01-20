@@ -1344,7 +1344,9 @@ function runWSH(func, args, blocking){
 runWSH.utility = getContents(CHROME_CONTENT_DIR + '/wsh.js');
 
 function getFinalUrl(url){
-	return request(url).addCallback(function(res){
+	return request(url, {
+		method : 'HEAD',
+	}).addCallback(function(res){
 		return res.channel.URI.spec;
 	});
 }

@@ -59,7 +59,6 @@ var FuelApplication     = getService('/fuel/application;1', Ci.fuelIApplication)
 var PrefService         = getService('/preferences-service;1');
 var MIMEService         = getService('/mime;1', Ci.nsIMIMEService);
 
-
 var PrefBranch = 
 	createConstructor('/preferences;1', 'nsIPrefBranch');
 
@@ -145,6 +144,13 @@ var FileOutputStream =
 		PR_SYNC : 0x40,
 		PR_EXCL : 0x80,
 	});
+
+var DocumentEncoder = function(document, mimeType, flags){
+	var encoder = Cc['@mozilla.org/layout/documentEncoder;1?type=' + mimeType].createInstance(Ci.nsIDocumentEncoder);
+	encoder.init(document, mimeType, flags);
+	return encoder;
+}
+update(DocumentEncoder, Ci.nsIDocumentEncoder);
 
 // ----[Utility]-------------------------------------------------
 function createMock(sample, proto){

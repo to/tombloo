@@ -559,7 +559,8 @@ function request(url, opts){
 			
 			// 元リクエストのメソッドを引き継ぐ(HEADからGETに変わり遅くならないように)
 			// XMLHttpRequestの挙動とは異なる
-			newChannel = broad(newChannel);
+			broad(oldChannel);
+			broad(newChannel);
 			newChannel.requestMethod = oldChannel.requestMethod;
 			setCookie(newChannel);
 		},
@@ -764,6 +765,26 @@ registerIteratorFactory(
 			}
 		};
 	});
+
+registerIteratorFactory(
+	'XPathResult', 
+	function(it){
+		return it instanceof Ci.nsIDOMXPathResult;
+	}, 
+	function(it){
+		var i = 0;
+		var len = it.snapshotLength;
+		return {
+			next: function(){
+				if(i >= len)
+					throw StopIteration;
+				
+				return it.snapshotItem(i++);
+			}
+		};
+	}, 
+	// iterateNextにマッチしないように先頭に追加する
+	true);
 
 registerIteratorFactory(
 	'XML', 
@@ -1518,7 +1539,7 @@ Repository.prototype = {
 	},
 }
 
-// ----[DOM]-------------------------------------------------
+// ----[DOM/XML]-------------------------------------------------
 'tree treecols treecol treechildren treeitem treerow treecell splitter'.split(' ').forEach(function(tag){
 	grobal[tag.toUpperCase()] = bind(E, null, tag);
 });
@@ -1690,6 +1711,49 @@ function convertToXULElement(str){
 	}
 
 	return result;
+}
+
+function convertToHTMLString(elm, unsafe){
+	var doc = elm.ownerDocument;
+	if(!unsafe){
+		// ツリーに組み込まれているエレメントは影響を与えないようにコピーする
+		if(elm.parentNode)
+			elm = elm.cloneNode(true);
+		
+		forEach(elm.querySelectorAll('frame,script,style,frame,iframe'), removeElement);
+	
+		// DocumentFragmentでも動作するようにルートを付加する
+		var root = doc.createElement('span');
+		root.appendChild(elm);
+		forEach(doc.evaluate('.//@*', root, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null), function(attr){
+			if(/(action|cellpadding|cellspacing|checked|cite|clear|cols|colspan|content|coords|enctype|face|for|href|label|method|name|nohref|nowrap|rel|rows|rowspan|shape|span|src|style|target|type|usemap|value)/.test(attr.name))
+				return;
+			
+			attr.ownerElement.removeAttribute(attr.name);
+		});
+		elm = appendChildNodes(doc.createDocumentFragment(), root.childNodes);
+	}
+	
+	var encoder = new DocumentEncoder(doc, 'text/html', 
+		DocumentEncoder.OutputFormatted | DocumentEncoder.OutputAbsoluteLinks);
+	encoder.setNode(elm);
+	return encoder.encodeToString();
+	// return (new XMLSerializer()).serializeToString(elm).replace(/ ?xmlns=".*?"/g,'');
+}
+
+function getTextContent(elm){
+	var encoder = new DocumentEncoder(document, 'text/plain', 
+		DocumentEncoder.OutputBodyOnly | DocumentEncoder.OutputLFLineBreak);
+	encoder.setNode(elm);
+	return encoder.encodeToString().trim();
+}
+
+function createFlavoredString(elm){
+	var res = new String(getTextContent(elm));
+	res.flavors = {
+		html : convertToHTMLString(elm),
+	};
+	return res;
 }
 
 function makeOpaqueFlash(doc){
@@ -1869,6 +1933,15 @@ function loadImage(src){
 	};
 	
 	return d;
+}
+
+function getSelectionContents(sel){
+	if(!sel)
+		return;
+	
+	sel = (sel.getSelection)? sel.getSelection() : sel;
+	if(sel.rangeCount && !sel.isCollapsed)
+		return sel.getRangeAt(0).cloneContents();
 }
 
 

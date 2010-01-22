@@ -165,4 +165,9 @@ update(String.prototype, {
 		
 		return res;
 	},
+	
+	getFlavor : function(name){
+		return (!this.flavors)? this : 
+			this.flavors[name] || this;
+	},
 });

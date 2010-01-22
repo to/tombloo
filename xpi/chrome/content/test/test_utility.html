@@ -27,9 +27,6 @@
 try {
 	// chrome://tombloo/content/test/test_utility.html
 	
-	var d = succeed();
-	SimpleTest.waitForExplicitFinish();
-	
 	// toRoma
 	is('アイウエオ'.toRoma(), 'aiueo');
 	is('ファイル'.toRoma(), 'fairu');
@@ -50,29 +47,69 @@ try {
 	CONNECT_TEST = false;
 	
 	if(CONNECT_TEST){
+		var d = succeed();
 		SimpleTest.waitForExplicitFinish();
 		
-		var ds = [];
-		ds.push(sendByChannel('http://www.google.com/').addCallback(function(res){
+		// request
+		d.addCallback(function(){
+			return request('http://www.google.com/');
+		});
+		d.addCallback(function(res){
+			log(res);
+			
 			is(res.status, 200);
 			ok(res.responseText);
-		}));
-		ds.push(sendByChannel('http://www.google.co.jp/translate_t', {
-			queryString : {
-				langpair : 'en|ja',
-			},
-			sendContent : {
-				hl : 'ja',
-				ie : 'UTF8',
-				text : 'apple',
-				langpair : 'en|ja',
-			},
-		}).addCallback(function(res){
+		});
+		
+		d.addCallback(function(){
+			return request('http://www.google.co.jp/translate_t', {
+				queryString : {
+					langpair : 'en|ja',
+				},
+				sendContent : {
+					hl : 'ja',
+					ie : 'UTF8',
+					text : 'apple',
+					langpair : 'en|ja',
+				},
+			});
+		});
+		d.addCallback(function(res){
 			is(res.status, 200);
 			ok(res.responseText.match('アップル'), '翻訳されたか');
-		}));
+		});
 		
-		gatherResults(ds).addBoth(function(){
+		// 文字化けテスト(日本Googleへ接続)
+		d.addCallback(function(){
+			return request('http://www.google.co.jp/').addCallback(function(res){
+				ok(res.responseText.match(/検索/), '文字化けしないか');
+			});
+		});
+		d.addCallback(function(){
+			return request('http://google.com/tombloo').addCallback(function(){
+				ok(false, '失敗リクエスト');
+			}).addErrback(function(err){
+				is(err.message.status, 404, '失敗リクエスト');
+			});
+		});
+		
+		// download
+		d.addCallback(function(){
+			return download('http://www.google.com/favicon.ico');
+		});
+		d.addCallback(function(){
+			var file = getDownloadDir();
+			file.append('favicon.ico');
+			ok(file.exists(), 'ダウンロード先を省略してダウンロードが可能か');
+			file.remove(false);
+		});
+		
+		
+		d.addErrback(function(e){
+			log(e)
+			ok(false);
+		});
+		d.addBoth(function(){
 			SimpleTest.finish()
 		});
 	}
@@ -96,7 +133,7 @@ try {
 	
 	// queryString
 	is(queryString({a:5}), 'a=5');
-	is(queryString({a:5}, true), '?a=5');
+	is(queryString({a:5}), 'a=5');
 	is(queryString('a=5'), 'a=5');
 	is(queryString({a:void(0)}), '');
 	is(queryString({a:[1,2,3]}), 'a=1&a=2&a=3');
@@ -373,22 +410,6 @@ try {
 	disconnectAll(obj);
 	ok(!connected(obj, 'load'));
 	
-	/*
-	// 文字化けテスト(日本Googleへ接続)
-	d.addCallback(function(){
-		return request('http://www.google.co.jp/').addCallback(function(res){
-			ok(res.responseText.match(/検索/), '文字化けしないか');
-		});
-	});
-	d.addCallback(function(){
-		return request('http://google.com/tombloo').addCallback(function(){
-			ok(false, '失敗リクエスト');
-		}).addErrback(function(err){
-			is(err.message.status, 404, '失敗リクエスト');
-		});
-	});
-	*/
-	
 	// extend
 	var src = {
 		_name : '',
@@ -418,27 +439,9 @@ try {
 	var dir = createDir('tombloo_test/c1', getDownloadDir());
 	ok(dir.exists(), '複数階層のディレクトリが作成されているか');
 	dir.parent.remove(true);
-	
-	// download
-	d.addCallback(function(){
-		return download('http://www.google.com/favicon.ico');
-	});
-	d.addCallback(function(){
-		var file = getDownloadDir();
-		file.append('favicon.ico');
-		ok(file.exists(), 'ダウンロード先を省略してダウンロードが可能か');
-		file.remove(false);
-	});
-	
-	
-	d.addErrback(function(e){
-		log(e)
-		ok(false);
-	});
-	d.addBoth(function(){
-		SimpleTest.finish()
-	});
 } catch (err) {
+	error(err);
+	
 	var s = [];
 	s.push('TEST SUITE FAILURE!');
 	for(var prop in err)

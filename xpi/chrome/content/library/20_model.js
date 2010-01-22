@@ -1018,7 +1018,7 @@ models.register({
 					url      : ps.itemUrl || 'no url',
 					title    : ps.item || 'no title',
 					comment  : ps.description,
-					body     : ps.body,
+					body     : ps.body.getFlavor('html'),
 					tags     : (ps.tags)? ps.tags.join(',') : '',
 					fullPage : (ps.body)? 'true' : 'false',
 				}),

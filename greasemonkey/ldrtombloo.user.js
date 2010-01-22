@@ -83,7 +83,7 @@ function share(event){
 	var ctx = update({
 			document  : doc,
 			window    : win,
-			selection : '' + win.getSelection(),
+			selection : win.getSelection(),
 			target    : target,
 			event     : {},
 			title     : null,

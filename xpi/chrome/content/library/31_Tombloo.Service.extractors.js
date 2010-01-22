@@ -31,8 +31,7 @@ Tombloo.Service.extractors = new Repository([
 		name : 'Quote - LDR',
 		ICON : 'http://reader.livedoor.com/favicon.ico',
 		check : function(ctx){
-			return Tombloo.Service.extractors.LDR.getItem(ctx, true) &&
-				ctx.selection;
+			return Tombloo.Service.extractors.LDR.getItem(ctx, true) && ctx.selection;
 		},
 		extract : function(ctx){
 			with(Tombloo.Service.extractors){
@@ -74,13 +73,13 @@ Tombloo.Service.extractors = new Repository([
 			var endpoint = Clipp.CLIPP_URL + 'bookmarklet' + link;
 			return Clipp.getForm(endpoint).addCallback(function(form) {
 				return update({
-					type: 'link',
-					item: ctx.title,
-					itemUrl: ctx.href,
-					favorite: {
-						name: 'Clipp',
-						endpoint: endpoint,
-						form: form
+					type     : 'link',
+					item     : ctx.title,
+					itemUrl  : ctx.href,
+					favorite : {
+						name     : 'Clipp',
+						endpoint : endpoint,
+						form     : form
 					}
 				}, self.convertToParams(form));
 			});
@@ -215,8 +214,7 @@ Tombloo.Service.extractors = new Repository([
 		name : 'Quote - GoogleReader',
 		ICON : 'http://www.google.com/reader/ui/favicon.ico',
 		check : function(ctx){
-			return Tombloo.Service.extractors.GoogleReader.getItem(ctx, true) &&
-				ctx.selection;
+			return Tombloo.Service.extractors.GoogleReader.getItem(ctx, true) && ctx.selection;
 		},
 		extract : function(ctx){
 			with(Tombloo.Service.extractors){
@@ -308,18 +306,12 @@ Tombloo.Service.extractors = new Repository([
 			return ctx.href.match('//twitter.com/.*?/(status|statuses)/\\d+');
 		},
 		extract : function(ctx){
-			var body = ctx.selection;
-			if(!body){
-				var content = $x('(//span[@class="entry-content"])[1]');
-				$x('.//a', content, true).forEach(function(l){l.href = l.href;});
-				body = content.innerHTML.replace(/ (rel|target)=".+?"/g, '');
-			}
-			
+			var dom = getSelectionContents(ctx.window) || $x('(//span[@class="entry-content"])[1]');
 			return {
 				type     : 'quote',
 				item     : ctx.title.substring(0, ctx.title.indexOf(': ')),
 				itemUrl  : ctx.href,
-				body     : body.trim(),
+				body     : createFlavoredString(dom),
 				favorite : {
 					name : 'Twitter',
 					id   : ctx.href.match(/(status|statuses)\/(\d+)/)[2],
@@ -335,11 +327,12 @@ Tombloo.Service.extractors = new Repository([
 			return ctx.href.match('//inyo.jp/quote/[a-f0-9]+');
 		},
 		extract : function(ctx){
+			var dom = getSelectionContents(ctx.window) || $x('//blockquote[contains(@class, "text")]/p');
 			return {
-				type    : 'quote',
-				item    : $x('//span[@class="title"]/text()'),
-				itemUrl : ctx.href,
-				body    : escapeHTML((ctx.selection || $x('//blockquote[contains(@class, "text")]/p').textContent).trim()),
+				type     : 'quote',
+				item     : $x('//span[@class="title"]/text()'),
+				itemUrl  : ctx.href,
+				body     : createFlavoredString(dom),
 			}
 		},
 	},
@@ -693,9 +686,9 @@ Tombloo.Service.extractors = new Repository([
 				itemUrl   : ctx.target.src,
 				author    : author.textContent.trim(),
 				authorUrl : author.href,
-				favorite : {
+				favorite  : {
 					name : '4u',
-					id : iLoveHer && decodeURIComponent(iLoveHer.extract('src=([^&]*)')),
+					id   : iLoveHer && decodeURIComponent(iLoveHer.extract('src=([^&]*)')),
 				}
 			};
 		},
@@ -828,9 +821,9 @@ Tombloo.Service.extractors = new Repository([
 		},
 		extract : function(ctx){
 			return {
-				type      : 'photo',
-				item      : ctx.title,
-				itemUrl   : ctx.target.src.replace(/(picoolio\.co\.uk\/photos)\/.+?\//, '$1/original/'),
+				type    : 'photo',
+				item    : ctx.title,
+				itemUrl : ctx.target.src.replace(/(picoolio\.co\.uk\/photos)\/.+?\//, '$1/original/'),
 			}
 		},
 	},
@@ -924,7 +917,7 @@ Tombloo.Service.extractors = new Repository([
 					itemUrl   : ctx.target.src.replace(/_m(\..{3})$/, '$1'),
 					author    : author.textContent,
 					authorUrl : author.href,
-					favorite : {
+					favorite  : {
 						name : 'FFFFOUND',
 						id   : ctx.href.split('/').pop(),
 					},
@@ -1256,10 +1249,10 @@ Tombloo.Service.extractors = new Repository([
 			ctx.href = tag.extract(/href="(.+?)"/);
 			
 			return {
-				type      : 'video',
-				item      : ctx.title.extract(/Dailymotion - (.*?) - /),
-				itemUrl   : ctx.href,
-				body      : tag.extract(/(<object.+object>)/),
+				type    : 'video',
+				item    : ctx.title.extract(/Dailymotion - (.*?) - /),
+				itemUrl : ctx.href,
+				body    : tag.extract(/(<object.+object>)/),
 			};
 		},
 		getTag : function(){
@@ -1298,7 +1291,7 @@ Tombloo.Service.extractors = new Repository([
 				type    : 'quote',
 				item    : ctx.title,
 				itemUrl : ctx.href,
-				body    : escapeHTML(ctx.selection.trim()),
+				body    : createFlavoredString(getSelectionContents(ctx.window)),
 			}
 		},
 	},

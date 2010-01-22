@@ -39,7 +39,7 @@ Tombloo.Service = {
 			ctx.ps = ps;
 			
 			// 予期せずに連続してquoteをポストしてしまうのを避けるため選択を解除する
-			if(ps.type == 'quote'&& ctx.window.getSelection().rangeCount)
+			if(ps.type == 'quote' && ctx.window.getSelection().rangeCount)
 				ctx.window.getSelection().collapseToStart();
 			
 			debug(ps);

@@ -276,7 +276,6 @@ connect(grobal, 'browser-load', function(e){
 			return;
 		}
 
-		// [FIXME] selection文字列化再検討
 		// command時にはクリック箇所などの情報が失われるためコンテキストを保持しておく
 		context = update({}, cwin.gContextMenu, win.location, {
 			document  : doc,

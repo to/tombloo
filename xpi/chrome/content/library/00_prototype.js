@@ -165,16 +165,4 @@ update(String.prototype, {
 		
 		return res;
 	},
-	
-	/**
-	 * 他の表現形式で値を取得する。
-	 * ウェブサービスとの通信の基本は文字列であるため、
-	 * モジュール間のデータ受け渡しもこれを拡張し用いることとした。
-	 *
-	 * @param {String} name フレーバー名("html"など)。
-	 */
-	getFlavor : function(name){
-		return (!this.flavors)? this : 
-			this.flavors[name] || this;
-	},
 });

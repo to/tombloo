@@ -925,7 +925,7 @@ models.register({
 					title      : ps.item,
 					bkmk       : ps.itemUrl,
 					annotation : joinText([ps.body, ps.description], ' ', true),
-					labels     : ps.tags? ps.tags.join(',') : '',
+					labels     : joinText(ps.tags, ','),
 					btnA       : fs.btnA,
 					sig        : fs.sig,
 				},
@@ -1005,10 +1005,21 @@ models.register({
 	
 	post : function(ps){
 		var self = this;
+		ps = update({}, ps);
 		if(!this.getAuthCookie())
 			throw new Error(getMessage('error.notLoggedin'));
 		
-		return this.getToken().addCallback(function(token){
+		var d = succeed();
+		if(ps.type=='link' && !ps.body && getPref('model.evernote.clipFullPage')){
+			d = request(ps.itemUrl).addCallback(function(res){
+				var doc = convertToHTMLDocument(res.responseText);
+				ps.body = convertToHTMLString(doc.documentElement, true);
+			});
+		}
+		
+		return d.addCallback(function(){
+			return self.getToken();
+		}).addCallback(function(token){
 			return request(self.POST_URL, {
 				redirectionLimit : 0,
 				sendContent : update(token, {
@@ -1018,8 +1029,8 @@ models.register({
 					url      : ps.itemUrl || 'no url',
 					title    : ps.item || 'no title',
 					comment  : ps.description,
-					body     : ps.body.getFlavor('html'),
-					tags     : (ps.tags)? ps.tags.join(',') : '',
+					body     : getFlavor(ps.body, 'html'),
+					tags     : joinText(ps.tags, ','),
 					fullPage : (ps.body)? 'true' : 'false',
 				}),
 			});
@@ -1162,7 +1173,7 @@ models.register({
 					description : ps.item,
 					jump        : 'no',
 					notes       : joinText([ps.body, ps.description], ' ', true),
-					tags        : ps.tags? ps.tags.join(' ') : '',
+					tags        : joinText(ps.tags, ' '),
 					share       : ps.private? 'no' : '',
 				}),
 			});
@@ -1579,7 +1590,7 @@ models.register({
 					title      : ps.item,
 					url        : ps.itemUrl,
 					desc       : joinText([ps.body, ps.description], ' ', true),
-					tags       : ps.tags? ps.tags.join(' ') : '',
+					tags       : joinText(ps.tags, ' '),
 					crumbs     : fs.crumbs,
 					visibility : ps.private==null? fs.visibility : (ps.private? 0 : 1),
 				},
@@ -1660,7 +1671,7 @@ models.register({
 				url         : ps.itemUrl,
 				description : ps.item,
 				shared      : ps.private? 'no' : '',  
-				tags        : ps.tags ? ps.tags.join(' ') : '',
+				tags        : joinText(ps.tags, ' '),
 				extended    : joinText([ps.body, ps.description], ' ', true),
 			},
 		});
@@ -2008,7 +2019,7 @@ models.register(update({
 				title   : ps.item,
 				postKey : token,
 				link    : ps.itemUrl,
-				tags    : ps.tags? ps.tags.join(' ') : '',
+				tags    : joinText(ps.tags, ' '),
 				notes   : joinText([ps.body, ps.description], ' ', true),
 				public  : ps.private? 'off' : 'on',
 			};

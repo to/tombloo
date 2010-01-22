@@ -7,7 +7,7 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 </head>
 <body>
-<form id="form">
+<form id="form" onclick="alert('HELLO')">
 	<input type="text" name="text" id="text" value="TEMP">
 	<input type="hidden" name="hidden" id="hidden" value="TEMP">
 	<select name="select" id="select">
@@ -26,6 +26,15 @@
 <script type="text/javascript">
 try {
 	// chrome://tombloo/content/test/test_utility.html
+	
+	
+	// convertToHTMLString
+	is(convertToHTMLString(document.getElementsByTagName('option')[0]), '<option value="1">A</option>');
+	
+	var html = convertToHTMLString(document.body.parentNode, true);
+	ok(!/<script/.test(html), 'スクリプトが取り除かれているか');
+	ok(!/onclick/.test(html), 'スクリプトが取り除かれているか');
+	
 	
 	// toRoma
 	is('アイウエオ'.toRoma(), 'aiueo');

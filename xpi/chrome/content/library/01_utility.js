@@ -1713,9 +1713,9 @@ function convertToXULElement(str){
 	return result;
 }
 
-function convertToHTMLString(elm, unsafe){
+function convertToHTMLString(elm, safe, flags){
 	var doc = elm.ownerDocument;
-	if(!unsafe){
+	if(safe){
 		// ツリーに組み込まれているエレメントは影響を与えないようにコピーする
 		if(elm.parentNode)
 			elm = elm.cloneNode(true);
@@ -1735,8 +1735,8 @@ function convertToHTMLString(elm, unsafe){
 	}
 	
 	// OutputFormattedを用いると不要な改行が追加され表示が崩れた
-	var encoder = new DocumentEncoder(doc, 'text/html', 
-		DocumentEncoder.OutputRaw | DocumentEncoder.OutputAbsoluteLinks);
+	flags = flags || [DocumentEncoder.OutputRaw, DocumentEncoder.OutputAbsoluteLinks];
+	var encoder = new DocumentEncoder(doc, 'text/html', flags.reduce(operator.or));
 	encoder.setNode(elm);
 	return encoder.encodeToString();
 }
@@ -1751,9 +1751,20 @@ function getTextContent(elm){
 function createFlavoredString(elm){
 	var res = new String(getTextContent(elm));
 	res.flavors = {
-		html : convertToHTMLString(elm),
+		html : convertToHTMLString(elm, true),
 	};
 	return res;
+}
+
+	
+/**
+ * 表現形式を指定して値を取得する。
+ *
+ * @param {String} name フレーバー名("html"など)。
+ */
+function getFlavor(src, name){
+	return (src==null || !src.flavors)? src : 
+		src.flavors[name] || src;
 }
 
 function makeOpaqueFlash(doc){

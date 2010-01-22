@@ -455,7 +455,7 @@ Tumblr.Regular = {
 		return {
 			'post[type]' : ps.type,
 			'post[one]'  : ps.item,
-			'post[two]'  : joinText([ps.body.getFlavor('html'), ps.description], '\n\n'),
+			'post[two]'  : joinText([getFlavor(ps.body, 'html'), ps.description], '\n\n'),
 		};
 	},
 }
@@ -517,7 +517,7 @@ Tumblr.Video = {
 	convertToForm : function(ps){
 		return {
 			'post[type]' : ps.type,
-			'post[one]'  : ps.body.getFlavor('html') || ps.itemUrl,
+			'post[one]'  : getFlavor(ps.body, 'html') || ps.itemUrl,
 			'post[two]'  : joinText([
 				(ps.item? ps.item.link(ps.pageUrl) : '') + (ps.author? ' (via ' + ps.author.link(ps.authorUrl) + ')' : ''), 
 				ps.description], '\n\n'),
@@ -540,7 +540,7 @@ Tumblr.Link = {
 			'post[type]'  : ps.type,
 			'post[one]'   : ps.item,
 			'post[two]'   : ps.itemUrl,
-			'post[three]' : joinText([thumb, ps.body.getFlavor('html'), ps.description], '\n\n'),
+			'post[three]' : joinText([thumb, getFlavor(ps.body, 'html'), ps.description], '\n\n'),
 		};
 	},
 }
@@ -557,7 +557,7 @@ Tumblr.Conversation = {
 		return {
 			'post[type]' : ps.type,
 			'post[one]'  : ps.item,
-			'post[two]'  : joinText([ps.body.getFlavor('html'), ps.description], '\n\n'),
+			'post[two]'  : joinText([getFlavor(ps.body, 'html'), ps.description], '\n\n'),
 		};
 	},
 }
@@ -573,7 +573,7 @@ Tumblr.Quote = {
 	convertToForm : function(ps){
 		return {
 			'post[type]' : ps.type,
-			'post[one]'  : ps.body.getFlavor('html'),
+			'post[one]'  : getFlavor(ps.body, 'html'),
 			'post[two]'  : joinText([(ps.item? ps.item.link(ps.pageUrl) : ''), ps.description], '\n\n'),
 		};
 	},

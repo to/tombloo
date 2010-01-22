@@ -18,3 +18,6 @@ pref('extensions.tombloo.postConfig',        '({Tumblr:{regular:"default", photo
 pref('extensions.tombloo.shortcutkey.quickPost.link',   '');
 pref('extensions.tombloo.shortcutkey.quickPost.regular','');
 pref('extensions.tombloo.shortcutkey.checkAndPost',     '');
+
+pref('extensions.tombloo.model.evernote.clipFullPage',  true);
+pref('extensions.tombloo.model.ndrive.defaultDir',      '');

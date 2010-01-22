@@ -12,6 +12,7 @@
 <!ENTITY label.shortcutkey.quickPost.regular "ショートカット - Textクイックポスト">
 <!ENTITY label.shortcutkey.checkAndPost "ショートカット(マウス) - 実行場所に適したタイプ">
 <!ENTITY label.accesskey.share "アクセスキー - Share">
+<!ENTITY label.contextMenu.top "コンテキストメニューの最上部に表示する">
 <!ENTITY label.ignoreError "無視するエラー(正規表現)">
 <!ENTITY label.dataDir "データ/スクリプトディレクトリ">
 <!ENTITY label.example "例:">

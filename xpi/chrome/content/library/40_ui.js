@@ -247,7 +247,7 @@ connect(grobal, 'browser-load', function(e){
 	var doc = cwin.document;
 	
 	connectToBrowser(cwin);
-		
+	
 	var context;
 	var menuContext = doc.getElementById('contentAreaContextMenu');
 	var menuShare   = doc.getElementById('tombloo-menu-share');
@@ -255,6 +255,17 @@ connect(grobal, 'browser-load', function(e){
 	var menuAction  = doc.getElementById('tombloo-menu-action');
 	
 	menuShare.setAttribute('accesskey', getPref('accesskey.share'));
+	
+	var separator = doc.createElement('menuseparator');
+	if(getPref('contextMenu.top')){
+		insertSiblingNodesAfter(menuAction.parentNode, separator);
+	} else {
+		// メニューを最下部へ移動する
+		menuContext.appendChild(separator);
+		menuContext.appendChild(menuShare);
+		menuContext.appendChild(menuSelect.parentNode);
+		menuContext.appendChild(menuAction.parentNode);
+	}
 	
 	// Menu Editor拡張によって個別メニューのイベントを取得できなくなる現象を回避
 	menuContext.addEventListener('popupshowing', function(e){

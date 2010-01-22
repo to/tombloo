@@ -34,6 +34,10 @@
 				name="extensions.tombloo.accesskey.share" 
 				type="string"/>
 			<preference 
+				id="contextMenu.top" 
+				name="extensions.tombloo.contextMenu.top" 
+				type="bool"/>
+			<preference 
 				id="shortcutkey.quickPost.link" 
 				name="extensions.tombloo.shortcutkey.quickPost.link" 
 				type="string"/>
@@ -98,6 +102,10 @@
 								<hbox>
 									<textbox preference="accesskey.share" maxlength="1" size="3" />
 								</hbox>
+							</row>
+							<row align="center">
+								<label value="&label.contextMenu.top;" />
+								<checkbox preference="contextMenu.top" />
 							</row>
 							<separator class="groove-thin" width="1" style="margin: 0.6em 0 1.5em 0;" />
 							<row align="center">

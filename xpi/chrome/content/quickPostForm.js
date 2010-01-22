@@ -101,6 +101,21 @@ forEach(range(1, 10), function(i){
 	};
 });
 
+forEach(range(1, 10), function(i){
+	DialogPanel.shortcutkeys['ALT + ' + i] = function(e){
+		cancel(e);
+		
+		var panel = dialogPanel.formPanel.postersPanel;
+		panel.allOff();
+		panel.toggle(panel.icons[i-1]);
+		
+		// 何が選択されたか見えるように
+		setTimeout(function(){
+			dialogPanel.formPanel.post();
+		}, 300);
+	};
+});
+
 DialogPanel.prototype = {
 	close : function(){
 		var box = this.elmBase.boxObject;

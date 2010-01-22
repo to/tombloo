@@ -101,6 +101,7 @@ forEach(range(1, 10), function(i){
 	};
 });
 
+// ダイレクト単独ポスト
 forEach(range(1, 10), function(i){
 	DialogPanel.shortcutkeys['ALT + ' + i] = function(e){
 		cancel(e);
@@ -1262,7 +1263,19 @@ PostersPanel.prototype = {
 		
 		// cancelをするとactive擬似クラスが有効にならずリアクションがなくなる
 		
-		this.toggle(e.target);
+		// ダイレクト単独ポスト
+		if(e.altKey){
+			this.allOff();
+			this.toggle(e.target);
+			
+			setTimeout(function(){
+				dialogPanel.formPanel.post();
+			}, 400);
+			
+			return true;
+		}
+			
+		this.toggle();
 	},
 	
 	onCarry : function(e){

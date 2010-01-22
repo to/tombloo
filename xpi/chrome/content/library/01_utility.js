@@ -1734,11 +1734,11 @@ function convertToHTMLString(elm, unsafe){
 		elm = appendChildNodes(doc.createDocumentFragment(), root.childNodes);
 	}
 	
+	// OutputFormattedを用いると不要な改行が追加され表示が崩れた
 	var encoder = new DocumentEncoder(doc, 'text/html', 
-		DocumentEncoder.OutputFormatted | DocumentEncoder.OutputAbsoluteLinks);
+		DocumentEncoder.OutputRaw | DocumentEncoder.OutputAbsoluteLinks);
 	encoder.setNode(elm);
 	return encoder.encodeToString();
-	// return (new XMLSerializer()).serializeToString(elm).replace(/ ?xmlns=".*?"/g,'');
 }
 
 function getTextContent(elm){

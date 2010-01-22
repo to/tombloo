@@ -117,13 +117,13 @@ update(String.prototype, {
 	},
 	
 	includesFullwidth : function(){
-		return (/[^ -~�-�]/).test(this);
+		return (/[^ -~｡-ﾟ]/).test(this);
 	},
 	
 	// http://code.google.com/p/kanaxs/
 	toHiragana : function(){
 		var c, i = this.length, a = [];
-
+		
 		while(i--){
 			c = this.charCodeAt(i);
 			a[i] = (0x30A1 <= c && c <= 0x30F6) ? c - 0x0060 : c;
@@ -134,12 +134,12 @@ update(String.prototype, {
 	
 	toKatakana : function(){
 		var c, i = this.length, a = [];
-
+		
 		while(i--){
 			c = this.charCodeAt(i);
 			a[i] = (0x3041 <= c && c <= 0x3096) ? c + 0x0060 : c;
 		};
-
+		
 		return String.fromCharCode.apply(null, a);
 	},
 	
@@ -166,6 +166,13 @@ update(String.prototype, {
 		return res;
 	},
 	
+	/**
+	 * 他の表現形式で値を取得する。
+	 * ウェブサービスとの通信の基本は文字列であるため、
+	 * モジュール間のデータ受け渡しもこれを拡張し用いることとした。
+	 *
+	 * @param {String} name フレーバー名("html"など)。
+	 */
 	getFlavor : function(name){
 		return (!this.flavors)? this : 
 			this.flavors[name] || this;

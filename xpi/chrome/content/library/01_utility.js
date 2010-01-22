@@ -415,6 +415,7 @@ function setCookie(channel){
  * @param {String} url リクエストURL。
  * @param {Object} opts リクエストオプション。
  * @param {String} opts.referrer リファラURL。
+ * opts.headers 
  * @param {String} opts.charset 文字セット。指定されない場合、レスポンスヘッダの文字セットが使われる。
  * @param {String || Object} opts.queryString クエリ。
  * @param {String || Object} opts.sendContent 
@@ -435,6 +436,11 @@ function request(url, opts){
 	
 	if(opts.referrer)
 		channel.referrer = createURI(opts.referrer);
+	
+	if(opts.headers)
+		items(opts.headers).forEach(function([key, value]){
+			channel.setRequestHeader(key, value, true);
+		});
 	
 	setCookie(channel);
 	
@@ -557,11 +563,13 @@ function request(url, opts){
 				return;
 			}
 			
-			// 元リクエストのメソッドを引き継ぐ(HEADからGETに変わり遅くならないように)
-			// XMLHttpRequestの挙動とは異なる
+			// HEADメソッドを引き継ぐ(GETに変わり遅くならないように)
 			broad(oldChannel);
-			broad(newChannel);
-			newChannel.requestMethod = oldChannel.requestMethod;
+			if(oldChannel.requestMethod == 'HEAD'){
+				broad(newChannel);
+				newChannel.requestMethod = 'HEAD';
+			}
+			
 			setCookie(newChannel);
 		},
 		

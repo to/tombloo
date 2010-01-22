@@ -248,29 +248,37 @@ connect(grobal, 'browser-load', function(e){
 	
 	connectToBrowser(cwin);
 	
+	var top = getPref('contextMenu.top');
 	var context;
 	var menuContext = doc.getElementById('contentAreaContextMenu');
 	var menuShare   = doc.getElementById('tombloo-menu-share');
 	var menuSelect  = doc.getElementById('tombloo-menu-select');
 	var menuAction  = doc.getElementById('tombloo-menu-action');
+	var separator = doc.createElement('menuseparator');
 	
 	menuShare.setAttribute('accesskey', getPref('accesskey.share'));
 	
-	var separator = doc.createElement('menuseparator');
-	if(getPref('contextMenu.top')){
+	if(top)
 		insertSiblingNodesAfter(menuAction.parentNode, separator);
-	} else {
-		// メニューを最下部へ移動する
-		menuContext.appendChild(separator);
-		menuContext.appendChild(menuShare);
-		menuContext.appendChild(menuSelect.parentNode);
-		menuContext.appendChild(menuAction.parentNode);
-	}
 	
 	// Menu Editor拡張によって個別メニューのイベントを取得できなくなる現象を回避
 	menuContext.addEventListener('popupshowing', function(e){
 		if(e.eventPhase != Event.AT_TARGET || (context && context.target == cwin.gContextMenu.target))
 			return;
+		
+		if(!top){
+			// リンク上とそれ以外で表示されるメニューが異なる
+			// 常にブックマークの上あたりに挿入する
+			var insertPoint = cwin.document.getElementById('context-sep-open');
+			if(insertPoint.hidden)
+				insertPoint = cwin.document.getElementById('context-sep-stop');
+			
+			// 表示される逆順に移動する
+			insertSiblingNodesAfter(insertPoint, separator);
+			insertSiblingNodesAfter(insertPoint, menuAction.parentNode);
+			insertSiblingNodesAfter(insertPoint, menuSelect.parentNode);
+			insertSiblingNodesAfter(insertPoint, menuShare);
+		}
 		
 		var doc = wrappedObject(cwin.gContextMenu.target.ownerDocument);
 		var win = wrappedObject(doc.defaultView);

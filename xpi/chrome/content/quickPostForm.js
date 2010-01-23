@@ -1275,7 +1275,7 @@ PostersPanel.prototype = {
 			return true;
 		}
 			
-		this.toggle();
+		this.toggle(e.target);
 	},
 	
 	onCarry : function(e){

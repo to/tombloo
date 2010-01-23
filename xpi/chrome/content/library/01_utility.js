@@ -415,7 +415,7 @@ function setCookie(channel){
  * @param {String} url リクエストURL。
  * @param {Object} opts リクエストオプション。
  * @param {String} opts.referrer リファラURL。
- * opts.headers 
+ * @param {Object} opts.headers リクエストヘッダー。
  * @param {String} opts.charset 文字セット。指定されない場合、レスポンスヘッダの文字セットが使われる。
  * @param {String || Object} opts.queryString クエリ。
  * @param {String || Object} opts.sendContent 

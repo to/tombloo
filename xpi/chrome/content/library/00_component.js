@@ -25,39 +25,46 @@ var IInputStream         = Ci.nsIInputStream;
 var ICache               = Ci.nsICache;
 var ISelectionListener   = Ci.nsISelectionListener;
 
+var start = Date.now();
 
-var ExtensionManager    = getService('/extensions/manager;1', Ci.nsIExtensionManager);
-var StorageService      = getService('/storage/service;1', Ci.mozIStorageService);
-var DirectoryService    = getService('/file/directory_service;1', Ci.nsIProperties);
-var IOService           = getService('/network/io-service;1', Ci.nsIIOService);
-var AtomService         = getService('/atom-service;1', Ci.nsIAtomService);
-var ChromeRegistry      = getService('/chrome/chrome-registry;1', Ci.nsIXULChromeRegistry);
-var WindowMediator      = getService('/appshell/window-mediator;1', Ci.nsIWindowMediator);
-var ConsoleService      = getService('/consoleservice;1', Ci.nsIConsoleService);
-var AlertsService       = getService('/alerts-service;1', Ci.nsIAlertsService);
-var MIMEService         = getService('/uriloader/external-helper-app-service;1', Ci.nsIMIMEService);
-var PromptService       = getService('/embedcomp/prompt-service;1', Ci.nsIPromptService);
-var CacheService        = getService('/network/cache-service;1', Ci.nsICacheService);
-var AppShellService     = getService('/appshell/appShellService;1', Ci.nsIAppShellService);
-var DownloadManager     = getService('/download-manager;1', Ci.nsIDownloadManager);
-var AppInfo             = getService('/xre/app-info;1');
-var UnescapeHTML        = getService('/feed-unescapehtml;1', Ci.nsIScriptableUnescapeHTML);
-var CookieService       = getService('/cookieService;1', Ci.nsICookieService);
-var CookieManager       = getService('/cookiemanager;1', Ci.nsICookieManager);
-var PasswordManager     = getService('/passwordmanager;1', Ci.nsIPasswordManager);
-var LoginManager        = getService('/login-manager;1', Ci.nsILoginManager);
-var StringBundleService = getService('/intl/stringbundle;1', Ci.nsIStringBundleService);
-var NavBookmarksService = getService('/browser/nav-bookmarks-service;1', Ci.nsINavBookmarksService);
-var AnnotationService   = getService('/browser/annotation-service;1', Ci.nsIAnnotationService);
-var ObserverService     = getService('/observer-service;1', Ci.nsIObserverService);
-var WindowWatcher       = getService('/embedcomp/window-watcher;1', Ci.nsIWindowWatcher);
-var ClipboardHelper     = getService('/widget/clipboardhelper;1', Ci.nsIClipboardHelper);
-var NavHistoryService   = getService('/browser/nav-history-service;1', Ci.nsINavHistoryService);
-var FaviconService      = getService('/browser/favicon-service;1', Ci.nsIFaviconService);
-var StyleSheetService   = getService('/content/style-sheet-service;1', Ci.nsIStyleSheetService);
-var FuelApplication     = getService('/fuel/application;1', Ci.fuelIApplication);
-var PrefService         = getService('/preferences-service;1');
-var MIMEService         = getService('/mime;1', Ci.nsIMIMEService);
+[
+	['ConsoleService',      'nsIConsoleService',         '/consoleservice;1'],
+	['ExtensionManager',    'nsIExtensionManager',       '/extensions/manager;1'],
+	['StorageService',      'mozIStorageService',        '/storage/service;1'],
+	['DirectoryService',    'nsIProperties',             '/file/directory_service;1'],
+	['IOService',           'nsIIOService',              '/network/io-service;1'],
+	['AtomService',         'nsIAtomService',            '/atom-service;1'],
+	['ChromeRegistry',      'nsIXULChromeRegistry',      '/chrome/chrome-registry;1'],
+	['WindowMediator',      'nsIWindowMediator',         '/appshell/window-mediator;1'],
+	['AlertsService',       'nsIAlertsService',          '/alerts-service;1'],
+	['MIMEService',         'nsIMIMEService',            '/uriloader/external-helper-app-service;1'],
+	['PromptService',       'nsIPromptService',          '/embedcomp/prompt-service;1'],
+	['CacheService',        'nsICacheService',           '/network/cache-service;1'],
+	['AppShellService',     'nsIAppShellService',        '/appshell/appShellService;1'],
+	['DownloadManager',     'nsIDownloadManager',        '/download-manager;1'],
+	['UnescapeHTML',        'nsIScriptableUnescapeHTML', '/feed-unescapehtml;1'],
+	['CookieService',       'nsICookieService',          '/cookieService;1'],
+	['CookieManager',       'nsICookieManager',          '/cookiemanager;1'],
+	['PasswordManager',     'nsIPasswordManager',        '/passwordmanager;1'],
+	['LoginManager',        'nsILoginManager',           '/login-manager;1'],
+	['StringBundleService', 'nsIStringBundleService',    '/intl/stringbundle;1'],
+	['NavBookmarksService', 'nsINavBookmarksService',    '/browser/nav-bookmarks-service;1'],
+	['AnnotationService',   'nsIAnnotationService',      '/browser/annotation-service;1'],
+	['ObserverService',     'nsIObserverService',        '/observer-service;1'],
+	['WindowWatcher',       'nsIWindowWatcher',          '/embedcomp/window-watcher;1'],
+	['ClipboardHelper',     'nsIClipboardHelper',        '/widget/clipboardhelper;1'],
+	['NavHistoryService',   'nsINavHistoryService',      '/browser/nav-history-service;1'],
+	['FaviconService',      'nsIFaviconService',         '/browser/favicon-service;1'],
+	['StyleSheetService',   'nsIStyleSheetService',      '/content/style-sheet-service;1'],
+	['FuelApplication',     'fuelIApplication',          '/fuel/application;1'],
+	['MIMEService',         'nsIMIMEService',            '/mime;1'],
+	['PrefService',         null,                        '/preferences-service;1'],
+	['AppInfo',             null,                        '/xre/app-info;1'],
+].forEach(function([name, ifc, cid]){
+	defineLazyServiceGetter(this, name, '@mozilla.org' + cid, ifc);
+}, this);
+
+ConsoleService.logStringMessage(''+(Date.now() - start));
 
 var PrefBranch = 
 	createConstructor('/preferences;1', 'nsIPrefBranch');
@@ -244,20 +251,26 @@ function createConstructor(clsName, ifc, init){
 }
 
 /**
- * XPCOMサービスを取得する。
- * インターフェースが指定されない場合、利用できる全てのインターフェースに拡げられる。
+ * XPCOMサービスを定義する。
+ * XPCOMUtils.defineLazyServiceGetterより。
+ * Firefox 3.5では存在しないため別途作成した。
  *
- * @param {String} clsName クラス名(@mozilla.org以降を指定する)。
- * @param {nsIJSID} ifc インターフェイス。
+ * @param {Object} obj サービスを取得するプロパティを付加するオブジェクト。
+ * @param {String} name プロパティ名称。
+ * @param {String} cid Contract ID。
+ * @param {String} ifc インターフェイス名。
  */
-function getService(clsName, ifc){
-	try{
-		var cls = Components.classes['@mozilla.org' + clsName];
-		return !cls? null : 
-			ifc? cls.getService(ifc) : broad(cls.getService());
-	} catch(e) {
-		return null;
-	}
+function defineLazyServiceGetter(obj, name, cid, ifc){
+	var cls = Cc[cid];
+	if(!cls)
+		return;
+	
+	obj.__defineGetter__(name, function(){
+		delete this[name];
+		try{
+			return this[name] = (ifc)? cls.getService(Ci[ifc]) : broad(cls.getService());
+		} catch(e){}
+	});
 }
 
 /**

@@ -420,6 +420,7 @@ function connectToBrowser(win){
 		hooked.contentReady = true;
 	}
 	
+	// ショートカットキーが設定されているか？
 	if(!hooked.shortcutkey && !isEmpty(shortcutkeys)){
 		win.addEventListener('keydown', function(e){
 			var key = shortcutkeys[keyString(e)];
@@ -433,6 +434,7 @@ function connectToBrowser(win){
 		hooked.shortcutkey = true;
 	}
 	
+	// マウスショートカットが設定されているか？
 	if(!hooked.mouseShortcut && keys(shortcutkeys).some(function(key){return key.indexOf('_DOWN')!=-1})){
 		observeMouseShortcut(win, function(e, key){
 			key = shortcutkeys[key];

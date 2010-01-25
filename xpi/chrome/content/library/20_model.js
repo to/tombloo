@@ -672,7 +672,7 @@ models.register({
 	},
 	
 	post : function(ps){
-		return this.update(joinText([ps.description, (ps.body)? '"' + ps.body + '"' : '', ps.item, ps.itemUrl], ' ', true));
+		return this.update(joinText([ps.description, (ps.body)? '"' + ps.body + '"' : '', ps.item, ps.itemUrl], ' '));
 	},
 	
 	update : function(status){

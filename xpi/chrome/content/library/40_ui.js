@@ -269,22 +269,6 @@ connect(grobal, 'browser-load', function(e){
 		if(e.eventPhase != Event.AT_TARGET || (context && context.target == cwin.gContextMenu.target))
 			return;
 		
-		if(!top && !menuEditor){
-			// リンク上とそれ以外で表示されるメニューが異なる
-			// 常に上から2ブロック目あたりに表示する
-			var insertPoint;
-			['context-sep-open', 'context-sep-copyimage', 'context-sep-stop', 'context-sep-selectall'].some(function(id){
-				insertPoint = cwin.document.getElementById(id);
-				return insertPoint && !insertPoint.hidden;
-			});
-			
-			// 表示される逆順に移動する
-			insertSiblingNodesAfter(insertPoint, separator);
-			insertSiblingNodesAfter(insertPoint, menuAction.parentNode);
-			insertSiblingNodesAfter(insertPoint, menuSelect.parentNode);
-			insertSiblingNodesAfter(insertPoint, menuShare);
-		}
-		
 		var doc = wrappedObject(cwin.gContextMenu.target.ownerDocument);
 		var win = wrappedObject(doc.defaultView);
 		try{
@@ -342,6 +326,23 @@ connect(grobal, 'browser-load', function(e){
 				elmItem.extractor = ext.name;
 				elmItem.showForm = true;
 			}
+		}
+		
+		// Menu Editorが有効になっている場合は衝突を避ける(表示されなくなる)
+		if(!top && !menuEditor){
+			// リンク上とそれ以外で表示されるメニューが異なる
+			// 常に上から2ブロック目あたりに表示する
+			var insertPoint;
+			['context-sep-open', 'context-sep-copyimage', 'context-sep-stop', 'context-sep-selectall'].some(function(id){
+				insertPoint = cwin.document.getElementById(id);
+				return insertPoint && !insertPoint.hidden;
+			});
+			
+			// 表示される逆順に移動する
+			insertSiblingNodesAfter(insertPoint, separator);
+			insertSiblingNodesAfter(insertPoint, menuAction.parentNode);
+			insertSiblingNodesAfter(insertPoint, menuSelect.parentNode);
+			insertSiblingNodesAfter(insertPoint, menuShare);
 		}
 	}, true);
 	

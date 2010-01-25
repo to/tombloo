@@ -23,3 +23,4 @@ pref('extensions.tombloo.shortcutkey.checkAndPost',     '');
 
 pref('extensions.tombloo.model.evernote.clipFullPage',  true);
 pref('extensions.tombloo.model.ndrive.defaultDir',      '');
+pref('extensions.tombloo.model.picasa.defaultAlbum',    '');

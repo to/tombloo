@@ -344,25 +344,36 @@ models.register({
 	 *        画像ファイル。単数または複数(最大5ファイル)。
 	 * @param {optional String} user 
 	 *        ユーザーID。省略された場合は現在Googleアカウントでログインしていると仮定される。
-	 * @param {optional Number} album 
-	 *        アルバムID(名称ではない)。省略された場合はリスト先頭のアルバムとなる。
+	 * @param {optional String || Number} album 
+	 *        アルバム名称またはアルバムID。
+	 *        省略された場合はmodel.picasa.defaultAlbumの設定値か先頭のアルバムとなる。
 	 * @param {String || nsIFile || nsIURI} basePath 基点となるパス。
 	 */
 	upload : function(files, user, album){
 		files = [].concat(files);
 		
+		album = album || getPref('model.picasa.defaultAlbum');
+		
 		var self = this;
 		var user = user || this.getCurrentUser();
 		var endpoint;
-		return maybeDeferred(album || this.getAlbums(user).addCallback(function(albums){
-			// アルバムが指定されていない場合は先頭のアルバムとする
-			return albums.feed.entry[0].gphoto$id.$t;
-		})).addCallback(function(album){
+		return maybeDeferred((typeof(album)=='number')? album : this.getAlbums(user).addCallback(function(albums){
+			if(album){
+				// 大/小文字が表示されているものと異なる
+				for each(var a in albums.feed.entry)
+					if(album.match(a.gphoto$name.$t, 'i'))
+						return a.gphoto$id.$t;
+				throw new Error('Album not found.');
+			} else {
+				// アルバムが指定されていない場合は先頭のアルバムとする
+				return albums.feed.entry[0].gphoto$id.$t;
+			}
+		})).addCallback(function(aid){
 			// トークンを取得しポスト準備をする
 			return request(self.URL + '/lh/webUpload', {
 				queryString : {
 					uname : user,
-					aid   : album,
+					aid   : aid,
 				}
 			}).addCallback(function(res){
 				var doc = convertToHTMLDocument(res.responseText);

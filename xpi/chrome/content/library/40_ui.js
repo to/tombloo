@@ -261,17 +261,22 @@ connect(grobal, 'browser-load', function(e){
 	if(top)
 		insertSiblingNodesAfter(menuAction.parentNode, separator);
 	
+	var menuEditor = FuelApplication.extensions.get('{EDA7B1D7-F793-4e03-B074-E6F303317FB0}');
+	menuEditor = menuEditor && menuEditor.enabled;
+	
 	// Menu Editor拡張によって個別メニューのイベントを取得できなくなる現象を回避
 	menuContext.addEventListener('popupshowing', function(e){
 		if(e.eventPhase != Event.AT_TARGET || (context && context.target == cwin.gContextMenu.target))
 			return;
 		
-		if(!top){
+		if(!top && !menuEditor){
 			// リンク上とそれ以外で表示されるメニューが異なる
-			// 常にブックマークの上あたりに挿入する
-			var insertPoint = cwin.document.getElementById('context-sep-open');
-			if(insertPoint.hidden)
-				insertPoint = cwin.document.getElementById('context-sep-stop');
+			// 常に上から2ブロック目あたりに表示する
+			var insertPoint;
+			['context-sep-open', 'context-sep-copyimage', 'context-sep-stop', 'context-sep-selectall'].some(function(id){
+				insertPoint = cwin.document.getElementById(id);
+				return insertPoint && !insertPoint.hidden;
+			});
 			
 			// 表示される逆順に移動する
 			insertSiblingNodesAfter(insertPoint, separator);

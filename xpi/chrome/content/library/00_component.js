@@ -25,8 +25,6 @@ var IInputStream         = Ci.nsIInputStream;
 var ICache               = Ci.nsICache;
 var ISelectionListener   = Ci.nsISelectionListener;
 
-var start = Date.now();
-
 [
 	['ConsoleService',      'nsIConsoleService',         '/consoleservice;1'],
 	['ExtensionManager',    'nsIExtensionManager',       '/extensions/manager;1'],
@@ -63,8 +61,6 @@ var start = Date.now();
 ].forEach(function([name, ifc, cid]){
 	defineLazyServiceGetter(this, name, '@mozilla.org' + cid, ifc);
 }, this);
-
-ConsoleService.logStringMessage(''+(Date.now() - start));
 
 var PrefBranch = 
 	createConstructor('/preferences;1', 'nsIPrefBranch');

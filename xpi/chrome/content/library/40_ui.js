@@ -353,11 +353,11 @@ connect(grobal, 'browser-load', function(e){
 		forEach(Tombloo.Service.actions, function([name, action]){
 			if(!/context/.test(action.type))
 				return;
-				
+			
 			if(action.check && !action.check(context))
 				return;
 			
-			var elmItem = appendMenuItem(menuAction, action.name);
+			var elmItem = appendMenuItem(menuAction, action.name, action.icon);
 			elmItem.action = action;
 		});
 	}, true);

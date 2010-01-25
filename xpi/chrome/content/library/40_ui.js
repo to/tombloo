@@ -298,18 +298,6 @@ connect(grobal, 'browser-load', function(e){
 			menu      : cwin.gContextMenu,
 		});
 		
-		// アクションメニューを作成する
-		forEach(Tombloo.Service.actions, function([name, action]){
-			if(!/context/.test(action.type))
-				return;
-				
-			if(action.check && !action.check(context))
-				return;
-			
-			var elmItem = appendMenuItem(menuAction, action.name);
-			elmItem.action = action;
-		});
-		
 		var exts = Tombloo.Service.check(context);
 		menuShare.label = 'Share - ' + exts[0].name;
 		menuShare.extractor = exts[0].name;
@@ -352,8 +340,26 @@ connect(grobal, 'browser-load', function(e){
 		
 		context = null;
 		
-		clearChildren(menuAction);
 		clearChildren(menuSelect);
+		clearChildren(menuAction);
+	}, true);
+	
+	menuAction.addEventListener('popupshowing', function(e){
+		// メニュー生成済みなら返る
+		if(menuAction.childNodes.length)
+			return;
+		
+		// アクションメニューを作成する
+		forEach(Tombloo.Service.actions, function([name, action]){
+			if(!/context/.test(action.type))
+				return;
+				
+			if(action.check && !action.check(context))
+				return;
+			
+			var elmItem = appendMenuItem(menuAction, action.name);
+			elmItem.action = action;
+		});
 	}, true);
 	
 	menuContext.addEventListener('command', function(e){

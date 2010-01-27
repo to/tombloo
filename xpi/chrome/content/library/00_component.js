@@ -345,7 +345,7 @@ function createURI(path){
 	
 	try{
 		var path = (path instanceof IFile) ? path : new LocalFile(path);
-		return IOService.newFileURI(path)	;
+		return broad(IOService.newFileURI(path));
 	}catch(e){}
 	
 	var uri = IOService.newURI(path, null, null);

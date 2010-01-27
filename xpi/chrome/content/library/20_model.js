@@ -2529,7 +2529,7 @@ models.register(update({}, AbstractSessionService, {
 	post : function(ps){
 		var self = this;
 		return (ps.file? succeed(ps.file) : download(ps.itemUrl, getTempDir())).addCallback(function(file){
-			return self.upload(file, null, validateFileName(ps.item));
+			return self.upload(file, null, ps.item + '.' + createURI(file).fileExtension);
 		});
 	},
 	
@@ -2629,6 +2629,10 @@ models.register(update({}, AbstractSessionService, {
 		return paths.join('/');
 	},
 	
+	validateFileName : function(name){
+		return name.replace(/[:\|\?\*\/\\]/g, '-').replace(/"/g, "'").replace(/</g, "(").replace(/>/g, ")");
+	},
+	
 	/**
 	 * ファイルをアップロードする。
 	 * 空要素は除外される。
@@ -2653,7 +2657,7 @@ models.register(update({}, AbstractSessionService, {
 		var self = this;
 		
 		file = getLocalFile(file);
-		name = name || file.leafName;
+		name = this.validateFileName(name || file.leafName);
 		
 		if(!dir)
 			dir = getPref('model.ndrive.defaultDir') || '';

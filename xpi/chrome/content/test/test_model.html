@@ -631,6 +631,8 @@ try {
 	is(NDrive.incrementFile('/a/b/c/test.jpg'), '/a/b/c/test(2).jpg');
 	is(NDrive.incrementFile('/a.1/b.2/c.3/te.st.jpg'), '/a.1/b.2/c.3/te.st(2).jpg');
 	
+	is(NDrive.validateFileName('<t|e:s/t>.jpg'), '(t-e-s-t).jpg');
+	is(NDrive.validateFileName('"t\\e?s*t".jpg'), "'t-e-s-t'.jpg");
 	
 	d.addErrback(function(e){
 		error(e.message);

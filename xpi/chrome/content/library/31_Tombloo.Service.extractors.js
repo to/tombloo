@@ -636,8 +636,8 @@ Tombloo.Service.extractors = new Repository([
 		},
 		getImage : function(ctx){
 			// 標準モード
-			var img = $x('.//img', ctx.target.parentNode);
-			if(img && img.src.match('//books.google.'))
+			var img = $x('./ancestor::div[@class="pageImageDisplay"]//img[contains(@src, "//books.google.")]', ctx.target);
+			if(img)
 				return img;
 			
 			// HTMLモード

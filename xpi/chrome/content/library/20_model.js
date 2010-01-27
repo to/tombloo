@@ -2357,7 +2357,7 @@ models.register({
 	
 	shorten : function(url){
 		var self = this;
-		if((/\/\/bit\.ly/).test(url))
+		if(url.match('//(bit.ly|j.mp)/'))
 			return succeed(url);
 		
 		return this.callMethod('shorten', {

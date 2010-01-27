@@ -354,7 +354,7 @@ Tombloo.Service.extractors = new Repository([
 		},
 		extract : function(ctx){
 			ctx.href = this.normalizeUrl(ctx.host, this.getAsin(ctx));
-			ctx.title = $x('id("prodImage")/@alt') + ': ' + ctx.document.title.split(/[：:] */).slice(-2).shift();
+			ctx.title = 'Amazon: ' + $x('id("prodImage")/@alt') + ': ' + ctx.document.title.split(/[：:] */).slice(-2).shift();
 		},
 	},
 	
@@ -1304,7 +1304,7 @@ Tombloo.Service.extractors = new Repository([
 		},
 		extract : function(ctx){
 			// リンクテキストが無い場合はページタイトルで代替する
-			var title = ctx.target.textContent;
+			var title = ctx.target.textContent || ctx.link.title;
 			if(!title || title==ctx.target.href)
 				title = ctx.title;
 			

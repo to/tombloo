@@ -150,12 +150,12 @@ forEach({
 			target    : doc.documentElement,
 		}, win.location);
 		
-		var models = Tombloo.Service.check(ctx).filter(function(model){
-			return /^Link/.test(model.name);
+		var exts = Tombloo.Service.check(ctx).filter(function(ext){
+			return /^Link/.test(ext.name);
 		});
 		Tombloo.Service.extractors.extract(
 			ctx, 
-			models[0]
+			exts[0]
 		).addCallback(function(ps){
 			QuickPostForm.show(ps);
 		});
@@ -345,21 +345,33 @@ connect(grobal, 'browser-load', function(e){
 	}, true);
 	
 	menuAction.addEventListener('popupshowing', function(e){
+		if(e.eventPhase != Event.AT_TARGET)
+			return;
+		
 		// メニュー生成済みなら返る
 		if(menuAction.childNodes.length)
 			return;
 		
 		// アクションメニューを作成する
-		forEach(Tombloo.Service.actions, function([name, action]){
-			if(!/context/.test(action.type))
-				return;
-			
-			if(action.check && !action.check(context))
-				return;
-			
-			var elmItem = appendMenuItem(menuAction, action.name, action.icon);
-			elmItem.action = action;
-		});
+		var doc = cwin.document;
+		var df = doc.createDocumentFragment();
+		(function me(actions, parent){
+			actions.forEach(function(action){
+				// 最初の階層のみアクションタイプを確認する
+				if(parent == df && !/context/.test(action.type))
+					return;
+				
+				if(action.check && !action.check(context))
+					return;
+				
+				var elmItem = appendMenuItem(parent, action.name, action.icon, !!action.children);
+				elmItem.action = action;
+				
+				if(action.children)
+					me(action.children, elmItem.appendChild(doc.createElement('menupopup')));
+			});
+		})(values(Tombloo.Service.actions), df);
+		menuAction.appendChild(df);
 	}, true);
 	
 	menuContext.addEventListener('command', function(e){
@@ -380,9 +392,10 @@ connect(grobal, 'browser-load', function(e){
 	
 	// clickイベントはマウス座標が異常
 	menuContext.addEventListener('mousedown', function(e){
-		if(!e.target.extractor)
+		if(!e.target.extractor && !e.target.action)
 			return;
 		
+		context.originalEvent = e;
 		context.mouse.post = {
 			x : e.screenX, 
 			y : e.screenY

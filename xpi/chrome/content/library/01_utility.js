@@ -123,6 +123,9 @@ function getMessage(key){
  * @param {String} title ウィンドウタイトル。
  */
 function input(form, title){
+	if(typeof(form)=='string')
+		return PromptService.confirm(null, title, form);
+	
 	function m(key){
 		return getMessage(key) || key || '';
 	}
@@ -141,20 +144,25 @@ function input(form, title){
 		return list[selected.value];
 	}
 	
-	var vals = values(form);
-	var method = (vals[0] == null && typeof(vals[1]) == 'boolean')? 'confirmCheck' : 'prompt';
-	
 	var args = [null, m(title)];
 	for(var msg in form){
 		args.push(m(msg));
 		
-		// 値を一時的にオブジェクトに変換する
+		// メッセージではないか？
 		if(form[msg] != null){
+			// 値を一時的にオブジェクトに変換する
 			var val = {value : form[msg]};
 			form[msg] = val;
 			args.push(val);
 		}
 	}
+	
+	var vals = values(form);
+	var method = (vals[0] == null && typeof(vals[1]) == 'boolean')? 'confirmCheck' : 'prompt';
+	
+	// テキストボックスのみか？(チェックボックス不要の場合)
+	if(method=='prompt' && args.length==4)
+		args = args.concat([null, {}]);
 	
 	if(!PromptService[method].apply(PromptService, args))
 		return;

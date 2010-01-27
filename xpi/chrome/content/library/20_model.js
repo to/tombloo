@@ -2759,7 +2759,7 @@ models.getPostConfig = function(config, name, ps){
 
 
 function shortenUrls(text, model){
-	var reUrl = /https?[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+/g;
+	var reUrl = /https?[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#\^]+/g;
 	if(!reUrl.test(text))
 		return;
 		

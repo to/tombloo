@@ -597,7 +597,7 @@ function request(url, opts){
 			
 			var text = this.data.join('');
 			try{
-				var charset = opts.charset || req.contentCharset;
+				var charset = opts.charset || req.contentCharset || text.extract(/content=["'].*charset=(.+?)[;"']/i);
 				text = charset? text.convertToUnicode(charset) : text;
 				
 				var res = {

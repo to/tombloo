@@ -2,21 +2,21 @@
 <RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
          xmlns:NC="http://home.netscape.com/NC-rdf#"
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Seq RDF:about="rdf:#$3JLWq">
-    <RDF:li RDF:resource="rdf:#$4JLWq"/>
-  </RDF:Seq>
-  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
-                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAEFACoKq1XClIrf3cxPtsrhDSo8XkY93ElUjtD9Qi2MXkSPL2TuSmu6u2tTlAxk5zNqGS4cgJH8M8ovGszs9QPCgJjfS67I4bR+/sph99zIk5xbm21CWJUPTzkJpBnv5O/3XMVM+a+IMiOWe7Q8WsV8DxQljpsvQAQ/NAtAT8iWB">
-    <em:updates RDF:resource="rdf:#$3JLWq"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$4JLWq"
-                   em:version="0.4.7">
-    <em:targetApplication RDF:resource="rdf:#$7JLWq"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$7JLWq"
+  <RDF:Description RDF:about="rdf:#$480FY"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
-                   em:minVersion="3.0"
+                   em:minVersion="3.5"
                    em:maxVersion="3.6.*"
                    em:updateLink="http://github.com/to/tombloo/raw/release/tombloo.xpi"
-                   em:updateHash="sha512:99e2930e3490aca8ad2f69b9fe0528eb967af99ea5c266c2e34e115c9111dfb23165d9a4c23d8b77a41203e1e532fcc39bf85fd913303f79584df5ee5e492f92" />
+                   em:updateHash="sha512:ee709ef1aef2878015beeec67d74a8ba463d3fc0dfafa20a227c30d932c407d3f40e19f2c2b26352761c481965ae5bae33cebcbf0a4266f13d4852a6d56584b5" />
+  <RDF:Seq RDF:about="rdf:#$080FY">
+    <RDF:li RDF:resource="rdf:#$180FY"/>
+  </RDF:Seq>
+  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAM3mnR+j8F95R91UNPHdPDDFvTLZNf/CjnLKRTcbXNQjTCn4u+GdQ+GR8pBoblJzi7VVG5DEZ3XIsLj2ohNvbqV1BbNmCFjiOorBxM5f2Pzx/crD7ND8jz8zmpjbTQ8nA6eG3ClshSN6WQ4RymsAs1Kq4NyKPhFh4hl/cIXik0tW">
+    <em:updates RDF:resource="rdf:#$080FY"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$180FY"
+                   em:version="0.4.8">
+    <em:targetApplication RDF:resource="rdf:#$480FY"/>
+  </RDF:Description>
 </RDF:RDF>

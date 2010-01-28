@@ -1341,102 +1341,99 @@ models.register(update({}, AbstractSessionService, {
 	},
 }));
 
-// Firefox 3以降
-if(NavBookmarksService){
-	models.register({
-		name : 'FirefoxBookmark',
-		ICON : 'chrome://tombloo/skin/firefox.ico',
-		ANNO_DESCRIPTION : 'bookmarkProperties/description',
+models.register({
+	name : 'FirefoxBookmark',
+	ICON : 'chrome://tombloo/skin/firefox.ico',
+	ANNO_DESCRIPTION : 'bookmarkProperties/description',
+	
+	check : function(ps){
+		return ps.type == 'link';
+	},
+	
+	post : function(ps){
+		return succeed(this.addBookmark(ps.itemUrl, ps.item, ps.tags, ps.description));
+	},
+	
+	addBookmark : function(uri, title, tags, description){
+		uri = createURI(uri);
+		tags = tags || [];
 		
-		check : function(ps){
-			return ps.type == 'link';
-		},
+		if(this.isBookmarked(uri))
+			return;
 		
-		post : function(ps){
-			return succeed(this.addBookmark(ps.itemUrl, ps.item, ps.tags, ps.description));
-		},
+		var folders = [NavBookmarksService.unfiledBookmarksFolder].concat(tags.map(bind('createTag', this)));
+		folders.forEach(function(folder){
+			NavBookmarksService.insertBookmark(
+				folder, 
+				uri,
+				NavBookmarksService.DEFAULT_INDEX,
+				title);
+		});
 		
-		addBookmark : function(uri, title, tags, description){
-			uri = createURI(uri);
-			tags = tags || [];
+		this.setDescription(uri, description);
+	},
+	
+	getBookmark : function(uri){
+		uri = createURI(uri);
+		var item = this.getBookmarkId(uri);
+		if(item)
+			return {
+				title       : NavBookmarksService.getItemTitle(item),
+				uri         : uri.asciiSpec,
+				description : this.getDescription(item),
+			};
+	},
+	
+	isBookmarked : function(uri){
+		return NavBookmarksService.isBookmarked(createURI(uri));
+	},
+	
+	removeBookmark : function(uri){
+		uri = createURI(uri);
+		NavBookmarksService.getBookmarkIdsForURI(uri, {}).forEach(function(item){
+			NavBookmarksService.removeItem(item);
+		});
+	},
+	
+	getBookmarkId : function(uri){
+		if(typeof(uri)=='number')
+			return uri;
+		
+		uri = createURI(uri);
+		return NavBookmarksService.getBookmarkIdsForURI(uri, {}).filter(function(item){
+			while(item = NavBookmarksService.getFolderIdForItem(item))
+				if(item == NavBookmarksService.tagsFolder)
+					return false;
 			
-			if(this.isBookmarked(uri))
-				return;
-			
-			var folders = [NavBookmarksService.unfiledBookmarksFolder].concat(tags.map(bind('createTag', this)));
-			folders.forEach(function(folder){
-				NavBookmarksService.insertBookmark(
-					folder, 
-					uri,
-					NavBookmarksService.DEFAULT_INDEX,
-					title);
-			});
-			
-			this.setDescription(uri, description);
-		},
-		
-		getBookmark : function(uri){
-			uri = createURI(uri);
-			var item = this.getBookmarkId(uri);
-			if(item)
-				return {
-					title       : NavBookmarksService.getItemTitle(item),
-					uri         : uri.asciiSpec,
-					description : this.getDescription(item),
-				};
-		},
-		
-		isBookmarked : function(uri){
-			return NavBookmarksService.isBookmarked(createURI(uri));
-		},
-		
-		removeBookmark : function(uri){
-			uri = createURI(uri);
-			NavBookmarksService.getBookmarkIdsForURI(uri, {}).forEach(function(item){
-				NavBookmarksService.removeItem(item);
-			});
-		},
-		
-		getBookmarkId : function(uri){
-			if(typeof(uri)=='number')
-				return uri;
-			
-			uri = createURI(uri);
-			return NavBookmarksService.getBookmarkIdsForURI(uri, {}).filter(function(item){
-				while(item = NavBookmarksService.getFolderIdForItem(item))
-					if(item == NavBookmarksService.tagsFolder)
-						return false;
-				
-				return true;
-			})[0];
-		},
-		
-		getDescription : function(uri){
-			try{
-				return AnnotationService.getItemAnnotation(this.getBookmarkId(uri), this.ANNO_DESCRIPTION);
-			} catch(e){
-				return '';
-			}
-		},
-		
-		setDescription : function(uri, description){
-			description = description || '';
-			try{
-				AnnotationService.setItemAnnotation(this.getBookmarkId(uri), this.ANNO_DESCRIPTION, description, 
-					0, AnnotationService.EXPIRE_NEVER);
-			} catch(e){}
-		},
-		
-		createTag : function(name){
-			return this.createFolder(NavBookmarksService.tagsFolder, name);
-		},
-		
-		createFolder : function(parent, name){
-			return NavBookmarksService.getChildFolder(parent, name) || 
-				NavBookmarksService.createFolder(parent, name, NavBookmarksService.DEFAULT_INDEX);
-		},
-	});
-}
+			return true;
+		})[0];
+	},
+	
+	getDescription : function(uri){
+		try{
+			return AnnotationService.getItemAnnotation(this.getBookmarkId(uri), this.ANNO_DESCRIPTION);
+		} catch(e){
+			return '';
+		}
+	},
+	
+	setDescription : function(uri, description){
+		description = description || '';
+		try{
+			AnnotationService.setItemAnnotation(this.getBookmarkId(uri), this.ANNO_DESCRIPTION, description, 
+				0, AnnotationService.EXPIRE_NEVER);
+		} catch(e){}
+	},
+	
+	createTag : function(name){
+		return this.createFolder(NavBookmarksService.tagsFolder, name);
+	},
+	
+	createFolder : function(parent, name){
+		return NavBookmarksService.getChildFolder(parent, name) || 
+			NavBookmarksService.createFolder(parent, name, NavBookmarksService.DEFAULT_INDEX);
+	},
+});
 
 
 models.register(update({

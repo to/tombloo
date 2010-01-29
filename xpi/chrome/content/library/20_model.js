@@ -1354,14 +1354,18 @@ models.register({
 		return succeed(this.addBookmark(ps.itemUrl, ps.item, ps.tags, ps.description));
 	},
 	
-	addBookmark : function(uri, title, tags, description){
+	addBookmark : function(uri, title, tags, description, folder){
 		uri = createURI(uri);
 		tags = tags || [];
 		
 		if(this.isBookmarked(uri))
 			return;
 		
-		var folders = [NavBookmarksService.unfiledBookmarksFolder].concat(tags.map(bind('createTag', this)));
+		folder = (!folder)? 
+			NavBookmarksService.unfiledBookmarksFolder : 
+			this.createFolder(NavBookmarksService.bookmarksMenuFolder, folder);
+		
+		var folders = [folder].concat(tags.map(bind('createTag', this)));
 		folders.forEach(function(folder){
 			NavBookmarksService.insertBookmark(
 				folder, 
@@ -1389,10 +1393,7 @@ models.register({
 	},
 	
 	removeBookmark : function(uri){
-		uri = createURI(uri);
-		NavBookmarksService.getBookmarkIdsForURI(uri, {}).forEach(function(item){
-			NavBookmarksService.removeItem(item);
-		});
+		NavBookmarksService.removeItem(this.getBookmarkId(uri));
 	},
 	
 	getBookmarkId : function(uri){

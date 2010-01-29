@@ -599,25 +599,22 @@ try {
 	});
 	*/
 	
-	/*
-	if(models.FirefoxBookmark){
-		// FirefoxBookmark
-		var uri = 'chrome://tombloo/content/prefs.xul';
-		var title = 'Tombloo 設定画面';
-		var description = 'DESCRIPTION';
-		
-		models.FirefoxBookmark.addBookmark(uri, title, ['tombloo', 'chrome'], description);
-		sameObject(models.FirefoxBookmark.getBookmark(uri), {
-			title : title,
-			uri : uri,
-			description : description,
-		}, 'FirefoxBookmark: ブックマークの追加');
-		ok(models.FirefoxBookmark.isBookmarked(uri));
-		
-		models.FirefoxBookmark.removeBookmark(uri);
-		ok(!models.FirefoxBookmark.getBookmark(uri), 'FirefoxBookmark: ブックマークの削除');
-	}
-	*/
+	// FirefoxBookmark
+	var uri = 'chrome://tombloo/content/prefs.xul';
+	var title = 'Tombloo 設定画面';
+	var description = 'DESCRIPTION';
+	
+	models.FirefoxBookmark.addBookmark(uri, title, ['tombloo', 'chrome'], description);
+	sameObject(models.FirefoxBookmark.getBookmark(uri), {
+		title : title,
+		uri : uri,
+		description : description,
+	}, 'FirefoxBookmark: ブックマークの追加');
+	ok(models.FirefoxBookmark.isBookmarked(uri));
+	
+	models.FirefoxBookmark.removeBookmark(uri);
+	ok(!models.FirefoxBookmark.getBookmark(uri), 'FirefoxBookmark: ブックマークの削除');
+	
 	
 	is(NDrive.incrementFile('/test(2).jpg'), '/test(3).jpg');
 	is(NDrive.incrementFile('test(100).jpg'), 'test(101).jpg');

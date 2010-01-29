@@ -47,20 +47,41 @@
 	
 	loadFormats();
 	
+	
 	function saveFormats(){
-		setPref('action.copyUrl.formats', uneval(formats));
+		setPref('action.copyLink.formats', uneval(formats));
 		updateMenus();
 	}
 	
 	function loadFormats(){
-		formats = getPref('action.copyUrl.formats');
+		formats = getPref('action.copyLink.formats');
 		formats = (formats)?
 			eval(formats) : DEFAULT_FORMATS;
 		
 		updateMenus();
 	}
 	
-	function copyUrl(ctx, format){
+	function extractLink(ctx){
+		return Tombloo.Service.extractors.extract(ctx, Tombloo.Service.check(ctx).filter(function(ext){
+			return /^Link/.test(ext.name);
+		})[0]);
+	}
+	
+	function copyLink(format, links){
+		links = links.map(function(link){
+			return format.format.
+				replace('%url%', link.url).
+				replace('%title%', link.title);
+		})
+		
+		var text = joinText(links, format.format.contains('\n')? '\n\n' : '\n');
+		if(links.length > 1)
+			text += '\n';
+		
+		copyString(text);
+	}
+	
+	function execute(ctx, format){
 		// 右クリック
 		if(ctx.originalEvent.button != 0){
 			if(input('Remove "' + format.name + '" format?', 'Copy URL: Remove format')){
@@ -71,6 +92,18 @@
 			return;
 		}
 		
+		var selection = getSelectionContents(ctx.window);
+		if(selection){
+			copyLink(format, map(function(link){
+				return {
+					url   : getTextContent(link),
+					title : link,
+				};
+			}, selection.querySelectorAll('a')));
+			
+			return
+		}
+			
 		var windows;
 		if(ctx.originalEvent.shiftKey && !ctx.onLink){
 			// 全タブを対象とする
@@ -97,21 +130,16 @@
 				target    : doc.documentElement,
 			}, win.location);
 			
-			return Tombloo.Service.extractors.extract(c, Tombloo.Service.check(c).reduce(function(memo, e){
-				return memo || (/^Link/.test(e.name) && e);
-			}));
+			// canonicalやAmazonを処理するためextractorを使う
+			return extractLink(c);
 		})).addCallback(function(ress){
-			ress = ress.map(function(ps){
-				// 取得されなかったページは抜かす
-				return ps && format.format.
-					replace('%url%', ps.itemUrl).
-					replace('%title%', ps.item);
-			})
-			
-			var text = joinText(ress, format.format.contains('\n')? '\n\n' : '\n');
-			if(windows.length > 1)
-				text += '\n';
-			copyString(text);
+			// 取得されなかったリンクは抜かす
+			copyLink(format, ress.filter(operator.truth).map(function(ps){
+				return {
+					url   : ps.itemUrl,
+					title : ps.item,
+				};
+			}));
 		});
 	}
 	
@@ -124,7 +152,7 @@
 			children.splice(-2, 0, {
 				name : format.name,
 				execute : function(ctx){
-					copyUrl(ctx, format);
+					execute(ctx, format);
 				}
 			});
 		});

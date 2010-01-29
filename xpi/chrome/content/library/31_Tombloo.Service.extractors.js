@@ -1304,8 +1304,8 @@ Tombloo.Service.extractors = new Repository([
 		},
 		extract : function(ctx){
 			// リンクテキストが無い場合はページタイトルで代替する
-			var title = ctx.target.textContent || ctx.link.title;
-			if(!title || title==ctx.target.href)
+			var title = getTextContent(ctx.link) || ctx.link.title;
+			if(!title || title==ctx.link.href)
 				title = ctx.title;
 			
 			return {

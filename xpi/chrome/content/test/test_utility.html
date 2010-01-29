@@ -298,6 +298,7 @@ try {
 	is(joinText(['1', '2']), '1,2');
 	is(joinText(['1'], ' ', true), '1');
 	is(joinText([null, null], ' ', true), '');
+	is(joinText([0, 1, '', 3], '-'), '0-1--3', 'joinText: 空文字や0が除外されないか');
 	
 	
 	// Repository

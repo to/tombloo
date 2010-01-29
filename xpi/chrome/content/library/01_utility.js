@@ -1276,7 +1276,9 @@ function joinText(txts, delm, trimTag){
 	
 	if(delm==null)
 		delm = ',';
-	txts = flattenArray([].concat(txts).filter(operator.truth));
+	txts = flattenArray([].concat(txts).filter(function(txt){
+		return txt != null;
+	}));
 	return (trimTag? txts.map(methodcaller('trimTag')) : txts).join(delm);
 }
 

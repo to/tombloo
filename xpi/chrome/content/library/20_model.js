@@ -1355,6 +1355,8 @@ models.register({
 	},
 	
 	addBookmark : function(uri, title, tags, description, folder){
+		var bs = NavBookmarksService;
+		
 		uri = createURI(uri);
 		tags = tags || [];
 		
@@ -1362,17 +1364,22 @@ models.register({
 			return;
 		
 		folder = (!folder)? 
-			NavBookmarksService.unfiledBookmarksFolder : 
-			this.createFolder(NavBookmarksService.bookmarksMenuFolder, folder);
+			bs.unfiledBookmarksFolder : 
+			this.createFolder(folder);
 		
-		var folders = [folder].concat(tags.map(bind('createTag', this)));
-		folders.forEach(function(folder){
-			NavBookmarksService.insertBookmark(
-				folder, 
-				uri,
-				NavBookmarksService.DEFAULT_INDEX,
-				title);
-		});
+		// 同じフォルダにブックマークされていないか?
+		if(!bs.getBookmarkIdsForURI(uri, {}).some(function(item){
+			return bs.getFolderIdForItem(item) == folder;
+		})){
+			var folders = [folder].concat(tags.map(bind('createTag', this)));
+			folders.forEach(function(folder){
+				bs.insertBookmark(
+					folder, 
+					uri,
+					bs.DEFAULT_INDEX,
+					title);
+			});
+		}
 		
 		this.setDescription(uri, description);
 	},
@@ -1419,6 +1426,9 @@ models.register({
 	},
 	
 	setDescription : function(uri, description){
+		if(description == null)
+			return;
+		
 		description = description || '';
 		try{
 			AnnotationService.setItemAnnotation(this.getBookmarkId(uri), this.ANNO_DESCRIPTION, description, 
@@ -1427,10 +1437,12 @@ models.register({
 	},
 	
 	createTag : function(name){
-		return this.createFolder(NavBookmarksService.tagsFolder, name);
+		return this.createFolder(name, NavBookmarksService.tagsFolder);
 	},
 	
-	createFolder : function(parent, name){
+	createFolder : function(name, parent){
+		parent = parent || NavBookmarksService.bookmarksMenuFolder;
+		
 		return NavBookmarksService.getChildFolder(parent, name) || 
 			NavBookmarksService.createFolder(parent, name, NavBookmarksService.DEFAULT_INDEX);
 	},

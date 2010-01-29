@@ -20,8 +20,8 @@
 			name    : 'Add format',
 			execute : function(){
 				var res = input({
-					'Format Definition' : 'Name,%title% %url%'
-				}, 'Copy URL: Add format');
+					'Format definition' : 'Name,%title% %url%'
+				}, NAME + ' - ' + this.name);
 				if(!res)
 					return;
 				
@@ -84,7 +84,7 @@
 	function execute(ctx, format){
 		// 右クリック
 		if(ctx.originalEvent.button != 0){
-			if(input('Remove "' + format.name + '" format?', 'Copy URL: Remove format')){
+			if(input('Remove "' + format.name + '" format?', NAME + ' - Remove format')){
 				formats.splice(formats.indexOf(format), 1);
 				
 				saveFormats();

@@ -1354,15 +1354,28 @@ models.register({
 		return succeed(this.addBookmark(ps.itemUrl, ps.item, ps.tags, ps.description));
 	},
 	
-	addBookmark : function(uri, title, tags, description, folder){
+	addBookmark : function(uri, title, tags, description){
 		var bs = NavBookmarksService;
+		
+		var folder;
+		var index = bs.DEFAULT_INDEX;
+		
+		// ハッシュタイプの引数か?
+		if(typeof(uri)=='object' && !(uri instanceof IURI)){
+			if(uri.index!=null)
+				index = uri.index;
+			
+			folder = uri.folder;
+			title = uri.title;
+			tags = uri.tags;
+			description = uri.description;
+			uri = uri.uri;
+		}
 		
 		uri = createURI(uri);
 		tags = tags || [];
 		
-		if(this.isBookmarked(uri))
-			return;
-		
+		// フォルダが未指定の場合は未整理のブックマークになる
 		folder = (!folder)? 
 			bs.unfiledBookmarksFolder : 
 			this.createFolder(folder);
@@ -1376,7 +1389,7 @@ models.register({
 				bs.insertBookmark(
 					folder, 
 					uri,
-					bs.DEFAULT_INDEX,
+					index,
 					title);
 			});
 		}

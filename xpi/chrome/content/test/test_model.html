@@ -603,17 +603,23 @@ try {
 	var uri = 'chrome://tombloo/content/prefs.xul';
 	var title = 'Tombloo 設定画面';
 	var description = 'DESCRIPTION';
-	
-	models.FirefoxBookmark.addBookmark(uri, title, ['tombloo', 'chrome'], description);
-	sameObject(models.FirefoxBookmark.getBookmark(uri), {
+	var params = {
 		title : title,
 		uri : uri,
 		description : description,
-	}, 'FirefoxBookmark: ブックマークの追加');
+	};
+	
+	models.FirefoxBookmark.addBookmark(uri, title, ['tombloo', 'chrome'], description);
+	sameObject(models.FirefoxBookmark.getBookmark(uri), params, 'FirefoxBookmark: ブックマークの追加');
 	ok(models.FirefoxBookmark.isBookmarked(uri));
 	
 	models.FirefoxBookmark.removeBookmark(uri);
 	ok(!models.FirefoxBookmark.getBookmark(uri), 'FirefoxBookmark: ブックマークの削除');
+	ok(!models.FirefoxBookmark.isBookmarked(uri));
+
+	models.FirefoxBookmark.addBookmark(params);
+	ok(models.FirefoxBookmark.isBookmarked(uri), 'FirefoxBookmark: ブックマークの追加(ハッシュ形式)');
+	models.FirefoxBookmark.removeBookmark(uri);
 	
 	
 	is(NDrive.incrementFile('/test(2).jpg'), '/test(3).jpg');

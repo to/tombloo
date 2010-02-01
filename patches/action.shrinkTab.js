@@ -66,7 +66,12 @@
 					}
 					
 					getMostRecentWindow().getBrowser().removeCurrentTab();
-					bookmark.addBookmark(ctx.href, ctx.title, null, null, folder);
+					bookmark.addBookmark({
+						uri    : ctx.href, 
+						title  : ctx.title, 
+						folder : folder,
+						index  : 0,
+					});
 				}
 			});
 		});

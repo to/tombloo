@@ -1731,50 +1731,87 @@ function convertToXULElement(str){
 	return result;
 }
 
-function convertToHTMLString(elm, safe, flags){
-	var doc = elm.ownerDocument;
-	if(safe){
-		// ツリーに組み込まれているエレメントは影響を与えないようにコピーする
-		if(elm.parentNode)
-			elm = elm.cloneNode(true);
-		
-		forEach(elm.querySelectorAll('frame,script,style,frame,iframe'), removeElement);
+/**
+ * HTMLが表示された状態のプレーンテキストを取得する。
+ * 範囲選択をしてコピーした時に得られる文字列に類似。
+ *
+ * @param {Element || Selection} src DOM要素または選択範囲。
+ * @param {Boolean} safe 
+ *        script要素などの不要要素を除去する。
+ *        セキュアなHTMLになるわけではない。
+ *        (UnescapeHTMLを用いたsanitizeHTMLメソッドの利用も検討すること)。
+ * @return {String} HTML文字列。
+ */
+function convertToHTMLString(src, safe){
+	var me = convertToHTMLString;
 	
-		// DocumentFragmentでも動作するようにルートを付加する
-		var root = doc.createElement('span');
-		root.appendChild(elm);
-		forEach(doc.evaluate('.//@*', root, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null), function(attr){
-			if(/(action|cellpadding|cellspacing|checked|cite|clear|cols|colspan|content|coords|enctype|face|for|href|label|method|name|nohref|nowrap|rel|rows|rowspan|shape|span|src|style|target|type|usemap|value)/.test(attr.name))
-				return;
-			
-			attr.ownerElement.removeAttribute(attr.name);
-		});
-		elm = appendChildNodes(doc.createDocumentFragment(), root.childNodes);
-	}
+	// 選択範囲の適切な外側まで含めてHTML文字列へ変換する(pre内選択なども正常処理される)
+	var doc = src.ownerDocument || src.focusNode.ownerDocument;
+	var encoder = new HTMLCopyEncoder(doc, 'text/unicode', 
+		HTMLCopyEncoder.OutputPreformatted | HTMLCopyEncoder.OutputLFLineBreak);
+	encoder[src.nodeType? 'setNode' : 'setSelection'](src);
 	
-	// OutputFormattedを用いると不要な改行が追加され表示が崩れた
-	flags = flags || [DocumentEncoder.OutputRaw, DocumentEncoder.OutputAbsoluteLinks];
-	var encoder = new DocumentEncoder(doc, 'text/html', flags.reduce(operator.or));
-	encoder.setNode(elm);
-	return encoder.encodeToString();
+	var html = encoder.encodeToString();
+	if(!safe)
+		return html;
+	
+	// DOMツリーに戻し不要な要素を除去する
+	var root = doc.createElement('span');
+	root.innerHTML = html;
+	
+	forEach($x('.//*[contains(",' + me.UNSAFE_ELEMENTS + ',", concat(",", local-name(.), ","))]', root, true), removeElement);
+	forEach(doc.evaluate('.//@*[not(contains(",' + me.SAFE_ATTRIBUTES + ',", concat(",", local-name(.), ",")))]', root, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null), function(attr){
+		attr.ownerElement.removeAttribute(attr.name);
+	});
+	src = appendChildNodes(doc.createDocumentFragment(), root.childNodes);
+	
+	// 再度HTML文字列へ変換する
+	return me(src);
 }
 
-function getTextContent(elm){
-	var encoder = new DocumentEncoder(document, 'text/plain', 
-		DocumentEncoder.OutputBodyOnly | DocumentEncoder.OutputLFLineBreak);
-	encoder.setNode(elm);
-	return encoder.encodeToString().trim();
+update(convertToHTMLString , {
+	UNSAFE_ELEMENTS : 'frame,script,style,frame,iframe',
+	SAFE_ATTRIBUTES : 'action,cellpadding,cellspacing,checked,cite,clear,cols,colspan,content,coords,enctype,face,for,href,label,method,name,nohref,nowrap,rel,rows,rowspan,shape,span,src,style,target,type,usemap,value',
+});
+
+/**
+ * HTML表示状態のプレーンテキストを取得する。
+ * 範囲選択をしてコピーした時に得られる文字列に類似。
+ *
+ * @param {String || Element || Selection} src HTML文字列、DOM要素、選択範囲のいずれか。
+ * @return {String} プレーンテキスト。
+ */
+function convertToPlainText(src){
+	// DOM要素または選択範囲か?
+	if(typeof(src)!='string')
+		src = convertToHTMLString(src);
+	
+	// DocumentEncoder(text/plan)を用いるとpre要素内の選択で改行が欠落した
+	// クリップボードへのコピー処理と同一のフレーバー作成の方法を使う
+	var res = {};
+	var converter = new HTMLFormatConverter();
+	
+	// 2倍のバッファサイズはnsCopySupport.cppの実装より(HTMLの2倍の文字列になることはないという仮定と思われる)
+	converter.convert('text/html', new SupportsString(src), src.length * 2, 'text/unicode', res, {})
+	
+	return broad(res.value).data.replace(/\r/g, '').trim();
 }
 
-function createFlavoredString(elm){
-	var res = new String(getTextContent(elm));
+/**
+ * HTML表示状態のプレーンテキストを取得する。
+ * 範囲選択をしてコピーした時に得られる文字列に類似。
+ *
+ * @param {Element || Selection} src DOM要素または選択範囲。
+ * @return {String} プレーンテキスト。
+ */
+function createFlavoredString(src){
+	var res = new String(convertToPlainText(src));
 	res.flavors = {
-		html : convertToHTMLString(elm, true),
+		html : convertToHTMLString(src, true),
 	};
 	return res;
 }
 
-	
 /**
  * 表現形式を指定して値を取得する。
  *

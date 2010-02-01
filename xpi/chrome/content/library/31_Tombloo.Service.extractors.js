@@ -306,12 +306,12 @@ Tombloo.Service.extractors = new Repository([
 			return ctx.href.match('//twitter.com/.*?/(status|statuses)/\\d+');
 		},
 		extract : function(ctx){
-			var dom = getSelectionContents(ctx.window) || $x('(//span[@class="entry-content"])[1]');
 			return {
 				type     : 'quote',
 				item     : ctx.title.substring(0, ctx.title.indexOf(': ')),
 				itemUrl  : ctx.href,
-				body     : createFlavoredString(dom),
+				body     : createFlavoredString((ctx.selection)? 
+					ctx.window.getSelection() : $x('(//span[@class="entry-content"])[1]')),
 				favorite : {
 					name : 'Twitter',
 					id   : ctx.href.match(/(status|statuses)\/(\d+)/)[2],
@@ -327,12 +327,12 @@ Tombloo.Service.extractors = new Repository([
 			return ctx.href.match('//inyo.jp/quote/[a-f0-9]+');
 		},
 		extract : function(ctx){
-			var dom = getSelectionContents(ctx.window) || $x('//blockquote[contains(@class, "text")]/p');
 			return {
 				type     : 'quote',
 				item     : $x('//span[@class="title"]/text()'),
 				itemUrl  : ctx.href,
-				body     : createFlavoredString(dom),
+				body     : createFlavoredString((ctx.selection)? 
+					ctx.window.getSelection() : $x('//blockquote[contains(@class, "text")]/p')),
 			}
 		},
 	},
@@ -1291,7 +1291,7 @@ Tombloo.Service.extractors = new Repository([
 				type    : 'quote',
 				item    : ctx.title,
 				itemUrl : ctx.href,
-				body    : createFlavoredString(getSelectionContents(ctx.window)),
+				body    : createFlavoredString(ctx.window.getSelection()),
 			}
 		},
 	},
@@ -1304,7 +1304,7 @@ Tombloo.Service.extractors = new Repository([
 		},
 		extract : function(ctx){
 			// リンクテキストが無い場合はページタイトルで代替する
-			var title = getTextContent(ctx.link) || ctx.link.title;
+			var title = convertToPlainText(ctx.link) || ctx.link.title;
 			if(!title || title==ctx.link.href)
 				title = ctx.title;
 			

@@ -377,7 +377,7 @@ FormPanel.prototype = {
 		
 		items(this.fields).forEach(function([name, field]){
 			// 値が変更されていない場合はフレーバーを保つため元の値を上書きしない
-			if(field.value != null && ps[name] != field.value)
+			if(field.value != null && (''+ps[name]) != field.value)
 				ps[name] = field.value;
 		});
 		

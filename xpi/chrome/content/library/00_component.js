@@ -62,6 +62,14 @@ var ISelectionListener   = Ci.nsISelectionListener;
 	defineLazyServiceGetter(this, name, '@mozilla.org' + cid, ifc);
 }, this);
 
+var HTMLFormatConverter = 
+	createConstructor('/widget/htmlformatconverter;1', 'nsIFormatConverter');
+
+var SupportsString = 
+	createConstructor('/supports-string;1', 'nsISupportsString', function(data){
+		this.data = data;
+	});
+
 var PrefBranch = 
 	createConstructor('/preferences;1', 'nsIPrefBranch');
 
@@ -147,6 +155,9 @@ var FileOutputStream =
 		PR_SYNC : 0x40,
 		PR_EXCL : 0x80,
 	});
+
+var HTMLCopyEncoder = 
+	createConstructor('/layout/htmlCopyEncoder;1', 'nsIDocumentEncoder', 'init');
 
 var DocumentEncoder = function(document, mimeType, flags){
 	var encoder = Cc['@mozilla.org/layout/documentEncoder;1?type=' + mimeType].createInstance(Ci.nsIDocumentEncoder);
@@ -554,8 +565,8 @@ function withStream(stream, func){
  * また不完全なタグなどを整形し正しいHTMLへ変換する。
  * Firefox 3では、JavaScriptプロトコルの除去が行われない。
  *
- * @param {String} html HTML。 
- * @return {String} 整形されたHTML。
+ * @param {String} html HTML文字列。 
+ * @return {String} 整形されたHTML文字列。
  */
 function sanitizeHTML(html){
 	var doc = document.implementation.createDocument('', '', null);

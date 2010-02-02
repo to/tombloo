@@ -64,6 +64,7 @@ try {
 			withDocument(doc, function(){
 				res.page = ctx.title;
 				res.pageUrl = ctx.href;
+				res.body = ''+res.body;
 				
 				exp && sameObject(res, exp, name + ': extract');
 				ok(ext.check(ctx), name + ': check');
@@ -72,13 +73,13 @@ try {
 		});
 	}
 	
-	basicExtractorTest('Quote - Twitter', 'http://twitter.com/ku/statuses/833768036', {
+	basicExtractorTest('Quote - Twitter', 'http://twitter.com/fuba_recorder/status/8539303990', {
 		type    : 'quote',
-		page    : 'Twitter / ku: http://getfirebug.com/ doe ...',
-		pageUrl : 'http://twitter.com/ku/statuses/833768036',
-		item    : 'Twitter / ku',
-		itemUrl : 'http://twitter.com/ku/statuses/833768036',
-		body    : '<a href="http://getfirebug.com/" class="tweet-url web">http://getfirebug.com/</a> does not respond......', 
+		page    : 'Twitter / fuba_recorder: @harsch 了解しました',
+		pageUrl : 'http://twitter.com/fuba_recorder/status/8539303990',
+		item    : 'Twitter / fuba_recorder',
+		itemUrl : 'http://twitter.com/fuba_recorder/status/8539303990',
+		body    : '@harsch 了解しました', 
 	});
 	
 	basicExtractorTest('Quote - inyo.jp', 'http://inyo.jp/quote/4528124a65fc7d03ca14a8b073ea49c964b463a0', {
@@ -101,9 +102,9 @@ try {
 			
 			return {
 				type    : 'photo',
-				page    : 'Master of Puppets: Metallica',
+				page    : 'Amazon: Master of Puppets: Metallica',
 				pageUrl : 'http://www.amazon.co.jp/o/ASIN/B000002H33',
-				item    : 'Master of Puppets: Metallica',
+				item    : 'Amazon: Master of Puppets: Metallica',
 				itemUrl : 'http://ecx.images-amazon.com/images/I/418MR1SQNKL.LZZZZZZZ.jpg', 
 			}
 		});
@@ -205,7 +206,7 @@ try {
 		page    : 'to',
 		pageUrl : 'http://to.tumblr.com/post/38249621',
 		item    : 'to',
-		itemUrl : 'http://6.media.tumblr.com/6hT7IIFQna5axukmGWK1Jj8q_500.jpg',
+		itemUrl : 'http://27.media.tumblr.com/6hT7IIFQna5axukmGWK1Jj8q_500.jpg',
 		favorite : {
 			endpoint  : 'http://www.tumblr.com/reblog/38249621/exgZK6NR',
 			name      : 'Tumblr',
@@ -223,7 +224,7 @@ try {
 				page    : 'to',
 				pageUrl : 'http://to.tumblr.com/post/38249621',
 				item    : 'to',
-				itemUrl : 'http://6.media.tumblr.com/6hT7IIFQna5axukmGWK1Jj8q_500.jpg',
+				itemUrl : 'http://27.media.tumblr.com/6hT7IIFQna5axukmGWK1Jj8q_500.jpg',
 				favorite : {
 					endpoint  : 'http://www.tumblr.com/reblog/38249621/exgZK6NR',
 					name      : 'Tumblr',
@@ -244,7 +245,7 @@ try {
 				pageUrl   : 'http://www.flickr.com/photos/le_carabinier/2569321947/',
 				item      : 'awkwardfeet',
 				itemUrl   : 'http://farm4.static.flickr.com/3151/2569321947_a245340e65_o.jpg', 
-				author    : '✈ Sean Marc Lee 李荆山 / 李子仁',
+				author    : '✈ Sean Marc Lee 李子仁',
 				authorUrl : 'http://www.flickr.com/photos/le_carabinier/',
 			}
 		});

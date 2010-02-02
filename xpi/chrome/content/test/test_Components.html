@@ -42,12 +42,6 @@ try {
 	
 	ok(PrefBranch.instanceOf(new PrefBranch()), 'createConstructor: instanceOf');
 	
-	// getService
-	is(typeof(Components.classes['not_found']), 'undefined');
-	ok(getService() === null);
-	ok(getService('hohoho') === null);
-	ok(getService('/consoleservice;1', Ci.nsIConsoleService).logStringMessage);
-	
 	
 	// getInterfaces
 	var uri = createURI('http://google.com');
@@ -66,9 +60,6 @@ try {
 	ok(channel.setRequestHeader != null) // nsIHttpChannel;
 	ok(channel.setUploadStream == null)  // nsIUploadChannel;
 	
-	// getService
-	ok(getService('/consoleservice;1', Ci.nsIConsoleService));
-	ok(getService('not_found', null) === null);
 	
 	// createURI
 	is(createURI('C:\\').spec, 'file:///C:/');
@@ -103,9 +94,6 @@ try {
 	ok(getDownloadDir().exists());
 	ok(getProfileDir().exists());
 	
-	// 
-	// ok(  findCacheFile('http://f4.wretch.yimg.com/moblog/4/1939118735.jpg'), 'キャッシュファイルが(無い場合もあり)');
-	// log(findCacheFile('http://pics8.blog.yam.com/6/userfile/i/ivanaki0929/album/146b685908d2dc.jpg'));
 	ok(! findCacheFile('http://google.com/notFound.jpg'));
 	
 	is(sanitizeHTML(
@@ -138,7 +126,6 @@ try {
 	is(sanitizeHTML(
 		'<form action="foo.cgi"><input type="submit"></form>'), 
 		'<form xmlns="http://www.w3.org/1999/xhtml"><input type="submit" /></form>');
-	
 	
 	/*
 	正常動作、テストのためにgetContentsが必要

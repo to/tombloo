@@ -8,6 +8,9 @@ function getElement(id){
 	return (typeof(id) == 'string')? document.getElementById(id) : id;
 }
 
+function isNotLinux() {
+	return navigator.platform.indexOf("Linux") == -1;
+}
 
 // ----[DialogPanel]----------------------------------------------------
 function DialogPanel(position, message){
@@ -42,46 +45,46 @@ function DialogPanel(position, message){
 	window.addEventListener('keydown', bind('onKeydown', this), true);
 	
 	// 不可視にして描画を隠す
-	self.elmWindow.style.opacity = 0;
+	// #14 Linuxの場合は透明から復帰できない問題があり透明にしない
+	if (isNotLinux())
+		self.elmWindow.style.opacity = 0;
 	
 	// コントロールと画像のロード後に体裁を整える
 	window.addEventListener('load', function(){
 		setTimeout(function(){
-			try{
-				self.onWindowResize();
-				
-				// FIXME: 状態の復元コードを移動
-				// 各オブジェクトが自分の状態を保存/ロードできるように
-				var state = QuickPostForm.dialog[ps.type] || {};
-				if(state.expandedForm)
-					self.formPanel.toggleDetail();
-				
-				if(state.expandedTags)
-					self.formPanel.tagsPanel.toggleSuggestion();
-				
-				if(ps.type != 'photo' && state.size)
-					window.resizeTo(state.size.width, state.size.height);
-				
-				self.focusToFirstControl();
-				
-				if(position){
-					// ポスト先の一番最初のアイコンの上にマウスカーソルがあるあたりへ移動
-					var win = getMostRecentWindow();
-					var box = self.formPanel.postersPanel.elmPanel.boxObject;
-					window.moveTo(
-						Math.min(win.screenX + win.outerWidth - window.innerWidth,  Math.max(win.screenX, position.x - (box.x + 16))), 
-						Math.min(win.screenY + win.outerHeight - window.innerHeight, Math.max(win.screenY, position.y - (box.y + (box.height / 2))))
-					);
-				} else {
-					with(QuickPostForm.dialog.snap)
-						self.snapToContentCorner(top, left);
-				}
-				
-				window.addEventListener('resize', bind('onWindowResize', self), true);
-			} finally {
-				// #14 Linuxで表示されない現象の仮パッチ
-				self.elmWindow.style.opacity = 1;
+			self.onWindowResize();
+
+			// FIXME: 状態の復元コードを移動
+			// 各オブジェクトが自分の状態を保存/ロードできるように
+			var state = QuickPostForm.dialog[ps.type] || {};
+			if(state.expandedForm)
+				self.formPanel.toggleDetail();
+
+			if(state.expandedTags)
+				self.formPanel.tagsPanel.toggleSuggestion();
+
+			if(ps.type != 'photo' && state.size)
+				window.resizeTo(state.size.width, state.size.height);
+
+			self.focusToFirstControl();
+
+			if(position){
+				// ポスト先の一番最初のアイコンの上にマウスカーソルがあるあたりへ移動
+				var win = getMostRecentWindow();
+				var box = self.formPanel.postersPanel.elmPanel.boxObject;
+				window.moveTo(
+					Math.min(win.screenX + win.outerWidth - window.innerWidth,  Math.max(win.screenX, position.x - (box.x + 16))), 
+					Math.min(win.screenY + win.outerHeight - window.innerHeight, Math.max(win.screenY, position.y - (box.y + (box.height / 2))))
+				);
+			} else {
+				with(QuickPostForm.dialog.snap)
+					self.snapToContentCorner(top, left);
 			}
+			window.addEventListener('resize', bind('onWindowResize', self), true);
+
+			// #14 Linuxの場合は透明から復帰できない問題があり透明にしてない
+			if (isNotLinux())
+				self.elmWindow.style.opacity = 1;
 		}, 0);
 	}, true);
 }

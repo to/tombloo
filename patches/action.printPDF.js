@@ -1,5 +1,6 @@
 Tombloo.Service.actions.register(	{
 	name : 'Print PDF',
+	icon : 'moz-icon://.pdf?size=16',
 	execute : function(){
 		const DEEP_DIR = false;
 		

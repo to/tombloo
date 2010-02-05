@@ -475,31 +475,6 @@ function getTempDir(){
 	return DirectoryService.get('TmpD', IFile);
 }
 
-/**
- * 外部エディタでファイルを開く。
- * Greasemonkeyで設定されているエディタ、または、ブラウザでソースを開く時に使われるエディタが呼び出される。
- *
- * @param {nsIFile} file 対象ファイル。 
- */
-function openInEditor(file){
-	function getFile(path){
-		return path && LocalFile(path);
-	}
-	
-	var editor = 
-		getFile(getPrefValue('greasemonkey.editor')) || 
-		getFile(getPrefValue('view_source.editor.path'));
-	if(!editor || !editor.exists())
-		return;
-	
-	var mimeInfo = MIMEService.getFromTypeAndExtension(
-		MIMEService.getTypeFromFile(file), 
-		file.leafName.split('.').pop());
-	mimeInfo.preferredAction = mimeInfo.useHelperApp;
-	mimeInfo.preferredApplicationHandler = editor;
-	mimeInfo.launchWithFile(file);
-}
-
 function getMostRecentWindow(){
 	return WindowMediator.getMostRecentWindow('navigator:browser');
 }

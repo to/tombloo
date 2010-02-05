@@ -400,6 +400,33 @@ function putContents(file, text, charset){
 		stream.write(text, text.length);
 	});
 }
+
+/**
+ * 外部エディタでファイルを開く。
+ * Greasemonkeyで設定されているエディタ、または、ブラウザでソースを開く時に使われるエディタが呼び出される。
+ *
+ * @param {nsIFile || String} path 対象ファイルのパス。 
+ */
+function openInEditor(path){
+	if(path instanceof IFile)
+		path = path.path;
+	
+	var app = 
+		getLocalFile(getPrefValue('greasemonkey.editor')) || 
+		getLocalFile(getPrefValue('view_source.editor.path'));
+	if(!app || !app.exists())
+		return;
+	
+	if(AppInfo.OS == 'Darwin'){
+		var args = ['-a', app.path, path];
+		app = new LocalFile('/usr/bin/open');
+		app.followLinks = true;
+	} else {
+		var args = [path];
+	}
+	
+	new Process(app).run(false, args, args.length);
+}
 	
 /**
  * チャンネルにクッキーを付加する。

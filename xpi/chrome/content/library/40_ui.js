@@ -465,3 +465,23 @@ function connectToBrowser(win){
 		hooked.mouseShortcut = true;
 	}
 }
+
+// ----[content-policy]-------------------------------------------------
+var loadPolicies = [];
+
+connect(grobal, 'environment-load', function(){
+	// 起動時にリスナがいない場合はパフォーマンス低下を避けるためフックを外す
+	if(!loadPolicies.length){
+		CategoryManager.deleteCategoryEntry('content-policy', grobal.NAME, false);
+		return;
+	}
+	
+	grobal.shouldLoad = function(contentType, contentLocation, requestOrigin, context, mimeTypeGuess, extra){
+		// ロードをキャンセルするポリシーをチェックする
+		for(var i=0,len=loadPolicies.length ; i<len ; i++)
+			if(loadPolicies[i](contentType, contentLocation, requestOrigin, context, mimeTypeGuess, extra))
+				return IContentPolicy.REJECT_SERVER;
+		
+		return IContentPolicy.ACCEPT;
+	}
+});

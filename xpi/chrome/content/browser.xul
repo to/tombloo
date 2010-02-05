@@ -28,7 +28,9 @@
 	</menupopup>
 	<script type="text/javascript; version=1.7"><![CDATA[
 	(function(){
-		var env = Cc['@brasil.to/tombloo-service;1'].getService().wrappedJSObject;
+		// createInstanceで呼び出し初期化を促す
+		// 他の場所ではgetServiceを用いてよい
+		var env = Cc['@brasil.to/tombloo-service;1'].createInstance().wrappedJSObject;
 		
 		env.signal(env, 'browser-open', window);
 		

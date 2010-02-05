@@ -382,8 +382,12 @@ function addTab(url, background){
 }
 
 function getContents(file, charset){
+	file = getLocalFile(file);
+	if(!file.exists())
+		return '';
+	
 	try{
-		return withStream(new FileInputStream(getLocalFile(file), -1, 0, false), function(fis){
+		return withStream(new FileInputStream(file, -1, 0, false), function(fis){
 			return withStream(new ConverterInputStream(fis, charset, fis.available()), function(cis){
 				var out = {};
 				cis.readString(fis.available(), out);

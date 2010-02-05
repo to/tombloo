@@ -12,25 +12,58 @@ ScriptLoader     = getService('/moz/jssubscript-loader;1', Ci.mozIJSSubScriptLoa
 ExtensionManager = getService('/extensions/manager;1', Ci.nsIExtensionManager);
 IOService        = getService('/network/io-service;1', Ci.nsIIOService);
 WindowMediator   = getService('/appshell/window-mediator;1', Ci.nsIWindowMediator);
+CategoryManager  = getService('/categorymanager;1', Ci.nsICategoryManager);
 
 Module = {
 	CID  : Components.ID('{aec75109-b143-4e49-a708-4904cfe85ea0}'),
 	NAME : 'TomblooService',
 	PID  : '@brasil.to/tombloo-service;1',
 	
-	createInstance : function(){
-		// createInstanceで呼び出されたときのために独自にシングルトン機構を持つ
-		if(this.instance)
+	onRegister : function(){
+		CategoryManager.addCategoryEntry('content-policy', this.NAME, this.PID, true, true);
+	},
+	
+	initialized : false,
+	
+	instance : {
+		shouldLoad : function(contentType, contentLocation, requestOrigin, context, mimeTypeGuess, extra){
+			return Ci.nsIContentPolicy.ACCEPT;
+		},
+		
+		shouldProcess : function(aContentType, aContentLocation, aRequestOrigin, aContext, aMimeTypeGuess, aExtra){
+			return Ci.nsIContentPolicy.ACCEPT;
+		},
+		
+		QueryInterface : function(iid){
+			if(iid.equals(Ci.nsIContentPolicy) || iid.equals(Ci.nsISupports) || iid.equals(Ci.nsISupportsWeakReference))
+				return this;
+			
+			throw Cr.NS_NOINTERFACE;
+		},
+	},
+	
+	createInstance : function(outer, iid){
+		// nsIContentPolicyはhiddenDOMWindowの準備ができる前に取得される
+		// 仮に応答できるオブジェクトを返し環境を構築できるまでの代替とする
+		if(iid.equals(Ci.nsIContentPolicy))
 			return this.instance;
 		
-		var env = function(){};
-		env.getContentDir = getContentDir;
-		env.getLibraries = getLibraries;
-		env.PID = this.PID;
+		// ブラウザが開かれるタイミングでインスタンスの要求を受け環境を初期化する
+		// 2個目以降のウィンドウからは生成済みの環境を返す
+		if(this.initialized)
+			return this.instance;
+		
+		// 以降のコードはアプリケーション起動後に一度だけ通過する
+		var env = this.instance;
 		
 		// アプリケーション全体で、同じloadSubScripts関数を使いまわし汚染を防ぐ
 		env.loadSubScripts = loadSubScripts;
 		env.loadAllSubScripts = loadAllSubScripts;
+		env.getContentDir = getContentDir;
+		env.getLibraries = getLibraries;
+		env.PID = this.PID;
+		env.CID = this.CID;
+		env.NAME = this.NAME;
 		
 		// MochiKit内部で使用しているinstanceofで異常が発生するのを避ける
 		env.MochiKit = {};
@@ -58,7 +91,10 @@ Module = {
 			});
 		}
 		
-		return this.instance = env;
+		env.signal(env, 'environment-load');
+		
+		this.initialized = true;
+		return env;
 	}, 
 }
 

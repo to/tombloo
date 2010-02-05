@@ -24,6 +24,7 @@ var IURI                 = Ci.nsIURI;
 var IInputStream         = Ci.nsIInputStream;
 var ICache               = Ci.nsICache;
 var ISelectionListener   = Ci.nsISelectionListener;
+var IContentPolicy       = Ci.nsIContentPolicy;
 
 [
 	['ConsoleService',      'nsIConsoleService',         '/consoleservice;1'],
@@ -56,6 +57,7 @@ var ISelectionListener   = Ci.nsISelectionListener;
 	['StyleSheetService',   'nsIStyleSheetService',      '/content/style-sheet-service;1'],
 	['FuelApplication',     'fuelIApplication',          '/fuel/application;1'],
 	['MIMEService',         'nsIMIMEService',            '/mime;1'],
+	['CategoryManager',     'nsICategoryManager',        '/categorymanager;1'],
 	['PrefService',         null,                        '/preferences-service;1'],
 	['AppInfo',             null,                        '/xre/app-info;1'],
 ].forEach(function([name, ifc, cid]){

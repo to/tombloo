@@ -1787,13 +1787,23 @@ function convertToHTMLString(src, safe){
 		return html;
 	
 	// DOMツリーに戻し不要な要素を除去する
-	var root = doc.createElement('span');
+	var root;
+	if(src.getRangeAt){
+		root = src.getRangeAt(0).commonAncestorContainer.cloneNode(false);
+		
+		// 親にtableを持たない要素にtrを追加すると消える
+		if(tagName(root)=='tbody')
+			doc.createElement('table').appendChild(root);
+ 	} else {
+		root = doc.createElement('div');
+	}
 	root.innerHTML = html;
 	
 	forEach($x('.//*[contains(",' + me.UNSAFE_ELEMENTS + ',", concat(",", local-name(.), ","))]', root, true), removeElement);
 	forEach(doc.evaluate('.//@*[not(contains(",' + me.SAFE_ATTRIBUTES + ',", concat(",", local-name(.), ",")))]', root, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null), function(attr){
 		attr.ownerElement.removeAttribute(attr.name);
 	});
+	
 	src = appendChildNodes(doc.createDocumentFragment(), root.childNodes);
 	
 	// 再度HTML文字列へ変換する
@@ -1801,8 +1811,8 @@ function convertToHTMLString(src, safe){
 }
 
 update(convertToHTMLString , {
-	UNSAFE_ELEMENTS : 'frame,script,style,frame,iframe',
-	SAFE_ATTRIBUTES : 'action,cellpadding,cellspacing,checked,cite,clear,cols,colspan,content,coords,enctype,face,for,href,label,method,name,nohref,nowrap,rel,rows,rowspan,shape,span,src,style,target,type,usemap,value',
+	UNSAFE_ELEMENTS : 'frame,iframe,script,style',
+	SAFE_ATTRIBUTES : 'action,align,cellpadding,cellspacing,checked,cite,clear,cols,colspan,content,coords,enctype,face,for,href,label,method,name,nohref,nowrap,rel,rows,rowspan,shape,span,src,style,target,type,usemap,valign,value',
 });
 
 /**

@@ -8,10 +8,6 @@ function getElement(id){
 	return (typeof(id) == 'string')? document.getElementById(id) : id;
 }
 
-function isNotLinux() {
-	return navigator.platform.indexOf("Linux") == -1;
-}
-
 // ----[DialogPanel]----------------------------------------------------
 function DialogPanel(position, message){
 	var self = this;
@@ -45,29 +41,30 @@ function DialogPanel(position, message){
 	window.addEventListener('keydown', bind('onKeydown', this), true);
 	
 	// 不可視にして描画を隠す
-	// #14 Linuxの場合は透明から復帰できない問題があり透明にしない
-	if (isNotLinux())
+	// #14 Linuxの場合は透明から復帰できない問題があるため透明にしない
+	if(navigator.platform.contains('Linux'))
 		self.elmWindow.style.opacity = 0;
 	
 	// コントロールと画像のロード後に体裁を整える
 	window.addEventListener('load', function(){
+		// 画像のロードとサイズ取得を待つ(大抵の場合キャッシュされているので正常に処理される)
 		setTimeout(function(){
 			self.onWindowResize();
-
+			
 			// FIXME: 状態の復元コードを移動
 			// 各オブジェクトが自分の状態を保存/ロードできるように
 			var state = QuickPostForm.dialog[ps.type] || {};
 			if(state.expandedForm)
 				self.formPanel.toggleDetail();
-
+			
 			if(state.expandedTags)
 				self.formPanel.tagsPanel.toggleSuggestion();
-
+			
 			if(ps.type != 'photo' && state.size)
 				window.resizeTo(state.size.width, state.size.height);
-
+			
 			self.focusToFirstControl();
-
+			
 			if(position){
 				// ポスト先の一番最初のアイコンの上にマウスカーソルがあるあたりへ移動
 				var win = getMostRecentWindow();
@@ -81,10 +78,8 @@ function DialogPanel(position, message){
 					self.snapToContentCorner(top, left);
 			}
 			window.addEventListener('resize', bind('onWindowResize', self), true);
-
-			// #14 Linuxの場合は透明から復帰できない問題があり透明にしてない
-			if (isNotLinux())
-				self.elmWindow.style.opacity = 1;
+			
+			self.elmWindow.style.opacity = 1;
 		}, 0);
 	}, true);
 }

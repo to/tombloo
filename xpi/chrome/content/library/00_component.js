@@ -4,6 +4,7 @@ var XML_NS  = 'http://www.w3.org/XML/1998/namespace';
 
 var Ci = Components.interfaces;
 var Cc = Components.classes;
+var Cr = Components.results;
 
 var INTERFACES = [];
 for(var i in Ci)
@@ -25,6 +26,7 @@ var IInputStream         = Ci.nsIInputStream;
 var ICache               = Ci.nsICache;
 var ISelectionListener   = Ci.nsISelectionListener;
 var IContentPolicy       = Ci.nsIContentPolicy;
+var IHttpChannel         = Ci.nsIHttpChannel;
 
 [
 	['ConsoleService',      'nsIConsoleService',         '/consoleservice;1'],

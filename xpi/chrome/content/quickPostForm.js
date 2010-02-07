@@ -42,7 +42,7 @@ function DialogPanel(position, message){
 	
 	// 不可視にして描画を隠す
 	// #14 Linuxの場合は透明から復帰できない問題があるため透明にしない
-	if(navigator.platform.contains('Linux'))
+	if(!navigator.platform.contains('Linux'))
 		self.elmWindow.style.opacity = 0;
 	
 	// コントロールと画像のロード後に体裁を整える

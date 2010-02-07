@@ -4,12 +4,12 @@
 	// 初期化されていないか?
 	// (アプリケーションを通じて一度だけ通過する)
 	var filt = grobal.filt;
+	var checked = {};
 	if(!filt){
 		var file = getPatchDir();
 		file.append('filt.txt');
 		
 		filt = grobal.filt = {
-			blocked : {},
 			blackList : [],
 			debug : false,
 			file : file,
@@ -17,13 +17,11 @@
 		ObserverService.addObserver(filt, 'http-on-modify-request', false);
 		
 		setInterval(function(){
-			filt.blocked = {};
+			checked = {};
 		}, 3 * 60 * 1000);
 		
 		reloadList();
 	}
-	
-	var blocked = filt.blocked;
 	
 	// policyチェックが開始する前に起きる通信をブロックする
 	// (画像などで先読みが行われているよう)
@@ -35,20 +33,18 @@
 	
 	loadPolicies.push(function(contentType, contentLocation, requestOrigin, context, mimeTypeGuess, extra){
 		// メインページとして開かれた場合は無条件に通す
+		var url = contentLocation.spec;
  		if(contentType == TYPE_DOCUMENT)
-			return blocked[url] = false;
+			return checked[url] = false;
  		
-		return isBlock(contentLocation.spec);
+		return isBlock(url);
 	});
 	
 	function isBlock(url){
-		if(url == 'http://parts.blog.livedoor.jp/img/cmn/clip_16_16_b.gif'){
-			log(url);
-		}
-		
 		// observeかpolicyで処理済みか(または最近アクセスされ判定済みか)?
-		if(blocked[url])
-			return blocked[url];
+		var res = checked[url];
+		if(res != null)
+			return res;
 		
 		var list = filt.blackList;
 		for(var i=0, len=list.length ; i<len ; i++){
@@ -56,11 +52,11 @@
 				if(filt.debug)
 					log([url, list[i]]);
 				
-				return blocked[url] = true;;
+				return checked[url] = true;;
 			}
 		}
 		
-		return blocked[url] = false;
+		return checked[url] = false;
 	}
 	
 	function reloadList(){
@@ -73,6 +69,7 @@
 		
 		putContents(filt.file, list.join('\n') + '\n');
 		
+		checked = {};
 		filt.blackList = list.map(function(r){
 			return new RegExp(r);
 		});

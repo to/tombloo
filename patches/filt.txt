@@ -1,6 +1,9 @@
 /(\w+\.){1,2}infoseek(\.\w+){1,2}/(bin|images)/
+//ai\.yimg\.jp/
+//ard\.yahoo\.co\.jp/
 //dailynews\.yahoo\.co\.jp/
 //feeds\.feedburner\.com/
+//kks-box\.net/
 //num\.bookmarks\.yahoo\.co\.jp/
 //public\.news\.yahoo\.co\.jp/
 //rss\.tc/
@@ -8,8 +11,6 @@
 /\w+\.(shinobi|ninja-systems)\.\w+/bin/\w+?\d+
 /\w+\.cgiboy\.\w+/O\.cgi?\d+
 /affiliate(\.\w+)+/
-/b\.hatena\.ne\.jp/bc/
-/b\.hatena\.ne\.jp/entry/image/
 /count(er)?((\.\w+){2,3})?/
 /fc2\.com/image/(cash|rose|deai)\.gif
 /gadgetparty\.jp/
@@ -29,8 +30,8 @@
 \.(value(click|commerce)|custom-click)\.
 \.2mdn\.net/
 \.a8\.net/
+\.seesaa\..*\.js
 \.snap\.com/
-\.st-hatena\.com/
 \.vector\.co\.jp/(ad\w+|ssi-bin|swreg)
 \w*count(er)?\w*\.cgi
 \w+\.tok2\.com/ban/
@@ -55,6 +56,7 @@ ad.*\.firestorage\.jp/
 adbutterfly\.com/
 adcl\.japan\.cnet\.com/
 addthis\.com/
+adperium\.com/
 adplan-ds\.com/
 adriver\.ru/
 ads.*\.msn\.com/
@@ -89,6 +91,7 @@ bloggingtofame\.com/
 blogguide\.jp/
 blogimg\.jp/
 blogmura\.com/
+blogparts
 blogpeople\.net/
 blogpeta\.jp/
 blogtimes\.jp/
@@ -140,6 +143,7 @@ gigya\.com/
 gmodules\.com/
 go2web20\.net/
 google-analytics\.com/
+google\.com/coop/
 google\.com/uds/
 googlesyndication\.com/
 gremz\.com/
@@ -180,6 +184,7 @@ myspiritual\.jp/
 nakanohito\.jp/
 netfuncards\.ru/
 newsing\.jp/
+newzia\.jp/
 novoteka\.ru/
 omnisio\.com/
 openx\.com/

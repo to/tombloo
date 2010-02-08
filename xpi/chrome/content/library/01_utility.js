@@ -1774,7 +1774,7 @@ function convertToXULElement(str){
  * @return {String} HTML文字列。
  */
 function convertToHTMLString(src, safe){
-	var me = convertToHTMLString;
+	var me = arguments.callee;
 	
 	// 選択範囲の適切な外側まで含めてHTML文字列へ変換する(pre内選択なども正常処理される)
 	var doc = src.ownerDocument || src.focusNode.ownerDocument;

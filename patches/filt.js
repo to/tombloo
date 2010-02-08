@@ -5,6 +5,7 @@
 	// (アプリケーションを通じて一度だけ通過する)
 	var filt = grobal.filt;
 	var checked = {};
+	var disabled = false;
 	if(!filt){
 		var file = getPatchDir();
 		file.append('filt.txt');
@@ -41,6 +42,9 @@
 	});
 	
 	function isBlock(url){
+		if(disabled)
+			return;
+		
 		// observeかpolicyで処理済みか(または最近アクセスされ判定済みか)?
 		var res = checked[url];
 		if(res != null)
@@ -82,6 +86,16 @@
 		icon : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAFWSURBVHjaYvz//z8DJQAggJgYKAQAAUSxAQABxILC285SyfD6rwKDGDMDAwcbAwM7FwMDrwADA6ckEMsxMPy8y8DAJvOAQXpNO0wLQACxoBl4C4jbGLgYgQqBUpwcQJoXiIGGsIowMPx6xMDAyByCrAEggFC94PlnLZDcz/AVGLCcIFdwAjXzAzULMzD8/QCU+r+fQWrlWmQtAAGEGQaizDlAb/xmePsDIfbjPhA/+M3AoZyDrhwggDAN8PxzDUjOYkCRAbqG4d8sBomF19CVAwQQ9lgQZa5nePXjLcP7twwMX54CA+/VWwYOxXpsSgECiAGUkLDivRzZ/7cx/v9/kv///3tO2bjUAQQQvnQwi+EvwzWGvyAv/ZyFSxFAAOE2wOn7bwbm/08Y/v19wqB45DcuZQABxII3mQkKbmPg5serBCCAGCnNTAABRHFeAAggig0ACDAAHjd13iiV8AcAAAAASUVORK5CYII=",
 		children : [
 			{
+				name : 'Disable',
+				check : function(){
+					this.name = ((disabled)? 'Enable' : 'Disable');
+					return true;
+				},
+				execute : function(){
+					disabled = !disabled;
+				},
+			},
+			{
 				name : 'Reload List',
 				execute : reloadList,
 			},
@@ -90,13 +104,17 @@
 				execute : partial(openInEditor, filt.file), 
 			},
 			{
-				name : '',
+				name : 'Debug - On',
 				check : function(){
 					this.name = 'Debug - ' + ((filt.debug)? 'Off' : 'On');
 					return true;
 				},
 				execute : function(){
 					filt.debug = !filt.debug;
+					
+					// デバッグをオンの場合はキャッシュをクリアして確認できるようにする
+					if(filt.debug)
+						checked = {};
 				},
 			},
 		],

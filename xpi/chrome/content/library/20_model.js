@@ -943,6 +943,32 @@ models.register({
 			});
 		});
 	},
+
+	getSuggestions : function(url){
+		var self = this;
+    if(this.tags){
+      return succeed({
+        duplicated: false,
+        recommended: [],
+        tags: this.tags
+      });
+    } else {
+      return request('http://www.google.com/bookmarks').addCallback(function(res){
+        var doc = convertToHTMLDocument(res.responseText);
+        self.tags = $x('descendant::a[starts-with(normalize-space(@id), "lbl_m_") and number(substring(normalize-space(@id), 7)) > 0]/text()', doc, true).map(function(tag){
+          return {
+            name      : tag,
+            frequency : -1
+          };
+        });
+        return {
+          duplicated: false,
+          recommended: [],
+          tags: self.tags
+        };
+      });
+    }
+	}
 });
 
 models.register({

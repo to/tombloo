@@ -49,6 +49,7 @@ Tombloo.Service.actions = new Repository([
 	},
 	{
 		type : 'menu',
+		icon : 'http://www.tumblr.com/images/favicon.gif',
 		name : getMessage('label.action.downloadPosts'),
 		execute : function(){
 			var users = getPref('updateUsers') || '';

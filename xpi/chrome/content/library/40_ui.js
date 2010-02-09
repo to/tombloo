@@ -352,26 +352,7 @@ connect(grobal, 'browser-load', function(e){
 		if(menuAction.childNodes.length)
 			return;
 		
-		// アクションメニューを作成する
-		var doc = cwin.document;
-		var df = doc.createDocumentFragment();
-		(function me(actions, parent){
-			actions.forEach(function(action){
-				// 最初の階層のみアクションタイプを確認する
-				if(parent == df && !/context/.test(action.type))
-					return;
-				
-				if(action.check && !action.check(context))
-					return;
-				
-				var elmItem = appendMenuItem(parent, action.name, action.icon, !!action.children);
-				elmItem.action = action;
-				
-				if(action.children)
-					me(action.children, elmItem.appendChild(doc.createElement('menupopup')));
-			});
-		})(values(Tombloo.Service.actions), df);
-		menuAction.appendChild(df);
+		createActionMenu(menuAction, context);
 	}, true);
 	
 	menuContext.addEventListener('command', function(e){
@@ -404,24 +385,40 @@ connect(grobal, 'browser-load', function(e){
 	
 	var menuMain = doc.getElementById('tombloo-menu-main');
 	menuMain.addEventListener('popupshowing', function(e){
-		clearChildren(menuMain);
+		if(e.eventPhase != Event.AT_TARGET)
+			return;
 		
-		forEach(Tombloo.Service.actions, function([name, action]){
-			// 後方互換のためtypeが存在しないものも可とする
-			if(action.type && !/menu/.test(action.type))
-				return;
-			
-			if(action.check && !action.check())
-				return;
-			
-			var elmItem = appendMenuItem(menuMain, action.name);
-			elmItem.action = action;
-		});
+		clearChildren(menuMain);
+		createActionMenu(menuMain);
 	}, true);
 	
 	menuMain.addEventListener('command', function(e){
 		e.target.action.execute(context);
 	}, true);
+	
+	function createActionMenu(root, ctx){
+		var doc = root.ownerDocument;
+		var df = doc.createDocumentFragment();
+		var type = RegExp((ctx)? 'context' : 'menu');
+		(function me(actions, parent){
+			actions.forEach(function(action){
+				// 最初の階層のみアクションタイプを確認する
+				// 後方互換のためtypeが未指定のものはメニューバーとして扱う
+				if(parent==df && !type.test(action.type || 'menu'))
+					return;
+				
+				if(action.check && !action.check(ctx))
+					return;
+				
+				var elmItem = appendMenuItem(parent, action.name, action.icon, !!action.children);
+				elmItem.action = action;
+				
+				if(action.children)
+					me(action.children, elmItem.appendChild(doc.createElement('menupopup')));
+			});
+		})(Tombloo.Service.actions.values, df);
+		root.appendChild(df);
+	}
 });
 
 function connectToBrowser(win){

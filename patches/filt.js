@@ -80,9 +80,8 @@
 	}
 	
 	Tombloo.Service.actions.register({
-		// メインメニューはサブメニューに対応していないため暫定的にコンテキストのみとする
 		name : 'filt',
-		type : 'context',
+		type : 'menu',
 		icon : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAFWSURBVHjaYvz//z8DJQAggJgYKAQAAUSxAQABxILC285SyfD6rwKDGDMDAwcbAwM7FwMDrwADA6ckEMsxMPy8y8DAJvOAQXpNO0wLQACxoBl4C4jbGLgYgQqBUpwcQJoXiIGGsIowMPx6xMDAyByCrAEggFC94PlnLZDcz/AVGLCcIFdwAjXzAzULMzD8/QCU+r+fQWrlWmQtAAGEGQaizDlAb/xmePsDIfbjPhA/+M3AoZyDrhwggDAN8PxzDUjOYkCRAbqG4d8sBomF19CVAwQQ9lgQZa5nePXjLcP7twwMX54CA+/VWwYOxXpsSgECiAGUkLDivRzZ/7cx/v9/kv///3tO2bjUAQQQvnQwi+EvwzWGvyAv/ZyFSxFAAOE2wOn7bwbm/08Y/v19wqB45DcuZQABxII3mQkKbmPg5serBCCAGCnNTAABRHFeAAggig0ACDAAHjd13iiV8AcAAAAASUVORK5CYII=",
 		children : [
 			{
@@ -128,20 +127,18 @@ connect(grobal, 'content-ready', function(win){
 		win[name] = non;
 	});
 	
+	var pageTracker = {
+		_setDomainName : non,
+		_initData : non,
+		_trackPageview : non,
+		_trackEvent : non,
+	};
 	win._gat = {
 		_getTracker : function(){
-			return {
-				_setDomainName : non,
-				_initData : non,
-				_trackPageview : non,
-			}
+			return pageTracker;
 		},
 	}
-
-	win.pageTracker = {
-		_trackEvent : non,
-		_trackPageview : non,
-	}
+	win.pageTracker = pageTracker;
 	
 	names.forEach(function(name){
 		fixProp(win, name);

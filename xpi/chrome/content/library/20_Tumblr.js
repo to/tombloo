@@ -235,9 +235,11 @@ var Tumblr = update({}, AbstractSessionService, {
 	 * @return {Deferred}
 	 */
 	appendTags : function(form, ps){
+		if(ps.private!=null)
+			form['post[state]'] = (ps.private)? 'private' : 0;
+		
 		return update(form, {
 			'post[tags]' : (ps.tags && ps.tags.length)? joinText(ps.tags, ',') : '',
-			'post[is_private]' : ps.private==null? form['post[is_private]'] : (ps.private? 1 : 0),
 		});
 	},
 	
@@ -293,8 +295,8 @@ var Tumblr = update({}, AbstractSessionService, {
 				if(res.responseText.match('more tomorrow'))
 					throw new Error("You've exceeded your daily post limit.");
 				
-				error(res);
-				throw new Error('Error posting entry.');
+				var doc = convertToHTMLDocument(res.responseText);
+				throw new Error(convertToPlainText(doc.getElementById('errors')));
 			}
 		});
 		return d;
@@ -453,7 +455,7 @@ Tumblr.Regular = {
 		return {
 			'post[type]' : ps.type,
 			'post[one]'  : ps.item,
-			'post[two]'  : joinText([ps.body, ps.description], '\n\n'),
+			'post[two]'  : joinText([getFlavor(ps.body, 'html'), ps.description], '\n\n'),
 		};
 	},
 }
@@ -515,7 +517,7 @@ Tumblr.Video = {
 	convertToForm : function(ps){
 		return {
 			'post[type]' : ps.type,
-			'post[one]'  : ps.body || ps.itemUrl,
+			'post[one]'  : getFlavor(ps.body, 'html') || ps.itemUrl,
 			'post[two]'  : joinText([
 				(ps.item? ps.item.link(ps.pageUrl) : '') + (ps.author? ' (via ' + ps.author.link(ps.authorUrl) + ')' : ''), 
 				ps.description], '\n\n'),
@@ -538,7 +540,7 @@ Tumblr.Link = {
 			'post[type]'  : ps.type,
 			'post[one]'   : ps.item,
 			'post[two]'   : ps.itemUrl,
-			'post[three]' : joinText([thumb, ps.body, ps.description], '\n\n'),
+			'post[three]' : joinText([thumb, getFlavor(ps.body, 'html'), ps.description], '\n\n'),
 		};
 	},
 }
@@ -555,7 +557,7 @@ Tumblr.Conversation = {
 		return {
 			'post[type]' : ps.type,
 			'post[one]'  : ps.item,
-			'post[two]'  : joinText([ps.body, ps.description], '\n\n'),
+			'post[two]'  : joinText([getFlavor(ps.body, 'html'), ps.description], '\n\n'),
 		};
 	},
 }
@@ -571,7 +573,7 @@ Tumblr.Quote = {
 	convertToForm : function(ps){
 		return {
 			'post[type]' : ps.type,
-			'post[one]'  : ps.body,
+			'post[one]'  : getFlavor(ps.body, 'html'),
 			'post[two]'  : joinText([(ps.item? ps.item.link(ps.pageUrl) : ''), ps.description], '\n\n'),
 		};
 	},

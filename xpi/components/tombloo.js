@@ -12,25 +12,58 @@ ScriptLoader     = getService('/moz/jssubscript-loader;1', Ci.mozIJSSubScriptLoa
 ExtensionManager = getService('/extensions/manager;1', Ci.nsIExtensionManager);
 IOService        = getService('/network/io-service;1', Ci.nsIIOService);
 WindowMediator   = getService('/appshell/window-mediator;1', Ci.nsIWindowMediator);
+CategoryManager  = getService('/categorymanager;1', Ci.nsICategoryManager);
 
 Module = {
 	CID  : Components.ID('{aec75109-b143-4e49-a708-4904cfe85ea0}'),
 	NAME : 'TomblooService',
 	PID  : '@brasil.to/tombloo-service;1',
 	
-	createInstance : function(){
-		// createInstanceで呼び出されたときのために独自にシングルトン機構を持つ
-		if(this.instance)
+	onRegister : function(){
+		CategoryManager.addCategoryEntry('content-policy', this.NAME, this.PID, true, true);
+	},
+	
+	initialized : false,
+	
+	instance : {
+		shouldLoad : function(contentType, contentLocation, requestOrigin, context, mimeTypeGuess, extra){
+			return Ci.nsIContentPolicy.ACCEPT;
+		},
+		
+		shouldProcess : function(aContentType, aContentLocation, aRequestOrigin, aContext, aMimeTypeGuess, aExtra){
+			return Ci.nsIContentPolicy.ACCEPT;
+		},
+		
+		QueryInterface : function(iid){
+			if(iid.equals(Ci.nsIContentPolicy) || iid.equals(Ci.nsISupports) || iid.equals(Ci.nsISupportsWeakReference))
+				return this;
+			
+			throw Cr.NS_NOINTERFACE;
+		},
+	},
+	
+	createInstance : function(outer, iid){
+		// nsIContentPolicyはhiddenDOMWindowの準備ができる前に取得される
+		// 仮に応答できるオブジェクトを返し環境を構築できるまでの代替とする
+		if(iid.equals(Ci.nsIContentPolicy))
 			return this.instance;
 		
-		var env = function(){};
-		env.getContentDir = getContentDir;
-		env.getLibraries = getLibraries;
-		env.PID = this.PID;
+		// ブラウザが開かれるタイミングでインスタンスの要求を受け環境を初期化する
+		// 2個目以降のウィンドウからは生成済みの環境を返す
+		if(this.initialized)
+			return this.instance;
+		
+		// 以降のコードはアプリケーション起動後に一度だけ通過する
+		var env = this.instance;
 		
 		// アプリケーション全体で、同じloadSubScripts関数を使いまわし汚染を防ぐ
 		env.loadSubScripts = loadSubScripts;
 		env.loadAllSubScripts = loadAllSubScripts;
+		env.getContentDir = getContentDir;
+		env.getLibraries = getLibraries;
+		env.PID = this.PID;
+		env.CID = this.CID;
+		env.NAME = this.NAME;
 		
 		// MochiKit内部で使用しているinstanceofで異常が発生するのを避ける
 		env.MochiKit = {};
@@ -47,7 +80,7 @@ Module = {
 				Tombloo : {
 					Service : copy({}, env.Tombloo.Service, /(check|share|posters|extractors)/),
 				}
-			}, env, /(Deferred|DeferredHash)/);
+			}, env, /(Deferred|DeferredHash|copyString|notify)/);
 			
 			for(var name in env.models)
 				if(env.models.hasOwnProperty(name))
@@ -58,7 +91,10 @@ Module = {
 			});
 		}
 		
-		return this.instance = env;
+		env.signal(env, 'environment-load');
+		
+		this.initialized = true;
+		return env;
 	}, 
 }
 
@@ -97,7 +133,7 @@ function setupEnvironment(global){
 	// 変数/定数はhiddenDOMWindowのものを直接使う
 	[
 		'navigator document window screen',
-		'XMLHttpRequest XPathResult Node Element KeyEvent Event DOMParser XSLTProcessor XML NodeFilter',
+		'XMLHttpRequest XPathResult Node Element KeyEvent Event DOMParser XSLTProcessor XML XMLSerializer NodeFilter',
 	].join(' ').split(' ').forEach(function(p){
 		global[p] = win[p];
 	});
@@ -148,10 +184,31 @@ function loadSubScripts(files, global){
 	var global = global || function(){};
 	files = [].concat(files);
 	
-	files.forEach(function(file){
-		var uri = file instanceof ILocalFile? IOService.newFileURI(file).spec : uri;
-		ScriptLoader.loadSubScript(uri, global);
-	});
+	for(var i=0,len=files.length ; i<len ; i++){
+		// 文字化け回避のためファイル内容を取得し評価する
+		// 複数スクリプトの連結評価(30%程度の高速化)は関数定義の上書きに失敗することがあるため見送った
+		global._source = getContents(files[i]);
+		ScriptLoader.loadSubScript('chrome://tombloo/content/eval.js', global);
+	}
+}
+
+function getContents(file){
+	try{
+		var fis = Cc['@mozilla.org/network/file-input-stream;1']
+			.createInstance(Ci.nsIFileInputStream);
+		fis.init(file, -1, 0, false);
+		
+		var cis = Cc['@mozilla.org/intl/converter-input-stream;1']
+			.createInstance(Ci.nsIConverterInputStream);
+		cis.init(fis, 'UTF-8', fis.available(), Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+		
+		var out = {};
+		cis.readString(fis.available(), out);
+		return out.value;
+	} finally {
+		fis && fis.close();
+		cis && cis.close();
+	}
 }
 
 function simpleIterator(e, ifc, func){

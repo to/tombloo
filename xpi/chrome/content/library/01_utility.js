@@ -8,6 +8,7 @@ var CHROME_CONTENT_DIR = CHROME_DIR + '/content';
 var EXTENSION_ID = 'tombloo@brasil.to';
 
 var KEY_ACCEL = (AppInfo.OS == 'Darwin')? 'META' : 'CTRL';
+var PATH_DELIMITER = (navigator.appVersion.indexOf('Windows') != -1)? '\\' : '/';
 
 var grobal = this;
 disconnectAll(grobal);
@@ -54,6 +55,10 @@ function wrappedObject(obj){
 	return obj.wrappedJSObject || obj;
 }
 
+function copyString(str){
+	ClipboardHelper.copyString(str);
+}
+
 /**
  * 相対パスを解決する。
  *
@@ -81,24 +86,16 @@ function getCookieString(host, name){
 }
 
 function getPasswords(host, user){
-	// Firefox 2
-	if(PasswordManager){
-		return filter(function(p){
-			return (p.host == host) && 
-				(user? p.user == user : true);
-		}, PasswordManager.enumerator);
-	} else {
-		return map(function(p){
-			return {
-				user : p.username,
-				usernameFieldName : p.usernameField,
-				password : p.password,
-				passwordFieldName : p.passwordField,
-			}
-		}, ifilter(function(p){
-			return (user? p.username == user : true);
-		}, LoginManager.findLogins({}, host, host, null)));
-	}
+	return map(function(p){
+		return {
+			user : p.username,
+			usernameFieldName : p.usernameField,
+			password : p.password,
+			passwordFieldName : p.passwordField,
+		}
+	}, ifilter(function(p){
+		return (user? p.username == user : true);
+	}, LoginManager.findLogins({}, host, host, null)));
 }
 
 var stringBundle = StringBundleService.createBundle(CHROME_DIR + '/locale/messages.properties');
@@ -126,6 +123,9 @@ function getMessage(key){
  * @param {String} title ウィンドウタイトル。
  */
 function input(form, title){
+	if(typeof(form)=='string')
+		return PromptService.confirm(null, title, form);
+	
 	function m(key){
 		return getMessage(key) || key || '';
 	}
@@ -144,20 +144,25 @@ function input(form, title){
 		return list[selected.value];
 	}
 	
-	var vals = values(form);
-	var method = (vals[0] == null && typeof(vals[1]) == 'boolean')? 'confirmCheck' : 'prompt';
-	
 	var args = [null, m(title)];
 	for(var msg in form){
 		args.push(m(msg));
 		
-		// 値を一時的にオブジェクトに変換する
+		// メッセージではないか？
 		if(form[msg] != null){
+			// 値を一時的にオブジェクトに変換する
 			var val = {value : form[msg]};
 			form[msg] = val;
 			args.push(val);
 		}
 	}
+	
+	var vals = values(form);
+	var method = (vals[0] == null && typeof(vals[1]) == 'boolean')? 'confirmCheck' : 'prompt';
+	
+	// テキストボックスのみか？(チェックボックス不要の場合)
+	if(method=='prompt' && args.length==4)
+		args = args.concat([null, {}]);
 	
 	if(!PromptService[method].apply(PromptService, args))
 		return;
@@ -169,33 +174,62 @@ function input(form, title){
 	return form;
 }
 
-function download(sourceURL, targetFile){
+function download(sourceURL, targetFile, useManger){
 	var d = new Deferred();
-	var targetURI = IOService.newFileURI(targetFile);
 	var sourceURI = createURI(sourceURL);
 	
-	var persist = WebBrowserPersist();
-	with(persist){
-		persist.progressListener = {
-			onLocationChange : function(){},
-			onProgressChange : function(){},
-			onSecurityChange : function(){},
-			onStatusChange : function(){},
-			onStateChange : function(progress, req, state, status){
-				if (state & IWebProgressListener.STATE_STOP)
-					d.callback(targetFile);
-			},
-		}
-		
-		persistFlags = PERSIST_FLAGS_FROM_CACHE;
-		saveURI(sourceURI, null, null, null, null, targetURI);
+	if(!targetFile)
+		targetFile = getDownloadDir();
+	
+	if(targetFile.exists() && targetFile.isDirectory())
+		targetFile.append(validateFileName(sourceURI.fileName));
+	
+	var targetURI = IOService.newFileURI(targetFile);
+	
+	var p = WebBrowserPersist();
+	if(useManger)
+		var download = broad(DownloadManager.addDownload(
+			DownloadManager.DOWNLOAD_TYPE_DOWNLOAD, sourceURI, targetURI,
+			null, null, Math.round(Date.now() * 1000), null, p));
+	
+	p.progressListener = {
+		onLocationChange : (useManger)? bind('onLocationChange', download) : function(){},
+		onProgressChange : (useManger)? bind('onProgressChange', download) : function(){},
+		onSecurityChange : (useManger)? bind('onSecurityChange', download) : function(){},
+		onStatusChange   : (useManger)? bind('onStatusChange', download)   : function(){},
+		onStateChange    : function(progress, req, state, status){
+			useManger && download.onStateChange(progress, req, state, status);
+			
+			if(state & IWebProgressListener.STATE_STOP)
+				d.callback(targetFile);
+		},
 	}
+	
+	p.persistFlags = 
+		p.PERSIST_FLAGS_FROM_CACHE | 
+		p.PERSIST_FLAGS_REPLACE_EXISTING_FILES | 
+		p.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
+	p.saveURI(sourceURI, null, null, null, null, targetURI);
 	
 	return d;
 }
 
-function createDir(dir){
-	var dir = (dir instanceof IFile) ? dir : new LocalFile(dir);
+function createDir(dir, basePath){
+	if(basePath){
+		basePath = (basePath instanceof IFile)? basePath.path : basePath;
+		
+		if(basePath.slice(-1) != PATH_DELIMITER)
+			basePath += PATH_DELIMITER;
+	} else {
+		basePath = ''; 
+	}
+	
+	dir = basePath + ((dir instanceof IFile)? dir.path : dir);
+	dir = dir.replace(/[\/\\]/g, PATH_DELIMITER);
+	
+	// 複数階層を一度に作成するため新しくインスタンスを生成する
+	dir = new LocalFile(dir);
+	
 	if(dir.exists()){
 		if(dir.isDirectory())
 			dir.permissions = 0774;
@@ -348,9 +382,13 @@ function addTab(url, background){
 }
 
 function getContents(file, charset){
+	file = getLocalFile(file);
+	if(!file.exists())
+		return '';
+	
 	try{
 		return withStream(new FileInputStream(file, -1, 0, false), function(fis){
-			return withStream(new ConverterInputStream(fis, charset), function(cis){
+			return withStream(new ConverterInputStream(fis, charset, fis.available()), function(cis){
 				var out = {};
 				cis.readString(fis.available(), out);
 				return out.value;
@@ -365,6 +403,33 @@ function putContents(file, text, charset){
 		text = text.convertFromUnicode(charset);
 		stream.write(text, text.length);
 	});
+}
+
+/**
+ * 外部エディタでファイルを開く。
+ * Greasemonkeyで設定されているエディタ、または、ブラウザでソースを開く時に使われるエディタが呼び出される。
+ *
+ * @param {nsIFile || String} path 対象ファイルのパス。 
+ */
+function openInEditor(path){
+	if(path instanceof IFile)
+		path = path.path;
+	
+	var app = 
+		getLocalFile(getPrefValue('greasemonkey.editor')) || 
+		getLocalFile(getPrefValue('view_source.editor.path'));
+	if(!app || !app.exists())
+		return;
+	
+	if(AppInfo.OS == 'Darwin'){
+		var args = ['-a', app.path, path];
+		app = new LocalFile('/usr/bin/open');
+		app.followLinks = true;
+	} else {
+		var args = [path];
+	}
+	
+	new Process(app).run(false, args, args.length);
 }
 	
 /**
@@ -389,6 +454,7 @@ function setCookie(channel){
  * @param {String} url リクエストURL。
  * @param {Object} opts リクエストオプション。
  * @param {String} opts.referrer リファラURL。
+ * @param {Object} opts.headers リクエストヘッダー。
  * @param {String} opts.charset 文字セット。指定されない場合、レスポンスヘッダの文字セットが使われる。
  * @param {String || Object} opts.queryString クエリ。
  * @param {String || Object} opts.sendContent 
@@ -404,11 +470,16 @@ function request(url, opts){
 	
 	opts = opts || {};
 	
-	var uri = createURI(url + queryString(opts.queryString, true));
+	var uri = createURI(joinText([url, queryString(opts.queryString)], '?'));
 	var channel = broad(IOService.newChannelFromURI(uri));
 	
 	if(opts.referrer)
 		channel.referrer = createURI(opts.referrer);
+	
+	if(opts.headers)
+		items(opts.headers).forEach(function([key, value]){
+			channel.setRequestHeader(key, value, true);
+		});
 	
 	setCookie(channel);
 	
@@ -446,10 +517,11 @@ function request(url, opts){
 						'--' + boundary,
 						'Content-Disposition: form-data; name="' + name + '"',
 						'',
-						(value.convertFromUnicode? value.convertFromUnicode() : value),
+						value.convertFromUnicode? value.convertFromUnicode() : value,
 					]);
 				} else {
 					if(value.file instanceof IFile){
+						value.contentType = value.contentType || getMimeType(value.file);
 						value.fileName = value.file.leafName;
 						value.file = IOService.newChannelFromURI(createURI(value.file)).open();
 					}
@@ -530,6 +602,13 @@ function request(url, opts){
 				return;
 			}
 			
+			// HEADメソッドを引き継ぐ(GETに変わり遅くならないように)
+			broad(oldChannel);
+			if(oldChannel.requestMethod == 'HEAD'){
+				broad(newChannel);
+				newChannel.requestMethod = 'HEAD';
+			}
+			
 			setCookie(newChannel);
 		},
 		
@@ -548,26 +627,31 @@ function request(url, opts){
 			broad(req);
 			
 			var text = this.data.join('');
-			var charset = opts.charset || req.contentCharset;
-			
 			try{
+				var charset = opts.charset || req.contentCharset || text.extract(/content=["'].*charset=(.+?)[;"']/i);
 				text = charset? text.convertToUnicode(charset) : text;
-			} catch(err){
-				// [FIXME] 調査中
-				error(err);
-				error(charset);
-				error(text);
+				
+				var res = {
+					channel      : req,
+					responseText : text,
+					status       : req.responseStatus,
+					statusText   : req.responseStatusText,
+				};
+			} catch(e) {
+				// contentCharsetなどのプロパティ取得時にNS_ERROR_NOT_AVAILABLEエラーが発生することがある
+				var res = {
+					channel      : req,
+					responseText : text,
+					status       : null,
+					statusText   : null,
+				};
 			}
-			var res = {
-				channel : req,
-				responseText : text,
-				status : req.responseStatus,
-				statusText : req.responseStatusText,
-			};
 			
 			if(Components.isSuccessCode(status) && res.status < 400){
 				d.callback(res);
 			}else{
+				error(res);
+				
 				res.message = getMessage('error.http.' + res.status);
 				d.errback(res);
 			}
@@ -587,6 +671,16 @@ function request(url, opts){
 	return d;
 }
 
+function getMimeType(file){
+	try{
+		return (file instanceof IFile)?
+			MIMEService.getTypeFromFile(file) : 
+			MIMEService.getTypeFromExtension(file)
+	}catch(e){
+		// 取得に失敗するとエラーが発生する(拡張子が無い場合など)
+		return '';
+	}
+}
 
 // ----[MochiKit]-------------------------------------------------
 var StopProcess = {};
@@ -653,27 +747,33 @@ function formContents(elm){
 	}, zip.apply(null, MochiKit.DOM.formContents(elm)), {});
 }
 
-function queryString(params, question){
+function queryString(params, charset){
 	if(isEmpty(params))
 		return '';
 	
 	if(typeof(params)=='string')
 		return params;
 	
+	// EUCエンコードなどに対応
+	var e = (charset)? function(str){
+		return escape((''+str).convertFromUnicode(charset))
+	} : encodeURIComponent;
+	
 	var qeries = [];
 	for(var key in params){
 		var value = params[key];
 		if(value==null)
 			continue;
-		qeries.push(encodeURIComponent(key) + '='+ encodeURIComponent(value));
+		
+		if(value instanceof Array){
+			value.forEach(function(val){
+				qeries.push(e(key) + '=' + e(val));
+			});
+		} else {
+			qeries.push(e(key) + '='+ e(value));
+		}
 	}
-	return (question? '?' : '') + qeries.join('&');
-}
-
-// FIXME: 互換のため
-function doXHR(url, opts){
-	error('deprecated: doXHR');
-	return request(url, opts);
+	return qeries.join('&');
 }
 
 registerIteratorFactory(
@@ -712,6 +812,26 @@ registerIteratorFactory(
 			}
 		};
 	});
+
+registerIteratorFactory(
+	'XPathResult', 
+	function(it){
+		return it instanceof Ci.nsIDOMXPathResult;
+	}, 
+	function(it){
+		var i = 0;
+		var len = it.snapshotLength;
+		return {
+			next: function(){
+				if(i >= len)
+					throw StopIteration;
+				
+				return it.snapshotItem(i++);
+			}
+		};
+	}, 
+	// iterateNextにマッチしないように先頭に追加する
+	true);
 
 registerIteratorFactory(
 	'XML', 
@@ -863,16 +983,6 @@ function roundPosition(p){
 		Math.round(p.y));
 }
 
-// FIXME: UTF-8でスクリプトをロードするように
-function isCorruptedScript(){
-	try{
-		'ウァ'.convertToUnicode();
-		return true;
-	} catch(e) {
-		return false;
-	}
-}
-
 String.katakana = {
 	'ウァ':'wha','ウィ':'wi','ウェ':'we','ウォ':'who',
 	'キャ':'kya','キィ':'kyi','キュ':'kyu','キェ':'kye','キョ':'kyo',
@@ -921,13 +1031,6 @@ String.katakana = {
 	'ヵ':'lka','ヶ':'lke','ッ':'ltu',
 	'ャ':'lya','ュ':'lyu','ョ':'lyo','ヮ':'lwa',
 	'。':".",'、':",",'ー':"-",
-}
-
-if(isCorruptedScript()){
-	String.katakana = reduce(function(memo, pair){
-		memo[pair[0].convertToUnicode()] = pair[1];
-		return memo;
-	}, String.katakana, {});
 }
 
 
@@ -984,9 +1087,14 @@ function firebug(method, args){
 	}
 	
 	// Firebug 1.2~
-	if ( win.Firebug && win.Firebug.Console ) {
-		win.Firebug.Console.logFormatted.call(win.Firebug.Console, Array.slice(args), win.FirebugContext, method);
-		return true;
+	if( win.Firebug && win.Firebug.Console ){
+		try {
+			win.Firebug.Console.logFormatted.call(win.Firebug.Console, Array.slice(args), win.FirebugContext, method);
+			
+			return true;
+		} catch(e) {
+			// Firebug 1.4.5でコンソールが開かれていないときに発生するエラーを抑止する
+		}
 	}
 	
 	return false;
@@ -1002,6 +1110,14 @@ function isEmpty(obj){
 	for(var i in obj)
 		return false;
 	return true;
+}
+
+function uniq(a){
+	return Array.reduce(a, function(e, r){
+		if(e.indexOf(r) == -1)
+			e.push(r);
+		return e;
+	}, []);
 }
 
 function populateForm(form, values){
@@ -1191,7 +1307,9 @@ function joinText(txts, delm, trimTag){
 	
 	if(delm==null)
 		delm = ',';
-	txts = flattenArray([].concat(txts).filter(operator.truth));
+	txts = flattenArray([].concat(txts).filter(function(txt){
+		return txt != null && txt != '';
+	}));
 	return (trimTag? txts.map(methodcaller('trimTag')) : txts).join(delm);
 }
 
@@ -1214,7 +1332,7 @@ function validateFileName(fileName){
 
 /**
  * Windows上でWSHを実行する。
- * スクリプト内でWScript.echoなどで出力された文字列も返り値に含まれる。
+ * 将来Deferredを用いるrunWSHに移行される。
  * 
  * @param {Function} func WSHスクリプト。
  * @param {Array} args WSHスクリプトの引数。 
@@ -1222,39 +1340,96 @@ function validateFileName(fileName){
  * @return {String} WSHスクリプトの実行結果。
  */
 function executeWSH(func, args, async){
+	error('deprecated: executeWSH');
+	
+	var res;
+	runWSH(func, args, !async).addCallback(function(r){
+		res = r;
+	});
+	
+	return res;
+}
+
+/**
+ * Windows上でWSHを実行する。
+ * スクリプト内から表示された文字列はコールバックされる。
+ * 
+ * @param {Function} func WSHスクリプト。
+ * @param {Array} args WSHスクリプトの引数。 
+ * @param {Boolean} blocking 同期で実行するか。デフォルトは非同期。
+ * @return {Deferred}
+ */
+function runWSH(func, args, blocking){
 	args = (args==null)? [] : [].concat(args);
+	args.unshift(func);
+	
+	var d = new Deferred();
 	
 	var bat = getTempFile('bat');
 	var script = getTempFile();
 	var out = new LocalFile(script.path + '.out');
 	
+	// リダイレクト結果を取得するためバッチ経由で実行する
 	putContents(bat, [
 		'cscript //E:JScript //Nologo', 
 		script.path.quote(), 
-		(async)? '' : ('> ' + out.path.quote())
+		'>',
+		out.path.quote()
 	].join(' '));
-	putContents(script, 
-		args.map(function(a, i){return 'var ARG_' + i + ' = ' + uneval(a) + ';'}).join('\n') + 
-		'WScript.echo(' + func.toSource() + '(' + 
-		args.map(function(a, i){return 'ARG_' + i}).join(',') + 
-		'));');
+	putContents(script,
+		runWSH.utility +  
+		'var ARGS = ' + uneval(args) + ';\n' + 
+		uneval(function(){
+			try{
+				WScript.echo('(' + JSON.stringify(ARGS.shift().apply(null, ARGS)) + ')');
+			} catch(e) {
+				WScript.echo('throw ' + JSON.stringify(e) + ';');
+			}
+		}) + '();');
 	
-	new Process(bat).run(!async, [], 0);
+	var end = function(){
+		var res = getContents(out, 'Shift-JIS').replace(/\s+$/, '');
+		
+		out.remove(false);
+		bat.remove(false);
+		script.remove(false);
+		
+		try{
+			res = eval(res);
+			d.callback(res);
+		}catch(e){
+			d.errback(e);
+		}
+	};
 	
-	// FIXME: 非同期時、スクリプトが終了していないためファイルを消せない
-	if(async)
-		return;
+	var process = new Process(bat);
+	if(!process.runAsync || blocking){
+		process.run(true, [], 0);
+		end();
+	} else {
+		process.runAsync([], 0, {
+			observe : end,
+		});
+	}
 	
-	var res = getContents(out, 'Shift-JIS').replace(/\s+$/, '');
-	
-	out.remove(false);
-	bat.remove(false);
-	script.remove(false);
-	
-	return res;
+	return d;
 }
-	
 
+runWSH.utility = getContents(CHROME_CONTENT_DIR + '/wsh.js');
+
+function getFinalUrl(url){
+	return request(url, {
+		method : 'HEAD',
+	}).addCallback(function(res){
+		return res.channel.URI.spec;
+	});
+}
+
+function getJSON(url, opts){
+	return request(url, opts).addCallback(function(res){
+		return evalInSandbox('(function(){return ' + res.responseText + '})()', url);
+	});
+}
 
 // ----[State]-------------------------------------------------
 var State = {
@@ -1413,7 +1588,7 @@ Repository.prototype = {
 	},
 }
 
-// ----[DOM]-------------------------------------------------
+// ----[DOM/XML]-------------------------------------------------
 'tree treecols treecol treechildren treeitem treerow treecell splitter'.split(' ').forEach(function(tag){
 	grobal[tag.toUpperCase()] = bind(E, null, tag);
 });
@@ -1559,7 +1734,7 @@ function convertToHTMLDocument(html, doc) {
 }
 
 function convertToXML(text){
-	return new XML(text.replace(/<\?.*\?>/gm,'').replace(/<!.*?>/gm, '').replace(/xmlns=".*?"/,''));
+	return new XML(text.replace(/<\?.*\?>/gm,'').replace(/<!.*?>/gm, '').replace(/xmlns=["'].*?["']/g,''));
 }
 
 function convertToXULElement(str){
@@ -1585,6 +1760,107 @@ function convertToXULElement(str){
 	}
 
 	return result;
+}
+
+/**
+ * HTMLが表示された状態のプレーンテキストを取得する。
+ * 範囲選択をしてコピーした時に得られる文字列に類似。
+ *
+ * @param {Element || Selection} src DOM要素または選択範囲。
+ * @param {Boolean} safe 
+ *        script要素などの不要要素を除去する。
+ *        セキュアなHTMLになるわけではない。
+ *        (UnescapeHTMLを用いたsanitizeHTMLメソッドの利用も検討すること)。
+ * @return {String} HTML文字列。
+ */
+function convertToHTMLString(src, safe){
+	var me = arguments.callee;
+	
+	// 選択範囲の適切な外側まで含めてHTML文字列へ変換する(pre内選択なども正常処理される)
+	var doc = src.ownerDocument || src.focusNode.ownerDocument;
+	var encoder = new HTMLCopyEncoder(doc, 'text/unicode', 
+		HTMLCopyEncoder.OutputPreformatted | HTMLCopyEncoder.OutputLFLineBreak);
+	encoder[src.nodeType? 'setNode' : 'setSelection'](src);
+	
+	var html = encoder.encodeToString();
+	if(!safe)
+		return html;
+	
+	// DOMツリーに戻し不要な要素を除去する
+	var root;
+	if(src.getRangeAt){
+		root = src.getRangeAt(0).commonAncestorContainer.cloneNode(false);
+		
+		// 親にtableを持たない要素にtrを追加すると消える
+		if(tagName(root)=='tbody')
+			doc.createElement('table').appendChild(root);
+ 	} else {
+		root = doc.createElement('div');
+	}
+	root.innerHTML = html;
+	
+	forEach($x('.//*[contains(",' + me.UNSAFE_ELEMENTS + ',", concat(",", local-name(.), ","))]', root, true), removeElement);
+	forEach(doc.evaluate('.//@*[not(contains(",' + me.SAFE_ATTRIBUTES + ',", concat(",", local-name(.), ",")))]', root, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null), function(attr){
+		attr.ownerElement.removeAttribute(attr.name);
+	});
+	
+	src = appendChildNodes(doc.createDocumentFragment(), root.childNodes);
+	
+	// 再度HTML文字列へ変換する
+	return me(src);
+}
+
+update(convertToHTMLString , {
+	UNSAFE_ELEMENTS : 'frame,iframe,script,style',
+	SAFE_ATTRIBUTES : 'action,align,cellpadding,cellspacing,checked,cite,clear,cols,colspan,content,coords,enctype,face,for,href,label,method,name,nohref,nowrap,rel,rows,rowspan,shape,span,src,style,target,type,usemap,valign,value',
+});
+
+/**
+ * HTML表示状態のプレーンテキストを取得する。
+ * 範囲選択をしてコピーした時に得られる文字列に類似。
+ *
+ * @param {String || Element || Selection} src HTML文字列、DOM要素、選択範囲のいずれか。
+ * @return {String} プレーンテキスト。
+ */
+function convertToPlainText(src){
+	// DOM要素または選択範囲か?
+	if(typeof(src)!='string')
+		src = convertToHTMLString(src);
+	
+	// DocumentEncoder(text/plan)を用いるとpre要素内の選択で改行が欠落した
+	// クリップボードへのコピー処理と同一のフレーバー作成の方法を使う
+	var res = {};
+	var converter = new HTMLFormatConverter();
+	
+	// 2倍のバッファサイズはnsCopySupport.cppの実装より(HTMLの2倍の文字列になることはないという仮定と思われる)
+	converter.convert('text/html', new SupportsString(src), src.length * 2, 'text/unicode', res, {})
+	
+	return broad(res.value).data.replace(/\r/g, '').trim();
+}
+
+/**
+ * HTML表示状態のプレーンテキストを取得する。
+ * 範囲選択をしてコピーした時に得られる文字列に類似。
+ *
+ * @param {Element || Selection} src DOM要素または選択範囲。
+ * @return {String} プレーンテキスト。
+ */
+function createFlavoredString(src){
+	var res = new String(convertToPlainText(src));
+	res.flavors = {
+		html : convertToHTMLString(src, true),
+	};
+	return res;
+}
+
+/**
+ * 表現形式を指定して値を取得する。
+ *
+ * @param {String} name フレーバー名("html"など)。
+ */
+function getFlavor(src, name){
+	return (src==null || !src.flavors)? src : 
+		src.flavors[name] || src;
 }
 
 function makeOpaqueFlash(doc){
@@ -1752,7 +2028,11 @@ function loadImage(src){
 	}
 	
 	img.onload = function(){
-		d.callback(img);
+		try{
+			d.callback(img);
+		}catch(e){
+			// ロードが複数回呼び出されて発生するエラーを抑止する
+		}
 	};
 	
 	img.onerror = function(){
@@ -1760,6 +2040,15 @@ function loadImage(src){
 	};
 	
 	return d;
+}
+
+function getSelectionContents(sel){
+	if(!sel)
+		return;
+	
+	sel = (sel.getSelection)? sel.getSelection() : sel;
+	if(sel.rangeCount && !sel.isCollapsed)
+		return sel.getRangeAt(0).cloneContents();
 }
 
 
@@ -2079,7 +2368,7 @@ AbstractSessionService = {
 				return succeed(self[key]);
 			
 		case 'changed':
-			return func().addCallback(function(value){
+			return func.apply(self).addCallback(function(value){
 				return self[key] = value;
 			});
 		}

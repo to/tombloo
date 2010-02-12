@@ -3,28 +3,43 @@ Tombloo.Service.actions = new Repository([
 		type : 'context',
 		name : getMessage('label.action.installPatch'),
 		check : function(ctx){
-			return ctx.onLink && (createURI(ctx.linkURL).fileExtension == 'js');
+			// GitHubでかつraw以外のリンクの場合は除外する
+			// FIXME: より簡易にインストールできるように
+			var url = ctx.linkURL;
+			return ctx.onLink && 
+				(createURI(url).fileExtension == 'js') && 
+				!(/github\.com/.test(url) && !/\/raw\//.test(url));
 		},
 		execute : function(ctx){
-			var res = input({
-				'message.installWarning' : null,
-				'label.agreeAndInstall' : false,
-			}, 'message.warning');
-			if(!res || !res['label.agreeAndInstall'])
-				return;
+			var self = this;
 			
-			var uri = createURI(ctx.linkURL);
-			var file = getPatchDir();
-			file.append(uri.fileName);
-			
-			return download(uri, file).addCallback(function(){
-				// 異常なスクリプトが含まれているとここで停止する
-				reload();
+			// ファイルタイプを取得しチェックする
+			var url;
+			return request(ctx.linkURL, {
+				method : 'HEAD',
+			}).addCallback(function(res){
+				if(!/^text\/.*(javascript|plain)/.test(res.channel.contentType)){
+					alert(getMessage('message.install.invalid'));
+					return;
+				}
 				
-				alert(getMessage('message.success'));
+				var res = input({
+					'message.install.warning' : null,
+					'label.install.agree' : false,
+				}, 'message.install.warning');
+				if(!res || !res['label.install.agree'])
+					return;
+				
+				return download(ctx.linkURL, getPatchDir()).addCallback(function(file){
+					// 異常なスクリプトが含まれているとここで停止する
+					reload();
+					
+					notify(self.name, getMessage('message.install.success'), notify.ICON_INFO);
+				});
 			});
 		},
 	},
+	
 	{
 		type : 'menu,context',
 		name : getMessage('label.action.changeAcount'),
@@ -34,6 +49,7 @@ Tombloo.Service.actions = new Repository([
 	},
 	{
 		type : 'menu',
+		icon : 'http://www.tumblr.com/images/favicon.gif',
 		name : getMessage('label.action.downloadPosts'),
 		execute : function(){
 			var users = getPref('updateUsers') || '';

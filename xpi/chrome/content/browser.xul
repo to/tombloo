@@ -2,25 +2,24 @@
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 	<popup id="contentAreaContextMenu">
 		<menuitem 
+			position="1" 
 			class="menuitem-iconic"
-			insertbefore="context-bookmarklink" 
 			label="Share" 
 			id="tombloo-menu-share" 
 			accesskey="J"/>
 		<menu 
+			position="2" 
 			class="menu-iconic"
 			image="chrome://tombloo/skin/empty.png"
-			insertbefore="context-bookmarklink"
 			label="Share...">
 			<menupopup id="tombloo-menu-select"/>
 		</menu>
 		<menu 
+			position="3" 
 			class="menuitem-iconic"
-			insertbefore="context-bookmarklink" 
 			label="Tombloo" >
 			<menupopup id="tombloo-menu-action"/>
 		</menu>
-		<menuseparator insertbefore="context-bookmarklink" />
 	</popup>
 	<menupopup id="menu_ToolsPopup">
 		<menu label="Tombloo" insertbefore="sanitizeSeparator">
@@ -29,7 +28,9 @@
 	</menupopup>
 	<script type="text/javascript; version=1.7"><![CDATA[
 	(function(){
-		var env = Cc['@brasil.to/tombloo-service;1'].getService().wrappedJSObject;
+		// createInstanceで呼び出し初期化を促す
+		// 他の場所ではgetServiceを用いてよい
+		var env = Cc['@brasil.to/tombloo-service;1'].createInstance().wrappedJSObject;
 		
 		env.signal(env, 'browser-open', window);
 		

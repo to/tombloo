@@ -8,7 +8,10 @@ Tombloo.Service = {
 	 */
 	check : function(ctx){
 		return withWindow(ctx.window, function(){
-			if(!ctx.menu && ctx.target){
+			// コンテキストメニューからの呼び出しの場合そちらで設定されている
+			// html要素などのルート要素も除外する
+			if(!ctx.menu && ctx.target && 
+				(ctx.target.parentNode != ctx.target.ownerDocument && ctx.target != ctx.target.ownerDocument)){
 				ctx.link = $x('.//ancestor::a', ctx.target);
 				ctx.onLink = !!ctx.link;
 				ctx.onImage = ctx.target instanceof Ci.nsIDOMHTMLImageElement;
@@ -36,7 +39,7 @@ Tombloo.Service = {
 			ctx.ps = ps;
 			
 			// 予期せずに連続してquoteをポストしてしまうのを避けるため選択を解除する
-			if(ps.type == 'quote'&& ctx.window.getSelection().rangeCount)
+			if(ps.type == 'quote' && ctx.window.getSelection().rangeCount)
 				ctx.window.getSelection().collapseToStart();
 			
 			debug(ps);
@@ -86,7 +89,7 @@ Tombloo.Service = {
 		posters = [].concat(posters);
 		posters.forEach(function(p){
 			try{
-				ds[p.name] = (p.name == (ps.favorite && ps.favorite.name))? p.favor(ps) : p.post(ps);
+				ds[p.name] = (ps.favorite && RegExp('^' + ps.favorite.name + '(\\s|$)').test(p.name))? p.favor(ps) : p.post(ps);
 			} catch(e){
 				ds[p.name] = fail(e);
 			}
@@ -129,7 +132,7 @@ Tombloo.Service = {
 		if(err.status)
 			err = err.message + '(' + err.status + ')';
 		
-		if(!err.lineNumber)
+		if(typeof(err)!='object')
 			return '' + err;
 		
 		var msg = [];

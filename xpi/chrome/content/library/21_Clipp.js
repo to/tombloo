@@ -3,7 +3,7 @@ if(typeof(models)=='undefined')
 
 var Clipp = {
 	name: 'Clipp',
-	ICON: 'http://clipp.in/favicon.ico',
+	ICON: 'chrome://tombloo/skin/item.ico',
 	CLIPP_URL: 'http://clipp.in/',
 
 	check: function(ps) {

@@ -4,6 +4,7 @@ var XML_NS  = 'http://www.w3.org/XML/1998/namespace';
 
 var Ci = Components.interfaces;
 var Cc = Components.classes;
+var Cr = Components.results;
 
 var INTERFACES = [];
 for(var i in Ci)
@@ -24,41 +25,54 @@ var IURI                 = Ci.nsIURI;
 var IInputStream         = Ci.nsIInputStream;
 var ICache               = Ci.nsICache;
 var ISelectionListener   = Ci.nsISelectionListener;
-// var IAccessNode          = Ci.nsIAccessNode;
+var IContentPolicy       = Ci.nsIContentPolicy;
+var IHttpChannel         = Ci.nsIHttpChannel;
 
+[
+	['ConsoleService',      'nsIConsoleService',         '/consoleservice;1'],
+	['ExtensionManager',    'nsIExtensionManager',       '/extensions/manager;1'],
+	['StorageService',      'mozIStorageService',        '/storage/service;1'],
+	['DirectoryService',    'nsIProperties',             '/file/directory_service;1'],
+	['IOService',           'nsIIOService',              '/network/io-service;1'],
+	['AtomService',         'nsIAtomService',            '/atom-service;1'],
+	['ChromeRegistry',      'nsIXULChromeRegistry',      '/chrome/chrome-registry;1'],
+	['WindowMediator',      'nsIWindowMediator',         '/appshell/window-mediator;1'],
+	['AlertsService',       'nsIAlertsService',          '/alerts-service;1'],
+	['MIMEService',         'nsIMIMEService',            '/uriloader/external-helper-app-service;1'],
+	['PromptService',       'nsIPromptService',          '/embedcomp/prompt-service;1'],
+	['CacheService',        'nsICacheService',           '/network/cache-service;1'],
+	['AppShellService',     'nsIAppShellService',        '/appshell/appShellService;1'],
+	['DownloadManager',     'nsIDownloadManager',        '/download-manager;1'],
+	['UnescapeHTML',        'nsIScriptableUnescapeHTML', '/feed-unescapehtml;1'],
+	['CookieService',       'nsICookieService',          '/cookieService;1'],
+	['CookieManager',       'nsICookieManager',          '/cookiemanager;1'],
+	['PasswordManager',     'nsIPasswordManager',        '/passwordmanager;1'],
+	['LoginManager',        'nsILoginManager',           '/login-manager;1'],
+	['StringBundleService', 'nsIStringBundleService',    '/intl/stringbundle;1'],
+	['NavBookmarksService', 'nsINavBookmarksService',    '/browser/nav-bookmarks-service;1'],
+	['AnnotationService',   'nsIAnnotationService',      '/browser/annotation-service;1'],
+	['ObserverService',     'nsIObserverService',        '/observer-service;1'],
+	['WindowWatcher',       'nsIWindowWatcher',          '/embedcomp/window-watcher;1'],
+	['ClipboardHelper',     'nsIClipboardHelper',        '/widget/clipboardhelper;1'],
+	['NavHistoryService',   'nsINavHistoryService',      '/browser/nav-history-service;1'],
+	['FaviconService',      'nsIFaviconService',         '/browser/favicon-service;1'],
+	['StyleSheetService',   'nsIStyleSheetService',      '/content/style-sheet-service;1'],
+	['FuelApplication',     'fuelIApplication',          '/fuel/application;1'],
+	['MIMEService',         'nsIMIMEService',            '/mime;1'],
+	['CategoryManager',     'nsICategoryManager',        '/categorymanager;1'],
+	['PrefService',         null,                        '/preferences-service;1'],
+	['AppInfo',             null,                        '/xre/app-info;1'],
+].forEach(function([name, ifc, cid]){
+	defineLazyServiceGetter(this, name, '@mozilla.org' + cid, ifc);
+}, this);
 
-// Firefox 2で全てのページがガベージされなくなるメモリーリークが発生したため停止中
-// const AccessibilityService = getService('/accessibilityService;1', Ci.nsIAccessibilityService);
-var ExtensionManager    = getService('/extensions/manager;1', Ci.nsIExtensionManager);
-var StorageService      = getService('/storage/service;1', Ci.mozIStorageService);
-var DirectoryService    = getService('/file/directory_service;1', Ci.nsIProperties);
-var IOService           = getService('/network/io-service;1', Ci.nsIIOService);
-var AtomService         = getService('/atom-service;1', Ci.nsIAtomService);
-var ChromeRegistry      = getService('/chrome/chrome-registry;1', Ci.nsIXULChromeRegistry);
-var WindowMediator      = getService('/appshell/window-mediator;1', Ci.nsIWindowMediator);
-var ConsoleService      = getService('/consoleservice;1', Ci.nsIConsoleService);
-var AlertsService       = getService('/alerts-service;1', Ci.nsIAlertsService);
-var MIMEService         = getService('/uriloader/external-helper-app-service;1', Ci.nsIMIMEService);
-var PromptService       = getService('/embedcomp/prompt-service;1', Ci.nsIPromptService);
-var CacheService        = getService('/network/cache-service;1', Ci.nsICacheService);
-var AppShellService     = getService('/appshell/appShellService;1', Ci.nsIAppShellService);
-var DownloadManager     = getService('/download-manager;1', Ci.nsIDownloadManager);
-var AppInfo             = getService('/xre/app-info;1');
-var UnescapeHTML        = getService('/feed-unescapehtml;1', Ci.nsIScriptableUnescapeHTML);
-var CookieService       = getService('/cookieService;1', Ci.nsICookieService);
-var CookieManager       = getService('/cookiemanager;1', Ci.nsICookieManager);
-var PasswordManager     = getService('/passwordmanager;1', Ci.nsIPasswordManager);
-var LoginManager        = getService('/login-manager;1', Ci.nsILoginManager);
-var StringBundleService = getService('/intl/stringbundle;1', Ci.nsIStringBundleService);
-var NavBookmarksService = getService('/browser/nav-bookmarks-service;1', Ci.nsINavBookmarksService);
-var AnnotationService   = getService('/browser/annotation-service;1', Ci.nsIAnnotationService);
-var ObserverService     = getService('/observer-service;1', Ci.nsIObserverService);
-var WindowWatcher       = getService('/embedcomp/window-watcher;1', Ci.nsIWindowWatcher);
-var ClipboardHelper     = getService('/widget/clipboardhelper;1', Ci.nsIClipboardHelper);
-var NavHistoryService   = getService('/browser/nav-history-service;1', Ci.nsINavHistoryService);
-var FaviconService      = getService('/browser/favicon-service;1', Ci.nsIFaviconService);
-var StyleSheetService   = getService('/content/style-sheet-service;1', Ci.nsIStyleSheetService);
+var HTMLFormatConverter = 
+	createConstructor('/widget/htmlformatconverter;1', 'nsIFormatConverter');
 
+var SupportsString = 
+	createConstructor('/supports-string;1', 'nsISupportsString', function(data){
+		this.data = data;
+	});
 
 var PrefBranch = 
 	createConstructor('/preferences;1', 'nsIPrefBranch');
@@ -92,7 +106,7 @@ var FileInputStream =
 
 var ConverterInputStream = 
 	createConstructor('/intl/converter-input-stream;1', 'nsIConverterInputStream', function(stream, charset, bufferSize){
-		this.init(stream, charset || 'UTF-8', bufferSize || 4096, ConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+		this.init(stream, charset || 'UTF-8', bufferSize || 8192, ConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
 	});
 
 var MIMEInputStream = 
@@ -145,6 +159,16 @@ var FileOutputStream =
 		PR_SYNC : 0x40,
 		PR_EXCL : 0x80,
 	});
+
+var HTMLCopyEncoder = 
+	createConstructor('/layout/htmlCopyEncoder;1', 'nsIDocumentEncoder', 'init');
+
+var DocumentEncoder = function(document, mimeType, flags){
+	var encoder = Cc['@mozilla.org/layout/documentEncoder;1?type=' + mimeType].createInstance(Ci.nsIDocumentEncoder);
+	encoder.init(document, mimeType, flags);
+	return encoder;
+}
+update(DocumentEncoder, Ci.nsIDocumentEncoder);
 
 // ----[Utility]-------------------------------------------------
 function createMock(sample, proto){
@@ -238,20 +262,26 @@ function createConstructor(clsName, ifc, init){
 }
 
 /**
- * XPCOMサービスを取得する。
- * インターフェースが指定されない場合、利用できる全てのインターフェースに拡げられる。
+ * XPCOMサービスを定義する。
+ * XPCOMUtils.defineLazyServiceGetterより。
+ * Firefox 3.5では存在しないため別途作成した。
  *
- * @param {String} clsName クラス名(@mozilla.org以降を指定する)。
- * @param {nsIJSID} ifc インターフェイス。
+ * @param {Object} obj サービスを取得するプロパティを付加するオブジェクト。
+ * @param {String} name プロパティ名称。
+ * @param {String} cid Contract ID。
+ * @param {String} ifc インターフェイス名。
  */
-function getService(clsName, ifc){
-	try{
-		var cls = Components.classes['@mozilla.org' + clsName];
-		return !cls? null : 
-			ifc? cls.getService(ifc) : broad(cls.getService());
-	} catch(e) {
-		return null;
-	}
+function defineLazyServiceGetter(obj, name, cid, ifc){
+	var cls = Cc[cid];
+	if(!cls)
+		return;
+	
+	obj.__defineGetter__(name, function(){
+		delete this[name];
+		try{
+			return this[name] = (ifc)? cls.getService(Ci[ifc]) : broad(cls.getService());
+		} catch(e){}
+	});
 }
 
 /**
@@ -305,16 +335,6 @@ notify.ICON_INFO     = 'chrome://global/skin/console/bullet-question.png';
 notify.ICON_ERROR    = 'chrome://global/skin/console/bullet-error.png';
 notify.ICON_WORN     = 'chrome://global/skin/console/bullet-warning.png';
 
-/*
-function getElementByPosition(x, y){
-	return AccessibilityService.
-		getAccessibleFor(currentDocument()).
-		getChildAtPoint(x, y).
-		QueryInterface(IAccessNode).
-		DOMNode;
-}
-*/
-
 function convertFromUnplaceableHTML(str){
 	var arr = [];
 	for(var i=0,len=str.length ; i<len ;i++)
@@ -340,7 +360,7 @@ function createURI(path){
 	
 	try{
 		var path = (path instanceof IFile) ? path : new LocalFile(path);
-		return IOService.newFileURI(path)	;
+		return broad(IOService.newFileURI(path));
 	}catch(e){}
 	
 	var uri = IOService.newURI(path, null, null);
@@ -459,31 +479,6 @@ function getTempDir(){
 	return DirectoryService.get('TmpD', IFile);
 }
 
-/**
- * 外部エディタでファイルを開く。
- * Greasemonkeyで設定されているエディタ、または、ブラウザでソースを開く時に使われるエディタが呼び出される。
- *
- * @param {nsIFile} file 対象ファイル。 
- */
-function openInEditor(file){
-	function getFile(path){
-		return path && LocalFile(path);
-	}
-	
-	var editor = 
-		getFile(getPrefValue('greasemonkey.editor')) || 
-		getFile(getPrefValue('view_source.editor.path'));
-	if(!editor || !editor.exists())
-		return;
-	
-	var mimeInfo = MIMEService.getFromTypeAndExtension(
-		MIMEService.getTypeFromFile(file), 
-		file.leafName.split('.').pop());
-	mimeInfo.preferredAction = mimeInfo.useHelperApp;
-	mimeInfo.preferredApplicationHandler = editor;
-	mimeInfo.launchWithFile(file);
-}
-
 function getMostRecentWindow(){
 	return WindowMediator.getMostRecentWindow('navigator:browser');
 }
@@ -549,8 +544,8 @@ function withStream(stream, func){
  * また不完全なタグなどを整形し正しいHTMLへ変換する。
  * Firefox 3では、JavaScriptプロトコルの除去が行われない。
  *
- * @param {String} html HTML。 
- * @return {String} 整形されたHTML。
+ * @param {String} html HTML文字列。 
+ * @return {String} 整形されたHTML文字列。
  */
 function sanitizeHTML(html){
 	var doc = document.implementation.createDocument('', '', null);

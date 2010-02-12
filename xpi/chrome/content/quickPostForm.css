@@ -6,6 +6,9 @@ description {
 	padding: 0;
 }
 
+resizer {
+	background-image: none !important;
+}
 
 label,
 description{
@@ -253,7 +256,7 @@ div{
 }
 
 #itemUrl image{
-	/* ウィンドウ初期サイズに揃える	*/
+	/* ウィンドウ初期サイズに揃える */
 	max-width: 22em;
 	max-height: 22em;
 }
@@ -267,6 +270,7 @@ div{
 #posters image.poster{
 	width: 16px;
 	height: 16px;
+	-moz-box-sizing: content-box;
 	
 	/*
 	横方向の調整にborderを使いマウスオーバーしない時間を減らす。

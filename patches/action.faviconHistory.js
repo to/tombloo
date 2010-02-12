@@ -1,5 +1,6 @@
 Tombloo.Service.actions.register(	{
 	name : 'Favicon History',
+	icon : 'chrome://tombloo/skin/firefox.ico',
 	execute : function(){
 		addTab('about:blank').addCallback(function(win){
 			withWindow(win, function(){

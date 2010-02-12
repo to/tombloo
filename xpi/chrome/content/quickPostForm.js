@@ -8,7 +8,6 @@ function getElement(id){
 	return (typeof(id) == 'string')? document.getElementById(id) : id;
 }
 
-
 // ----[DialogPanel]----------------------------------------------------
 function DialogPanel(position, message){
 	var self = this;
@@ -39,43 +38,50 @@ function DialogPanel(position, message){
 	this.elmWindow.addEventListener('mousemove', dynamicBind('onMouseMove', this), false);
 	this.elmWindow.addEventListener('mouseout', dynamicBind('onMouseOut', this), false);
 	
-	window.addEventListener('resize', bind('onWindowResize', this), true);
 	window.addEventListener('keydown', bind('onKeydown', this), true);
 	
-	// ロード時にはウィンドウのサイズが決定されていない
-	self.elmWindow.style.opacity = 0;
-	window.addEventListener('resize', function(){
-		window.removeEventListener('resize', arguments.callee, false);
-		
-		// FIXME: 状態の復元コードを移動
-		// 各オブジェクトが自分の状態を保存/ロードできるように
-		var state = QuickPostForm.dialog[ps.type] || {};
-		if(state.expandedForm)
-			self.formPanel.toggleDetail();
-		
-		if(state.expandedTags)
-			self.formPanel.tagsPanel.toggleSuggestion();
-		
-		if(ps.type != 'photo' && state.size)
-			window.resizeTo(state.size.width, state.size.height);
-		
-		self.focusToFirstControl();
-		
-		if(position){
-			// ポスト先の一番最初のアイコンの上にマウスカーソルがあるあたりへ移動
-			var win = getMostRecentWindow();
-			var box = self.formPanel.postersPanel.elmPanel.boxObject;
-			window.moveTo(
-				Math.min(win.screenX + win.outerWidth - window.innerWidth,  Math.max(win.screenX, position.x - (box.x + 16))), 
-				Math.min(win.screenY + win.outerHeight - window.innerHeight, Math.max(win.screenY, position.y - (box.y + (box.height / 2))))
-			);
-		} else {
-			with(QuickPostForm.dialog.snap)
-				self.snapToContentCorner(top, left);
-		}
-		
-		self.elmWindow.style.opacity = 1;
-	}, false);
+	// 不可視にして描画を隠す
+	// #14 Linuxの場合は透明から復帰できない問題があるため透明にしない
+	if(!navigator.platform.contains('Linux'))
+		self.elmWindow.style.opacity = 0;
+	
+	// コントロールと画像のロード後に体裁を整える
+	window.addEventListener('load', function(){
+		// 画像のロードとサイズ取得を待つ(大抵の場合キャッシュされているので正常に処理される)
+		setTimeout(function(){
+			self.onWindowResize();
+			
+			// FIXME: 状態の復元コードを移動
+			// 各オブジェクトが自分の状態を保存/ロードできるように
+			var state = QuickPostForm.dialog[ps.type] || {};
+			if(state.expandedForm)
+				self.formPanel.toggleDetail();
+			
+			if(state.expandedTags)
+				self.formPanel.tagsPanel.toggleSuggestion();
+			
+			if(ps.type != 'photo' && state.size)
+				window.resizeTo(state.size.width, state.size.height);
+			
+			self.focusToFirstControl();
+			
+			if(position){
+				// ポスト先の一番最初のアイコンの上にマウスカーソルがあるあたりへ移動
+				var win = getMostRecentWindow();
+				var box = self.formPanel.postersPanel.elmPanel.boxObject;
+				window.moveTo(
+					Math.min(win.screenX + win.outerWidth - window.innerWidth,  Math.max(win.screenX, position.x - (box.x + 16))), 
+					Math.min(win.screenY + win.outerHeight - window.innerHeight, Math.max(win.screenY, position.y - (box.y + (box.height / 2))))
+				);
+			} else {
+				with(QuickPostForm.dialog.snap)
+					self.snapToContentCorner(top, left);
+			}
+			window.addEventListener('resize', bind('onWindowResize', self), true);
+			
+			self.elmWindow.style.opacity = 1;
+		}, 0);
+	}, true);
 }
 
 DialogPanel.shortcutkeys = {};
@@ -88,6 +94,29 @@ DialogPanel.shortcutkeys[KEY_ACCEL + ' + W'] = function(e){
 	cancel(e);
 	dialogPanel.close();
 }
+
+forEach(range(1, 10), function(i){
+	DialogPanel.shortcutkeys[KEY_ACCEL + ' + ' + i] = function(){
+		var panel = dialogPanel.formPanel.postersPanel;
+		panel.toggle(panel.icons[i-1]);
+	};
+});
+
+// ダイレクト単独ポスト
+forEach(range(1, 10), function(i){
+	DialogPanel.shortcutkeys['ALT + ' + i] = function(e){
+		cancel(e);
+		
+		var panel = dialogPanel.formPanel.postersPanel;
+		panel.allOff();
+		panel.toggle(panel.icons[i-1]);
+		
+		// 何が選択されたか見えるように
+		setTimeout(function(){
+			dialogPanel.formPanel.post();
+		}, 300);
+	};
+});
 
 DialogPanel.prototype = {
 	close : function(){
@@ -155,10 +184,10 @@ DialogPanel.prototype = {
 			this.elmBase.removeAttribute('flex');
 		
 		var box = this.elmBase.boxObject;
-		if(box.width != window.innerWidth || box.height != window.innerHeight)
+		if(box.width != window.innerWidth || box.height != window.innerHeight){
 			this.selfResizing = true;
-		
-		window.resizeTo(box.width, box.height);
+			window.resizeTo(box.width, box.height);
+		}
 		
 		if(shrink)
 			this.elmBase.setAttribute('flex', '1');
@@ -345,7 +374,8 @@ FormPanel.prototype = {
 			return;
 		
 		items(this.fields).forEach(function([name, field]){
-			if(field.value != null)
+			// 値が変更されていない場合はフレーバーを保つため元の値を上書きしない
+			if(field.value != null && (''+ps[name]) != field.value)
 				ps[name] = field.value;
 		});
 		
@@ -610,7 +640,7 @@ function TagsPanel(elmPanel, formPanel){
 				}
 			}).addErrback(function(e){
 				setTimeout(function(){
-					alert(self.tagProvider + ': ' + e.message);
+					alert(self.tagProvider + ': ' + e.message.message);
 				}, 50);
 				error(e);
 			}).addBoth(function(){
@@ -1015,7 +1045,9 @@ DescriptionBox.prototype = {
 	},
 	
 	set value(value){
-		return this.elmDescription.value = value;
+		var res = this.elmDescription.value = value;
+		this.onInput();
+		return res;
 	},
 	
 	get value(){
@@ -1027,7 +1059,7 @@ DescriptionBox.prototype = {
 		var value = elm.value;
 		var start = elm.selectionStart;
 		
-		elm.value = 
+		this.value = 
 			value.substr(0, elm.selectionStart) + 
 			text + 
 			value.substr(elm.selectionEnd);
@@ -1171,6 +1203,10 @@ PostersPanel.prototype = {
 		});
 	},
 	
+	get icons(){
+		return $x('.//xul:image', this.elmPanel, true);
+	},
+	
 	setIcon : function(image, poster, enabled){
 		var prop = (enabled)? 'ICON' : 'DISABLED_ICON';
 		var src = poster[prop];
@@ -1189,7 +1225,7 @@ PostersPanel.prototype = {
 	
 	allOff : function(){
 		var self = this;
-		$x('.//xul:image', this.elmPanel, true).forEach(function(image){
+		this.icons.forEach(function(image){
 			self.setDisabled(image, true);
 		});
 	},
@@ -1204,7 +1240,7 @@ PostersPanel.prototype = {
 		this.elmButton.disabled = !this.checked.length;
 	},
 	
-	toggleDisabled : function(image){
+	toggle : function(image){
 		this.setDisabled(image, !(image.getAttribute('disabled')=='true'));
 	},
 	
@@ -1228,12 +1264,24 @@ PostersPanel.prototype = {
 		
 		// cancelをするとactive擬似クラスが有効にならずリアクションがなくなる
 		
-		this.toggleDisabled(e.target);
+		// ダイレクト単独ポスト
+		if(e.altKey){
+			this.allOff();
+			this.toggle(e.target);
+			
+			setTimeout(function(){
+				dialogPanel.formPanel.post();
+			}, 400);
+			
+			return true;
+		}
+			
+		this.toggle(e.target);
 	},
 	
 	onCarry : function(e){
 		if(!(/description|label/).test(e.target.tagName))
-			this.toggleDisabled(e.target);
+			this.toggle(e.target);
 	},
 }
 

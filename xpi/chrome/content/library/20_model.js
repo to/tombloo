@@ -97,7 +97,7 @@ models.register({
 models.register({
 	name : 'FFFFOUND',
 	ICON : 'http://ffffound.com/favicon.ico',
-	URL : 'http://FFFFOUND.com/',
+	URL  : 'http://FFFFOUND.com/',
 	
 	getToken : function(){
 		return request(FFFFOUND.URL + 'bookmarklet.js').addCallback(function(res){
@@ -158,95 +158,6 @@ models.register({
 			if(error)
 				throw new Error(RegExp.$1.trim());
 		});
-	},
-});
-
-models.register({
-	name : 'Amazon',
-	ICON : 'http://www.amazon.co.jp/favicon.ico',
-	getItem : function(asin){
-		return request('http://webservices.amazon.co.jp/onca/xml', {
-			queryString : {
-				Service        : 'AWSECommerceService',
-				SubscriptionId : '0DCQFXHRBNT9GN9Z64R2',
-				Operation      : 'ItemLookup',
-				ResponseGroup  : 'Medium,Images',
-				ItemId         : asin,
-			},
-		}).addCallback(function(res){
-			var xml = convertToXML(res.responseText);
-			if(xml.Error.length())
-				throw res;
-			
-			return new Amazon.Item(xml.Items.Item);
-		});
-	},
-	
-	normalizeUrl : function(asin){
-		return  'http://amazon.co.jp/o/ASIN/' + asin + 
-			(this.affiliateId ? '/' + this.affiliateId + '/ref=nosim' : '');
-	},
-	
-	get affiliateId(){
-		return getPref('amazonAffiliateId');
-	},
-	
-	Item : function(item){
-		return {
-			get _source(){
-				return item;
-			},
-			get title(){
-				return ''+item.ItemAttributes.Title;
-			},
-			get creators(){
-				var creators = [];
-				
-				// '原著'以外
-				for each(var creator in item.ItemAttributes.Creator.(@Role != '\u539F\u8457'))
-					creators.push(''+creator);
-				return creators;
-			},
-			get largestImage(){
-				return this.largeImage || this.mediumImage || this.smallImage;
-			},
-			get largeImage(){
-				return new Amazon.Image(item.LargeImage);
-			},
-			get mediumImage(){
-				return new Amazon.Image(item.MediumImage);
-			},
-			get smallImage(){
-				return new Amazon.Image(item.SmallImage);
-			},
-			get releaseDate() {
-				var date = (''+item.ItemAttributes.PublicationDate || ''+item.ItemAttributes.ReleaseDate);
-				if(date.split('-').length == 2)
-					date += '-1';
-				
-				return new Date(date.replace(/-/g, '/'));
-			},
-		}
-	},
-	
-	Image : function(img){
-		if(!img.length())
-			return;
-		
-		return {
-			get size(){
-				return (''+img.name()).slice(0, -5).toLowerCase();
-			},
-			get url(){
-				return ''+img.URL;
-			},
-			get width(){
-				return 1*img.Width;
-			},
-			get height(){
-				return 1*img.Height;
-			},
-		}
 	},
 });
 
@@ -408,9 +319,149 @@ models.register(update({
 }, AbstractSessionService));
 
 models.register({
+	name : 'Picasa',
+	ICON : 'http://picasaweb.google.com/favicon.ico',
+	URL  : 'http://picasaweb.google.com',
+	
+	check : function(ps){
+		return ps.type=='photo';
+	},
+	
+	post : function(ps){
+		var self = this;
+		return ((ps.file)? 
+			succeed(ps.file) : 
+			download(ps.itemUrl, getTempFile(createURI(ps.itemUrl).fileExtension))
+		).addCallback(function(file){
+			return self.upload(file);
+		});
+	},
+	
+	/**
+	 * 画像をアップロードする。
+	 *
+	 * @param {File} files 
+	 *        画像ファイル。単数または複数(最大5ファイル)。
+	 * @param {optional String} user 
+	 *        ユーザーID。省略された場合は現在Googleアカウントでログインしていると仮定される。
+	 * @param {optional String || Number} album 
+	 *        アルバム名称またはアルバムID。
+	 *        省略された場合はmodel.picasa.defaultAlbumの設定値か先頭のアルバムとなる。
+	 * @param {String || nsIFile || nsIURI} basePath 基点となるパス。
+	 */
+	upload : function(files, user, album){
+		files = [].concat(files);
+		
+		album = album || getPref('model.picasa.defaultAlbum');
+		
+		var self = this;
+		var user = user || this.getCurrentUser();
+		var endpoint;
+		return maybeDeferred((typeof(album)=='number')? album : this.getAlbums(user).addCallback(function(albums){
+			if(album){
+				// 大/小文字が表示されているものと異なる
+				for each(var a in albums.feed.entry)
+					if(album.match(a.gphoto$name.$t, 'i'))
+						return a.gphoto$id.$t;
+				throw new Error('Album not found.');
+			} else {
+				// アルバムが指定されていない場合は先頭のアルバムとする
+				return albums.feed.entry[0].gphoto$id.$t;
+			}
+		})).addCallback(function(aid){
+			// トークンを取得しポスト準備をする
+			return request(self.URL + '/lh/webUpload', {
+				queryString : {
+					uname : user,
+					aid   : aid,
+				}
+			}).addCallback(function(res){
+				var doc = convertToHTMLDocument(res.responseText);
+				var form = doc.getElementById('lhid_uploadFiles');
+				endpoint = resolveRelativePath(form.action, self.URL);
+				
+				return formContents(form);
+			});
+		}).addCallback(function(token){
+			var ps = {};
+			files.forEach(function(file, i){
+				ps['file' + i] = file;
+			});
+			
+			return request(endpoint, {
+				sendContent : update(token, ps, {
+					num : files.length,
+				})
+			});
+		});
+	},
+	
+	getAlbums : function(user){
+		user = user || this.getCurrentUser();
+		return getJSON('http://picasaweb.google.com/data/feed/back_compat/user/' + user + '?alt=json&kind=album');
+	},
+	
+	getCurrentUser : function(){
+		var cookie = getCookies('google.com', 'GAUSR')[0];
+		if(!cookie)
+			throw new Error(getMessage('error.notLoggedin'));
+			
+		return cookie.value.split('@').shift();
+	},
+});
+
+models.register({
+	name     : 'Twitpic',
+	ICON     : 'http://twitpic.com/favicon.ico',
+	POST_URL : 'http://twitpic.com/upload/',
+	
+	check : function(ps){
+		return ps.type=='photo';
+	},
+	
+	post : function(ps){
+		var self = this;
+		return ((ps.file)? 
+			succeed(ps.file) : 
+			download(ps.itemUrl, getTempFile(createURI(ps.itemUrl).fileExtension))
+		).addCallback(function(file){
+			return self.upload({
+				media   : file,
+				message : ps.description,
+			});
+		});
+	},
+	
+	upload : function(ps){
+		var self = this;
+		return this.getToken().addCallback(function(token){
+			return request(self.POST_URL, {
+				sendContent : update(token, {
+					do_upload : 1,
+				}, ps),
+			});
+		});
+	},
+	
+	getToken : function(){
+		var self = this;
+		return request(self.POST_URL).addCallback(function(res){
+			// 未ログインの場合トップにリダイレクトされる(クッキー判別より安全と判断)
+			if(res.channel.URI.asciiSpec != self.POST_URL)
+				throw new Error(getMessage('error.notLoggedin'));
+			
+			var doc = convertToHTMLDocument(res.responseText);
+			return {
+				form_auth : $x('//input[@name="form_auth"]/@value', doc)
+			};
+		});
+	},
+});
+
+models.register({
 	name : 'WeHeartIt',
-	ICON : 'http://weheartit.com/img/favicon.ico',
-	URL : 'http://weheartit.com/',
+	ICON : 'http://weheartit.com/favicon.ico',
+	URL  : 'http://weheartit.com/',
 	
 	check : function(ps){
 		return ps.type == 'photo' && !ps.file;
@@ -457,8 +508,7 @@ models.register({
 
 models.register({
 	name : '4u',
-	ICON : 'http://www.straightline.jp/html/common/static/favicon.ico',
-	
+	ICON : 'data:image/x-icon,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%10%00%00%00%10%08%03%00%00%00(-%0FS%00%00%00ZPLTE%FF%FF%FF%F9%F9%F9%C3%C3%C3%AE%AE%AE%E7%E7%E7%24%24%24EEE%60%60%60!!!%DE%DE%DEoooZZZWWW%CC%CC%CC%0C%0C%0CKKK%D2%D2%D2fff%06%06%06uuu%D5%D5%D5%1B%1B%1B%93%93%93ccclll%BA%BA%BA%C0%C0%C0%AB%AB%AB%00%00%00%8D%8D%8D2%BF%0C%CD%00%00%00IIDAT%18%95c%60%20%17021%B3%20%F3YX%D9%D898%91%04%B8%B8%D1t%B0%F3%A0%09%F0%F2%F1%0B%A0%8Ap%0A%0A%093%A2%0A%89%88%8A%A1i%13%97%40%E2H%B20H%89J%23%09%08%F3%C9%88%CA%E2w%3A%1E%00%00%E6%DF%02%18%40u1A%00%00%00%00IEND%AEB%60%82',
 	URL : 'http://4u.straightline.jp/',
 	
 	check : function(ps){
@@ -633,24 +683,35 @@ models.register({
 	},
 	
 	post : function(ps){
-		return this.update(joinText([ps.item, ps.itemUrl, ps.body, ps.description], ' ', true));
+		return this.update(joinText([ps.description, (ps.body)? '"' + ps.body + '"' : '', ps.item, ps.itemUrl], ' '));
 	},
 	
 	update : function(status){
 		var self = this;
+		var POST_URL = self.URL + '/status/update';
+		
 		return maybeDeferred((status.length < 140)? 
 			status : 
 			shortenUrls(status, models[this.SHORTEN_SERVICE])
-		).addCallback(function(status){
-			return Twitter.getToken().addCallback(function(token){
-				// FIXME: 403が発生することがあったため redirectionLimit:0 を外す
-				token.status = status;
-				return request(self.URL + '/status/update', update({
-					sendContent : token,
-				}));
+		).addCallback(function(shortend){
+			status = shortend;
+			
+			return Twitter.getToken();
+		}).addCallback(function(token){
+			token.status = status;
+			
+			return request(POST_URL, {
+				sendContent : token,
 			});
-		})
-		
+		}).addCallback(function(res){
+			// ホームにリダイレクトされなかった場合はエラー発生とみなす
+			if(res.channel.URI.asciiSpec == POST_URL)
+				throw new Error('Error');
+			
+			var msg = res.responseText.extract(/notification.setMessage\("(.*?)"\)/);
+			if(msg)
+				throw unescapeHTML(msg).trimTag();
+		});
 	},
 	
 	favor : function(ps){
@@ -667,6 +728,19 @@ models.register({
 				authenticity_token : html.extract(/authenticity_token.+value="(.+?)"/),
 				siv                : html.extract(/logout\?siv=(.+?)"/),
 			}
+		});
+	},
+	
+	changePicture : function(url){
+		var self = this;
+		return ((url instanceof IFile)? succeed(url) : download(url, getTempDir())).addCallback(function(file){
+			return Twitter.getToken().addCallback(function(token){
+				return request(self.URL + '/account/picture', {
+					sendContent : update(token, {
+						'profile_image[uploaded_data]' : file,
+					}),
+				});
+			});
 		});
 	},
 	
@@ -725,7 +799,7 @@ models.register({
 		this.getCurrentUser();
 		
 		return request(Jaiku.URL).addCallback(function(res){
-			var form =  formContents(convertToHTMLDocument(res.responseText));
+			var form = formContents(convertToHTMLDocument(res.responseText));
 			return request(Jaiku.URL, {
 				redirectionLimit : 0,
 				sendContent : {
@@ -736,54 +810,6 @@ models.register({
 		});
 	},
 });
-
-models.register(update({}, AbstractSessionService, {
-	name : 'Rejaw',
-	ICON : 'http://rejaw.com/favicon.ico',
-
-	check : function(ps){
-		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
-	},
-	
-	post : function(ps){
-		return Rejaw.shout(joinText([ps.item, ps.itemUrl, ps.body, ps.description], '\n', true));
-	},
-	
-	shout : function(text){
-		return Rejaw.getToken().addCallback(function(token){
-			return request('http://rejaw.com/v1/conversation/shout.json', {
-				redirectionLimit : 0,
-				sendContent : update(token, {
-					text : text,
-				}),
-			});
-		});
-	},
-	
-	getAuthCookie : function(){
-		return getCookieString('rejaw.com', 'signin_email') || getCookieString('rejaw.com', 'signin_openid_url');
-	},
-	
-	getToken : function(){
-		var status = this.updateSession();
-		switch (status){
-		case 'none':
-			throw new Error(getMessage('error.notLoggedin'));
-			
-		case 'same':
-			if(this.token)
-				return succeed(this.token);
-			
-		case 'changed':
-			var self = this;
-			return request('http://rejaw.com/').addCallback(function(res){
-				return self.token = {
-					session : res.responseText.extract(/"session":"(.+?)"/)
-				};
-			});
-		}
-	},
-}));
 
 models.register(update({
 	name : 'Plurk',
@@ -895,7 +921,7 @@ models.register({
 	
 	post : function(ps){
 		return request('http://www.google.com/bookmarks/mark', {
-			queryString :	{
+			queryString : {
 				op : 'add',
 			},
 		}).addCallback(function(res){
@@ -910,13 +936,39 @@ models.register({
 					title      : ps.item,
 					bkmk       : ps.itemUrl,
 					annotation : joinText([ps.body, ps.description], ' ', true),
-					labels     : ps.tags? ps.tags.join(',') : '',
+					labels     : joinText(ps.tags, ','),
 					btnA       : fs.btnA,
 					sig        : fs.sig,
 				},
 			});
 		});
 	},
+
+	getSuggestions : function(url){
+		var self = this;
+		if(this.tags){
+			return succeed({
+				duplicated: false,
+				recommended: [],
+				tags: this.tags
+			});
+		} else {
+			return request('http://www.google.com/bookmarks').addCallback(function(res){
+				var doc = convertToHTMLDocument(res.responseText);
+				self.tags = $x('descendant::a[starts-with(normalize-space(@id), "lbl_m_") and number(substring(normalize-space(@id), 7)) > 0]/text()', doc, true).map(function(tag){
+					return {
+						name      : tag,
+						frequency : -1
+					};
+				});
+				return {
+					duplicated: false,
+					recommended: [],
+					tags: self.tags
+				};
+			});
+		}
+	}
 });
 
 models.register({
@@ -978,6 +1030,70 @@ models.register({
 	},
 });
 
+
+models.register({
+	name     : 'Evernote',
+	ICON     : 'http://www.evernote.com/favicon.ico',
+	POST_URL : 'http://www.evernote.com/clip.action',
+	 
+	check : function(ps){
+		return (/(regular|quote|link|conversation|video)/).test(ps.type) && !ps.file;
+	},
+	
+	post : function(ps){
+		var self = this;
+		ps = update({}, ps);
+		if(!this.getAuthCookie())
+			throw new Error(getMessage('error.notLoggedin'));
+		
+		var d = succeed();
+		if(ps.type=='link' && !ps.body && getPref('model.evernote.clipFullPage')){
+			d = request(ps.itemUrl).addCallback(function(res){
+				var doc = convertToHTMLDocument(res.responseText);
+				ps.body = convertToHTMLString(doc.documentElement, true);
+			});
+		}
+		
+		return d.addCallback(function(){
+			return self.getToken();
+		}).addCallback(function(token){
+			return request(self.POST_URL, {
+				redirectionLimit : 0,
+				sendContent : update(token, {
+					saveQuicknote : 'save',
+					format        : 'microclip',
+					
+					url      : ps.itemUrl || 'no url',
+					title    : ps.item || 'no title',
+					comment  : ps.description,
+					body     : getFlavor(ps.body, 'html'),
+					tags     : joinText(ps.tags, ','),
+					fullPage : (ps.body)? 'true' : 'false',
+				}),
+			});
+		});
+	},
+	
+	getAuthCookie : function(){
+		return getCookieString('evernote.com', 'auth');
+	},
+	
+	getToken : function(){
+		return request(this.POST_URL, {
+			sendContent: {
+				format    : 'microclip', 
+				quicknote : 'true'
+			}
+		}).addCallback(function(res){
+			var doc = convertToHTMLDocument(res.responseText);
+			return {
+				_sourcePage   : $x('//input[@name="_sourcePage"]/@value', doc),
+				__fp          : $x('//input[@name="__fp"]/@value', doc),
+				noteBookGuide : $x('//select[@name="notebookGuid"]//option[@selected="selected"]/@value', doc),
+			};
+		});
+	},
+});
 
 models.register({
 	name : 'Delicious',
@@ -1084,16 +1200,17 @@ models.register({
 			},
 		}).addCallback(function(res){
 			var doc = convertToHTMLDocument(res.responseText);
-			if(!doc.getElementById('saveitem'))
+			var elmForm = doc.getElementById('saveitem');
+			if(!elmForm)
 				throw new Error(getMessage('error.notLoggedin'));
 			
-			return request('http://delicious.com'+$x('id("saveitem")/@action', doc), {
+			return request('http://delicious.com' + $x('id("saveitem")/@action', doc), {
 				redirectionLimit : 0,
-				sendContent : update(formContents(doc), {
+				sendContent : update(formContents(elmForm), {
 					description : ps.item,
 					jump        : 'no',
 					notes       : joinText([ps.body, ps.description], ' ', true),
-					tags        : ps.tags? ps.tags.join(' ') : '',
+					tags        : joinText(ps.tags, ' '),
 					share       : ps.private? 'no' : '',
 				}),
 			});
@@ -1250,102 +1367,125 @@ models.register(update({}, AbstractSessionService, {
 	},
 }));
 
-// Firefox 3以降
-if(NavBookmarksService){
-	models.register({
-		name : 'FirefoxBookmark',
-		ICON : 'chrome://tombloo/skin/firefox.ico',
-		ANNO_DESCRIPTION : 'bookmarkProperties/description',
+models.register({
+	name : 'FirefoxBookmark',
+	ICON : 'chrome://tombloo/skin/firefox.ico',
+	ANNO_DESCRIPTION : 'bookmarkProperties/description',
+	
+	check : function(ps){
+		return ps.type == 'link';
+	},
+	
+	post : function(ps){
+		return succeed(this.addBookmark(ps.itemUrl, ps.item, ps.tags, ps.description));
+	},
+	
+	addBookmark : function(uri, title, tags, description){
+		var bs = NavBookmarksService;
 		
-		check : function(ps){
-			return ps.type == 'link';
-		},
+		var folder;
+		var index = bs.DEFAULT_INDEX;
 		
-		post : function(ps){
-			return succeed(this.addBookmark(ps.itemUrl, ps.item, ps.tags, ps.description));
-		},
-		
-		addBookmark : function(uri, title, tags, description){
-			uri = createURI(uri);
-			tags = tags || [];
+		// ハッシュタイプの引数か?
+		if(typeof(uri)=='object' && !(uri instanceof IURI)){
+			if(uri.index!=null)
+				index = uri.index;
 			
-			if(this.isBookmarked(uri))
-				return;
-			
-			var folders = [NavBookmarksService.unfiledBookmarksFolder].concat(tags.map(bind('createTag', this)));
+			folder = uri.folder;
+			title = uri.title;
+			tags = uri.tags;
+			description = uri.description;
+			uri = uri.uri;
+		}
+		
+		uri = createURI(uri);
+		tags = tags || [];
+		
+		// フォルダが未指定の場合は未整理のブックマークになる
+		folder = (!folder)? 
+			bs.unfiledBookmarksFolder : 
+			this.createFolder(folder);
+		
+		// 同じフォルダにブックマークされていないか?
+		if(!bs.getBookmarkIdsForURI(uri, {}).some(function(item){
+			return bs.getFolderIdForItem(item) == folder;
+		})){
+			var folders = [folder].concat(tags.map(bind('createTag', this)));
 			folders.forEach(function(folder){
-				NavBookmarksService.insertBookmark(
+				bs.insertBookmark(
 					folder, 
 					uri,
-					NavBookmarksService.DEFAULT_INDEX,
+					index,
 					title);
 			});
+		}
+		
+		this.setDescription(uri, description);
+	},
+	
+	getBookmark : function(uri){
+		uri = createURI(uri);
+		var item = this.getBookmarkId(uri);
+		if(item)
+			return {
+				title       : NavBookmarksService.getItemTitle(item),
+				uri         : uri.asciiSpec,
+				description : this.getDescription(item),
+			};
+	},
+	
+	isBookmarked : function(uri){
+		return NavBookmarksService.isBookmarked(createURI(uri));
+	},
+	
+	removeBookmark : function(uri){
+		NavBookmarksService.removeItem(this.getBookmarkId(uri));
+	},
+	
+	getBookmarkId : function(uri){
+		if(typeof(uri)=='number')
+			return uri;
+		
+		uri = createURI(uri);
+		return NavBookmarksService.getBookmarkIdsForURI(uri, {}).filter(function(item){
+			while(item = NavBookmarksService.getFolderIdForItem(item))
+				if(item == NavBookmarksService.tagsFolder)
+					return false;
 			
-			this.setDescription(uri, description);
-		},
+			return true;
+		})[0];
+	},
+	
+	getDescription : function(uri){
+		try{
+			return AnnotationService.getItemAnnotation(this.getBookmarkId(uri), this.ANNO_DESCRIPTION);
+		} catch(e){
+			return '';
+		}
+	},
+	
+	setDescription : function(uri, description){
+		if(description == null)
+			return;
 		
-		getBookmark : function(uri){
-			uri = createURI(uri);
-			var item = this.getBookmarkId(uri);
-			if(item)
-				return {
-					title       : NavBookmarksService.getItemTitle(item),
-					uri         : uri.asciiSpec,
-					description : this.getDescription(item),
-				};
-		},
+		description = description || '';
+		try{
+			AnnotationService.setItemAnnotation(this.getBookmarkId(uri), this.ANNO_DESCRIPTION, description, 
+				0, AnnotationService.EXPIRE_NEVER);
+		} catch(e){}
+	},
+	
+	createTag : function(name){
+		return this.createFolder(name, NavBookmarksService.tagsFolder);
+	},
+	
+	createFolder : function(name, parent){
+		parent = parent || NavBookmarksService.bookmarksMenuFolder;
 		
-		isBookmarked : function(uri){
-			return NavBookmarksService.isBookmarked(createURI(uri));
-		},
-		
-		removeBookmark : function(uri){
-			uri = createURI(uri);
-			NavBookmarksService.getBookmarkIdsForURI(uri, {}).forEach(function(item){
-				NavBookmarksService.removeItem(item);
-			});
-		},
-		
-		getBookmarkId : function(uri){
-			if(typeof(uri)=='number')
-				return uri;
-			
-			uri = createURI(uri);
-			return NavBookmarksService.getBookmarkIdsForURI(uri, {}).filter(function(item){
-				while(item = NavBookmarksService.getFolderIdForItem(item))
-					if(item == NavBookmarksService.tagsFolder)
-						return false;
-				
-				return true;
-			})[0];
-		},
-		
-		getDescription : function(uri){
-			try{
-				return AnnotationService.getItemAnnotation(this.getBookmarkId(uri), this.ANNO_DESCRIPTION);
-			} catch(e){
-				return '';
-			}
-		},
-		
-		setDescription : function(uri, description){
-			description = description || '';
-			try{
-				AnnotationService.setItemAnnotation(this.getBookmarkId(uri), this.ANNO_DESCRIPTION, description, 
-					0, AnnotationService.EXPIRE_NEVER);
-			} catch(e){}
-		},
-		
-		createTag : function(name){
-			return this.createFolder(NavBookmarksService.tagsFolder, name);
-		},
-		
-		createFolder : function(parent, name){
-			return NavBookmarksService.getChildFolder(parent, name) || 
-				NavBookmarksService.createFolder(parent, name, NavBookmarksService.DEFAULT_INDEX);
-		},
-	});
-}
+		return NavBookmarksService.getChildFolder(parent, name) || 
+			NavBookmarksService.createFolder(parent, name, NavBookmarksService.DEFAULT_INDEX);
+	},
+});
 
 
 models.register(update({
@@ -1464,7 +1604,7 @@ models.register({
 	
 	parse : function(ps){
 		ps.appid = this.APP_ID;
-		return request('http://api.jlp.yahoo.co.jp/MAService/V1/parse', {
+		return request('http://jlp.yahooapis.jp/MAService/V1/parse', {
 			charset     : 'utf-8',
 			sendContent : ps
 		}).addCallback(function(res){
@@ -1510,7 +1650,7 @@ models.register({
 					title      : ps.item,
 					url        : ps.itemUrl,
 					desc       : joinText([ps.body, ps.description], ' ', true),
-					tags       : ps.tags? ps.tags.join(' ') : '',
+					tags       : joinText(ps.tags, ' '),
 					crumbs     : fs.crumbs,
 					visibility : ps.private==null? fs.visibility : (ps.private? 0 : 1),
 				},
@@ -1591,7 +1731,7 @@ models.register({
 				url         : ps.itemUrl,
 				description : ps.item,
 				shared      : ps.private? 'no' : '',  
-				tags        : ps.tags ? ps.tags.join(' ') : '',
+				tags        : joinText(ps.tags, ' '),
 				extended    : joinText([ps.body, ps.description], ' ', true),
 			},
 		});
@@ -1599,82 +1739,9 @@ models.register({
 });
 
 models.register({
-	name : 'Magnolia',
-	ICON : 'http://ma.gnolia.com/favicon.ico',
-	
-	getCurrentUser : function(){
-		return request('https://ma.gnolia.com/').addCallback(function(res){
-			var doc = convertToHTMLDocument(res.responseText);
-			var user = $x('//meta[@name="session-userid"]/@content', doc)
-			if(user=='')
-				throw new Error(getMessage('error.notLoggedin'));
-			return user;
-		});
-	},
-	
-	getApiKey : function(){
-		var self = this;
-		return request('http://ma.gnolia.com/account/applications').addCallback(function(res){
-			try {
-				return self.apikey = $x(
-					'id("api_key")/text()', 
-					convertToHTMLDocument(res.responseText)).replace(/[\n\r]+/g, '');
-			} catch(e) {
-				throw new Error(getMessage('error.notLoggedin'));
-			}
-		});
-	},
-	
-	/**
-	 * タグを取得する。
-	 *
-	 * @param {String} url 関連情報を取得する対象のページURL。
-	 * @return {Object}
-	 */
-	getSuggestions : function(url){
-		// 同期でエラーが起きないようにする
-		return succeed().addCallback(function(){
-			return Magnolia.getCurrentUser().addCallback(function(user){
-				return request('https://ma.gnolia.com/people/' + user + '/tags');
-			}).addCallback(function(res){
-				var doc = convertToHTMLDocument(res.responseText);
-				return {
-					duplicated : false,
-					tags : $x('id("tag_cloud_1")/div/a/text()', doc, true).map(function(tag){
-						return {
-							name      : tag,
-							frequency : -1,
-						};
-					}),
-				}
-			});
-		});
-	},
-	
-	check : function(ps){
-		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
-	},
-	
-	post : function(ps){
-		return Magnolia.getApiKey().addCallback(function(apikey){
-			return request('http://ma.gnolia.com/api/rest/1/bookmarks_add', {
-				queryString : {
-					api_key     : apikey,
-					url         : ps.itemUrl,
-					title       : ps.item,
-					description : ps.description,
-					private     : ps.private ? 1 : 0,
-					tags        : ps.tags ? ps.tags.join(' ') : '',
-					rating      : 0,
-				},
-			});
-		});
-	},
-});
-
-models.register({
 	name : 'Snipshot',
-	ICON : 'http://snipshot.com/favicon.ico',
+	// ICON : 'http://snipshot.com/favicon.ico',
+	ICON : "data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%10%00%00%00%10%08%06%00%00%00%1F%F3%FFa%00%00%00%04gAMA%00%00%AF%C87%05%8A%E9%00%00%00%19tEXtSoftware%00Adobe%20ImageReadyq%C9e%3C%00%00%01%E9IDATx%DAbd%00%82%D0%5D%92%FF%BF%FF%F9%C2%80%0E%D8%988%18%D6%BA%BFbX%7F%7F%12%C3%BC%1B5%60%B1%CD%9E%9F%18%7C%B7%F31%B01s2%ACs%7F%C5%08%10%40LA%3B%C5%B0j%06%01G%E9%080%BD%F2N%17%5C%EC%DB%9F%CF%0C%12%5C%0A%0C%BF%FE~%07%5B%0C%10%40L%20%06.%F0%FA%FBc0%9D%A0%D1%04%A6%F9%D8%84%19%B8Xx%19%3E%FC%7C%05%E6%83%2C%06%08%20%16%06%3C%E0%DC%9B%BD%60%DAC6%09%8CA%E0%F4%EB%9D%0C%3F%FE~%83%AB%01%08%20%BC%06%04*%E6%C1%D9w%3E%5E%60%98z5%8F%C1X%C4%0D%1C%0E0%00%10%40x%0DH%D2h%81%B3%0B%8F%D9%01%F9%AD%40Cs%19%EE%7F%BE%CC0%FFF-%83%81%88%23%03%40%00%E14%C0K.%05%85o!%EE%03%D6%FC%F7%FF%1F%86%BC%23%D6%60%B1%F3o%F61%00%04%10%E3%EA%BB%BD%FF%AD%25%02%19%24%B9%141%0CYv%BB%1Dl%5B%B5%D12%B8%D8%A5%B7%87%18%AAO%F9%C0%F9%00%01%C4%12%A2T%84%D3%0B%20%CD%8A%BC%BA(bz%C2v(%7C%80%00b%F8O%00%BC%FF%F1%F2%FF%EA%BB%7D%FF%5B%CFF%FD%7F%FA%E5%0E%5C%1C%E4%F2k%EFN%FC%07%08%20F%10%07d%D3%AD%0Fg%C1%CEcabe(%D4%9B%09%B7%20%ED%A0%01%C3%F3o%F7%E0%FC%D5n%CF%198%98%B9%E1%7C%80%00b%01%25KdPk%BC%12%CE%FE%F1%F7%2B%8Afh%B2g%90%E2Vf%10%E3%90c%B8%F0v%3F%03%40%00%A1%C4%02%2B%13%3B%83%99%98'%9C%BF%E4V3%D6%B0y%F6%F5.%18%83%00%40%001!K%14%EB%CFFQ%B8%F1%C14%06B%00%20%80%98%40%B9%0A%06%AC%25%02%E0%EC%ED%8F%E6%12%D4%CC%C9%C2%C3%00%10%40L%A0%2C%09b%C4%AB7%A2HN%BBZ%88W3%C8b%60%802%02%04%18%00%B1%97%D3qL%D5*%FC%00%00%00%00IEND%AEB%60%82",
 	
 	check : function(ps){
 		return ps.type=='photo';
@@ -1760,7 +1827,7 @@ models.register(update({
 			var self = this;
 			return request('http://www.hatena.ne.jp/my').addCallback(function(res){
 				return self.user = $x(
-					'id("simple-header-body")//li[@class="welcome"]//a/text()', 
+					'id("simple-header-body")//li[@class="welcome" or @class="welcoe"]//a/text()', 
 					convertToHTMLDocument(res.responseText));
 			});
 		}
@@ -1813,6 +1880,7 @@ models.register(update({
 	ICON : 'http://b.hatena.ne.jp/favicon.ico',
 	
 	POST_URL : 'http://b.hatena.ne.jp/add',
+	JSON_URL : 'http://b.hatena.ne.jp/my.name',
 	
 	check : function(ps){
 		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
@@ -1838,9 +1906,12 @@ models.register(update({
 			
 		case 'changed':
 			var self = this;
-			return request(HatenaBookmark.POST_URL).addCallback(function(res){
-				if(res.responseText.extract(/new Hatena.Bookmark.User\('.*?',\s.*'(.*?)'\)/))
-					return self.token = RegExp.$1;
+			return request(HatenaBookmark.JSON_URL).addCallback(function(res){
+				var data = JSON.parse(res.responseText);
+				if(!data["login"])
+					throw new Error(getMessage('error.notLoggedin'));
+				self.token = data['rks'];
+				return self.token;
 			});
 		}
 	},
@@ -1967,7 +2038,7 @@ models.register({
 		return HatenaStar.getToken().addCallback(function(token){
 			return request('http://s.hatena.ne.jp/star.add.json', {
 				redirectionLimit : 0,
-				queryString :	{
+				queryString : {
 					rks      : token,
 					title    : ps.item,
 					quote    : joinText([ps.body, ps.description], ' ', true),
@@ -1982,7 +2053,7 @@ models.register({
 		return HatenaStar.getToken().addCallback(function(token){
 			return request('http://s.hatena.ne.jp/star.delete.json', {
 				redirectionLimit : 0,
-				queryString :	{
+				queryString : {
 					rks   : token,
 					uri   : ps.itemUrl,
 					quote : joinText([ps.body, ps.description], ' ', true),
@@ -2008,7 +2079,7 @@ models.register(update({
 				title   : ps.item,
 				postKey : token,
 				link    : ps.itemUrl,
-				tags    : ps.tags? ps.tags.join(' ') : '',
+				tags    : joinText(ps.tags, ' '),
 				notes   : joinText([ps.body, ps.description], ' ', true),
 				public  : ps.private? 'off' : 'on',
 			};
@@ -2099,9 +2170,8 @@ models.register({
 	},
 });
 
-// 絶対復習
 models.register({
-	name : '\u7D76\u5BFE\u5FA9\u7FD2',
+	name : '絶対復習',
 	URL  : 'http://www.takao7.net',
 	ICON : 'chrome://tombloo/skin/item.ico',
 	
@@ -2248,12 +2318,53 @@ models.register({
 	URL  : 'http://8tracks.com',
 	
 	upload : function(file){
+		file = getLocalFile(file);
 		return request(this.URL + '/tracks', {
 			redirectionLimit : 0,
 			sendContent : {
-				'attachment_data[]' : getLocalFile(file),
+				'track_files[]' : file,
 			},
 		});
+	},
+	
+	getPlayToken : function(){
+		return getJSON(this.URL + '/sets/new.json').addCallback(function(res){
+			return res.play_token;
+		});
+	},
+	
+	getPlaylist : function(mixId){
+		var self = this;
+		var tracks = [];
+		var number = 0;
+		var d = new Deferred();
+		
+		self.getPlayToken().addCallback(function(token){
+			(function(){
+				var me = arguments.callee;
+				return getJSON(self.URL + '/sets/' + token + '/' + ((number==0)? 'play' : 'next')+ '.json', {
+					queryString : {
+						mix_id : mixId,
+					}
+				}).addCallback(function(res){
+					// 最後のトラック以降にはトラック個別情報が含まれない
+					if(!res.track.item){
+						d.callback(tracks);
+						return;
+					}
+					
+					res.track.number = ++number;
+					tracks.push(res.track);
+					me();
+				}).addErrback(function(e){
+					// 異常なトラックをスキップする(破損したJSONが返る)
+					if(e.message.name == 'SyntaxError')
+						me();
+				});
+			})();
+		});
+		
+		return d;
 	}
 });
 
@@ -2295,7 +2406,7 @@ models.register({
 	
 	shorten : function(url){
 		var self = this;
-		if((/\/\/bit\.ly/).test(url))
+		if(url.match('//(bit.ly|j.mp)/'))
 			return succeed(url);
 		
 		return this.callMethod('shorten', {
@@ -2334,6 +2445,12 @@ models.register({
 		});
 	},
 });
+
+models.register(update({}, models['bit.ly'], {
+	name : 'j.mp',
+	ICON : 'http://j.mp/static/images/favicon.png',
+	URL  : 'http://api.j.mp',
+}));
 
 models.register({
 	name : 'TextConversionServices',
@@ -2404,6 +2521,231 @@ models.register({
 	},
 });
 
+models.register({
+	name : 'Sharebee.com',
+	URL  : 'http://sharebee.com/',
+	
+	decrypt : function(url){
+		return request(url.startsWith(this.URL)? url : this.URL + url).addCallback(function(res){
+			var doc = convertToHTMLDocument(res.responseText);
+			return {
+				fileName : $x('//h2/span[@title]/@title', doc),
+				links    : $x('//table[@class="links"]//a/@href', doc, true),
+			}
+		});
+	},
+});
+
+models.register({
+	name : 'Nicovideo',
+	URL  : 'http://www.nicovideo.jp',
+	ICON : 'http://www.nicovideo.jp/favicon.ico',
+	
+	getPageInfo : function(id){
+		return request(this.URL + '/watch/' + id, {
+			charset : 'UTF-8',
+		}).addCallback(function(res){
+			var doc = convertToHTMLDocument(res.responseText);
+			return {
+				title : doc.title.extract(/(.*)‐/),
+				lists : $x('id("des_2")//a[contains(@href, "/mylist/")]/@href', doc, true),
+				links : $x('id("des_2")//a[starts-with(@href, "http") and contains(@href, "/watch/")]/@href', doc, true),
+			}
+		});
+	},
+	
+	download : function(id, title){
+		var self = this;
+		return ((title)? succeed(title) : self.getPageInfo(id).addCallback(itemgetter('title'))).addCallback(function(title){
+			return request(self.URL + '/api/getflv?v='+id).addCallback(function(res){
+				var params = parseQueryString(res.responseText);
+				var file = getDownloadDir();
+				file.append(validateFileName(title + '.flv'));
+				return download(params.url, file, true);
+			});
+		});
+	},
+});
+
+models.register(update({}, AbstractSessionService, {
+	name : 'NDrive',
+	ICON : 'http://ndrive1.naver.jp/favicon.ico',
+	
+	check : function(ps){
+		return (/(photo|link)/).test(ps.type);
+	},
+	
+	post : function(ps){
+		var self = this;
+		return (ps.file? succeed(ps.file) : download(ps.itemUrl, getTempDir())).addCallback(function(file){
+			return self.upload(file, null, ps.item + '.' + createURI(file).fileExtension);
+		});
+	},
+	
+	getAuthCookie : function(){
+		return getCookieString('ndrive1.naver.jp', 'njid_inf');
+	},
+	
+	getUserInfo : function(){
+		return request('http://ndrive.naver.jp/').addCallback(function(res){
+			function getString(name){
+				return res.responseText.extract(RegExp('\\s' + name + '\\s*=\\s*[\'"](.+?)[\'"]'));
+			}
+			
+			return {
+				userId          : getString('userId'),
+				userIdx         : getString('userIdx'),
+				cmsServerDomain : getString('cmsServerDomain'),
+			}
+		});
+	},
+	
+	toW3CDTF : function(date){
+		with(date){
+			return getFullYear() + '-' + (getMonth()+1).pad(2) + '-' + getDate().pad(2) + 
+			'T' + getHours().pad(2) + ':' + getMinutes().pad(2) + ':' + getSeconds().pad(2) + 
+			toTimeString().split('GMT').pop().replace(/(\d{2})(\d{2})/, '$1:$2');
+		}
+	},
+	
+	/**
+	 * ファイルのアップロード可否を確認する。
+	 * ファイルが重複する場合など、そのままアップロードできない場合はエラーとなる。
+	 * 
+	 * @param {String} path 
+	 *        アップロード対象のパス。ルート(/)からはじまる相対パスで記述する。
+	 * @param {optional Number} size 
+	 *        アップロードするファイルのサイズ。
+	 * @return {Deferred} 処理結果。
+	 */
+	checkUpload : function(path, size){
+		var self = this;
+		
+		size = size || 1;
+		
+		return this.getSessionValue('user', this.getUserInfo).addCallback(function(info){
+			return request('http://' + info.cmsServerDomain + '/CheckUpload.ndrive', {
+				sendContent : {
+					cookie      : getCookieString('ndrive1.naver.jp'),
+					userid      : info.userId,
+					useridx     : info.userIdx,
+					
+					dstresource : path,
+					uploadsize  : size,
+				}
+			}).addCallback(function(res){
+				res = evalInSandbox('(' + res.responseText + ')', self.ICON);
+				
+				if(res.resultcode != 0)
+					throw res;
+				return res;
+			});
+		});
+	},
+	
+	uniqueFile : function(path){
+		var self = this;
+		return this.checkUpload(path).addCallback(function(){
+			return path;
+		}).addErrback(function(err){
+			err = err.message;
+			
+			// Duplicated File Exist以外のエラーは抜ける
+			if(err.resultcode != 9)
+				throw err;
+			
+			return self.uniqueFile(self.incrementFile(path));
+		});
+	},
+	
+	incrementFile : function(path){
+		var paths = path.split('/');
+		var name = paths.pop();
+		
+		// 既に括弧数字が含まれているか?
+		var re = /(.*\()(\d+)(\))/;
+		if(re.test(name)){
+			name = name.replace(re, function(all, left, num, right){
+				return left + (++num) + right;
+			});
+		} else {
+			name = (name.contains('.'))?
+				name.replace(/(.*)(\..*)/, '$1(2)$2') : 
+				name + '(2)';
+		}
+		
+		paths.push(name);
+		return paths.join('/');
+	},
+	
+	validateFileName : function(name){
+		return name.replace(/[:\|\?\*\/\\]/g, '-').replace(/"/g, "'").replace(/</g, "(").replace(/>/g, ")");
+	},
+	
+	/**
+	 * ファイルをアップロードする。
+	 * 空要素は除外される。
+	 * 配列が空の場合は、空文字列が返される。
+	 * 配列の入れ子は直列化される。
+	 * 
+	 * @param {LocalFile || String} file 
+	 *        アップロード対象のファイル。ファイルへのURIでも可。
+	 * @param {optional String} dir 
+	 *        アップロード先のディレクトリ。
+	 *        省略された場合はmodel.ndrive.defaultDirの設定値かルートになる。
+	 *        先頭および末尾のスラッシュの有無は問わない。
+	 * @param {optional String} name 
+	 *        アップロード後のファイル名。
+	 *        省略された場合は元のファイル名のままとなる。
+	 * @param {optional Boolean} overwrite 
+	 *        上書きフラグ。
+	 *        上書きせずに同名のファイルが存在した場合は末尾に括弧数字((3)など)が付加される。
+	 * @return {Deferred} 処理結果。
+	 */
+	upload : function(file, dir, name, overwrite){
+		var self = this;
+		
+		file = getLocalFile(file);
+		name = this.validateFileName(name || file.leafName);
+		
+		if(!dir)
+			dir = getPref('model.ndrive.defaultDir') || '';
+		
+		if(dir && dir.slice(-1)!='/')
+			dir += '/' ;
+		
+		if(!dir.startsWith('/'))
+			dir = '/' + dir;
+		
+		var path = dir + name;
+		
+		// 上書きしない場合はファイル名のチェックを先に行う
+		return ((overwrite)? succeed(path) : self.uniqueFile(path)).addCallback(function(fixed){
+			path = fixed;
+			
+			return self.getSessionValue('user', this.getUserInfo);
+		}).addCallback(function(info){
+			return request('http://' + info.cmsServerDomain + path, {
+				sendContent : {
+					overwrite       : overwrite? 'T' : 'F',
+					NDriveSvcType   : 'NHN/ND-WEB Ver',
+					Upload          : 'Submit Query',
+					
+					// FIXME: マルチパートの場合、自動でエンコードされない(Tumblrはデコードを行わない)
+					cookie          : encodeURIComponent(getCookieString('ndrive1.naver.jp')),
+					userid          : info.userId,
+					useridx         : info.userIdx,
+					
+					Filename        : file.leafName,
+					filesize        : file.fileSize,
+					getlastmodified : self.toW3CDTF(new Date(file.lastModifiedTime)),
+					Filedata        : file,
+				}
+			});
+		});
+	}
+}));
+
 
 // 全てのサービスをグローバルコンテキストに置く(後方互換)
 models.copyTo(this);
@@ -2470,7 +2812,7 @@ models.getPostConfig = function(config, name, ps){
 
 
 function shortenUrls(text, model){
-	var reUrl = /https?[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+/g;
+	var reUrl = /https?[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#\^]+/g;
 	if(!reUrl.test(text))
 		return;
 		

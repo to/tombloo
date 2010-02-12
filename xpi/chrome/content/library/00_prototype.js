@@ -17,11 +17,24 @@ Math.hypot = function(x, y){
 	return Math.sqrt(x*x + y*y);
 }
 
-Number.prototype.toHexString = function(){
-	return ('0' + this.toString(16)).slice(-2);
-};
+update(Number.prototype, {
+	pad : function(len, ch){
+		return ('' + this).pad(len, ch || '0');
+	},
+	toHexString : function(){
+		return ('0' + this.toString(16)).slice(-2);
+	},
+});
 
 update(String.prototype, {
+	contains : function(str){
+		return this.indexOf(str) != -1;
+	},
+	
+	startsWith : function(s){
+		return this.indexOf(s) == 0;
+	},
+	
 	pad :function(len, ch){
 		len = len-this.length;
 		if(len<=0) return this;
@@ -104,13 +117,13 @@ update(String.prototype, {
 	},
 	
 	includesFullwidth : function(){
-		return (/[^ -~¡-ß]/).test(this);
+		return (/[^ -~ï½¡-ï¾Ÿ]/).test(this);
 	},
 	
 	// http://code.google.com/p/kanaxs/
 	toHiragana : function(){
 		var c, i = this.length, a = [];
-
+		
 		while(i--){
 			c = this.charCodeAt(i);
 			a[i] = (0x30A1 <= c && c <= 0x30F6) ? c - 0x0060 : c;
@@ -121,12 +134,12 @@ update(String.prototype, {
 	
 	toKatakana : function(){
 		var c, i = this.length, a = [];
-
+		
 		while(i--){
 			c = this.charCodeAt(i);
 			a[i] = (0x3041 <= c && c <= 0x3096) ? c + 0x0060 : c;
 		};
-
+		
 		return String.fromCharCode.apply(null, a);
 	},
 	

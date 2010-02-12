@@ -318,10 +318,7 @@ extend(Database.prototype, {
 	 * @param {String} name テーブル名。
 	 */
 	tableExists : function(name){
-		// Firefox 2ではtableExistsは存在しない
-		return this.connection.tableExists?
-			this.connection.tableExists(name) :
-			!!this.execute('PRAGMA table_info('+name+')').length;
+		return this.connection.tableExists(name);
 	},
 	
 	/**
@@ -491,7 +488,7 @@ function Entity(def){
 					break;
 				}
 				
-				cache[name] = sql;
+				cache[method] = sql;
 			}
 			args.unshift(sql);
 			

@@ -106,7 +106,7 @@ var QuickPostForm = {
 	show : function(ps, position, message){
 		openDialog(
 			'chrome://tombloo/content/quickPostForm.xul', 
-			'chrome,alwaysRaised=yes,resizable=yes,titlebar=no,dependent=yes', ps, position, message);
+			'chrome,alwaysRaised=yes,resizable=yes,dependent=yes,titlebar=no', ps, position, message);
 	},
 };
 
@@ -121,12 +121,12 @@ QuickPostForm.dialog = {
 };
 QuickPostForm.descriptionContextMenus = [
 	{
-		name : 'is.gd',
-		icon : models['is.gd'].ICON,
+		name : 'j.mp',
+		icon : models['j.mp'].ICON,
 		
-		execute : function(elmText){
-			shortenUrls(elmText.value, models['is.gd']).addCallback(function(value){
-				elmText.value = value;
+		execute : function(elmText, desc){
+			shortenUrls(desc.value, models['j.mp']).addCallback(function(value){
+				desc.value = value;
 			});
 		},
 	},
@@ -139,18 +139,23 @@ forEach({
 	'shortcutkey.quickPost.link' : function(e){
 		cancel(e);
 		
-		var win = e.currentTarget.content;
+		var win = getMostRecentWindow().content;
 		var doc = win.document;
-		win = win.wrappedJSObject || win;
 		
 		var ctx = update({
 			document  : doc,
 			window    : win,
 			title     : doc.title,
+			selection : ''+win.getSelection(),
+			target    : doc.documentElement,
 		}, win.location);
+		
+		var exts = Tombloo.Service.check(ctx).filter(function(ext){
+			return /^Link/.test(ext.name);
+		});
 		Tombloo.Service.extractors.extract(
 			ctx, 
-			Tombloo.Service.extractors.Link
+			exts[0]
 		).addCallback(function(ps){
 			QuickPostForm.show(ps);
 		});
@@ -158,9 +163,8 @@ forEach({
 	'shortcutkey.quickPost.regular' : function(e){
 		cancel(e);
 		
-		var win = e.currentTarget.content;
+		var win = wrappedObject(e.currentTarget.content);
 		var doc = win.document;
-		win = win.wrappedJSObject || win;
 		
 		QuickPostForm.show({
 			type    : 'regular',
@@ -172,8 +176,7 @@ forEach({
 	// 処理を行わなかった場合はtrueを返す
 	'shortcutkey.checkAndPost' : function(e){
 		var doc = e.originalTarget.ownerDocument;
-		var win = doc.defaultView;
-		win = win.wrappedJSObject || win;
+		var win = wrappedObject(doc.defaultView);
 		
 		// XULは処理しない
 		if(!doc.body)
@@ -244,14 +247,22 @@ connect(grobal, 'browser-load', function(e){
 	var doc = cwin.document;
 	
 	connectToBrowser(cwin);
-		
+	
+	var top = getPref('contextMenu.top');
 	var context;
 	var menuContext = doc.getElementById('contentAreaContextMenu');
 	var menuShare   = doc.getElementById('tombloo-menu-share');
 	var menuSelect  = doc.getElementById('tombloo-menu-select');
 	var menuAction  = doc.getElementById('tombloo-menu-action');
+	var separator = doc.createElement('menuseparator');
 	
 	menuShare.setAttribute('accesskey', getPref('accesskey.share'));
+	
+	if(top)
+		insertSiblingNodesAfter(menuAction.parentNode, separator);
+	
+	var menuEditor = FuelApplication.extensions.get('{EDA7B1D7-F793-4e03-B074-E6F303317FB0}');
+	menuEditor = menuEditor && menuEditor.enabled;
 	
 	// Menu Editor拡張によって個別メニューのイベントを取得できなくなる現象を回避
 	menuContext.addEventListener('popupshowing', function(e){
@@ -273,7 +284,6 @@ connect(grobal, 'browser-load', function(e){
 			return;
 		}
 
-		// [FIXME] selection文字列化再検討
 		// command時にはクリック箇所などの情報が失われるためコンテキストを保持しておく
 		context = update({}, cwin.gContextMenu, win.location, {
 			document  : doc,
@@ -286,18 +296,6 @@ connect(grobal, 'browser-load', function(e){
 				screen : {x : e.screenX, y : e.screenY},
 			},
 			menu      : cwin.gContextMenu,
-		});
-		
-		// アクションメニューを作成する
-		forEach(Tombloo.Service.actions, function([name, action]){
-			if(!/context/.test(action.type))
-				return;
-				
-			if(action.check && !action.check(context))
-				return;
-			
-			var elmItem = appendMenuItem(menuAction, name);
-			elmItem.action = action;
 		});
 		
 		var exts = Tombloo.Service.check(context);
@@ -317,6 +315,23 @@ connect(grobal, 'browser-load', function(e){
 				elmItem.showForm = true;
 			}
 		}
+		
+		// Menu Editorが有効になっている場合は衝突を避ける(表示されなくなる)
+		if(!top && !menuEditor){
+			// リンク上とそれ以外で表示されるメニューが異なる
+			// 常に上から2ブロック目あたりに表示する
+			var insertPoint;
+			['context-sep-open', 'context-sep-copyimage', 'context-sep-stop', 'context-sep-selectall'].some(function(id){
+				insertPoint = cwin.document.getElementById(id);
+				return insertPoint && !insertPoint.hidden;
+			});
+			
+			// 表示される逆順に移動する
+			insertSiblingNodesAfter(insertPoint, separator);
+			insertSiblingNodesAfter(insertPoint, menuAction.parentNode);
+			insertSiblingNodesAfter(insertPoint, menuSelect.parentNode);
+			insertSiblingNodesAfter(insertPoint, menuShare);
+		}
 	}, true);
 	
 	menuContext.addEventListener('popuphidden', function(e){
@@ -325,8 +340,19 @@ connect(grobal, 'browser-load', function(e){
 		
 		context = null;
 		
-		clearChildren(menuAction);
 		clearChildren(menuSelect);
+		clearChildren(menuAction);
+	}, true);
+	
+	menuAction.addEventListener('popupshowing', function(e){
+		if(e.eventPhase != Event.AT_TARGET)
+			return;
+		
+		// メニュー生成済みなら返る
+		if(menuAction.childNodes.length)
+			return;
+		
+		createActionMenu(menuAction, context);
 	}, true);
 	
 	menuContext.addEventListener('command', function(e){
@@ -347,9 +373,10 @@ connect(grobal, 'browser-load', function(e){
 	
 	// clickイベントはマウス座標が異常
 	menuContext.addEventListener('mousedown', function(e){
-		if(!e.target.extractor)
+		if(!e.target.extractor && !e.target.action)
 			return;
 		
+		context.originalEvent = e;
 		context.mouse.post = {
 			x : e.screenX, 
 			y : e.screenY
@@ -358,18 +385,40 @@ connect(grobal, 'browser-load', function(e){
 	
 	var menuMain = doc.getElementById('tombloo-menu-main');
 	menuMain.addEventListener('popupshowing', function(e){
-		clearChildren(menuMain);
+		if(e.eventPhase != Event.AT_TARGET)
+			return;
 		
-		forEach(Tombloo.Service.actions, function([name, action]){
-			// 後方互換のためtypeが存在しないものも可とする
-			if(!action.type || /menu/.test(action.type))
-				appendMenuItem(menuMain, name);
-		});
+		clearChildren(menuMain);
+		createActionMenu(menuMain);
 	}, true);
 	
 	menuMain.addEventListener('command', function(e){
-		Tombloo.Service.actions[e.originalTarget.getAttribute('label')].execute();
+		e.target.action.execute(context);
 	}, true);
+	
+	function createActionMenu(root, ctx){
+		var doc = root.ownerDocument;
+		var df = doc.createDocumentFragment();
+		var type = RegExp((ctx)? 'context' : 'menu');
+		(function me(actions, parent){
+			actions.forEach(function(action){
+				// 最初の階層のみアクションタイプを確認する
+				// 後方互換のためtypeが未指定のものはメニューバーとして扱う
+				if(parent==df && !type.test(action.type || 'menu'))
+					return;
+				
+				if(action.check && !action.check(ctx))
+					return;
+				
+				var elmItem = appendMenuItem(parent, action.name, action.icon, !!action.children);
+				elmItem.action = action;
+				
+				if(action.children)
+					me(action.children, elmItem.appendChild(doc.createElement('menupopup')));
+			});
+		})(Tombloo.Service.actions.values, df);
+		root.appendChild(df);
+	}
 });
 
 function connectToBrowser(win){
@@ -387,6 +436,7 @@ function connectToBrowser(win){
 		hooked.contentReady = true;
 	}
 	
+	// ショートカットキーが設定されているか？
 	if(!hooked.shortcutkey && !isEmpty(shortcutkeys)){
 		win.addEventListener('keydown', function(e){
 			var key = shortcutkeys[keyString(e)];
@@ -400,6 +450,7 @@ function connectToBrowser(win){
 		hooked.shortcutkey = true;
 	}
 	
+	// マウスショートカットが設定されているか？
 	if(!hooked.mouseShortcut && keys(shortcutkeys).some(function(key){return key.indexOf('_DOWN')!=-1})){
 		observeMouseShortcut(win, function(e, key){
 			key = shortcutkeys[key];
@@ -411,3 +462,23 @@ function connectToBrowser(win){
 		hooked.mouseShortcut = true;
 	}
 }
+
+// ----[content-policy]-------------------------------------------------
+var loadPolicies = [];
+
+connect(grobal, 'environment-load', function(){
+	// 起動時にリスナがいない場合はパフォーマンス低下を避けるためフックを外す
+	if(!loadPolicies.length){
+		CategoryManager.deleteCategoryEntry('content-policy', grobal.NAME, false);
+		return;
+	}
+	
+	grobal.shouldLoad = function(contentType, contentLocation, requestOrigin, context, mimeTypeGuess, extra){
+		// ロードをキャンセルするポリシーをチェックする
+		for(var i=0,len=loadPolicies.length ; i<len ; i++)
+			if(loadPolicies[i](contentType, contentLocation, requestOrigin, context, mimeTypeGuess, extra))
+				return IContentPolicy.REJECT_SERVER;
+		
+		return IContentPolicy.ACCEPT;
+	}
+});

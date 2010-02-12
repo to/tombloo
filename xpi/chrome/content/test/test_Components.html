@@ -17,7 +17,6 @@
 try {
 	// chrome://tombloo/content/test/test_Components.html
 	
-	
 	// createMock
 	var BaseWebProgressListener = createMock('@mozilla.org/appshell/component/browser-status-filter;1');
 	ok(BaseWebProgressListener.STATE_TRANSFERRING);
@@ -43,12 +42,6 @@ try {
 	
 	ok(PrefBranch.instanceOf(new PrefBranch()), 'createConstructor: instanceOf');
 	
-	// getService
-	is(typeof(Components.classes['not_found']), 'undefined');
-	ok(getService() === null);
-	ok(getService('hohoho') === null);
-	ok(getService('/consoleservice;1', Ci.nsIConsoleService).logStringMessage);
-	
 	
 	// getInterfaces
 	var uri = createURI('http://google.com');
@@ -67,9 +60,6 @@ try {
 	ok(channel.setRequestHeader != null) // nsIHttpChannel;
 	ok(channel.setUploadStream == null)  // nsIUploadChannel;
 	
-	// getService
-	ok(getService('/consoleservice;1', Ci.nsIConsoleService));
-	ok(getService('not_found', null) === null);
 	
 	// createURI
 	is(createURI('C:\\').spec, 'file:///C:/');
@@ -104,9 +94,6 @@ try {
 	ok(getDownloadDir().exists());
 	ok(getProfileDir().exists());
 	
-	// 
-	// ok(  findCacheFile('http://f4.wretch.yimg.com/moblog/4/1939118735.jpg'), 'キャッシュファイルが(無い場合もあり)');
-	// log(findCacheFile('http://pics8.blog.yam.com/6/userfile/i/ivanaki0929/album/146b685908d2dc.jpg'));
 	ok(! findCacheFile('http://google.com/notFound.jpg'));
 	
 	is(sanitizeHTML(
@@ -117,49 +104,28 @@ try {
 		'');
 	is(sanitizeHTML(
 		'<input<script src="alert(3)"<\/script>'), 
-		'<INPUT/>');
+		'<input xmlns="http://www.w3.org/1999/xhtml" />');
 	is(sanitizeHTML(
 		'<pre>CODE<pre/>'), 
-		'<PRE>CODE<PRE/></PRE>',
+		'<pre xmlns="http://www.w3.org/1999/xhtml">CODE<pre></pre></pre>',
 		'誤ったpreタグ');
-	if(navigator.userAgent.match('Firefox/3')){
-		is(sanitizeHTML(
-			'TEXT<title>HELLO BLOG</tile><link rel="stylesheet" type="text/css" href="style.css">'), 
-			'TEXTHELLO BLOG');
-		is(sanitizeHTML(
-			'<a href="javascript:alert(4)">yahoo</a>'), 
-			'<A href="javascript:alert(4)">yahoo</A>');
-		is(sanitizeHTML(
-			'<a href="javascrip&#116;:alert(3)">YAHOO</a>'), 
-			'<A href="javascript:alert(3)">YAHOO</A>',
-			'数値実体参照を使ったスクリプトの埋め込み');
-		is(sanitizeHTML(
-			'<a href="javascrip&#116:alert(3)">YAHOO</a>'), 
-			'<A href="javascript:alert(3)">YAHOO</A>',
-			'数値実体参照を使ったスクリプトの埋め込み(末尾セミコロンの省略)');
-		is(sanitizeHTML(
-			'<form action="foo.cgi"><input type="submit"></form>'), 
-			'<FORM><INPUT type="submit"/></FORM>');
-	} else {
-		is(sanitizeHTML(
-			'TEXT<title>HELLO BLOG</tile><link rel="stylesheet" type="text/css" href="style.css">'), 
-			'TEXT');
-		is(sanitizeHTML(
-			'<a href="javascript:alert(4)">yahoo</a>'), 
-			'<A>yahoo</A>');
-		is(sanitizeHTML(
-			'<a href="javascrip&#116;:alert(3)">YAHOO</a>'), 
-			'<A>YAHOO</A>',
-			'数値実体参照を使ったスクリプトの埋め込み');
-		is(sanitizeHTML(
-			'<a href="javascrip&#116:alert(3)">YAHOO</a>'), 
-			'<A>YAHOO</A>',
-			'数値実体参照を使ったスクリプトの埋め込み(末尾セミコロンの省略)');
-		is(sanitizeHTML(
-			'<form action="foo.cgi"><input type="submit"></form>'), 
-			'<FORM action="foo.cgi"><INPUT type="submit"/></FORM>');
-	}
-	
+	is(sanitizeHTML(
+		'TEXT<title>HELLO BLOG</tile><link rel="stylesheet" type="text/css" href="style.css">'), 
+		'TEXTHELLO BLOG');
+	is(sanitizeHTML(
+		'<a href="javascript:alert(4)">yahoo</a>'), 
+		'<a xmlns="http://www.w3.org/1999/xhtml" href="javascript:alert(4)">yahoo</a>');
+	is(sanitizeHTML(
+		'<a href="javascrip&#116;:alert(3)">YAHOO</a>'), 
+		'<a xmlns="http://www.w3.org/1999/xhtml" href="javascript:alert(3)">YAHOO</a>',
+		'数値実体参照を使ったスクリプトの埋め込み');
+	is(sanitizeHTML(
+		'<a href="javascrip&#116:alert(3)">YAHOO</a>'), 
+		'<a xmlns="http://www.w3.org/1999/xhtml" href="javascript:alert(3)">YAHOO</a>',
+		'数値実体参照を使ったスクリプトの埋め込み(末尾セミコロンの省略)');
+	is(sanitizeHTML(
+		'<form action="foo.cgi"><input type="submit"></form>'), 
+		'<form xmlns="http://www.w3.org/1999/xhtml"><input type="submit" /></form>');
 	
 	/*
 	正常動作、テストのためにgetContentsが必要

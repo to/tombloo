@@ -1,7 +1,6 @@
-addAround(Tumblr, 'post', function(proceed, args, target, methodName){
-	return proceed([
-		update({}, args[0], {
-			private : true
-		})
-	]);
+addAround(Tumblr, 'appendTags', function(proceed, args, target, methodName){
+	proceed(args);
+	
+	args[0]['post[state]'] = 'private';
+;
 });

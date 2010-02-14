@@ -1,0 +1,8 @@
+<svg:svg xmlns:svg="http://www.w3.org/2000/svg" height="0">
+	<svg:defs>
+		<svg:filter id="grayscale">
+			<svg:feColorMatrix values="0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0.3333 0.3333 0.3333 0 0 0 0 0 1 0"/>
+		</svg:filter>
+	</svg:defs>
+</svg:svg>
+

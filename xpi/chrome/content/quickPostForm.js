@@ -1165,13 +1165,14 @@ function PostersPanel(){
 				disabled : disabled,
 			}));
 			image.name = name;
-			image.setAttribute('src', poster.ICON);
 			
 			// OSXではオリジナルのツールチップを利用する
 			// FIXME: 表示位置が悪いだけでは(未確認)
 			if(AppInfo.OS == 'Darwin'){
 				image.setAttribute('tooltiptext', name);
 			}
+			
+			self.setIcon(image, poster, !disabled);
 		});
 		
 		self.elmAllOff = self.elmPanel.appendChild(LABEL({
@@ -1206,6 +1207,22 @@ PostersPanel.prototype = {
 		return $x('.//xul:image', this.elmPanel, true);
 	},
 	
+	setIcon : function(image, poster, enabled){
+		var prop = (enabled)? 'ICON' : 'DISABLED_ICON';
+		var src = poster[prop];
+		var d;
+		if(/^data:/.test(src)){
+			d = succeed(src);
+		} else {
+			d = ((enabled)? convertToDataURL(poster.ICON) : toGrayScale(poster.ICON)).addCallback(function(src){
+				return poster[prop] = src;
+			});
+		}
+		d.addCallback(function(src){
+			image.setAttribute('src', src);
+		});
+	},
+	
 	allOff : function(){
 		var self = this;
 		this.icons.forEach(function(image){
@@ -1218,6 +1235,8 @@ PostersPanel.prototype = {
 		
 		image.setAttribute('disabled', disabled);
 				
+		this.setIcon(image, poster, !disabled);
+		
 		this.elmButton.disabled = !this.checked.length;
 	},
 	

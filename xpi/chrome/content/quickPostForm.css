@@ -300,7 +300,6 @@ div{
 
 #posters image.poster[disabled=true]{
 	opacity: 0.4;
-	filter : url(grayscale.svg#grayscale);
 }
 
 /* FIXME: 再利用するときに共通化する */

@@ -1070,14 +1070,14 @@ Tombloo.Service.extractors = new Repository([
 			return ctx.onImage && ctx.target.src.match(/^data:/);
 		},
 		extract : function(ctx){
-			var source = ctx.target.src || ctx.target.toDataURL();
-			var channel = IOService.newChannelFromURI(createURI(source));
-			return {
-				type    : 'photo',
-				item    : ctx.title,
-				itemUrl : source,
-				file    : channel.open(),
-			};
+			var src = ctx.target.src || ctx.target.toDataURL();
+			return download(src, getTempDir(uriToFileName(ctx.href) + '.png')).addCallback(function(file){
+				return {
+					type : 'photo',
+					item : ctx.title,
+					file : file,
+				}
+			});
 		},
 	},
 	
@@ -1089,6 +1089,28 @@ Tombloo.Service.extractors = new Repository([
 		},
 		extract : function(ctx){
 			return Tombloo.Service.extractors['Photo - Data URI'].extract(ctx);
+		},
+	},
+	
+	{
+		name : 'Photo - There, I Fixed It',
+		ICON : 'chrome://tombloo/skin/photo.png',
+		check : function(ctx){
+			return ctx.onImage && ctx.target.src.match(/thereifixedit\.files\.wordpress.com/);
+		},
+		extract : function(ctx){
+			var img = ctx.target;
+			var src = capture(img, null, {
+				w : img.naturalWidth,
+				h : img.naturalHeight - 12,
+			});
+			return download(src, getTempDir(uriToFileName(ctx.href) + '.png')).addCallback(function(file){
+				return {
+					type : 'photo',
+					item : ctx.title,
+					file : file,
+				}
+			});
 		},
 	},
 	
@@ -1372,11 +1394,6 @@ Tombloo.Service.extractors = new Repository([
 				return;
 			
 			var win = ctx.window;
-			
-			// Macの場合Flashを透過しなくてもキャプチャ可能(詳細未確認)
-			if(AppInfo.OS != 'Darwin')
-				makeOpaqueFlash();
-			
 			return succeed().addCallback(function(){
 				switch (type){
 				case 'Region':

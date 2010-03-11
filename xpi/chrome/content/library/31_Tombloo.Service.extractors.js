@@ -561,6 +561,24 @@ Tombloo.Service.extractors = new Repository([
 	},
 	
 	{
+		name : 'Photo - Ameba blog',
+		ICON : 'chrome://tombloo/skin/photo.png',
+		check : function(ctx){
+			return ctx.onLink && 
+				ctx.host == ('ameblo.jp') &&
+				ctx.onImage &&
+				ctx.target.src.match(/\/t[0-9]+_/);
+		},
+		extract : function(ctx){
+			return {
+				type    : 'photo',
+				item    : ctx.title,
+				itemUrl : ctx.target.src.replace(/(\/t[0-9]+_)/, '/o'),
+			};
+		},
+	},
+	
+	{
 		name : 'Photo - Flickr',
 		ICON : models.Flickr.ICON,
 		

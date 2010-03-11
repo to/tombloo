@@ -1962,9 +1962,7 @@ function showNotification(fragments, animation){
 	return notification;
 }
 
-function capture(src, pos, dim, scale){
-	pos = pos || {x:0, y:0};
-	
+function capture(win, pos, dim, scale){
 	// デフォルトではAppShellService.hiddenDOMWindowが使われる
 	var canvas = document.createElementNS(HTML_NS, 'canvas');
 	var ctx = canvas.getContext('2d');
@@ -1980,11 +1978,7 @@ function capture(src, pos, dim, scale){
 		ctx.scale(scale, scale);
 	}
 	
-	if(src instanceof Ci.nsIDOMHTMLImageElement){
-		ctx.drawImage(src, pos.x, pos.y);
-	} else {
-		ctx.drawWindow(src, pos.x, pos.y, dim.w, dim.h, '#FFF');
-	}
+	ctx.drawWindow(win, pos.x, pos.y, dim.w, dim.h, '#FFF');
 	
 	return canvas.toDataURL('image/png', '');
 }

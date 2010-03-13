@@ -82,6 +82,8 @@ Tombloo.Service = {
 	 * @return {Deferred} ポスト完了後に呼び出される。
 	 */
 	post : function(ps, posters){
+		// エラー後再ポスト時のデバッグに使用
+		debug(ps);
 		debug(posters);
 		
 		var self = this;

@@ -920,7 +920,7 @@ models.register({
 	},
 	
 	post : function(ps){
-		return request('http://www.google.com/bookmarks/mark', {
+		return request('https://www.google.com/bookmarks/mark', {
 			queryString : {
 				op : 'add',
 			},
@@ -930,7 +930,7 @@ models.register({
 				throw new Error(getMessage('error.notLoggedin'));
 			
 			var fs = formContents(doc);
-			return request('http://www.google.com'+$x('//form[@name="add_bkmk_form"]/@action', doc), {
+			return request('https://www.google.com'+$x('//form[@name="add_bkmk_form"]/@action', doc), {
 				redirectionLimit : 0,
 				sendContent  : {
 					title      : ps.item,
@@ -2814,7 +2814,7 @@ models.getPostConfig = function(config, name, ps){
 function shortenUrls(text, model){
 	var reUrl = /https?[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#\^]+/g;
 	if(!reUrl.test(text))
-		return;
+		return text;
 		
 	var urls = text.match(reUrl);
 	return gatherResults(urls.map(function(url){

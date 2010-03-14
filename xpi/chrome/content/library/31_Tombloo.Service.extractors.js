@@ -561,6 +561,24 @@ Tombloo.Service.extractors = new Repository([
 	},
 	
 	{
+		name : 'Photo - Ameba blog',
+		ICON : 'chrome://tombloo/skin/photo.png',
+		check : function(ctx){
+			return ctx.onLink && 
+				ctx.host == ('ameblo.jp') &&
+				ctx.onImage &&
+				ctx.target.src.match(/\/t[0-9]+_/);
+		},
+		extract : function(ctx){
+			return {
+				type    : 'photo',
+				item    : ctx.title,
+				itemUrl : ctx.target.src.replace(/(\/t[0-9]+_)/, '/o'),
+			};
+		},
+	},
+	
+	{
 		name : 'Photo - Flickr',
 		ICON : models.Flickr.ICON,
 		
@@ -1009,6 +1027,29 @@ Tombloo.Service.extractors = new Repository([
 	},
 	
 	{
+		name : 'Photo - There, I Fixed It',
+		ICON : 'chrome://tombloo/skin/photo.png',
+		check : function(ctx){
+			return ctx.onImage && ctx.target.src.match(/thereifixedit\.files\.wordpress.com/);
+		},
+		extract : function(ctx){
+			var img = ctx.target;
+			var src = capture(img, null, {
+				w : img.naturalWidth,
+				h : img.naturalHeight - 12,
+			});
+			return download(src, getTempDir(uriToFileName(ctx.href) + '.png')).addCallback(function(file){
+				return {
+					type : 'photo',
+					item : ctx.title,
+					file : file,
+				}
+			});
+		},
+	},
+	
+	
+	{
 		name : 'Photo - covered',
 		ICON : 'chrome://tombloo/skin/photo.png',
 		check : function(ctx){
@@ -1057,7 +1098,9 @@ Tombloo.Service.extractors = new Repository([
 			return uri && (/(png|gif|jpe?g)$/i).test(uri.fileExtension);
 		},
 		extract : function(ctx){
-			ctx.target = ctx.link;
+			ctx.target = {
+				src : ctx.link.href
+			};
 			
 			return Tombloo.Service.extractors['Photo'].extract(ctx);
 		},
@@ -1070,14 +1113,14 @@ Tombloo.Service.extractors = new Repository([
 			return ctx.onImage && ctx.target.src.match(/^data:/);
 		},
 		extract : function(ctx){
-			var source = ctx.target.src || ctx.target.toDataURL();
-			var channel = IOService.newChannelFromURI(createURI(source));
-			return {
-				type    : 'photo',
-				item    : ctx.title,
-				itemUrl : source,
-				file    : channel.open(),
-			};
+			var src = ctx.target.src || ctx.target.toDataURL();
+			return download(src, getTempDir(uriToFileName(ctx.href) + '.png')).addCallback(function(file){
+				return {
+					type : 'photo',
+					item : ctx.title,
+					file : file,
+				}
+			});
 		},
 	},
 	
@@ -1108,20 +1151,17 @@ Tombloo.Service.extractors = new Repository([
 			'gizmag.com/pictures/',
 			'/awkwardfamilyphotos.com/',
 			'/docs.google.com/',
-			'share-image.com/pictures/big/'
+			'share-image.com/pictures/big/',
 		],
 		check : function(ctx){
 			return ctx.onImage;
 		},
 		extract : function(ctx){
 			var target = ctx.target;
-			var tag = tagName(target);
-			var source =
-				tag=='object'? target.data :
-				tag=='img'? target.src : target.href;
+			var itemUrl = (tagName(target)=='object')? target.data : target.src;
 			
 			if(this.PROTECTED_SITES.some(function(re){
-				return RegExp(re).test(source);
+				return RegExp(re).test(itemUrl);
 			})){
 				return Tombloo.Service.extractors['Photo - Upload from Cache'].extract(ctx);
 			};
@@ -1132,7 +1172,7 @@ Tombloo.Service.extractors = new Repository([
 			return {
 				type    : 'photo',
 				item    : ctx.title,
-				itemUrl : source,
+				itemUrl : itemUrl,
 			}
 		},
 	},
@@ -1148,7 +1188,7 @@ Tombloo.Service.extractors = new Repository([
 				ctx.title = ctx.href.split('/').pop();
 			
 			var target = ctx.target;
-			var itemUrl = tagName(target)=='object'? target.data : target.src;
+			var itemUrl = (tagName(target)=='object')? target.data : target.src;
 			
 			var uri = createURI(itemUrl);
 			return download(itemUrl, getTempDir()).addCallback(function(file){
@@ -1372,11 +1412,6 @@ Tombloo.Service.extractors = new Repository([
 				return;
 			
 			var win = ctx.window;
-			
-			// Macの場合Flashを透過しなくてもキャプチャ可能(詳細未確認)
-			if(AppInfo.OS != 'Darwin')
-				makeOpaqueFlash();
-			
 			return succeed().addCallback(function(){
 				switch (type){
 				case 'Region':

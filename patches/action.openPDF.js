@@ -8,7 +8,7 @@ Tombloo.Service.actions.register({
 	execute : function(ctx){
 		// ファイル名を取得しわかりやすくするためにリダイレクトを処理する
 		getFinalUrl(ctx.linkURL).addCallback(function(url){
-			addTab('http://docs.google.com/viewer?url=' + encodeURIComponent(ctx.linkURL));
+			addTab('http://docs.google.com/viewer?url=' + encodeURIComponent(url));
 		})
 	},
 }, '----');

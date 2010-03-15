@@ -1169,11 +1169,14 @@ Tombloo.Service.extractors = new Repository([
 			if(ctx.document.contentType.match(/^image/))
 				ctx.title = ctx.href.split('/').pop();
 			
-			return {
-				type    : 'photo',
-				item    : ctx.title,
-				itemUrl : itemUrl,
-			}
+			// ポスト先のサービスがリダイレクトを処理できずエラーになることがあるため必ずチェックをする(テスト中)
+			return getFinalUrl(itemUrl).addCallback(function(url){
+				return {
+					type    : 'photo',
+					item    : ctx.title,
+					itemUrl : url,
+				}
+			});
 		},
 	},
 	

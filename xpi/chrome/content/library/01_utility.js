@@ -158,7 +158,7 @@ function input(form, title){
 	}
 	
 	var vals = values(form);
-	var method = (vals[0] == null && typeof(vals[1]) == 'boolean')? 'confirmCheck' : 'prompt';
+	var method = (vals[0] == null && typeof(vals[1].value) == 'boolean')? 'confirmCheck' : 'prompt';
 	
 	// テキストボックスのみか？(チェックボックス不要の場合)
 	if(method=='prompt' && args.length==4)

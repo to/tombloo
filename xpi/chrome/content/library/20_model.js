@@ -101,7 +101,7 @@ models.register({
 	
 	getToken : function(){
 		return request(FFFFOUND.URL + 'bookmarklet.js').addCallback(function(res){
-			return res.responseText.match(/token = '(.*?)'/)[1];
+			return res.responseText.match(/token ?= ?'(.*?)'/)[1];
 		});
 	},
 	

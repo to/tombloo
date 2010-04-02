@@ -2,21 +2,21 @@
 <RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
          xmlns:NC="http://home.netscape.com/NC-rdf#"
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Description RDF:about="rdf:#$0PgMH3"
+  <RDF:Seq RDF:about="rdf:#$XEMfg2">
+    <RDF:li RDF:resource="rdf:#$YEMfg2"/>
+  </RDF:Seq>
+  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBADbKZv5IoN1g5DI0ImryamBOC5M5cyxGfaVNgWUlMiO6Mk0Yo3mLCOfm7IUnQu04EavzB1OSQ8w9gm2Np6TdfLR7jXB9ziCgdwH7vPWKO5jZzrveqjAmvS2TCRZQHMAZki98X02ez6XD3Oo+QPsFooYiJpe9duQjwJkfUfR98Hht">
+    <em:updates RDF:resource="rdf:#$XEMfg2"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$YEMfg2"
+                   em:version="0.4.9">
+    <em:targetApplication RDF:resource="rdf:#$+EMfg2"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$+EMfg2"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="3.5"
                    em:maxVersion="3.6.*"
                    em:updateLink="http://github.com/to/tombloo/raw/release/tombloo.xpi"
-                   em:updateHash="sha512:07e7ef88b1ea7cf51f3002d71ca5e144298005f43e9c7efddf9f6f1c9a8567acd73e3e53db0ee33a6ee1fcdbf7ec952d8ccb41f5d5e8f6b576936b35d753b099" />
-  <RDF:Seq RDF:about="rdf:#$YOgMH3">
-    <RDF:li RDF:resource="rdf:#$ZOgMH3"/>
-  </RDF:Seq>
-  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
-                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAEaG44E3qRRYI1PeDCK3Dwx6MD31OXEkU4XEEXyi7M9+aCjsUYIMRt0hSZMXBtshJDmXaBEjroTBhmVS/Z9s5+l7vUghjT7N2+gZCU2s2zhxpcEZfperr1uOLVSR9t4HyDKTlJg4hefatT3nVTTQklI2I6S3kTJXRZRc85E0MubT">
-    <em:updates RDF:resource="rdf:#$YOgMH3"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$ZOgMH3"
-                   em:version="0.4.8.1">
-    <em:targetApplication RDF:resource="rdf:#$0PgMH3"/>
-  </RDF:Description>
+                   em:updateHash="sha512:b47aefad84812249f258fc2033d10a0cd02a38d5d58989ceaa8e7e466df41164c31953300ce675efa2a046a1d3d447f74d428992792e530889c09ae40773c4d0" />
 </RDF:RDF>

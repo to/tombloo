@@ -1435,7 +1435,10 @@ models.register({
 	},
 	
 	isBookmarked : function(uri){
-		return NavBookmarksService.isBookmarked(createURI(uri));
+		return this.getBookmarkId(uri) != null;
+		
+		// 存在しなくてもtrueが返ってくるようになり利用できない
+		// return NavBookmarksService.isBookmarked(createURI(uri));
 	},
 	
 	removeBookmark : function(uri){

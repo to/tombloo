@@ -616,7 +616,7 @@ try {
 	models.FirefoxBookmark.removeBookmark(uri);
 	ok(!models.FirefoxBookmark.getBookmark(uri), 'FirefoxBookmark: ブックマークの削除');
 	ok(!models.FirefoxBookmark.isBookmarked(uri));
-
+	
 	models.FirefoxBookmark.addBookmark(params);
 	ok(models.FirefoxBookmark.isBookmarked(uri), 'FirefoxBookmark: ブックマークの追加(ハッシュ形式)');
 	models.FirefoxBookmark.removeBookmark(uri);

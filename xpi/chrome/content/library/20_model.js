@@ -2496,15 +2496,19 @@ models.register({
 	convert : function(str, name){
 		var service;
 		var self = this;
-		
+
 		return this.getService(name).addCallback(function(res){
+			var strForRequest;
+
 			service = res;
 			
 			charset = self.charsets[service.charset];
 			if(charset != 'utf-8')
-				str = escape(str.convertFromUnicode(charset));
+				strForRequest = escape(str.convertFromUnicode(charset));
+			else
+				strForRequest = encodeURIComponent(str);
 			
-			return request(service.url.replace(/%s/, str), {
+			return request(service.url.replace(/%s/, strForRequest), {
 				charset : charset,
 			});
 		}).addCallback(function(res){

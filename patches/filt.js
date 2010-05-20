@@ -1,5 +1,6 @@
 (function(){
 	const TYPE_DOCUMENT = IContentPolicy.TYPE_DOCUMENT;
+	const REDIRECTION_LIMIT = getPrefValue('network.http.redirection-limit') || 20;
 	
 	// 初期化されていないか?
 	// (アプリケーションを通じて一度だけ通過する)
@@ -27,18 +28,31 @@
 	// policyチェックが開始する前に起きる通信をブロックする
 	// (画像などで先読みが行われているよう)
 	filt.observe = function(subject, topic, data){
-		var url = subject.QueryInterface(IHttpChannel).URI.spec;
-		if(isBlock(url))
-			subject.cancel(Cr.NS_BINDING_ABORTED);
+		try{
+			var channel = subject.QueryInterface(IHttpChannel);
+			var url = channel.URI.spec;
+			
+			// リダイレクトしている場合はメインページとして開いているか元コンテンツなので通す
+			if((REDIRECTION_LIMIT == c.redirectionLimit) && isBlock(url))
+				subject.cancel(Cr.NS_BINDING_ABORTED);
+		}catch(e){
+			error(e);
+			return;
+		}
 	};
 	
 	loadPolicies.push(function(contentType, contentLocation, requestOrigin, context, mimeTypeGuess, extra){
-		// メインページとして開かれた場合は無条件に通す
-		var url = contentLocation.spec;
- 		if(contentType == TYPE_DOCUMENT)
-			return checked[url] = false;
- 		
-		return isBlock(url);
+		try{
+			// メインページとして開かれた場合は無条件に通す
+			var url = contentLocation.spec;
+	 		if(contentType == TYPE_DOCUMENT)
+				return checked[url] = false;
+	 		
+			return isBlock(url);
+		}catch(e){
+			error(e);
+			return false;
+		}
 	});
 	
 	function isBlock(url){

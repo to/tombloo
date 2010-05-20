@@ -33,7 +33,7 @@
 			var url = channel.URI.spec;
 			
 			// リダイレクトしている場合はメインページとして開いているか元コンテンツなので通す
-			if((REDIRECTION_LIMIT == c.redirectionLimit) && isBlock(url))
+			if((REDIRECTION_LIMIT == channel.redirectionLimit) && isBlock(url))
 				subject.cancel(Cr.NS_BINDING_ABORTED);
 		}catch(e){
 			error(e);

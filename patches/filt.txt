@@ -1,4 +1,3 @@
-crwdcntrl\.net/
 /(\w+\.){1,2}infoseek(\.\w+){1,2}/(bin|images)/
 //ad-hatena\.jp/
 //adimp\.excite\.co\.jp/
@@ -11,6 +10,7 @@ crwdcntrl\.net/
 //dailynews\.yahoo\.co\.jp/
 //decknetwork\.net/
 //disqus\.com/
+//easyad-us\.com/
 //feeds\.feedburner\.com/
 //geo\.yahoo\.com/
 //imp\.asahi\.com/
@@ -109,6 +109,7 @@ adriver\.ru/
 ads.*\.msn\.com/
 adserver\.yahoo\.com/
 adstatic\.ameba\.jp/
+adultadworld\.com/
 affiliate\.rakuten\.co\.jp/
 afl\.rakuten\.co\.jp/
 afy11\.net/
@@ -178,12 +179,15 @@ counters\.net/
 cpalead\.com/
 cpxinteractive\.com/
 crazyegg\.com/
+crwdcntrl\.net/
 cyberbuzz\.jp/
 d-064\.com/
 d\.thatsping\.jp/
 dcs\.yahoo\.co\.jp/
+dexplatform\.com/
 dff\.jp/
 digg\.com/
+dormitory\.com/
 doubleclick\.net/
 drembrkr\.com/
 dt00\.net/
@@ -205,6 +209,7 @@ flickr\.com/badge
 floq\.jp/
 flux\.com/
 fluxstatic\.com/
+fpctraffic\.com/
 freeonlineusers\.com/
 friendlyduck\.com/
 fruitmail\.net/

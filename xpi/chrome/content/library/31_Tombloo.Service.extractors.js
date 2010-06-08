@@ -1358,6 +1358,24 @@ Tombloo.Service.extractors = new Repository([
 	},
 	
 	{
+		name : 'Link - trim parameters',
+		ICON : 'chrome://tombloo/skin/link.png',
+		TARGET_SITES : [
+			'//itunes.apple.com/',
+		],
+		check : function(ctx){
+			return this.TARGET_SITES.some(function(re){
+				return RegExp(re).test(ctx.href);
+			});
+		},
+		extract : function(ctx){
+			var uri = createURI(ctx.href);
+			ctx.href = uri.prePath + uri.filePath;
+			return Tombloo.Service.extractors.Link.extract(ctx);
+		},
+	},
+	
+	{
 		name : 'Link - link',
 		ICON : 'chrome://tombloo/skin/link.png',
 		check : function(ctx){

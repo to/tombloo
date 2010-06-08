@@ -365,7 +365,9 @@ connect(grobal, 'browser-load', function(e){
 		}
 		
 		if(target.action){
-			target.action.execute(context);
+			withWindow(context.window, function(){
+				target.action.execute(context);
+			});
 			
 			return;
 		}
@@ -407,7 +409,14 @@ connect(grobal, 'browser-load', function(e){
 				if(parent==df && !type.test(action.type || 'menu'))
 					return;
 				
-				if(action.check && !action.check(ctx))
+				// ブラウザメニューから実行された場合はコンテキストが渡されない
+				// extractorの動作を同じにするためwithWindow内でアクションを実行する
+				if(action.check && (
+					(!ctx)? 
+						!action.check() : 
+						!withWindow(ctx.window, function(){
+							return action.check(ctx);
+						})))
 					return;
 				
 				var elmItem = appendMenuItem(parent, action.name, action.icon, !!action.children);

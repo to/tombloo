@@ -1073,11 +1073,10 @@ Tombloo.Service.extractors = new Repository([
 			return /tabelog\.com/.test(ctx.host) && /link-(left|right)/.test(ctx.target.id);
 		},
 		extract : function(ctx){
-			return {
-				type    : 'photo',
-				item    : ctx.title,
-				itemUrl : resolveRelativePath($x('id("pict")').style.backgroundImage.extract(/url\("(.*)"\)/), ctx.href),
-			}
+			ctx.target = {
+				src : resolveRelativePath($x('id("pict")').style.backgroundImage.extract(/url\("(.*)"\)/), ctx.href),
+			};
+			return Tombloo.Service.extractors['Photo - Upload from Cache'].extract(ctx);
 		},
 	},
 	

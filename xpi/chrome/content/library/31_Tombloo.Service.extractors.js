@@ -1066,6 +1066,20 @@ Tombloo.Service.extractors = new Repository([
 		},
 	},
 	
+	{
+		name : 'Photo - Tabelog',
+		ICON : 'http://r.tabelog.com/favicon.ico',
+		check : function(ctx){
+			return /tabelog\.com/.test(ctx.host) && /link-(left|right)/.test(ctx.target.id);
+		},
+		extract : function(ctx){
+			return {
+				type    : 'photo',
+				item    : ctx.title,
+				itemUrl : resolveRelativePath($x('id("pict")').style.backgroundImage.extract(/url\("(.*)"\)/), ctx.href),
+			}
+		},
+	},
 	
 	{
 		name : 'Photo - covered',

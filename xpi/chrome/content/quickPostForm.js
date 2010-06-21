@@ -412,7 +412,7 @@ FormPanel.prototype = {
 				var attrs = update({
 					id        : name,
 					name      : name,
-					value     : value,
+					value     : isArrayLike(value)? value.join(' ') : value,
 					emptytext : label,
 					hidden    : !!def.toggle,
 				}, def.attributes);
@@ -581,8 +581,8 @@ function TagsPanel(elmPanel, formPanel){
 	this.suggest = (this.tagProvider && ps.type == 'link');
 	
 	withDocument(document, function(){
-		self.elmPanel = getElement(elmPanel);
-		self.elmCompletion = self.elmPanel.appendChild(BOX({
+		self.elmPanel = elmPanel = getElement(elmPanel);
+		self.elmCompletion = elmPanel.appendChild(BOX({
 			emptytext : elmPanel.getAttribute('emptytext'),
 			class : 'completion',
 		}));
@@ -596,6 +596,8 @@ function TagsPanel(elmPanel, formPanel){
 		
 		self.elmCompletion.autoComplete = getPref('tagAutoComplete');
 		self.elmCompletion.candidates = QuickPostForm.candidates;
+		
+		self.value = elmPanel.getAttribute('value');
 		
 		if(self.suggest){
 			withDocument(document, function(){

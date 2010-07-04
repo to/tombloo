@@ -2576,7 +2576,13 @@ models.register({
 	ICON : 'http://soundcloud.com/favicon.ico',
 	
 	normalizeTrackUrl : function(url){
-		return url && url.extract('^(.+:/(/.+?){3})(/|$)');
+		if(!url)
+			return;
+		
+		url = createURI(url);
+		url = url.prePath + url.filePath;
+		
+		return url.extract('^(.+:/(/.+?){3})(/|$)');
 	},
 	
 	getPageInfo : function(url){

@@ -6,6 +6,6 @@ Tombloo.Service.actions.register({
 		return /soundcloud\.com\/.*?\/sets\//.test(ctx.href);
 	},
 	execute : function(ctx){
-		copyString($x('//a[@class="gothere button"]', ctx.document, true).map(itemgetter('href')).join('\n'));
+		copyString($x('//a[@class="gothere pl-button"]', ctx.document, true).map(itemgetter('href')).join('\n'));
 	},
 }, '----');

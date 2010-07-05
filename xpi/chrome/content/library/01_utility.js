@@ -200,8 +200,25 @@ function download(sourceURL, targetFile, useManger){
 		onStateChange    : function(progress, req, state, status){
 			useManger && download.onStateChange(progress, req, state, status);
 			
-			if(state & IWebProgressListener.STATE_STOP)
-				d.callback(targetFile);
+			if(state & IWebProgressListener.STATE_STOP){
+				broad(req);
+				
+				var res = {
+					channel      : req,
+					status       : req.responseStatus,
+					statusText   : req.responseStatusText,
+				};
+				
+				if(res.status < 400){
+					d.callback(targetFile, res);
+				}else{
+					error(res);
+					targetFile.remove(false);
+					
+					res.message = getMessage('error.http.' + res.status);
+					d.errback(res);
+				}
+			}
 		},
 	}
 	

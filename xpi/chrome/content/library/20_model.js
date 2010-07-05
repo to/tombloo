@@ -1435,7 +1435,10 @@ models.register({
 	},
 	
 	isBookmarked : function(uri){
-		return NavBookmarksService.isBookmarked(createURI(uri));
+		return this.getBookmarkId(uri) != null;
+		
+		// 存在しなくてもtrueが返ってくるようになり利用できない
+		// return NavBookmarksService.isBookmarked(createURI(uri));
 	},
 	
 	removeBookmark : function(uri){
@@ -2567,6 +2570,68 @@ models.register({
 				file.append(validateFileName(title + '.flv'));
 				return download(params.url, file, true);
 			});
+		});
+	},
+});
+
+models.register({
+	name : 'Soundcloud',
+	URL  : 'http://soundcloud.com/',
+	ICON : 'http://soundcloud.com/favicon.ico',
+	
+	normalizeTrackUrl : function(url){
+		if(!url)
+			return;
+		
+		url = createURI(url);
+		url = url.prePath + url.filePath;
+		
+		return url.extract('^(.+:/(/.+?){3})(/|$)');
+	},
+	
+	getPageInfo : function(url){
+		url = this.normalizeTrackUrl(url);
+		
+		return request(url).addCallback(function(res){
+			var doc = convertToHTMLDocument(res.responseText);
+			var tokens = url.split('/');
+			var track = tokens.pop();
+			var user = tokens.pop();
+			
+			var info = {user:user, track:track};
+			['uid', 'token'].forEach(function(prop){
+				info[prop] = res.responseText.extract('"' + prop + '":"(.+?)"');
+			});
+			
+			info.download = !!$x('//a[contains(@class, "download")]', doc);
+			info.type = (info.download)? $x('//span[contains(@class, "file-type")]/text()', doc) || 'mp3' : 'mp3';
+			
+			info.title = $x('//div[contains(@class, "info-header")]//h1', doc).textContent.replace(/[\n\r\t]/g, '');
+			
+			return info;
+		});
+	},
+	
+	download : function(url, file){
+		var self = this;
+		url = this.normalizeTrackUrl(url);
+		
+		return this.getPageInfo(url).addCallback(function(info){
+			if(!file){
+				file = getDownloadDir();
+				file.append(self.name);
+				file.append(info.user);
+				createDir(file);
+				
+				file.append(validateFileName(
+					info.title + 
+					((info.download)? '' : ' (STREAM)') + 
+					'.' + info.type));
+			}
+			
+			return download((info.download)? 
+				url + '/download' : 
+				'http://media.soundcloud.com/stream/' + info.uid + '?stream_token=' + info.token, file, true);
 		});
 	},
 });

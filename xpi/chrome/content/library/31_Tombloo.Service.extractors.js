@@ -672,17 +672,35 @@ Tombloo.Service.extractors = new Repository([
 	{
 		name : 'Photo - Kiva',
 		check : function(ctx){
-			var imgUrl = '^http://www.kiva.org/img/';
-			return (ctx.onImage && ctx.target.src.match(imgUrl)) || 
-				(ctx.onLink && ctx.link.href.match(imgUrl));
+			return (ctx.onImage && this.isOriginalUrl(ctx.target.src)) || 
+				(ctx.onLink && this.isOriginalUrl(ctx.link.href));
 		},
 		extract : function(ctx){
-			return getFinalUrl(ctx.onLink? ctx.link.href : ctx.target.src).addCallback(function(url){
+			return this.getFinalUrl(ctx.onLink? ctx.link.href : ctx.target.src).addCallback(function(url){
 				return {
 					type    : 'photo',
 					item    : ctx.title,
 					itemUrl : url,
 				}
+			});
+		},
+		isOriginalUrl : function(url){
+			return /^http:\/\/www\.kiva\.org\/img\//.test(url);
+		},
+		getFinalUrl : function(url, retryCount){
+			retryCount = retryCount || 0;
+			
+			var self = this;
+			if(!this.isOriginalUrl(url))
+				return succeed(url);
+			
+			if(retryCount > 5)
+				throw 'Kiva: retry over.';
+				
+			return getFinalUrl(url).addBoth(function(url){
+				return (retryCount? wait(3) : succeed()).addCallback(function(){
+					return self.getFinalUrl(url, ++retryCount);
+				});
 			});
 		},
 	},
@@ -1048,6 +1066,20 @@ Tombloo.Service.extractors = new Repository([
 		},
 	},
 	
+	{
+		name : 'Photo - Tabelog',
+		ICON : 'http://r.tabelog.com/favicon.ico',
+		check : function(ctx){
+			return /tabelog\.com/.test(ctx.host) && /link-(left|right)/.test(ctx.target.id);
+		},
+		extract : function(ctx){
+			return {
+				type    : 'photo',
+				item    : ctx.title,
+				itemUrl : $x('//p[@class="original-photo"]/a/@href'),
+			}
+		},
+	},
 	
 	{
 		name : 'Photo - covered',
@@ -1336,6 +1368,24 @@ Tombloo.Service.extractors = new Repository([
 				itemUrl : ctx.href,
 				body    : createFlavoredString(ctx.window.getSelection()),
 			}
+		},
+	},
+	
+	{
+		name : 'Link - trim parameters',
+		ICON : 'chrome://tombloo/skin/link.png',
+		TARGET_SITES : [
+			'//itunes.apple.com/',
+		],
+		check : function(ctx){
+			return this.TARGET_SITES.some(function(re){
+				return RegExp(re).test(ctx.href);
+			});
+		},
+		extract : function(ctx){
+			var uri = createURI(ctx.href);
+			ctx.href = uri.prePath + uri.filePath;
+			return Tombloo.Service.extractors.Link.extract(ctx);
 		},
 	},
 	

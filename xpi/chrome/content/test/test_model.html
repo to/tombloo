@@ -30,7 +30,6 @@ try {
 	})
 	*/
 	
-	
 	/*
 	// 絶対復習
 	d.addCallback(function(){
@@ -616,12 +615,13 @@ try {
 	models.FirefoxBookmark.removeBookmark(uri);
 	ok(!models.FirefoxBookmark.getBookmark(uri), 'FirefoxBookmark: ブックマークの削除');
 	ok(!models.FirefoxBookmark.isBookmarked(uri));
-
+	
 	models.FirefoxBookmark.addBookmark(params);
 	ok(models.FirefoxBookmark.isBookmarked(uri), 'FirefoxBookmark: ブックマークの追加(ハッシュ形式)');
 	models.FirefoxBookmark.removeBookmark(uri);
 	
 	
+	// NDrive
 	is(NDrive.incrementFile('/test(2).jpg'), '/test(3).jpg');
 	is(NDrive.incrementFile('test(100).jpg'), 'test(101).jpg');
 	is(NDrive.incrementFile('te.st(100).jpg'), 'te.st(101).jpg');
@@ -636,6 +636,14 @@ try {
 	
 	is(NDrive.validateFileName('<t|e:s/t>.jpg'), '(t-e-s-t).jpg');
 	is(NDrive.validateFileName('"t\\e?s*t".jpg'), "'t-e-s-t'.jpg");
+	
+	
+	// Soundcloud
+	var url = 'http://soundcloud.com/user/track';
+	is(Soundcloud.normalizeTrackUrl(url), url);
+	is(Soundcloud.normalizeTrackUrl(url + '/'), url);
+	is(Soundcloud.normalizeTrackUrl(url + '/download'), url);
+	
 	
 	d.addErrback(function(e){
 		error(e.message);

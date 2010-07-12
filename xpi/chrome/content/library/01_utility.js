@@ -209,7 +209,7 @@ function download(sourceURL, targetFile, useManger){
 					statusText   : req.responseStatusText,
 				};
 				
-				if(res.status < 400){
+				if(!res.status || res.status < 400){
 					d.callback(targetFile, res);
 				}else{
 					error(res);

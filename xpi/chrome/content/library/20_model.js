@@ -2350,16 +2350,20 @@ models.register({
 						mix_id : mixId,
 					}
 				}).addCallback(function(res){
+					var track = res.set.track;
+					
 					// 最後のトラック以降にはトラック個別情報が含まれない
-					if(!res.track.item){
+					if(!track.url){
 						d.callback(tracks);
 						return;
 					}
 					
-					res.track.number = ++number;
-					tracks.push(res.track);
+					track.number = ++number;
+					tracks.push(track);
 					me();
 				}).addErrback(function(e){
+					error(e);
+					
 					// 異常なトラックをスキップする(破損したJSONが返る)
 					if(e.message.name == 'SyntaxError')
 						me();

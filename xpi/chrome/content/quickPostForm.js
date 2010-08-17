@@ -412,7 +412,7 @@ FormPanel.prototype = {
 				var attrs = update({
 					id        : name,
 					name      : name,
-					value     : isArrayLike(value)? value.join(' ') : value,
+					value     : value.join? value.join(' ') : value,
 					emptytext : label,
 					hidden    : !!def.toggle,
 				}, def.attributes);

@@ -2503,17 +2503,18 @@ models.register({
 	convert : function(str, name){
 		var service;
 		var self = this;
-
+		
 		return this.getService(name).addCallback(function(res){
 			var strForRequest;
-
+			
 			service = res;
 			
 			charset = self.charsets[service.charset];
-			if(charset != 'utf-8')
+			if(charset != 'utf-8'){
 				strForRequest = escape(str.convertFromUnicode(charset));
-			else
+			} else {
 				strForRequest = encodeURIComponent(str);
+			}
 			
 			return request(service.url.replace(/%s/, strForRequest), {
 				charset : charset,

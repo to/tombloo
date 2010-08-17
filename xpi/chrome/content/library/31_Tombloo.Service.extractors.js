@@ -1262,15 +1262,21 @@ Tombloo.Service.extractors = new Repository([
 			return ctx.host.match('youtube.com');
 		},
 		extract : function(ctx){
-			var author = $x('id("watch-channel-stats")/a');
+			var author_anchor = $x('id("watch-channel-stats")/a', ctx.document) || $x('id("watch-username")', ctx.document);
+			if (author_anchor) {
+				var author = author_anchor.textContent;
+			} else {
+				var banner = $x('id("watch-userbanner")/descendant::img');
+				var author = banner.title;
+			}
 			ctx.title = ctx.title.replace(/[\n\r\t]+/gm, ' ').trim();
 			
 			return {
 				type      : 'video',
-				item      : ctx.title.extract(/ - (.*)/),
+				item      : ctx.title.extract(/\s- (.*)/),
 				itemUrl   : ctx.href,
 				author    : author.textContent,
-				authorUrl : author.href,
+				authorUrl : author.href
 			};
 		},
 	},

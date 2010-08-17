@@ -1097,7 +1097,7 @@ models.register({
 
 models.register({
 	name : 'Delicious',
-	ICON : 'http://delicious.com/favicon.ico',
+	ICON : 'http://www.delicious.com/favicon.ico',
 	
 	/**
 	 * ユーザーの利用しているタグ一覧を取得する。
@@ -1137,7 +1137,7 @@ models.register({
 				self.getCurrentUser();
 				
 				// ブックマークレット用画面の削除リンクを使い既ブックマークを判定する
-				return request('http://delicious.com/save', {
+				return request('http://www.delicious.com/save', {
 					queryString : {
 						noui : 1,
 						url  : url,
@@ -1152,7 +1152,7 @@ models.register({
 					return $x('id("save-' + part + '-tags")//a[contains(@class, "tag-list-tag")]/text()', doc, true);
 				}
 				return {
-					editPage : editPage = 'http://delicious.com/save?url=' + url,
+					editPage : editPage = 'http://www.delicious.com/save?url=' + url,
 					form : {
 						item        : doc.getElementById('title').value,
 						description : doc.getElementById('notes').value,
@@ -1182,7 +1182,7 @@ models.register({
 	
 	getCurrentUser : function(){
 		// FIXME: 判定不完全、_userが取得できて、かつ、ログアウトしている状態がありうる
-		if(decodeURIComponent(getCookieString('delicious.com', '_user')).match(/user=(.*?) /))
+		if(decodeURIComponent(getCookieString('www.delicious.com', '_user')).match(/user=(.*?) /))
 			return RegExp.$1;
 		
 		throw new Error(getMessage('error.notLoggedin'));
@@ -1193,7 +1193,7 @@ models.register({
 	},
 	
 	post : function(ps){
-		return request('http://delicious.com/post/', {
+		return request('http://www.delicious.com/post/', {
 			queryString :	{
 				title : ps.item,
 				url   : ps.itemUrl,
@@ -1204,7 +1204,7 @@ models.register({
 			if(!elmForm)
 				throw new Error(getMessage('error.notLoggedin'));
 			
-			return request('http://delicious.com' + $x('id("saveitem")/@action', doc), {
+			return request('http://www.delicious.com' + $x('id("saveitem")/@action', doc), {
 				redirectionLimit : 0,
 				sendContent : update(formContents(elmForm), {
 					description : ps.item,

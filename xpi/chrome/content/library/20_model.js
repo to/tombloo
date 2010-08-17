@@ -1491,6 +1491,36 @@ models.register({
 });
 
 
+models.register({
+	name : 'ReadItLater',
+	ICON : 'http://readitlaterlist.com/favicon.ico',
+	LINK : 'http://readitlaterlist.com/',
+	LOGIN_URL : 'http://readitlaterlist.com/l',
+	check : function(ps){
+		return /quote|link/.test(ps.type);
+	},
+	post : function(ps){
+		return request('http://readitlaterlist.com/edit').addCallback(function(res) {
+			var doc = convertToHTMLDocument(res.responseText);
+			var form = $x('id("content")/form', doc);
+			if(!form)
+				throw new Error(getMessage('error.notLoggedin'));
+			
+			return request('http://readitlaterlist.com/edit_process.php', {
+				queryString: {
+					BL : 1
+				},
+				sendContent: update(formContents(form), {
+					tags  : ps.tags? ps.tags.join(',') : '',
+					title : ps.item,
+					url   : ps.itemUrl
+				})
+			});
+		});
+	}
+});
+
+
 models.register(update({
 	name : 'Instapaper',
 	ICON : 'chrome://tombloo/skin/instapaper.ico',

@@ -1152,7 +1152,7 @@ models.register({
 					return $x('id("save-' + part + '-tags")//a[contains(@class, "tag-list-tag")]/text()', doc, true);
 				}
 				return {
-					editPage : editPage = 'http://www.delicious.com/save?url=' + url,
+					editPage : 'http://www.delicious.com/save?url=' + url,
 					form : {
 						item        : doc.getElementById('title').value,
 						description : doc.getElementById('notes').value,
@@ -1830,40 +1830,19 @@ models.register(update({
 	},
 	
 	getToken : function(){
-		switch (this.updateSession()){
-		case 'none':
-			throw new Error(getMessage('error.notLoggedin'));
-			
-		case 'same':
-			if(this.token)
-				return succeed(this.token);
-			
-		case 'changed':
-			var self = this;
-			return request('http://d.hatena.ne.jp/edit').addCallback(function(res){
-				if(res.responseText.match(/\srkm\s*:\s*['"](.+?)['"]/))
-					return self.token = RegExp.$1;
-			});
-		}
+		return this.getUserInfo().addCallback(itemgetter('rks'));
 	},
 	
 	getCurrentUser : function(){
-		switch (this.updateSession()){
-		case 'none':
-			return succeed('');
-			
-		case 'same':
-			if(this.user)
-				return succeed(this.user);
-			
-		case 'changed':
-			var self = this;
-			return request('http://www.hatena.ne.jp/my').addCallback(function(res){
-				return self.user = $x(
-					'id("simple-header-body")//li[@class="welcome" or @class="welcoe"]//a/text()', 
-					convertToHTMLDocument(res.responseText));
+		return this.getUserInfo().addCallback(itemgetter('name'));
+	},
+	
+	getUserInfo : function(){
+		return this.getSessionValue('userInfo', function(){
+			return request('http://b.hatena.ne.jp/my.name').addCallback(function(res){
+				return JSON.parse(res.responseText);
 			});
-		}
+		});
 	},
 	
 	reprTags: function (tags) {
@@ -1872,6 +1851,7 @@ models.register(update({
 		}).join('') : '' ;
 	},
 }, AbstractSessionService));
+
 
 models.register({
 	name : 'HatenaFotolife',
@@ -1911,9 +1891,7 @@ models.register({
 models.register(update({
 	name : 'HatenaBookmark',
 	ICON : 'http://b.hatena.ne.jp/favicon.ico',
-	
 	POST_URL : 'http://b.hatena.ne.jp/add',
-	JSON_URL : 'http://b.hatena.ne.jp/my.name',
 	
 	check : function(ps){
 		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
@@ -1924,33 +1902,31 @@ models.register(update({
 		return this.addBookmark(ps.itemUrl, null, ps.tags, joinText([ps.body, ps.description], ' ', true));
 	},
 	
-	getAuthCookie : function(){
-		return Hatena.getAuthCookie();
+	getEntry : function(url){
+		var self = this;
+		return request('http://b.hatena.ne.jp/my.entry', {
+			queryString : {
+				url : url
+			}
+		}).addCallback(function(res){
+			return JSON.parse(res.responseText);
+		});
 	},
 	
-	getToken : function(){
-		switch (this.updateSession()){
-		case 'none':
-			throw new Error(getMessage('error.notLoggedin'));
-			
-		case 'same':
-			if(this.token)
-				return succeed(this.token);
-			
-		case 'changed':
-			var self = this;
-			return request(HatenaBookmark.JSON_URL).addCallback(function(res){
-				var data = JSON.parse(res.responseText);
-				if(!data["login"])
-					throw new Error(getMessage('error.notLoggedin'));
-				self.token = data['rks'];
-				return self.token;
+	getUserTags : function(user){
+		return request('http://b.hatena.ne.jp/' + user + '/tags.json').addCallback(function(res){
+			var tags = JSON.parse(res.responseText)['tags'];
+			return items(tags).map(function(pair){
+				return {
+					name      : pair[0],
+					frequency : pair[1].count
+				}
 			});
-		}
+		});
 	},
 	
 	addBookmark : function(url, title, tags, description){
-		return HatenaBookmark.getToken().addCallback(function(token){
+		return Hatena.getToken().addCallback(function(token){
 			return request('http://b.hatena.ne.jp/bookmarklet.edit', {
 				redirectionLimit : 0,
 				sendContent : {
@@ -1973,33 +1949,36 @@ models.register(update({
 	 * @return {Object}
 	 */
 	getSuggestions : function(url){
-		return succeed().addCallback(function(){
-			if(!Hatena.getAuthCookie())
-				throw new Error(getMessage('error.notLoggedin'));
+		var self = this;
+		return Hatena.getCurrentUser().addCallback(function(user){
+			return new DeferredHash({
+				tags : self.getUserTags(user),
+				entry : self.getEntry(url),
+			});
+		}).addCallback(function(ress){
+			var entry = ress.entry[1];
+			var tags = ress.tags[1];
 			
-			return request(HatenaBookmark.POST_URL, {
-				sendContent : {
-					mode : 'confirm',
-					url  : url,
-				},
-			})
-		}).addCallback(function(res){
-			var tags = evalInSandbox(
-				'(' + res.responseText.extract(/var tags =(.*);$/m) + ')', 
-				HatenaBookmark.POST_URL) || {};
+			var duplicated = !!entry.bookmarked_data;
+			var endpoint = HatenaBookmark.POST_URL + '?' + queryString({
+				mode : 'confirm',
+				url  : url,
+			});
+			var form = {item : entry.title};
+			if(duplicated){
+				form = update(form, {
+					description : entry.bookmarked_data.comment,
+					tags        : entry.bookmarked_data.tags,
+					private     : entry.bookmarked_data.private,
+				});
+			}
 			
 			return {
-				duplicated : (/bookmarked-confirm/).test(res.responseText),
-				recommended : $x(
-					'id("recommend-tags")/span[@class="tag"]/text()', 
-					convertToHTMLDocument(res.responseText), 
-					true),
-				tags : map(function([tag, info]){
-					return {
-						name      : tag,
-						frequency : info.count,
-					}
-				}, items(tags)),
+				form        : form,
+				editPage    : endpoint,
+				tags        : tags,
+				duplicated  : duplicated,
+				recommended : entry.recommend_tags,
 			}
 		});
 	},

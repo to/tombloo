@@ -206,13 +206,13 @@ try {
 	d.addCallback(function(){
 		return Hatena.getCurrentUser();
 	}).addCallback(function(user){
-		ok(user);
+		ok(user, 'Hatena.getCurrentUser');
 	});
 	
 	d.addCallback(function(){
 		return Hatena.getToken();
 	}).addCallback(function(token){
-		ok(token);
+		ok(token, 'Hatena.getToken');
 	});
 	*/
 	
@@ -229,11 +229,10 @@ try {
 	});
 	
 	d.addCallback(function(){
-		return HatenaBookmark.getSuggestions('http://www.hatena.ne.jp/');
-	});
-	d.addCallback(function(res){
-		ok(! res.duplicated, 'HatenaBookmark: ブックマーク済みでないか');
-		ok(res.tags.length);
+		return HatenaBookmark.getSuggestions('http://jp.msn.com/');
+	}).addCallback(function(res){
+		ok(res.tags.length, 'HatenaBookmark.getSuggestions(tags)');
+		ok(res.recommended.length, 'HatenaBookmark.getSuggestions(recommended)');
 	});
 	
 	d.addCallback(bind('post', HatenaBookmark), {

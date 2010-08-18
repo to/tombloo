@@ -6,12 +6,12 @@
 		<em:id>tombloo@brasil.to</em:id>
 		<em:type>2</em:type>
 		<em:name>Tombloo</em:name>
-		<em:version>0.4.10</em:version>
+		<em:version>0.4.11</em:version>
 		<em:creator>to</em:creator>
 		<em:description></em:description>
 		<em:optionsURL>chrome://tombloo/content/prefs.xul</em:optionsURL>
 		<em:aboutURL>chrome://tombloo/content/about.xul</em:aboutURL>
-		<em:updateURL>http://github.com/to/tombloo/tree/release/update.rdf?raw=true</em:updateURL>
+		<em:updateURL>http://github.com/to/tombloo/raw/release/update.rdf</em:updateURL>
 		<em:updateKey>MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDkDKakUfa66DxM47cHMltH9sviYxIBUNLhj8c6S5zbg2atrmraQVigfxQW9Oqj13WLGl2LiZPcbekEEViEsYa8CrqYNrF6tBZmW6Zp0eZmvIMABJOZfgt/sCWs6OF15BiOgl3kP92IJzMgOhizbnYOHhtPL6U4ZBQN61SWRxIdmwIDAQAB</em:updateKey>
 		
 		<em:targetApplication>

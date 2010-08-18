@@ -413,7 +413,7 @@ models.register({
 models.register({
 	name     : 'Twitpic',
 	ICON     : 'http://twitpic.com/favicon.ico',
-	POST_URL : 'http://twitpic.com/upload/',
+	POST_URL : 'http://twitpic.com/upload',
 	
 	check : function(ps){
 		return ps.type=='photo';
@@ -426,8 +426,9 @@ models.register({
 			download(ps.itemUrl, getTempFile(createURI(ps.itemUrl).fileExtension))
 		).addCallback(function(file){
 			return self.upload({
-				media   : file,
-				message : ps.description,
+				media      : file,
+				message    : ps.description,
+				post_photo : 1, // Twitterへクロスポスト
 			});
 		});
 	},
@@ -435,10 +436,8 @@ models.register({
 	upload : function(ps){
 		var self = this;
 		return this.getToken().addCallback(function(token){
-			return request(self.POST_URL, {
-				sendContent : update(token, {
-					do_upload : 1,
-				}, ps),
+			return request(self.POST_URL + '/process', {
+				sendContent : update(token, ps),
 			});
 		});
 	},
@@ -1116,6 +1115,11 @@ models.register({
 			return request('http://feeds.delicious.com/feeds/json/tags/' + (user || Delicious.getCurrentUser()));
 		}).addCallback(function(res){
 			var tags = evalInSandbox(res.responseText, 'http://feeds.delicious.com/');
+			
+			// タグが無いか?(取得失敗時も発生)
+			if(!tags || !tags.length)
+				return [];
+			
 			return reduce(function(memo, tag){
 				memo.push({
 					name      : tag[0],

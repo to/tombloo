@@ -1117,7 +1117,7 @@ models.register({
 			var tags = evalInSandbox(res.responseText, 'http://feeds.delicious.com/');
 			
 			// タグが無いか?(取得失敗時も発生)
-			if(!tags || !tags.length)
+			if(!tags || isEmpty(tags))
 				return [];
 			
 			return reduce(function(memo, tag){

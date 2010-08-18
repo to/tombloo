@@ -591,9 +591,9 @@ Tombloo.Service.extractors = new Repository([
 				if(
 					(ctx.target.src && ctx.target.src.match('spaceball.gif')) || 
 					ctx.target.id == 'photo-drag-proxy' || 
-					$x('./ancestor-or-self::div[@id="photo_notes"]', ctx.target)
+					$x('./ancestor-or-self::div[@id="photo-drag-proxy"]', ctx.target)
 				){
-					ctx.target = $x('//img[@class="reflect"]') || ctx.target;
+					ctx.target = $x('//div[@class="photo-div"]/img') || ctx.target;
 				}
 			}
 			

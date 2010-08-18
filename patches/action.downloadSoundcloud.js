@@ -6,16 +6,25 @@
 	}
 	
 	function downloadAll(urls){
-		return deferredForEach(urls, function(url){
-			if(/\/\/soundcloud.com\/users\//.test(url))
+		urls = urls.slice(0).filter(function(url){
+			return !/\/\/soundcloud.com\/users\//.test(url);
+		});
+		
+		function getTrack(){
+			if(!urls.length)
 				return;
 			
-			return Soundcloud.download(url);
-		}).addCallback(function(){
+			var url = urls.shift();
+			return Soundcloud.download(url).addCallbacks(getTrack, function(err){
+				alert(url);
+				error(err);
+				
+				return succeed().addCallback(getTrack);
+			});
+		}
+		
+		return succeed().addCallback(getTrack).addCallback(function(){
 			notify(BASE_ACTION.name, 'End', notify.ICON_DOWNLOAD);
-		}).addErrback(function(err){
-			alert(err);
-			error(err);
 		});
 	}
 	

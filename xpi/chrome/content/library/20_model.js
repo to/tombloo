@@ -1025,6 +1025,11 @@ models.register({
 					dates   : from.toLocaleFormat('%Y%m%d') + '/' + to.toLocaleFormat('%Y%m%d'),
 					text    : title, 
 					details : description,
+					sf      : true,
+					crm     : 'AVAILABLE',
+					icc     : 'DEFAULT',
+					output  : 'js',
+					scp     : 'ONE',
 				}
 		});
 	},

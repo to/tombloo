@@ -2,21 +2,21 @@
 <RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
          xmlns:NC="http://home.netscape.com/NC-rdf#"
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Seq RDF:about="rdf:#$XEMfg2">
-    <RDF:li RDF:resource="rdf:#$YEMfg2"/>
-  </RDF:Seq>
   <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
-                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBADbKZv5IoN1g5DI0ImryamBOC5M5cyxGfaVNgWUlMiO6Mk0Yo3mLCOfm7IUnQu04EavzB1OSQ8w9gm2Np6TdfLR7jXB9ziCgdwH7vPWKO5jZzrveqjAmvS2TCRZQHMAZki98X02ez6XD3Oo+QPsFooYiJpe9duQjwJkfUfR98Hht">
-    <em:updates RDF:resource="rdf:#$XEMfg2"/>
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAJ5WU7Ytd5SFlHKXunAnW2PrKfRYFjOJ43/f/6QgiuTD5hXaE+QBcJ1nYV9oVPLTr7NtUyMMNGxgUxxs1sVtdwztuLHfS+9BUDkdFjr81RsvuLy6ctZDCLlUCpo+GrYfDRrj26ZPT3AnsgGbsiZsO8FpKccuTJ3eReMFVdeldO9D">
+    <em:updates RDF:resource="rdf:#$j2kIk2"/>
   </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$YEMfg2"
-                   em:version="0.4.9">
-    <em:targetApplication RDF:resource="rdf:#$+EMfg2"/>
+  <RDF:Description RDF:about="rdf:#$k2kIk2"
+                   em:version="0.4.10">
+    <em:targetApplication RDF:resource="rdf:#$n2kIk2"/>
   </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$+EMfg2"
+  <RDF:Description RDF:about="rdf:#$n2kIk2"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="3.5"
                    em:maxVersion="3.6.*"
                    em:updateLink="http://github.com/to/tombloo/raw/release/tombloo.xpi"
-                   em:updateHash="sha512:b47aefad84812249f258fc2033d10a0cd02a38d5d58989ceaa8e7e466df41164c31953300ce675efa2a046a1d3d447f74d428992792e530889c09ae40773c4d0" />
+                   em:updateHash="sha512:bb0315f5d06ee9d2fe0703f40cde12d04db7670c5fa928e23a1eac39f6e8c84b441b0be8bc43cc94250e331effa62f54c95e60af570481fd3111e2ded3d9b62b" />
+  <RDF:Seq RDF:about="rdf:#$j2kIk2">
+    <RDF:li RDF:resource="rdf:#$k2kIk2"/>
+  </RDF:Seq>
 </RDF:RDF>

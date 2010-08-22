@@ -5,7 +5,7 @@ Tombloo.Service.extractors = new Repository([
 			if(ctx.host != 'reader.livedoor.com' && ctx.host != 'fastladder.com')
 				return;
 			
-			var item  = $x('ancestor::div[starts-with(@id, "item_count")]', ctx.target);
+			var item  = $x('ancestor-or-self::div[starts-with(@id, "item_count")]', ctx.target);
 			if(!item)
 				return;
 			

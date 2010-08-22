@@ -2151,7 +2151,8 @@ models.register(update({
 			var self = this;
 				return request(LivedoorClip.POST_URL, {
 					queryString : {
-						link : 'http://tombloo/',
+						link  : 'http://tombloo/',
+						cache : Date.now(),
 					},
 				}).addCallback(function(res){
 					if(res.responseText.match(/"postkey" value="(.*)"/)){

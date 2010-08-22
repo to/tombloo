@@ -1503,8 +1503,6 @@ models.register({
 models.register({
 	name : 'ReadItLater',
 	ICON : 'http://readitlaterlist.com/favicon.ico',
-	LINK : 'http://readitlaterlist.com/',
-	LOGIN_URL : 'http://readitlaterlist.com/l',
 	check : function(ps){
 		return /quote|link/.test(ps.type);
 	},
@@ -1512,7 +1510,7 @@ models.register({
 		return request('http://readitlaterlist.com/edit').addCallback(function(res) {
 			var doc = convertToHTMLDocument(res.responseText);
 			var form = $x('id("content")/form', doc);
-			if(!form)
+			if(/login/.test(form.action))
 				throw new Error(getMessage('error.notLoggedin'));
 			
 			return request('http://readitlaterlist.com/edit_process.php', {

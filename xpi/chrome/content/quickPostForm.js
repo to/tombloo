@@ -49,6 +49,9 @@ function DialogPanel(position, message){
 	window.addEventListener('load', function(){
 		// 画像のロードとサイズ取得を待つ(大抵の場合キャッシュされているので正常に処理される)
 		setTimeout(function(){
+			// FIXME: エラーメッセージがあるときに見切れる問題に対応
+			window.addEventListener('resize', bind('onWindowResize', self), true);
+			
 			self.onWindowResize();
 			
 			// FIXME: 状態の復元コードを移動
@@ -77,7 +80,6 @@ function DialogPanel(position, message){
 				with(QuickPostForm.dialog.snap)
 					self.snapToContentCorner(top, left);
 			}
-			window.addEventListener('resize', bind('onWindowResize', self), true);
 			
 			self.elmWindow.style.opacity = 1;
 		}, 0);

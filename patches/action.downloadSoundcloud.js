@@ -14,16 +14,15 @@
 			if(!urls.length)
 				return;
 			
-			var url = urls.shift();
-			return Soundcloud.download(url).addCallbacks(getTrack, function(err){
-				alert(url);
-				error(err);
-				
-				return succeed().addCallback(getTrack);
-			});
+			return Soundcloud.download(urls.shift()).addCallback(getTrack);
 		}
 		
-		return succeed().addCallback(getTrack).addCallback(function(){
+		return succeed().addCallbacks(getTrack, function(err){
+			alert(err);
+			error(err);
+			
+			return succeed().addCallback(getTrack);
+		}).addCallback(function(){
 			notify(BASE_ACTION.name, 'End', notify.ICON_DOWNLOAD);
 		});
 	}
@@ -45,6 +44,16 @@
 		},
 		execute : function(ctx){
 			return downloadAll($x('//div[contains(@class, "info-header")]//h3/a', ctx.document, true).map(itemgetter('href')));
+		},
+	}), '----');
+	
+	Tombloo.Service.actions.register(update({}, BASE_ACTION, {
+		name : 'Download Soundcloud(Set/All)',
+		check : function(ctx){
+			return ctx.href.match('//soundcloud.com/.*/sets/');
+		},
+		execute : function(ctx){
+			return downloadAll($x('//span[@class="info"]/a', ctx.document, true).map(itemgetter('href')));
 		},
 	}), '----');
 	

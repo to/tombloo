@@ -802,6 +802,21 @@ Tombloo.Service.extractors = new Repository([
 	},
 	
 	{
+		name : 'Photo - BRIGIT',
+		ICON : 'http://brigit.jp/img/favicon.gif',
+		check : function(ctx){
+			return ctx.host == 'brigit.jp' && $x('ancestor::div[@id="photo_1"]', ctx.target);
+		},
+		extract : function(ctx){
+			return {
+				type    : 'photo',
+				item    : ctx.title,
+				itemUrl : $x('preceding-sibling::img', ctx.target).src,
+			}
+		},
+	},
+	
+	{
 		name : 'Photo - Google',
 		ICON : models.Google.ICON,
 		check : function(ctx){

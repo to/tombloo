@@ -1102,6 +1102,35 @@ Tombloo.Service.extractors = new Repository([
 	},
 	
 	{
+		name : 'Photo - Lightbox',
+		ICON : 'chrome://tombloo/skin/photo.png',
+		PATTERNS : [
+			{re: /(nextLink|prevLink|hoverNav)/, image: 'lightboxImage'},
+			{re: /(lbPrevLink|lbNextLink|lbImage)/, image: 'lbImage'}
+		],
+		getPattern : function(ctx){
+			var id = ctx.target.id;
+			var ps = this.PATTERNS;
+			for(var i=0 ; i<ps.length ; i++)
+				if(ps[i].re.test(id))
+					return ps[i];
+		},
+		check : function(ctx){
+			return !!this.getPattern(ctx);
+		},
+		extract : function(ctx){
+			var img  = $x('id("' + this.getPattern(ctx).image + '")');
+			return {
+				type    : 'photo',
+				item    : ctx.title,
+				itemUrl : (img instanceof Ci.nsIDOMHTMLImageElement)? 
+					img.src : 
+					resolveRelativePath(img.style.backgroundImage.extract(/\([" ]*([^"]+)/), ctx.href),
+			}
+		}
+	},
+	
+	{
 		name : 'Photo - covered',
 		ICON : 'chrome://tombloo/skin/photo.png',
 		check : function(ctx){

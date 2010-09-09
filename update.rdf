@@ -3,20 +3,20 @@
          xmlns:NC="http://home.netscape.com/NC-rdf#"
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
   <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
-                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBADf0Xm5pYiIgqnAG2Ra1mVvg24HdfaBIqBYlC7bnp5Uy+SvbtghqkZT6r9bG0rsDI0lL3FmPnOUE6uJN8j0x32A2zaIdz3avqBnhyHvdkDPvmXxIwVxc/yerscV0lTPjrCy4wfwjV4ak5yG3uCdRHAdeMcKt1YAUP9o3MnwT3EIf">
-    <em:updates RDF:resource="rdf:#$YLzYx3"/>
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAEls55ul4And584sjUQf8e0hXu6U76kO8oS0zJqlnknoJNfB5jDpYWGJ9wLfeNLXUEBtuArGCttBd/VbuHskw4GVNu874McBc8zFsm/Caz3HZbRH4TvIrVE+eLlrMDvf6Cg/GZLHCmDYPV/db4JQwXOtaVl3RU0AISKzeEFH0mzy">
+    <em:updates RDF:resource="rdf:#$1YSqw2"/>
   </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$ZLzYx3"
-                   em:version="0.4.13">
-    <em:targetApplication RDF:resource="rdf:#$0MzYx3"/>
+  <RDF:Description RDF:about="rdf:#$2YSqw2"
+                   em:version="0.4.14">
+    <em:targetApplication RDF:resource="rdf:#$5YSqw2"/>
   </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$0MzYx3"
+  <RDF:Description RDF:about="rdf:#$5YSqw2"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="3.5"
                    em:maxVersion="3.6.*"
                    em:updateLink="http://github.com/to/tombloo/raw/release/tombloo.xpi"
-                   em:updateHash="sha512:275fd8c75c115271d32ee390d037617f3e099457b9794d15ac3a6cb38653caf4acf609e528dbe2202578d1de3f9efd32276f9b5ed400e4a9a4548564f58e0a5e" />
-  <RDF:Seq RDF:about="rdf:#$YLzYx3">
-    <RDF:li RDF:resource="rdf:#$ZLzYx3"/>
+                   em:updateHash="sha512:72f0ef985050296684ef002efea6c033fbd0654ebc934d67f28c5938a3679a1d85e55dc5f3c05dab5fdd4e3a8b26aafd39f9309405aace154eaf284a910fa0cb" />
+  <RDF:Seq RDF:about="rdf:#$1YSqw2">
+    <RDF:li RDF:resource="rdf:#$2YSqw2"/>
   </RDF:Seq>
 </RDF:RDF>

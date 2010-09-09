@@ -928,6 +928,7 @@ function deferredForEach(it, func, index){
 }
 */
 
+// FIXME: JSDeferred的な解決/エラーハンドリング
 // 暫定パッチ、事前にリスト作成、無限リストに未対応
 function deferredForEach(it, func){
 	var d = new Deferred();

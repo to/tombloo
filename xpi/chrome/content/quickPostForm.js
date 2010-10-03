@@ -125,7 +125,7 @@ DialogPanel.prototype = {
 		var box = this.elmBase.boxObject;
 		QuickPostForm.dialog[ps.type] = {
 			expandedForm : this.formPanel.expanded,
-			expandedTags : this.formPanel.tagsPanel.expanded,
+			expandedTags : (this.formPanel.tagsPanel) ? this.formPanel.tagsPanel.expanded : false,
 			size : {
 				width : box.width,
 				height : box.height,
@@ -353,6 +353,12 @@ FormPanel.prototype = {
 			tags        : {toggle : true},
 			description : {toggle : true},
 		},
+    conversation: {
+			item        : {type : 'label'},
+			itemUrl     : {toggle : true},
+			tags        : {toggle : true},
+			description : {toggle : true},
+    },
 	},
 	
 	toggles : [],

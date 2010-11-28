@@ -7,6 +7,6 @@ Tombloo.Service.actions.register({
 	},
 	execute : function(ctx){
 		var user = ctx.href.extract(/soundcloud\.com\/(.*?)(\/|$)/);
-		addTab('http://pipes.yahoo.com/pipes/pipe.run?_id=zLLQDaZE3hGdsj811ZzWFw&_render=rss&username=' + user);
+		addTab('http://cloudfeeds.theblackestbox.net/users/' + user + '/tracks');
 	},
 }, '----');

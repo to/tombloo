@@ -1154,25 +1154,17 @@ models.register({
 				});
 			}).addCallback(function(res){
 				var doc = convertToHTMLDocument(res.responseText);
-				if(!doc.getElementById('title'))
-					throw new Error(getMessage('error.notLoggedin'));
-				
-				function getTags(part){
-					return $x('id("save-' + part + '-tags")//a[contains(@class, "tag-list-tag")]/text()', doc, true);
-				}
 				return {
 					editPage : 'http://www.delicious.com/save?url=' + url,
 					form : {
-						item        : doc.getElementById('title').value,
-						description : doc.getElementById('notes').value,
-						tags        : doc.getElementById('tags').value.split(' '),
-						private     : doc.getElementById('share').checked,
+						item        : doc.getElementById('saveTitle').value,
+						description : doc.getElementById('saveNotes').value,
+						tags        : doc.getElementById('saveTags').value.split(' '),
+						private     : doc.getElementById('savePrivate').checked,
 					},
 					
-					duplicated : !!doc.getElementById('delete'),
-					recommended : getTags('reco'), 
-					popular : getTags('pop'),
-					network : getTags('net'),
+					duplicated : !!doc.getElementById('savedon'),
+					recommended : $x('id("recommendedField")//span[contains(@class, "m")]/text()', doc, true), 
 				}
 			})
 		};
@@ -1209,11 +1201,11 @@ models.register({
 			},
 		}).addCallback(function(res){
 			var doc = convertToHTMLDocument(res.responseText);
-			var elmForm = doc.getElementById('saveitem');
+			var elmForm = doc.getElementById('saveForm');
 			if(!elmForm)
 				throw new Error(getMessage('error.notLoggedin'));
 			
-			return request('http://www.delicious.com' + $x('id("saveitem")/@action', doc), {
+			return request('http://www.delicious.com' + $x('id("saveForm")/@action', doc), {
 				redirectionLimit : 0,
 				sendContent : update(formContents(elmForm), {
 					description : ps.item,

@@ -9,6 +9,7 @@
 		<em:version>0.4.16</em:version>
 		<em:creator>to</em:creator>
 		<em:description></em:description>
+		<em:unpack>true<em:unpack>
 		<em:optionsURL>chrome://tombloo/content/prefs.xul</em:optionsURL>
 		<em:aboutURL>chrome://tombloo/content/about.xul</em:aboutURL>
 		<em:updateURL>http://github.com/to/tombloo/raw/release/update.rdf</em:updateURL>

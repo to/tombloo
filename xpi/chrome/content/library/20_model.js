@@ -2600,7 +2600,7 @@ models.register({
 		url = createURI(url);
 		url = url.prePath + url.filePath;
 		
-		return url.replace(/\/$/, '');
+		return url.replace(/(download|\/)+$/g, '');
 	},
 	
 	getPageInfo : function(url){

@@ -2600,10 +2600,11 @@ models.register({
 		url = createURI(url);
 		url = url.prePath + url.filePath;
 		
-		return url.extract('^(.+:/(/.+?){3})(/|$)');
+		return url.replace(/\/$/, '');
 	},
 	
 	getPageInfo : function(url){
+		var self = this;
 		url = this.normalizeTrackUrl(url);
 		
 		return request(url).addCallback(function(res){
@@ -2613,8 +2614,10 @@ models.register({
 			var user = tokens.pop();
 			
 			var info = {user:user, track:track};
-			['uid', 'token'].forEach(function(prop){
-				info[prop] = res.responseText.extract('"' + prop + '":"(.+?)"');
+			['uid', 'token', 'waveformUrl', 'streamUrl'].forEach(function(prop){
+				// Unicodeエスケープを戻す
+				var value = res.responseText.extract('"' + prop + '":"(.+?)"');
+				info[prop] = evalInSandbox('"' + value + '"', self.URL);
 			});
 			
 			info.download = !!$x('//a[contains(@class, "download")]', doc);
@@ -2643,9 +2646,7 @@ models.register({
 					'.' + info.type));
 			}
 			
-			return download((info.download)? 
-				url + '/download' : 
-				'http://media.soundcloud.com/stream/' + info.uid + '?stream_token=' + info.token, file, true);
+			return download(info.download? url + '/download' : info.streamUrl, file, true);
 		});
 	},
 });

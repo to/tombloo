@@ -17,3 +17,15 @@ function keys(o){
 function wait(ms){
 	WScript.sleep(ms);
 }
+
+function StopIteration(){};
+
+function forEach(list, fn){
+	try{
+		for(var i=0, e=new Enumerator(list) ; !e.atEnd() ; e.moveNext(), i++)
+			fn(e.item(), i);
+	} catch (e) {
+		if (e != StopIteration) 
+			throw e;
+	}
+}

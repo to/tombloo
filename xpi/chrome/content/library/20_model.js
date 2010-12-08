@@ -1988,11 +1988,11 @@ models.register( {
 	ICON: 'http://d.hatena.ne.jp/favicon.ico',
 	POST_URL : 'http://d.hatena.ne.jp',
 	
-	/*
+    
 	check : function(ps){
 		return (/(regular|photo|quote|link)/).test(ps.type) && !ps.file;
 	},
-	*/
+    
 	converters: {
 		getTitle: function(ps){
 			return Hatena.reprTags(ps.tags) + (ps.page || '')
@@ -2014,12 +2014,12 @@ models.register( {
 	post : function(params){
 		var content;
 		var self = this;
-		return models.Hatena.getToken().addCallback(function(token){
+		return Hatena.getUserInfo().addCallback(itemgetter('rkm')).addCallback(function(token){
 			content = self.converters[params.type](params);
 			content.rkm = token;
-			return models.Hatena.getCurrentUser();
-		}).addCallback(function(id){
-			var endpoint = [self.POST_URL, id, ''].join('/');
+			return Hatena.getCurrentUser();
+		}).addCallback(function(user){
+			var endpoint = [self.POST_URL, user, ''].join('/');
 			return request( endpoint, {
 				redirectionLimit : 0,
 				referrer    : endpoint,

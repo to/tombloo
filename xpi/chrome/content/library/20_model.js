@@ -733,9 +733,13 @@ models.register({
 	changePicture : function(url){
 		var self = this;
 		return ((url instanceof IFile)? succeed(url) : download(url, getTempDir())).addCallback(function(file){
-			return Twitter.getToken().addCallback(function(token){
-				return request(self.URL + '/account/picture', {
-					sendContent : update(token, {
+			return request(self.URL + '/account/settings').addCallback(function(res){
+				var form = convertToHTMLDocument(res.responseText).getElementById('account_settings_form');
+				var ps = formContents(form);
+				var endpoint = self.URL + '/settings/profile';
+				return request(endpoint, {
+					referrer : endpoint,
+					sendContent : update(ps, {
 						'profile_image[uploaded_data]' : file,
 					}),
 				});

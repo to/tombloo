@@ -2834,6 +2834,23 @@ models.register(update({}, AbstractSessionService, {
 	}
 }));
 
+models.register({
+	name : 'GazoPa',
+	icon : 'http://www.gazopa.com/favicon_gazopa.ico',
+	getSimilarImages : function(src){
+		return request('http://www.gazopa.com/similar', {
+			queryString : {
+				key_url : src,
+			}
+		}).addCallback(function(res){
+			var doc = convertToHTMLDocument(res.responseText);
+			return $x('//img[starts-with(@id, "result_img_")]/parent::a/@href', doc, true).map(function(href){
+				return parseQueryString(createURI(href).query).img_url;
+			});
+		});
+	}
+});
+
 
 // 全てのサービスをグローバルコンテキストに置く(後方互換)
 models.copyTo(this);

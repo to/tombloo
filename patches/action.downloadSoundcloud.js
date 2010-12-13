@@ -14,15 +14,16 @@
 			if(!urls.length)
 				return;
 			
-			return Soundcloud.download(urls.shift()).addCallback(getTrack);
+			return Soundcloud.download(urls.shift()).addCallbacks(getTrack, alertError);
 		}
 		
-		return succeed().addCallbacks(getTrack, function(err){
-			alert(err);
-			error(err);
+		function alertError(err){
+			alert(err.message.status + ': ' +  err.message.statusText + ': \n' + err.message.channel.URI.spec);
 			
-			return succeed().addCallback(getTrack);
-		}).addCallback(function(){
+			return succeed().addCallbacks(getTrack, alertError);
+		}
+		
+		return succeed().addCallbacks(getTrack, alertError).addCallback(function(){
 			notify(BASE_ACTION.name, 'End', notify.ICON_DOWNLOAD);
 		});
 	}

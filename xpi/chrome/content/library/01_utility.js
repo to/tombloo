@@ -1807,7 +1807,10 @@ function convertToHTMLString(src, safe){
 	// DOMツリーに戻し不要な要素を除去する
 	var root;
 	if(src.getRangeAt){
-		root = src.getRangeAt(0).commonAncestorContainer.cloneNode(false);
+		var ancestor = src.getRangeAt(0).commonAncestorContainer;
+		root = (src.anchorNode == ancestor)? 
+			doc.createElement('div') : 
+			ancestor.cloneNode(false);
 		
 		// 親にtableを持たない要素にtrを追加すると消える
 		if(tagName(root)=='tbody')

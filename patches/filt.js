@@ -33,7 +33,7 @@
 			var url = channel.URI.spec;
 			
 			// リダイレクトしている場合はメインページとして開いているか元コンテンツなので通す
-			if((REDIRECTION_LIMIT == channel.redirectionLimit) && isBlock(url))
+			if(channel.referrer && (REDIRECTION_LIMIT == channel.redirectionLimit) && isBlock(url))
 				subject.cancel(Cr.NS_BINDING_ABORTED);
 		}catch(e){
 			error(e);
@@ -45,9 +45,10 @@
 		try{
 			// メインページとして開かれた場合は無条件に通す
 			var url = contentLocation.spec;
-	 		if(contentType == TYPE_DOCUMENT)
+			
+			if(contentType == TYPE_DOCUMENT)
 				return checked[url] = false;
-	 		
+			
 			return isBlock(url);
 		}catch(e){
 			error(e);

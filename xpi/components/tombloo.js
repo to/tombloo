@@ -187,8 +187,9 @@ function loadSubScripts(files, global){
 	for(var i=0,len=files.length ; i<len ; i++){
 		// 文字化け回避のためファイル内容を取得し評価する
 		// 複数スクリプトの連結評価(30%程度の高速化)は関数定義の上書きに失敗することがあるため見送った
+		// エラー発生時に発生ファイル名を特定するためパラメーターを付加する
 		global._source = getContents(files[i]);
-		ScriptLoader.loadSubScript('chrome://tombloo/content/eval.js', global);
+		ScriptLoader.loadSubScript('chrome://tombloo/content/eval.js?file=' + files[i].leafName, global);
 	}
 }
 

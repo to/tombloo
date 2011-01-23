@@ -1042,7 +1042,7 @@ models.register({
 models.register({
 	name     : 'Evernote',
 	ICON     : 'http://www.evernote.com/favicon.ico',
-	POST_URL : 'http://www.evernote.com/clip.action',
+	POST_URL : 'https://www.evernote.com/clip.action',
 	 
 	check : function(ps){
 		return (/(regular|quote|link|conversation|video)/).test(ps.type) && !ps.file;
@@ -1079,6 +1079,9 @@ models.register({
 					fullPage : (ps.body)? 'true' : 'false',
 				}),
 			});
+		}).addBoth(function(res){
+			if(res.status != 302)
+				throw new Error('An error might occur.');
 		});
 	},
 	

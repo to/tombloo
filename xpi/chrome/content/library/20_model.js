@@ -1080,6 +1080,7 @@ models.register({
 				}),
 			});
 		}).addBoth(function(res){
+			// 正常終了していない可能性を考慮(ステータスコード200で失敗していた)
 			if(res.status != 302)
 				throw new Error('An error might occur.');
 		});

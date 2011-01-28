@@ -86,8 +86,14 @@ Module = {
 				if(env.models.hasOwnProperty(name))
 					GM_Tombloo[name] = copy({}, env.models[name], /^(?!.*(password|cookie))/i);
 			
-			env.addBefore(gm, 'evalInSandbox', function(code, codebase, sandbox){
-				sandbox.GM_Tombloo = GM_Tombloo;
+			env.addBefore(gm, 'evalInSandbox', function(){
+				for(var i=0, len=arguments.length ; i<len ; i++){
+					var arg = arguments[i];
+					if(typeof(arg) == 'object'){
+						arg.GM_Tombloo = GM_Tombloo;
+						return;
+					}
+				}
 			});
 		}
 		

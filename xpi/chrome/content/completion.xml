@@ -281,14 +281,18 @@
 				<body><![CDATA[
 					var cands = [];
 					
-					var reStrict = new RegExp('^' + hint, 'i');
+					var escapeRegExp = function(str){
+						return str.replace(/[.*+?|()\[\]{}\\]/g, '\\$&');
+					}
+					
+					var reStrict = new RegExp('^' + escapeRegExp(hint), 'i');
 					this.candidates.forEach(function(cand){
 						if(reStrict.test(cand.reading))
 							cands.push(cand.value);
 					});
 					
 					if(!cands.length){
-						var reLoose = new RegExp('^' + hint.split('').join('.*'), 'i');
+						var reLoose = new RegExp('^' + hint.split('').map(escapeRegExp).join('.*'), 'i');
 						this.candidates.forEach(function(cand){
 							if(reLoose.test(cand.reading))
 								cands.push(cand.value);

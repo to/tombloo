@@ -1,3 +1,6 @@
+component  {aec75109-b143-4e49-a708-4904cfe85ea0} components/tombloo.js
+contract   @brasil.to/tombloo-service;1 {aec75109-b143-4e49-a708-4904cfe85ea0}
+
 content  tombloo  chrome/content/
 skin     tombloo  classic  chrome/skin/
 overlay  chrome://browser/content/browser.xul  chrome://tombloo/content/browser.xul

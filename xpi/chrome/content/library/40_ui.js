@@ -193,9 +193,9 @@ forEach({
 				screen : {x : e.screenX, y : e.screenY},
 			},
 		}, win.location);
-		
+
 		var ext = Tombloo.Service.check(ctx)[0];
-		
+
 		// FIXME: xul:popup要素の使用を検討
 		var tip = doc.createElement('div');
 		tip.setAttribute('style', <>
@@ -206,15 +206,15 @@ forEach({
 			background         : #EEEEEE no-repeat;
 			position           : fixed;
 			z-index            : 999999999;
-			width              : auto; 
+			width              : auto;
 			height             : 16px;
-			overflow           : hidden; 
-			
+			overflow           : hidden;
+
 			-moz-border-radius : 4px;
 			border             : 4px solid #EEE;
 			padding-left       : 20px;
 			padding-right      : 2px;
-		</>);
+		</>.toString);
 		tip.textContent = ext.name;
 		convertToDataURL(ext.ICON).addCallback(function(dataUrl){
 			tip.style.backgroundImage = 'url(' + dataUrl + ')';
@@ -258,12 +258,30 @@ connect(grobal, 'browser-load', function(e){
 	
 	menuShare.setAttribute('accesskey', getPref('accesskey.share'));
 	
-	if(top)
+	if(top) {
 		insertSiblingNodesAfter(menuAction.parentNode, separator);
-	
-	var menuEditor = FuelApplication.extensions.get('{EDA7B1D7-F793-4e03-B074-E6F303317FB0}');
-	menuEditor = menuEditor && menuEditor.enabled;
-	
+	}
+
+	var menuEditor = false;
+	if (typeof FuelApplication !== 'undefined' && FuelApplication.extensions) {
+		menuEditor = FuelApplication.extensions.get('{EDA7B1D7-F793-4e03-B074-E6F303317FB0}');
+		menuEditor = menuEditor && menuEditor.enabled;
+	} else {
+		let { AddonManager } =
+		let (ctx = {}) Components.utils.import("resource://gre/modules/AddonManager.jsm", ctx);
+		let check = null;
+		AddonManager.getAllAddons(function callback(addons) {
+			check = addons.some(function(i) {
+				return i.id.toUpperCase() === '{EDA7B1D7-F793-4e03-B074-E6F303317FB0}';
+			});
+		});
+		let thread = Cc['@mozilla.org/thread-manager;1'].getService().mainThread;
+		while (check === null) {
+			thread.processNextEvent(true);
+		}
+		menuEditor = check;
+	}
+
 	// Menu Editor拡張によって個別メニューのイベントを取得できなくなる現象を回避
 	menuContext.addEventListener('popupshowing', function(e){
 		if(e.eventPhase != Event.AT_TARGET || (context && context.target == cwin.gContextMenu.target))

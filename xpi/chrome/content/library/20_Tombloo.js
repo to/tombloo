@@ -260,7 +260,7 @@ extend(Tombloo.Photo.prototype, {
 		return 'http://' + this.user + '.tumblr.com/post/' + this.id;
 	},
 	
-	set url(){
+	set url(target){
 	},
 	
 	checkFile : function(size){

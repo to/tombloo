@@ -22,16 +22,16 @@ updatePatchChromeManifest();
 
 function updatePatchChromeManifest(){
 	var DELIMITER = '# GENERATED';
-	
+
 	var dataDir = createURI(getDataDir()).spec;
 	var line = 'content tombloo-patch ' + dataDir;
 	var manifest = getChromeManifestFile();
 	var contents = getContents(manifest);
-	var updated = 
-		contents.split(DELIMITER).shift() + 
-		DELIMITER + '\n' + 
+	var updated =
+		contents.split(DELIMITER).shift() +
+		DELIMITER + '\n' +
 		line + '\n';
-	
+
 	if(contents != updated){
 		putContents(manifest, updated);
 		ChromeRegistry.checkForNewChrome();
@@ -40,7 +40,7 @@ function updatePatchChromeManifest(){
 
 function reload(){
 	signal(grobal, 'context-reload');
-	
+
 	loadAllSubScripts();
 	getWindows().forEach(connectToBrowser);
 }
@@ -74,7 +74,7 @@ function getCookies(host, name){
 	return filter(function(c){
 		// ホストの末尾が同一か?
 		var len = Math.min(c.host.length, host.length);
-		return (c.host.slice(-len) == host.slice(-len)) && 
+		return (c.host.slice(-len) == host.slice(-len)) &&
 			(name? c.name == name : true);
 	}, CookieManager.enumerator);
 }
@@ -125,11 +125,11 @@ function getMessage(key){
 function input(form, title){
 	if(typeof(form)=='string')
 		return PromptService.confirm(null, title, form);
-	
+
 	function m(key){
 		return getMessage(key) || key || '';
 	}
-	
+
 	// リストボックス形式のフォームか?
 	var pair;
 	if(some(form, function(p){
@@ -140,14 +140,14 @@ function input(form, title){
 		var [msg, list] = pair;
 		if(!PromptService.select(null, m(title), m(msg), list.length, list, selected))
 			return;
-		
+
 		return list[selected.value];
 	}
-	
+
 	var args = [null, m(title)];
 	for(var msg in form){
 		args.push(m(msg));
-		
+
 		// メッセージではないか？
 		if(form[msg] != null){
 			// 値を一時的にオブジェクトに変換する
@@ -156,42 +156,42 @@ function input(form, title){
 			args.push(val);
 		}
 	}
-	
+
 	var vals = values(form);
 	var method = (vals[0] == null && typeof(vals[1].value) == 'boolean')? 'confirmCheck' : 'prompt';
-	
+
 	// テキストボックスのみか？(チェックボックス不要の場合)
 	if(method=='prompt' && args.length==4)
 		args = args.concat([null, {}]);
-	
+
 	if(!PromptService[method].apply(PromptService, args))
 		return;
-	
+
 	// 返り値を取り出す
 	for(var msg in form)
 		form[msg] = form[msg] && form[msg].value;
-	
+
 	return form;
 }
 
 function download(sourceURL, targetFile, useManger){
 	var d = new Deferred();
 	var sourceURI = createURI(sourceURL);
-	
+
 	if(!targetFile)
 		targetFile = getDownloadDir();
-	
+
 	if(targetFile.exists() && targetFile.isDirectory())
 		targetFile.append(validateFileName(sourceURI.fileName));
-	
+
 	var targetURI = IOService.newFileURI(targetFile);
-	
+
 	var p = WebBrowserPersist();
 	if(useManger)
 		var download = broad(DownloadManager.addDownload(
 			DownloadManager.DOWNLOAD_TYPE_DOWNLOAD, sourceURI, targetURI,
 			null, null, Math.round(Date.now() * 1000), null, p));
-	
+
 	p.progressListener = {
 		onLocationChange : (useManger)? bind('onLocationChange', download) : function(){},
 		onProgressChange : (useManger)? bind('onProgressChange', download) : function(){},
@@ -199,61 +199,61 @@ function download(sourceURL, targetFile, useManger){
 		onStatusChange   : (useManger)? bind('onStatusChange', download)   : function(){},
 		onStateChange    : function(progress, req, state, status){
 			useManger && download.onStateChange(progress, req, state, status);
-			
+
 			if(state & IWebProgressListener.STATE_STOP){
 				broad(req);
-				
+
 				var res = {
 					channel      : req,
 					status       : req.responseStatus,
 					statusText   : req.responseStatusText,
 				};
-				
+
 				if(!res.status || res.status < 400){
 					d.callback(targetFile, res);
 				}else{
 					error(res);
 					targetFile.remove(false);
-					
+
 					res.message = getMessage('error.http.' + res.status);
 					d.errback(res);
 				}
 			}
 		},
 	}
-	
-	p.persistFlags = 
-		p.PERSIST_FLAGS_FROM_CACHE | 
-		p.PERSIST_FLAGS_REPLACE_EXISTING_FILES | 
+
+	p.persistFlags =
+		p.PERSIST_FLAGS_FROM_CACHE |
+		p.PERSIST_FLAGS_REPLACE_EXISTING_FILES |
 		p.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
 	p.saveURI(sourceURI, null, null, null, null, targetURI);
-	
+
 	return d;
 }
 
 function createDir(dir, basePath){
 	if(basePath){
 		basePath = (basePath instanceof IFile)? basePath.path : basePath;
-		
+
 		if(basePath.slice(-1) != PATH_DELIMITER)
 			basePath += PATH_DELIMITER;
 	} else {
-		basePath = ''; 
+		basePath = '';
 	}
-	
+
 	dir = basePath + ((dir instanceof IFile)? dir.path : dir);
 	dir = dir.replace(/[\/\\]/g, PATH_DELIMITER);
-	
+
 	// 複数階層を一度に作成するため新しくインスタンスを生成する
 	dir = new LocalFile(dir);
-	
+
 	if(dir.exists()){
 		if(dir.isDirectory())
 			dir.permissions = 0774;
 	} else {
 		dir.create(dir.DIRECTORY_TYPE, 0774);
 	}
-	
+
 	return dir;
 }
 
@@ -272,14 +272,14 @@ function clearCollision(file){
 function getContentDir(){
 	var contentDir = getExtensionDir(EXTENSION_ID);
 	contentDir.setRelativeDescriptor(contentDir, 'chrome/content');
-	
+
 	return contentDir;
 }
 
 function getPatchDir(){
 	var dir = getDataDir();
 	dir.append('script');
-	
+
 	return createDir(dir);
 }
 
@@ -287,7 +287,7 @@ function getDataDir(name){
 	var path = 'file:///' + getPref('dataDir').replace(/\{(.*?)\}/g, function(all, name){
 		return DirectoryService.get(name, IFile).path;
 	}).replace(/\\/g, '/')
-	
+
 	var dir = createDir(getLocalFile(path));
 	name && dir.append(name);
 	return dir;
@@ -296,21 +296,21 @@ function getDataDir(name){
 function getTempDir(name){
 	var dir = DirectoryService.get('TmpD', IFile);
 	name && dir.append(name);
-	
+
 	return dir;
 }
 
 function getTempFile(ext){
 	var file = getTempDir();
 	file.append(joinText(['tombloo_' + (new Date()).getTime(), ext], '.'));
-	
+
 	return file;
 }
 
 function getChromeManifestFile(){
 	var manifest = getExtensionDir(EXTENSION_ID);
 	manifest.append('chrome.manifest');
-	
+
 	return manifest;
 }
 
@@ -320,7 +320,7 @@ function addChromeManifest(line){
 	var contents = getContents(manifest);
 	if(re.test(contents))
 		return;
-	
+
 	putContents(manifest, contents + line + '\n');
 	ChromeRegistry.checkForNewChrome();
 }
@@ -331,7 +331,7 @@ function removeChromeManifest(line){
 	var contents = getContents(manifest);
 	if(!re.test(contents))
 		return;
-	
+
 	putContents(manifest, contents.replace(re, ''));
 	ChromeRegistry.checkForNewChrome();
 }
@@ -347,9 +347,9 @@ function removeChromeManifest(line){
 function openProgressDialog(progress, max, value){
 	if(!(progress instanceof Progress))
 		progress = new Progress(progress, max, value);
-	
+
 	openDialog('chrome://tombloo/content/library/progressDialog.xul', 'dialog,centerscreen', progress);
-	
+
 	return progress;
 }
 
@@ -361,7 +361,7 @@ function openProgressDialog(progress, max, value){
  * @param {Object} value ウィンドウへ渡す値。
  */
 function openDialog(url, features, value){
-	var win = getMostRecentWindow(); 
+	var win = getMostRecentWindow();
 	var args = Array.slice(arguments);
 	args.splice(1, 0, '_blank')
 	return win.openDialog.apply(win, args);
@@ -388,13 +388,13 @@ function addTab(url, background){
 	var browser = tab.linkedBrowser;
 	if(!background)
 		tabbrowser.selectedTab = tab;
-	
+
 	browser.addEventListener('DOMContentLoaded', function(event){
 		browser.removeEventListener('DOMContentLoaded', arguments.callee, true);
-		
+
 		d.callback(wrappedObject(event.originalTarget.defaultView));
 	}, true);
-	
+
 	return d;
 }
 
@@ -402,7 +402,7 @@ function getContents(file, charset){
 	file = getLocalFile(file);
 	if(!file.exists())
 		return '';
-	
+
 	try{
 		return withStream(new FileInputStream(file, -1, 0, false), function(fis){
 			return withStream(new ConverterInputStream(fis, charset, fis.available()), function(cis){
@@ -415,7 +415,7 @@ function getContents(file, charset){
 }
 
 function putContents(file, text, charset){
-	withStream(new FileOutputStream(file, 
+	withStream(new FileOutputStream(file,
 		FileOutputStream.PR_WRONLY | FileOutputStream.PR_CREATE_FILE | FileOutputStream.PR_TRUNCATE, 420, -1), function(stream){
 		text = text.convertFromUnicode(charset);
 		stream.write(text, text.length);
@@ -426,18 +426,18 @@ function putContents(file, text, charset){
  * 外部エディタでファイルを開く。
  * Greasemonkeyで設定されているエディタ、または、ブラウザでソースを開く時に使われるエディタが呼び出される。
  *
- * @param {nsIFile || String} path 対象ファイルのパス。 
+ * @param {nsIFile || String} path 対象ファイルのパス。
  */
 function openInEditor(path){
 	if(path instanceof IFile)
 		path = path.path;
-	
-	var app = 
-		getLocalFile(getPrefValue('greasemonkey.editor')) || 
+
+	var app =
+		getLocalFile(getPrefValue('greasemonkey.editor')) ||
 		getLocalFile(getPrefValue('view_source.editor.path'));
 	if(!app || !app.exists())
 		return;
-	
+
 	if(AppInfo.OS == 'Darwin'){
 		var args = ['-a', app.path, path];
 		app = new LocalFile('/usr/bin/open');
@@ -445,10 +445,10 @@ function openInEditor(path){
 	} else {
 		var args = [path];
 	}
-	
+
 	new Process(app).run(false, args, args.length);
 }
-	
+
 /**
  * チャンネルにクッキーを付加する。
  *
@@ -458,9 +458,9 @@ function setCookie(channel){
 	// サードパーティのクッキーを送信するか?
 	if(!channel.QueryInterface(Ci.nsIHttpChannel) || getPrefValue('network.cookie.cookieBehavior') != 1)
 		return channel;
-	
+
 	channel.setRequestHeader('Cookie', getCookieString(channel.originalURI.host), true);
-	
+
 	return channel;
 }
 
@@ -474,35 +474,35 @@ function setCookie(channel){
  * @param {Object} opts.headers リクエストヘッダー。
  * @param {String} opts.charset 文字セット。指定されない場合、レスポンスヘッダの文字セットが使われる。
  * @param {String || Object} opts.queryString クエリ。
- * @param {String || Object} opts.sendContent 
+ * @param {String || Object} opts.sendContent
  *        コンテント。設定されているとPOSTメソッドになる。値に直接ファイルをセットしてもよい。
  * @param {nsIInputStream || nsIFile} opts.KEY.file アップロードファイル。
- * @param {String} opts.KEY.fileName 
+ * @param {String} opts.KEY.fileName
  *        サーバーへ送信するファイル名。指定されない場合、元のファイル名が使われる。
- * @param {String} opts.KEY.contentType 
+ * @param {String} opts.KEY.contentType
  *        コンテントタイプ。指定されない場合、application/octet-streamになる。
  */
 function request(url, opts){
 	var d = new Deferred();
-	
+
 	opts = opts || {};
-	
+
 	var uri = createURI(joinText([url, queryString(opts.queryString)], '?'));
 	var channel = broad(IOService.newChannelFromURI(uri));
-	
+
 	if(opts.referrer)
 		channel.referrer = createURI(opts.referrer);
-	
+
 	if(opts.headers)
 		items(opts.headers).forEach(function([key, value]){
 			channel.setRequestHeader(key, value, true);
 		});
-	
+
 	setCookie(channel);
-	
+
 	if(opts.sendContent){
 		var contents = opts.sendContent;
-		
+
 		// マルチパートチェック/パラメーター準備
 		var multipart;
 		for(var name in contents){
@@ -510,25 +510,25 @@ function request(url, opts){
 			var value = contents[name];
 			if(value instanceof IInputStream || value instanceof IFile)
 				value = contents[name] = {file : value};
-			
+
 			if(value && value.file)
 				multipart = true;
 		}
-		
+
 		if(!multipart){
 			contents = queryString(contents);
 			channel.setUploadStream(
-				new StringInputStream(contents), 
+				new StringInputStream(contents),
 				'application/x-www-form-urlencoded', -1);
 		} else {
 			var boundary = '---------------------------' + (new Date().getTime());
 			var streams = [];
-			
+
 			for(var name in contents){
 				var value = contents[name];
 				if(value==null)
 					continue;
-				
+
 				if(!value.file){
 					streams.push([
 						'--' + boundary,
@@ -542,7 +542,7 @@ function request(url, opts){
 						value.fileName = value.file.leafName;
 						value.file = IOService.newChannelFromURI(createURI(value.file)).open();
 					}
-					
+
 					streams.push([
 						'--' + boundary,
 						'Content-Disposition: form-data; name="' + name + '"; filename="' + (value.fileName || '_') + '"',
@@ -554,22 +554,22 @@ function request(url, opts){
 				}
 			}
 			streams.push('--' + boundary + '--');
-			
+
 			var mimeStream = new MIMEInputStream(new MultiplexInputStream(streams));
 			mimeStream.addHeader('Content-Type', 'multipart/form-data; boundary=' + boundary);
 			channel.setUploadStream(mimeStream, null, -1);
 		}
 	}
-	
+
 	var redirectionCount = 0;
 	var listener = {
 		QueryInterface : createQueryInterface([
-			'nsIStreamListener', 
-			'nsIProgressEventSink', 
-			'nsIHttpEventSink', 
-			'nsIInterfaceRequestor', 
+			'nsIStreamListener',
+			'nsIProgressEventSink',
+			'nsIHttpEventSink',
+			'nsIInterfaceRequestor',
 			'nsIChannelEventSink']),
-		
+
 		isAppOfType : function(val){
 			// http://hg.mozilla.org/mozilla-central/file/FIREFOX_3_1b2_RELEASE/docshell/base/nsILoadContext.idl#l78
 			//
@@ -583,11 +583,11 @@ function request(url, opts){
 			//   APP_TYPE_EDITOR  2
 			return (val == 0);
 		},
-		
+
 		// nsIProgressEventSink
 		onProgress : function(req, ctx, progress, progressMax){},
 		onStatus : function(req, ctx, status, statusArg){},
-		
+
 		// nsIInterfaceRequestor
 		getInterface : function(iid){
 			// Firefox 2でnsIPromptを要求されエラーになるため判定処理を外す
@@ -595,19 +595,19 @@ function request(url, opts){
 			// http://developer.mozilla.org/ja/docs/Creating_Sandboxed_HTTP_Connections
 			return this;
 		},
-		
+
 		// nsIHttpEventSink
 		onRedirect : function(oldChannel, newChannel){},
-		
+
 		// nsIChannelEventSink
 		onChannelRedirect : function(oldChannel, newChannel, flags){
 			// channel.redirectionLimitを使うとリダイレクト後のアドレスが取得できない
 			redirectionCount++;
-			
+
 			if(opts.redirectionLimit!=null && redirectionCount>opts.redirectionLimit){
 				// NS_ERROR_REDIRECT_LOOP
 				newChannel.cancel(2152398879);
-				
+
 				var res = {
 					channel : newChannel,
 					responseText : '',
@@ -615,20 +615,20 @@ function request(url, opts){
 					statusText : oldChannel.responseStatusText,
 				};
 				d.callback(res);
-				
+
 				return;
 			}
-			
+
 			// HEADメソッドを引き継ぐ(GETに変わり遅くならないように)
 			broad(oldChannel);
 			if(oldChannel.requestMethod == 'HEAD'){
 				broad(newChannel);
 				newChannel.requestMethod = 'HEAD';
 			}
-			
+
 			setCookie(newChannel);
 		},
-		
+
 		// nsIStreamListener
 		onStartRequest: function(req, ctx){
 			this.data = [];
@@ -640,14 +640,14 @@ function request(url, opts){
 			// Firefox 3ではcancelするとonStopRequestは呼ばれない
 			if(opts.redirectionLimit!=null && redirectionCount>opts.redirectionLimit)
 				return;
-			
+
 			broad(req);
-			
+
 			var text = this.data.join('');
 			try{
 				var charset = opts.charset || req.contentCharset || text.extract(/content=["'].*charset=(.+?)[;"']/i);
 				text = charset? text.convertToUnicode(charset) : text;
-				
+
 				var res = {
 					channel      : req,
 					responseText : text,
@@ -663,35 +663,35 @@ function request(url, opts){
 					statusText   : null,
 				};
 			}
-			
+
 			if(Components.isSuccessCode(status) && res.status < 400){
 				d.callback(res);
 			}else{
 				error(res);
-				
+
 				res.message = getMessage('error.http.' + res.status);
 				d.errback(res);
 			}
 		},
 	};
-	
-	channel.requestMethod = 
-		(opts.method)? opts.method : 
+
+	channel.requestMethod =
+		(opts.method)? opts.method :
 		(opts.sendContent)? 'POST' : 'GET';
 	channel.notificationCallbacks = listener;
 	channel.asyncOpen(listener, null);
-	
+
 	// 確実にガベージコレクトされるように解放する
 	listener = null;
 	channel = null;
-	
+
 	return d;
 }
 
 function getMimeType(file){
 	try{
 		return (file instanceof IFile)?
-			MIMEService.getTypeFromFile(file) : 
+			MIMEService.getTypeFromFile(file) :
 			MIMEService.getTypeFromExtension(file)
 	}catch(e){
 		// 取得に失敗するとエラーが発生する(拡張子が無い場合など)
@@ -709,10 +709,10 @@ function connected(src, sig){
 }
 
 function maybeDeferred(d) {
-	return typeof(d) == 'function'? 
-		MochiKit.Async.maybeDeferred(d) : 
-		(d==null || !d.addCallback)? 
-			succeed(d) : 
+	return typeof(d) == 'function'?
+		MochiKit.Async.maybeDeferred(d) :
+		(d==null || !d.addCallback)?
+			succeed(d) :
 			d;
 }
 
@@ -723,28 +723,28 @@ MochiKit.Base.update(MochiKit.Signal.Event.prototype, {
 	},
 	isStopped : function(){
 		var evt = this.event();
-		
+
 		return evt.getPreventDefault ?
 			evt.getPreventDefault() :
 			evt.cancelBubble;
 	},
-	
+
 	// FIXME: 統合、現在Stroboで利用
 	keyString : function(){
 		var keys = [];
-		
+
 		var mod = this.modifier();
 		mod.ctrl && keys.push('CTRL');
 		mod.shift && keys.push('SHIFT');
 		mod.alt && keys.push('ALT');
-		
+
 		var key = this.key();
 		if(key){
 			key = key.string.replace(/^KEY_/, '');
 			if(!keys.some(function(i){return i==key}))
 				keys.push(key);
 		}
-		
+
 		return keys.join('+');
 	},
 })
@@ -757,7 +757,7 @@ MochiKit.Base.update(MochiKit.Signal._specialKeys, {
 function formContents(elm){
 	if(typeof(elm)=='string')
 		elm = convertToHTMLDocument(elm);
-	
+
 	return reduce(function(p, a){
 		p[a[0]]=a[1];
 		return p;
@@ -767,21 +767,21 @@ function formContents(elm){
 function queryString(params, charset){
 	if(isEmpty(params))
 		return '';
-	
+
 	if(typeof(params)=='string')
 		return params;
-	
+
 	// EUCエンコードなどに対応
 	var e = (charset)? function(str){
 		return escape((''+str).convertFromUnicode(charset))
 	} : encodeURIComponent;
-	
+
 	var qeries = [];
 	for(var key in params){
 		var value = params[key];
 		if(value==null)
 			continue;
-		
+
 		if(value instanceof Array){
 			value.forEach(function(val){
 				qeries.push(e(key) + '=' + e(val));
@@ -794,17 +794,17 @@ function queryString(params, charset){
 }
 
 registerIteratorFactory(
-	'SimpleEnumerator', 
+	'SimpleEnumerator',
 	function(it){
 		return it && typeof(it.hasMoreElements) == "function";
-	}, 
+	},
 	function(it){
 		var ifcs;
 		return {
 			next: function(){
 				if(!it.hasMoreElements())
 					throw StopIteration;
-				
+
 				var res = it.getNext();
 				if(!ifcs)
 					ifcs = getInterfaces(res);
@@ -814,27 +814,27 @@ registerIteratorFactory(
 	});
 
 registerIteratorFactory(
-	'TreeWalker', 
+	'TreeWalker',
 	function(it){
 		return it instanceof Ci.nsIDOMTreeWalker;
-	}, 
+	},
 	function(it){
 		return {
 			next: function(){
 				var elm;
 				if(!(elm = it.nextNode()))
 					throw StopIteration;
-				
+
 				return elm;
 			}
 		};
 	});
 
 registerIteratorFactory(
-	'XPathResult', 
+	'XPathResult',
 	function(it){
 		return it instanceof Ci.nsIDOMXPathResult;
-	}, 
+	},
 	function(it){
 		var i = 0;
 		var len = it.snapshotLength;
@@ -842,19 +842,19 @@ registerIteratorFactory(
 			next: function(){
 				if(i >= len)
 					throw StopIteration;
-				
+
 				return it.snapshotItem(i++);
 			}
 		};
-	}, 
+	},
 	// iterateNextにマッチしないように先頭に追加する
 	true);
 
 registerIteratorFactory(
-	'XML', 
+	'XML',
 	function(it){
 		return typeof(it) == "xml";
-	}, 
+	},
 	function(it){
 		var i = 0;
 		var len = it.length();
@@ -862,7 +862,7 @@ registerIteratorFactory(
 			next: function(){
 				if(i >= len)
 					throw StopIteration;
-				
+
 				return it[i++];
 			}
 		};
@@ -870,10 +870,10 @@ registerIteratorFactory(
 
 if(NavHistoryService){
 	registerIteratorFactory(
-		'nsINavHistoryContainerResultNode', 
+		'nsINavHistoryContainerResultNode',
 		function(it){
 			return it instanceof Ci.nsINavHistoryContainerResultNode;
-		}, 
+		},
 		function(it){
 			var i = 0;
 			var len = it.childCount;
@@ -881,7 +881,7 @@ if(NavHistoryService){
 				next: function(){
 					if(i >= len)
 						throw StopIteration;
-					
+
 					return it.getChild(i++);
 				}
 			};
@@ -890,10 +890,10 @@ if(NavHistoryService){
 
 // 実験的、itemsの利用を推奨
 registerIteratorFactory(
-	'Object', 
+	'Object',
 	function(it){
 		return it && typeof(it) == "object";
-	}, 
+	},
 	function(it){
 		var props = keys(it).filter(function(prop){
 			return it.hasOwnProperty(prop);
@@ -903,7 +903,7 @@ registerIteratorFactory(
 				var prop = props.shift();
 				if(!prop)
 					throw StopIteration;
-				
+
 				return [prop, it[prop]];
 			}
 		};
@@ -913,7 +913,7 @@ registerIteratorFactory(
 function deferredForEach(it, func, index){
 	index = index || 0;
 	it = iter(it);
-	
+
 	var d = succeed();
 	try{
 		return d.
@@ -940,17 +940,17 @@ function deferredForEach(it, func){
 	d.addErrback(function(err){
 		if(err.message==StopIteration)
 			return;
-		
+
 		throw err;
 	});
 	d.callback();
-	
+
 	return d;
 }
 
 function DeferredHash(ds){
 	var props = keys(ds);
-	
+
 	return new DeferredList(values(ds)).addCallback(function(results){
 		var res = {};
 		for (var i = 0; i < results.length; i++)
@@ -970,7 +970,7 @@ function getViewDimensions(){
 		d.h = doc.body.clientHeight;
 		d.w = doc.body.clientWidth;
 	}
-	
+
 	return d;
 }
 
@@ -985,7 +985,7 @@ function getPageDimensions(){
 		d.h = doc.body.scrollHeight;
 		d.w = doc.body.scrollWidth;
 	}
-	
+
 	return d;
 }
 
@@ -997,7 +997,7 @@ function getElementPosition(elm){
 
 function roundPosition(p){
 	return new Coordinates(
-		Math.round(p.x), 
+		Math.round(p.x),
 		Math.round(p.y));
 }
 
@@ -1028,7 +1028,7 @@ String.katakana = {
 	'ピャ':'pya','ピィ':'pyi','ピュ':'pyu','ピェ':'pye','ピョ':'pyo',
 	'ミャ':'mya','ミィ':'myi','ミュ':'myu','ミェ':'mye','ミョ':'myo',
 	'リャ':'rya','リィ':'ryi','リュ':'ryu','リェ':'rye','リョ':'ryo',
-	
+
 	'ア':'a','イ':'i','ウ':'u','エ':'e','オ':'o',
 	'カ':'ka','キ':'ki','ク':'ku','ケ':'ke','コ':'ko',
 	'サ':'sa','シ':'shi','ス':'su','セ':'se','ソ':'so',
@@ -1044,7 +1044,7 @@ String.katakana = {
 	'ダ':'da','ヂ':'di','ヅ':'du','デ':'de','ド':'do',
 	'バ':'ba','ビ':'bi','ブ':'bu','ベ':'be','ボ':'bo',
 	'パ':'pa','ピ':'pi','プ':'pu','ペ':'pe','ポ':'po',
-	
+
 	'ァ':'la','ィ':'li','ゥ':'lu','ェ':'le','ォ':'lo',
 	'ヵ':'lka','ヶ':'lke','ッ':'ltu',
 	'ャ':'lya','ュ':'lyu','ョ':'lyo','ヮ':'lwa',
@@ -1058,7 +1058,7 @@ Array.prototype = update(Array.prototype, {
 		var res = [];
 		for(var i=0,len=this.length ; i<len ;)
 			res.push(this.slice(i, i+=step));
-		
+
 		return res;
 	},
 });
@@ -1068,53 +1068,53 @@ Array.prototype = update(Array.prototype, {
 function debug(msg){
 	if(!getPref('debug'))
 		return msg;
-	
+
 	return log(msg);
 }
 
 function log(msg){
-	firebug('log', arguments) || 
+	firebug('log', arguments) ||
 		ConsoleService.logStringMessage(''+msg);
-	
+
 	return msg;
 }
 
 function error(err){
-	firebug('error', arguments) || 
+	firebug('error', arguments) ||
 		Components.utils.reportError(err);
-	
+
 	return err;
 }
 
 function warn(msg){
-	firebug('warn', arguments) || 
+	firebug('warn', arguments) ||
 		ConsoleService.logMessage(new ScriptError(msg, null, null, null, null, ScriptError.warningFlag, null));
-	
+
 	return msg;
 }
 
 function firebug(method, args){
 	if(!getPref('useFirebug'))
 		return false;
-	
+
 	var win = getMostRecentWindow();
 	if(win.FirebugConsole && win.FirebugContext) {
 		var console = new win.FirebugConsole(win.FirebugContext, win.content);
 		console[method].apply(console, args);
 		return true;
 	}
-	
+
 	// Firebug 1.2~
 	if( win.Firebug && win.Firebug.Console ){
 		try {
 			win.Firebug.Console.logFormatted.call(win.Firebug.Console, Array.slice(args), win.FirebugContext, method);
-			
+
 			return true;
 		} catch(e) {
 			// Firebug 1.4.5でコンソールが開かれていないときに発生するエラーを抑止する
 		}
 	}
-	
+
 	return false;
 }
 
@@ -1143,7 +1143,7 @@ function populateForm(form, values){
 		var control = $x('//*[@name="' + name + '"]', form);
 		if(!control || !values[name])
 			continue;
-		
+
 		if(control.type == 'checkbox'){
 			if(control.value == values[name])
 				control.checked = true;
@@ -1179,34 +1179,34 @@ function absolutePath(path){
 /**
  * オブジェクトのプロパティをコピーする。
  * ゲッター/セッターの関数も対象に含まれる。
- * 
+ *
  * @param {Object} target コピー先。
  * @param {Object} source コピー元。
  * @return {Object} コピー先。
  */
 function extend(target, source, overwrite){
 	overwrite = overwrite==null? true : overwrite;
-	
+
 	for(var p in source){
 		var getter = source.__lookupGetter__(p);
 		if(getter)
 			target.__defineGetter__(p, getter);
-		
+
 		var setter = source.__lookupSetter__(p);
 		if(setter)
 			target.__defineSetter__(p, setter);
-		
+
 		if(!getter && !setter && (overwrite || !(p in target)))
 			target[p] = source[p];
 	}
-	
+
 	return target;
 }
 
 /**
  * メソッドが呼ばれる前に処理を追加する。
  * より詳細なコントロールが必要な場合はaddAroundを使うこと。
- * 
+ *
  * @param {Object} target 対象オブジェクト。
  * @param {String} name メソッド名。
  * @param {Function} before 前処理。
@@ -1223,22 +1223,22 @@ function addBefore(target, name, before) {
 /**
  * メソッドへアラウンドアドバイスを追加する。
  * 処理を置きかえ、引数の変形や、返り値の加工をできるようにする。
- * 
+ *
  * @param {Object} target 対象オブジェクト。
- * @param {String || Array} methodNames 
+ * @param {String || Array} methodNames
  *        メソッド名。複数指定することもできる。
  *        set*のようにワイルドカートを使ってもよい。
- * @param {Function} advice 
+ * @param {Function} advice
  *        アドバイス。proceed、args、target、methodNameの4つの引数が渡される。
  *        proceedは対象オブジェクトにバインド済みのオリジナルのメソッド。
  */
 function addAround(target, methodNames, advice){
 	methodNames = [].concat(methodNames);
-	
+
 	// ワイルドカードの展開
 	for(var i=0 ; i<methodNames.length ; i++){
 		if(methodNames[i].indexOf('*')==-1) continue;
-		
+
 		var hint = methodNames.splice(i, 1)[0];
 		hint = new RegExp('^' + hint.replace(/\*/g, '.*'));
 		for(var prop in target) {
@@ -1246,7 +1246,7 @@ function addAround(target, methodNames, advice){
 				methodNames.push(prop);
 		}
 	}
-	
+
 	methodNames.forEach(function(methodName){
 		var method = target[methodName];
 		target[methodName] = function() {
@@ -1254,7 +1254,7 @@ function addAround(target, methodNames, advice){
 			return advice(
 				function(args){
 					return method.apply(self, args);
-				}, 
+				},
 				arguments, self, methodName);
 		};
 		target[methodName].overwrite = (method.overwrite || 0) + 1;
@@ -1264,7 +1264,7 @@ function addAround(target, methodNames, advice){
 function cache(fn, ms){
 	var executed;
 	var res;
-	
+
 	var deferred = false;
 	var waiting = false;
 	var pendings;
@@ -1276,30 +1276,30 @@ function cache(fn, ms){
 			if(waiting){
 				var d = new Deferred();
 				pendings.push(d);
-				
+
 				return d;
 			}
-			
+
 			return deferred? succeed(res) : res;
 		}
-		
+
 		executed = now;
 		res = fn.apply(null, arguments)
-		
+
 		if(res instanceof Deferred){
 			deferred = true;
 			waiting  = true;
 			pendings = [];
-			
+
 			return res.addCallback(function(result){
 				res = result;
 				waiting = false;
-				
+
 				// 結果の確定待ちがあればそれらを先に呼び出す(順序が逆転する)
 				pendings.forEach(function(d){
 					d.callback(res);
 				});
-				
+
 				return res;
 			});
 		} else {
@@ -1313,7 +1313,7 @@ function cache(fn, ms){
  * 空要素は除外される。
  * 配列が空の場合は、空文字列が返される。
  * 配列の入れ子は直列化される。
- * 
+ *
  * @param {Array} txts 文字列配列。
  * @param {String} delm 区切り文字列。
  * @param {Boolean} trimTag 各文字列からHTMLタグを除外するか。
@@ -1322,7 +1322,7 @@ function cache(fn, ms){
 function joinText(txts, delm, trimTag){
 	if(!txts)
 		return '';
-	
+
 	if(delm==null)
 		delm = ',';
 	txts = flattenArray([].concat(txts).filter(function(txt){
@@ -1344,59 +1344,59 @@ function validateFileName(fileName){
 	else if (navigator.appVersion.indexOf("Macintosh") != -1){
 		return fileName.replace(/[\:\/]+/g, "_");
 	}
-	
+
 	return fileName.replace(/[\/]+/g, "_");
 }
 
 /**
  * Windows上でWSHを実行する。
  * 将来Deferredを用いるrunWSHに移行される。
- * 
+ *
  * @param {Function} func WSHスクリプト。
- * @param {Array} args WSHスクリプトの引数。 
- * @param {Boolean} async 非同期で実行するか。 
+ * @param {Array} args WSHスクリプトの引数。
+ * @param {Boolean} async 非同期で実行するか。
  * @return {String} WSHスクリプトの実行結果。
  */
 function executeWSH(func, args, async){
 	error('deprecated: executeWSH');
-	
+
 	var res;
 	runWSH(func, args, !async).addCallback(function(r){
 		res = r;
 	});
-	
+
 	return res;
 }
 
 /**
  * Windows上でWSHを実行する。
  * スクリプト内から表示された文字列はコールバックされる。
- * 
+ *
  * @param {Function} func WSHスクリプト。
- * @param {Array} args WSHスクリプトの引数。 
+ * @param {Array} args WSHスクリプトの引数。
  * @param {Boolean} blocking 同期で実行するか。デフォルトは非同期。
  * @return {Deferred}
  */
 function runWSH(func, args, blocking){
 	args = (args==null)? [] : [].concat(args);
 	args.unshift(func);
-	
+
 	var d = new Deferred();
-	
+
 	var bat = getTempFile('bat');
 	var script = getTempFile();
 	var out = new LocalFile(script.path + '.out');
-	
+
 	// リダイレクト結果を取得するためバッチ経由で実行する
 	putContents(bat, [
-		'cscript //E:JScript //Nologo', 
-		script.path.quote(), 
+		'cscript //E:JScript //Nologo',
+		script.path.quote(),
 		'>',
 		out.path.quote()
 	].join(' '));
 	putContents(script,
-		runWSH.utility +  
-		'var ARGS = ' + uneval(args) + ';\n' + 
+		runWSH.utility +
+		'var ARGS = ' + uneval(args) + ';\n' +
 		uneval(function(){
 			try{
 				WScript.echo('(' + JSON.stringify(ARGS.shift().apply(null, ARGS)) + ')');
@@ -1404,14 +1404,14 @@ function runWSH(func, args, blocking){
 				WScript.echo('throw ' + JSON.stringify(e) + ';');
 			}
 		}) + '();');
-	
+
 	var end = function(){
 		var res = getContents(out, 'Shift-JIS').replace(/\s+$/, '');
-		
+
 		out.remove(false);
 		bat.remove(false);
 		script.remove(false);
-		
+
 		try{
 			res = eval(res);
 			d.callback(res);
@@ -1419,7 +1419,7 @@ function runWSH(func, args, blocking){
 			d.errback(e);
 		}
 	};
-	
+
 	var process = new Process(bat);
 	if(!process.runAsync || blocking){
 		process.run(true, [], 0);
@@ -1429,7 +1429,7 @@ function runWSH(func, args, blocking){
 			observe : end,
 		});
 	}
-	
+
 	return d;
 }
 
@@ -1457,7 +1457,7 @@ var State = {
 			stateSet = stateSetName;
 			stateSetName = void(0);
 		}
-		
+
 		var p = cls.prototype;
 		var K = this.K;
 		forEach(this.gatherProperties(stateSet), function(prop){
@@ -1467,9 +1467,9 @@ var State = {
 					state[prop] = K;
 			}
 		});
-	
+
 		update(p, stateSet[defaultStateName]);
-		
+
 		if(stateSetName){
 			update(p, this._multiProto);
 			if(!p.state){
@@ -1484,38 +1484,38 @@ var State = {
 			p.stateSet = stateSet;
 		}
 	},
-	
+
 	gatherProperties : function(stateSet){
 		var props = {};
 		for(var i in stateSet)
 			for(var prop in stateSet[i])
 				props[prop] = true;
-		
+
 		return keys(props);
 	},
-	
+
 	K : function(arg){
-		return arg; 
+		return arg;
 	},
-	
+
 	_singleProto: {
 		changeState : function(stateName){
 			update(this, this.stateSet[stateName]);
 			this.state = stateName;
-			
+
 			if(this.onChangeState)
 				this.onChangeState();
 		}
 	},
-	
+
 	_multiProto: {
 		changeState : function(stateSetName, stateName){
 			update(this, this.stateSet[stateSetName][stateName]);
-			
+
 			// 各オブジェクト個別の状態を持つためにクローンを行い変更する
 			this.state = update({}, this.state);
 			this.state[stateSetName] = stateName;
-			
+
 			if(this.onChangeState)
 				this.onChangeState();
 		}
@@ -1537,36 +1537,36 @@ Repository.prototype = {
 	get size(){
 		return this.names.length;
 	},
-	
+
 	get names(){
 		return this.values.map(itemgetter('name'));
 	},
-	
+
 	get values(){
 		return map(itemgetter(1), this).filter(function(v){
 			return v.name;
 		});
 	},
-	
+
 	clear : function(){
 		this.names.forEach(function(name){
 			delete this[name];
 		}, this);
 	},
-	
+
 	find : function(name){
 		return this.values.filter(function(i){
 			return i.name && i.name.search(name) != -1;
 		});
 	},
-	
+
 	copyTo : function(t){
 		forEach(this, function(m){
 			t[m[0]] = m[1];
 		});
 		return t;
 	},
-	
+
 	check : function(){
 		var args = arguments;
 		return reduce(function(memo, i){
@@ -1575,10 +1575,10 @@ Repository.prototype = {
 			return memo;
 		}, this.values, []);
 	},
-	
+
 	/**
 	 * 新しい定義を追加する。
-	 * 
+	 *
 	 * @param {Array} defs
 	 * @param {String} target 追加対象。この名前の前後に追加される。
 	 * @param {Boolean} after 追加対象の前に追加するか否か(後か)。
@@ -1586,20 +1586,20 @@ Repository.prototype = {
 	register : function(defs, target, after){
 		if(!defs)
 			return;
-		
+
 		defs = [].concat(defs);
 		if(target){
 			var vals = this.values;
 			this.clear();
-			
+
 			for(var i=0 ; i < vals.length ; i++)
 				if(vals[i].name == target)
 					break;
-			
+
 			vals.splice.apply(vals, [(after? i+1 : i), 0].concat(defs));
 			defs = vals;
 		}
-		
+
 		defs.forEach(function(d){
 			this[d.name] = d;
 		}, this);
@@ -1614,30 +1614,30 @@ Repository.prototype = {
 function E(){
 	var tag = Array.prototype.shift.call(arguments);
 	var elm = currentDocument().createElement(tag);
-	
+
 	var text = [];
 	function processChild(arr){
 		Array.prototype.forEach.call(arr, function(value){
 			if(!value)
 				return;
-			
+
 			if(value && value.nodeType){
 				elm.appendChild(value);
 				return;
 			}
-			
+
 			switch (typeof(value)) {
 				case 'string':
 				case 'number':
 					elm.appendChild(currentDocument().createTextNode(value))
 					break;
-					
+
 				default:
 					if(value.forEach){
 						processChild(value)
 						break;
 					}
-					
+
 					for(var key in value){
 						var attr = value[key];
 						switch(key){
@@ -1651,7 +1651,7 @@ function E(){
 		});
 	}
 	processChild(arguments);
-	
+
 	return elm;
 }
 
@@ -1673,7 +1673,7 @@ function tagName(elm){
 
 function $x(exp, context, multi) {
 	context = context || currentDocument();
-	
+
 	var doc = context.ownerDocument || context;
 	var exp = doc.createExpression(exp, {
 		lookupNamespaceURI : function(prefix){
@@ -1688,11 +1688,11 @@ function $x(exp, context, multi) {
 			}
 		},
 	});
-	
+
 	var value = function(node){
 		if(!node)
 			return;
-		
+
 		switch (node.nodeType) {
 		case Node.ELEMENT_NODE:
 			return node;
@@ -1701,7 +1701,7 @@ function $x(exp, context, multi) {
 			return node.textContent;
 		}
 	}
-	
+
 	var result = exp.evaluate(context, XPathResult.ANY_TYPE, null);
 	switch (result.resultType) {
 		case XPathResult.STRING_TYPE : return result.stringValue;
@@ -1710,7 +1710,7 @@ function $x(exp, context, multi) {
 		case XPathResult.UNORDERED_NODE_ITERATOR_TYPE: {
 			if(!multi)
 				return value(result.iterateNext());
-			
+
 			result = exp.evaluate(context, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 			var ret = [];
 			for (var i = 0, len = result.snapshotLength; i < len ; i++) {
@@ -1730,24 +1730,24 @@ function convertToDOM(xml){
 
 function convertToHTMLDocument(html, doc) {
 	html = html.replace(/<!DOCTYPE.*?>/, '').replace(/<html.*?>/, '').replace(/<\/html>.*/, '');
-	
+
 	doc = doc || currentDocument() || document;
 	var xsl = (new DOMParser()).parseFromString(
 		'<?xml version="1.0"?>\
 			<stylesheet version="1.0" xmlns="http://www.w3.org/1999/XSL/Transform">\
 			<output method="html"/>\
 		</stylesheet>', 'text/xml');
-	
+
 	var xsltp = new XSLTProcessor();
 	xsltp.importStylesheet(xsl);
-	
+
 	doc = xsltp.transformToDocument(doc.implementation.createDocument('', '', null));
 	doc.appendChild(doc.createElement('html'));
-	
+
 	var range = doc.createRange();
 	range.selectNodeContents(doc.documentElement);
 	doc.documentElement.appendChild(range.createContextualFragment(html));
-	
+
 	return doc
 }
 
@@ -1759,14 +1759,14 @@ function convertToXULElement(str){
 	str = str.toXMLString? str.toXMLString() : str;
 	var xul = (
 		'<box xmlns="'+XUL_NS+'" >'+
-			str + 
+			str +
 		'</box>').replace(/^  +/gm, '').replace(/\n/g, '');
 	var parser = new DOMParser();
 	var elms = parser.parseFromString(xul, 'text/xml').documentElement.childNodes;
 	var result = currentDocument().createDocumentFragment();
 	for(var i=0 ; i<elms.length ; i++)
 		result.appendChild(elms[i]);
-	
+
 	// Firefox 3でstyle属性が適用されないため再設定を行う(暫定パッチ)
 	if(parseFloat(AppInfo.version) >= 3){
 		for(var style, w = currentDocument().createTreeWalker(result, NodeFilter.SHOW_ELEMENT, null, true) ; e = w.nextNode() ; ){
@@ -1785,7 +1785,7 @@ function convertToXULElement(str){
  * 範囲選択をしてコピーした時に得られる文字列に類似。
  *
  * @param {Element || Selection} src DOM要素または選択範囲。
- * @param {Boolean} safe 
+ * @param {Boolean} safe
  *        script要素などの不要要素を除去する。
  *        セキュアなHTMLになるわけではない。
  *        (UnescapeHTMLを用いたsanitizeHTMLメソッドの利用も検討すること)。
@@ -1793,25 +1793,25 @@ function convertToXULElement(str){
  */
 function convertToHTMLString(src, safe){
 	var me = arguments.callee;
-	
+
 	// 選択範囲の適切な外側まで含めてHTML文字列へ変換する(pre内選択なども正常処理される)
 	var doc = src.ownerDocument || src.focusNode.ownerDocument;
-	var encoder = new HTMLCopyEncoder(doc, 'text/unicode', 
+	var encoder = new HTMLCopyEncoder(doc, 'text/unicode',
 		HTMLCopyEncoder.OutputPreformatted | HTMLCopyEncoder.OutputLFLineBreak);
 	encoder[src.nodeType? 'setNode' : 'setSelection'](src);
-	
+
 	var html = encoder.encodeToString();
 	if(!safe)
 		return html;
-	
+
 	// DOMツリーに戻し不要な要素を除去する
 	var root;
 	if(src.getRangeAt){
 		var ancestor = src.getRangeAt(0).commonAncestorContainer;
-		root = (src.anchorNode == ancestor)? 
-			doc.createElement('div') : 
+		root = (src.anchorNode == ancestor)?
+			doc.createElement('div') :
 			ancestor.cloneNode(false);
-		
+
 		// 親にtableを持たない要素にtrを追加すると消える
 		if(tagName(root)=='tbody')
 			doc.createElement('table').appendChild(root);
@@ -1819,14 +1819,14 @@ function convertToHTMLString(src, safe){
 		root = doc.createElement('div');
 	}
 	root.innerHTML = html;
-	
+
 	forEach($x('.//*[contains(",' + me.UNSAFE_ELEMENTS + ',", concat(",", local-name(.), ","))]', root, true), removeElement);
 	forEach(doc.evaluate('.//@*[not(contains(",' + me.SAFE_ATTRIBUTES + ',", concat(",", local-name(.), ",")))]', root, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null), function(attr){
 		attr.ownerElement.removeAttribute(attr.name);
 	});
-	
+
 	src = appendChildNodes(doc.createDocumentFragment(), root.childNodes);
-	
+
 	// 再度HTML文字列へ変換する
 	return me(src);
 }
@@ -1847,15 +1847,15 @@ function convertToPlainText(src){
 	// DOM要素または選択範囲か?
 	if(typeof(src)!='string')
 		src = convertToHTMLString(src);
-	
+
 	// DocumentEncoder(text/plan)を用いるとpre要素内の選択で改行が欠落した
 	// クリップボードへのコピー処理と同一のフレーバー作成の方法を使う
 	var res = {};
 	var converter = new HTMLFormatConverter();
-	
+
 	// 2倍のバッファサイズはnsCopySupport.cppの実装より(HTMLの2倍の文字列になることはないという仮定と思われる)
 	converter.convert('text/html', new SupportsString(src), src.length * 2, 'text/unicode', res, {})
-	
+
 	return broad(res.value).data.replace(/\r/g, '').trim();
 }
 
@@ -1880,7 +1880,7 @@ function createFlavoredString(src){
  * @param {String} name フレーバー名("html"など)。
  */
 function getFlavor(src, name){
-	return (src==null || !src.flavors)? src : 
+	return (src==null || !src.flavors)? src :
 		src.flavors[name] || src;
 }
 
@@ -1896,15 +1896,15 @@ function makeOpaqueFlash(doc){
 
 function addStyle(css, doc) {
 	doc = doc || currentDocument() || document;
-	
+
 	var head = doc.getElementsByTagName('head')[0];
 	if (!head)
 		return;
-	
+
 	var style = doc.createElement('style');
 	style.type = 'text/css';
 	style.innerHTML = css;
-	
+
 	head.appendChild(style);
 }
 
@@ -1912,15 +1912,15 @@ function appendMenuItem(menu, label, image, hasChildren){
 	var doc = menu.ownerDocument;
 	if((/^----/).test(label))
 		return menu.appendChild(doc.createElement('menuseparator'));
-	
+
 	var item = menu.appendChild(doc.createElement(hasChildren? 'menu' : 'menuitem'));
 	item.setAttribute('label', label);
-	
+
 	if(image){
 		item.setAttribute('class', hasChildren? 'menu-iconic' : 'menuitem-iconic');
 		item.setAttribute('image', image);
 	}
-	
+
 	return item;
 }
 
@@ -1930,7 +1930,7 @@ function keyString(e){
 	for(var name in KeyEvent)
 		if(name.indexOf('DOM_VK_')==0)
 			table[KeyEvent[name]] = name.substring(7);
-	
+
 	return (keyString = function(e){
 		var code = e.keyCode;
 		var res = [];
@@ -1938,10 +1938,10 @@ function keyString(e){
 		(e.ctrlKey  || code==KeyEvent.DOM_VK_CONTROL) && res.push('CTRL');
 		(e.shiftKey || code==KeyEvent.DOM_VK_SHIFT)   && res.push('SHIFT');
 		(e.altKey   || code==KeyEvent.DOM_VK_ALT)     && res.push('ALT');
-		
+
 		if((code < KeyEvent.DOM_VK_SHIFT || KeyEvent.DOM_VK_ALT < code) && code != KeyEvent.DOM_VK_META)
 			res.push(table[code]);
-		
+
 		return res.join(' + ');
 	})(e);
 }
@@ -1955,22 +1955,22 @@ function showNotification(fragments, animation){
 	var browser = getMostRecentWindow().getBrowser();
 	var doc = browser.ownerDocument;
 	var box = browser.getNotificationBox(browser.selectedBrowser);
-	
+
 	var slideSteps = box.slideSteps;
 	if(!animation)
 		box.slideSteps = 1;
-	
+
 	var notification = this.notification = box.appendNotification('', '', null,	box.PRIORITY_INFO_HIGH, null);
 	box.slideSteps = slideSteps;
-	
+
 	var outset = doc.getAnonymousNodes(notification)[0];
 	outset.setAttribute('align', 'start');
-	
+
 	var details = doc.getAnonymousElementByAttribute(notification, 'anonid', 'details');
 	clearChildren(details);
-	
+
 	notification.appendChild(fragments);
-	
+
 	if(!animation){
 		notification.__close = notification.close;
 		notification.close = function(){
@@ -1979,34 +1979,34 @@ function showNotification(fragments, animation){
 			box.slideSteps = slideSteps;
 		}
 	}
-	
+
 	return notification;
 }
 
 function capture(src, pos, dim, scale){
 	pos = pos || {x:0, y:0};
-	
+
 	// デフォルトではAppShellService.hiddenDOMWindowが使われる
 	var canvas = document.createElementNS(HTML_NS, 'canvas');
 	var ctx = canvas.getContext('2d');
 	canvas.width = dim.w;
 	canvas.height = dim.h;
-	
+
 	if(scale){
-		scale	= scale.w? scale.w/dim.w : 
+		scale	= scale.w? scale.w/dim.w :
 			scale.h? scale.h/dim.h : scale;
-		
+
 		canvas.width = dim.w * scale;
 		canvas.height = dim.h * scale;
 		ctx.scale(scale, scale);
 	}
-	
+
 	if(src instanceof Ci.nsIDOMHTMLImageElement){
 		ctx.drawImage(src, pos.x, pos.y);
 	} else {
 		ctx.drawWindow(src, pos.x, pos.y, dim.w, dim.h, '#FFF');
 	}
-	
+
 	return canvas.toDataURL('image/png', '');
 }
 
@@ -2014,12 +2014,12 @@ function convertToDataURL(src){
 	return loadImage(src).addCallback(function(img){
 		var canvas = document.createElementNS(HTML_NS, 'canvas');
 		var ctx = canvas.getContext('2d');
-		
+
 		canvas.width = img.width;
 		canvas.height = img.height;
-		
+
 		ctx.drawImage(img, 0, 0);
-		
+
 		return canvas.toDataURL('image/png', '');
 	});
 }
@@ -2031,29 +2031,29 @@ function toGrayScale(src){
 
 		canvas.width = img.width;
 		canvas.height = img.height;
-		
+
 		ctx.drawImage(img, 0, 0);
 
 		var image = ctx.getImageData(0, 0, img.width, img.height);
 		for(var i=0, d=image.data, len=d.length ; i<len ; i+=4)
 			d[i] = d[i+1] = d[i+2] = (d[i] * 0.299 + d[i+1] * 0.587 + d[i+2] * 0.114);
-		
+
 		ctx.putImageData(image, 0, 0);
-		
+
 		return canvas.toDataURL();
 	});
 }
 
 function loadImage(src){
 	var d = new Deferred();
-	
+
 	if(src instanceof Ci.nsIDOMHTMLImageElement){
 		var img = src;
 	} else {
 		var img = document.createElementNS(HTML_NS, 'img');
 		img.src = src;
 	}
-	
+
 	img.onload = function(){
 		try{
 			d.callback(img);
@@ -2061,18 +2061,18 @@ function loadImage(src){
 			// ロードが複数回呼び出されて発生するエラーを抑止する
 		}
 	};
-	
+
 	img.onerror = function(){
 		d.errback(img);
 	};
-	
+
 	return d;
 }
 
 function getSelectionContents(sel){
 	if(!sel)
 		return;
-	
+
 	sel = (sel.getSelection)? sel.getSelection() : sel;
 	if(sel.rangeCount && !sel.isCollapsed)
 		return sel.getRangeAt(0).cloneContents();
@@ -2100,16 +2100,16 @@ function observeMouseShortcut(target, check){
 			target.addEventListener('keydown', onKeyDown, true);
 			target.addEventListener('keypress', cancelEvent, true);
 			executed = false;
-			
+
 			// Firefox 2において後でclientXなどが取得できなくなるためクローンする
 			event = update({}, e);
 		}
-		
+
 		downed[BUTTONS[e.button]] = true;
-		
+
 		checkKey(e, [keyString(e), keys(downed)])
 	}, true);
-	
+
 	target.addEventListener('mouseup', function(e){
 		delete downed[BUTTONS[e.button]];
 		if(isEmpty(downed)){
@@ -2121,32 +2121,32 @@ function observeMouseShortcut(target, check){
 
 	target.addEventListener('contextmenu', cancelEvent, true);
 	target.addEventListener('click', cancelEvent, true);
-	
+
 	function cancelEvent(e){
 		// クリックによる遷移やコンテキストメニュー、ショートカットキーなどを抑制する
 		if(executed)
 			cancel(e)
 	}
-	
+
 	function onKeyDown(e){
 		var code = e.keyCode;
 		if(KeyEvent.DOM_VK_SHIFT <= code && code <= KeyEvent.DOM_VK_ALT)
 			return;
-		
+
 		if(executed){
 			cancel(e)
 			return;
 		}
-		
+
 		if(checkKey(e, [keys(downed), keyString(e)]))
 			cancel(e);
 	}
-	
+
 	function checkKey(e, keys){
 		var hit = !check(event, joinText(keys, (' + ')));
 		if(hit)
 			executed = true;
-		
+
 		return hit;
 	}
 }
@@ -2154,7 +2154,7 @@ function observeMouseShortcut(target, check){
 function selectElement(doc){
 	var deferred = new Deferred();
 	doc = doc || currentDocument();
-	
+
 	var target;
 	function onMouseOver(e){
 		target = e.target;
@@ -2166,13 +2166,13 @@ function selectElement(doc){
 	}
 	function onClick(e){
 		cancel(e);
-		
+
 		finalize();
 		deferred.callback(target);
 	}
 	function onKeyDown(e){
 		cancel(e);
-		
+
 		switch(keyString(e)){
 		case 'ESCAPE':
 			finalize();
@@ -2191,15 +2191,15 @@ function selectElement(doc){
 		doc.removeEventListener('mouseout', onMouseOut, true);
 		doc.removeEventListener('click', onClick, true);
 		doc.removeEventListener('keydown', onKeyDown, true);
-		
+
 		unpoint(target);
 	}
-	
+
 	doc.addEventListener('mouseover', onMouseOver, true);
 	doc.addEventListener('mouseout', onMouseOut, true);
 	doc.addEventListener('click', onClick, true);
 	doc.addEventListener('keydown', onKeyDown, true);
-	
+
 	return deferred;
 }
 selectElement.TARGET_BACKGROUND = '#888';
@@ -2207,41 +2207,41 @@ selectElement.TARGET_BACKGROUND = '#888';
 function selectRegion(doc){
 	var deferred = new Deferred();
 	doc = doc || currentDocument();
-	
+
 	var win = doc.defaultView;
-	
+
 	doc.documentElement.style.cursor = 'crosshair';
-	
+
 	var style = doc.createElement('style');
 	style.innerHTML = <><![CDATA[
 		* {
 			cursor: crosshair !important;
 			-moz-user-select: none;
 		}
-	]]></>;
+	]]></>.toString();
 	doc.body.appendChild(style);
-	
+
 	var region, p, d, moving, square;
 	function mouse(e){
 		return {
-			x: e.clientX, 
+			x: e.clientX,
 			y: e.clientY
 		};
 	}
-	
+
 	function onMouseMove(e){
 		var to = mouse(e);
-		
+
 		if(moving){
 			p = {
-				x: Math.max(to.x - d.w, 0), 
+				x: Math.max(to.x - d.w, 0),
 				y: Math.max(to.y - d.h, 0)
 			};
 			setElementPosition(region, p);
 		}
-		
+
 		d = {
-			w: to.x - p.x, 
+			w: to.x - p.x,
 			h: to.y - p.y
 		};
 		if(square){
@@ -2250,10 +2250,10 @@ function selectRegion(doc){
 		}
 		setElementDimensions(region, d);
 	}
-	
+
 	function onMouseDown(e){
 		cancel(e);
-		
+
 		p = mouse(e);
 		region = doc.createElement('div');
 		region.setAttribute('style', <>
@@ -2263,18 +2263,18 @@ function selectRegion(doc){
 			z-index    : 999999999;
 			top        : {p.y}px;
 			left       : {p.x}px;
-		</>);
+		</>.toString());
 		doc.body.appendChild(region);
-		
+
 		doc.addEventListener('mousemove', onMouseMove, true);
 		doc.addEventListener('mouseup', onMouseUp, true);
 		win.addEventListener('keydown', onKeyDown, true);
 		win.addEventListener('keyup', onKeyUp, true);
 	}
-	
+
 	function onKeyDown(e){
 		cancel(e);
-		
+
 		switch(keyString(e)){
 		case 'SHIFT': square = true; return;
 		case 'SPACE': moving = true; return;
@@ -2284,28 +2284,28 @@ function selectRegion(doc){
 			return;
 		}
 	}
-	
+
 	function onKeyUp(e){
 		cancel(e);
-		
+
 		switch(keyString(e)){
 		case 'SHIFT': square = false; return;
 		case 'SPACE': moving = false; return;
 		}
 	}
-	
+
 	function onMouseUp(e){
 		cancel(e);
-		
+
 		p = getElementPosition(region);
 		finalize();
-		
+
 		// FIXME: 暫定/左上方向への選択不可/クリックとのダブルインターフェース未実装
 		if(!d || d.w<0 || d.h<0){
 			deferred.cancel();
 			return;
 		}
-		
+
 		deferred.callback({
 			position: p,
 			dimensions: d,
@@ -2315,28 +2315,28 @@ function selectRegion(doc){
 	function onClick(e){
 		// リンククリックによる遷移を抑止する
 		cancel(e);
-		
+
 		// mouseupよりも後にイベントが発生するため、ここで取り除く
 		doc.removeEventListener('click', onClick, true);
 	}
-	
+
 	function finalize(){
 		doc.removeEventListener('mousedown', onMouseDown, true);
 		doc.removeEventListener('mousemove', onMouseMove, true);
 		doc.removeEventListener('mouseup', onMouseUp, true);
 		win.removeEventListener('keydown', onKeyDown, true);
 		win.removeEventListener('keyup', onKeyUp, true);
-		
+
 		doc.documentElement.style.cursor = '';
-		
+
 		removeElement(region);
 		removeElement(style);
 	}
-	
+
 	doc.addEventListener('mousedown', onMouseDown, true);
 	doc.addEventListener('click', onClick, true);
 	doc.defaultView.focus();
-	
+
 	return deferred;
 }
 
@@ -2350,7 +2350,7 @@ function flashView(doc){
 		z-index    : 999999999;
 		top        : 0;
 		left       : 0;
-	</>);
+	</>.toString());
 	setElementDimensions(flash, getViewDimensions());
 	doc.body.appendChild(flash);
 	fade(flash, {
@@ -2360,7 +2360,7 @@ function flashView(doc){
 			d.callback();
 		},
 	});
-	
+
 	return d;
 }
 
@@ -2370,30 +2370,30 @@ AbstractSessionService = {
 		var cookie = this.getAuthCookie();
 		if(cookie && this.cookie==cookie)
 			return 'same';
-		
+
 		delete this.cookie;
 		delete this.user;
 		delete this.token;
 		delete this.password;
-		
+
 		if(!cookie)
 			return 'none';
-		
+
 		this.cookie = cookie;
-		
+
 		return 'changed';
 	},
-	
+
 	getSessionValue : function(key, func){
 		var self = this;
 		switch (this.updateSession()){
 		case 'none':
 			return fail(new Error(getMessage('error.notLoggedin')));
-			
+
 		case 'same':
 			if(self[key])
 				return succeed(self[key]);
-			
+
 		case 'changed':
 			return func.apply(self).addCallback(function(value){
 				return self[key] = value;

@@ -7,8 +7,9 @@ var Cc = Components.classes;
 var Cr = Components.results;
 
 var INTERFACES = [];
-for(var i in Ci)
+for(var i in Ci) {
 	INTERFACES.push(Ci[i]);
+}
 
 if(typeof(update)=='undefined'){
 	function update(t, s){
@@ -60,95 +61,98 @@ var IHttpChannel         = Ci.nsIHttpChannel;
 	['FuelApplication',     'fuelIApplication',          '/fuel/application;1'],
 	['MIMEService',         'nsIMIMEService',            '/mime;1'],
 	['CategoryManager',     'nsICategoryManager',        '/categorymanager;1'],
-	['PrefService',         null,                        '/preferences-service;1'],
-	['AppInfo',             null,                        '/xre/app-info;1'],
+	['PrefService',         'nsIPrefService',            '/preferences-service;1'],
+	['AppInfo',             'nsIXULAppInfo',             '/xre/app-info;1'],
 ].forEach(function([name, ifc, cid]){
 	defineLazyServiceGetter(this, name, '@mozilla.org' + cid, ifc);
 }, this);
 
-var HTMLFormatConverter = 
+broad(AppInfo, [Ci.nsIXULRuntime]);  // nsIXULRuntime => AppInfo.OS
+
+var HTMLFormatConverter =
 	createConstructor('/widget/htmlformatconverter;1', 'nsIFormatConverter');
 
-var SupportsString = 
+var SupportsString =
 	createConstructor('/supports-string;1', 'nsISupportsString', function(data){
 		this.data = data;
 	});
 
-var PrefBranch = 
-	createConstructor('/preferences;1', 'nsIPrefBranch');
+var PrefBranch = function () {
+	return PrefService.getBranch('');
+}
 
-var LocalFile = 
+var LocalFile =
 	createConstructor('/file/local;1', 'nsILocalFile', 'initWithPath');
 
-var WebBrowserPersist = 
+var WebBrowserPersist =
 	createConstructor('/embedding/browser/nsWebBrowserPersist;1', 'nsIWebBrowserPersist');
 
-var StorageStatementWrapper = 
+var StorageStatementWrapper =
 	createConstructor('/storage/statement-wrapper;1', 'mozIStorageStatementWrapper', 'initialize');
 
-var ScriptError = 
+var ScriptError =
 	createConstructor('/scripterror;1', 'nsIScriptError', 'init');
 
-var Process = 
+var Process =
 	createConstructor('/process/util;1', 'nsIProcess', 'init');
 
-var FilePicker = 
+var FilePicker =
 	createConstructor('/filepicker;1', 'nsIFilePicker', 'init');
 
-var InputStream = 
+var InputStream =
 	createConstructor('/scriptableinputstream;1', 'nsIScriptableInputStream', 'init');
 
-var BinaryInputStream = 
+var BinaryInputStream =
 	createConstructor('/binaryinputstream;1', 'nsIBinaryInputStream', 'setInputStream');
 
-var FileInputStream = 
+var FileInputStream =
 	createConstructor('/network/file-input-stream;1', 'nsIFileInputStream', 'init');
 
-var ConverterInputStream = 
+var ConverterInputStream =
 	createConstructor('/intl/converter-input-stream;1', 'nsIConverterInputStream', function(stream, charset, bufferSize){
 		this.init(stream, charset || 'UTF-8', bufferSize || 8192, ConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
 	});
 
-var MIMEInputStream = 
+var MIMEInputStream =
 	createConstructor('/network/mime-input-stream;1', 'nsIMIMEInputStream', function(stream){
 		this.addContentLength = true;
 		this.setData(stream);
 	});
 
-var BufferedInputStream = 
+var BufferedInputStream =
 	createConstructor('/network/buffered-input-stream;1', 'nsIBufferedInputStream', function(stream, bufferSize){
 		this.init(stream, bufferSize || 4096);
 	});
 
-var StringInputStream = 
+var StringInputStream =
 	createConstructor('/io/string-input-stream;1', 'nsIStringInputStream', function(str){
 		this.setData(str, str.length);
 	});
 
-var UnicodeConverter = 
+var UnicodeConverter =
 	createConstructor('/intl/scriptableunicodeconverter', 'nsIScriptableUnicodeConverter', function(charset){
 		this.charset = charset || 'UTF-8';
 	});
 
-var MultiplexInputStream = 
+var MultiplexInputStream =
 	createConstructor('/io/multiplex-input-stream;1', 'nsIMultiplexInputStream', function(streams){
 		var self = this;
 		streams = streams || [];
 		streams.forEach(function(stream){
 			if(stream.join)
 				stream = stream.join('\r\n');
-			
+
 			if(typeof(stream)=='string')
 				stream = new StringInputStream(stream + '\r\n');
-				
+
 			self.appendStream(stream);
 		});
 	});
 
-var CryptoHash = 
+var CryptoHash =
 	createConstructor('/security/hash;1', 'nsICryptoHash', 'init');
 
-var FileOutputStream = 
+var FileOutputStream =
 	update(createConstructor('/network/file-output-stream;1', 'nsIFileOutputStream', 'init'), {
 		PR_RDONLY : 0x01,
 		PR_WRONLY : 0x02,
@@ -160,7 +164,7 @@ var FileOutputStream =
 		PR_EXCL : 0x80,
 	});
 
-var HTMLCopyEncoder = 
+var HTMLCopyEncoder =
 	createConstructor('/layout/htmlCopyEncoder;1', 'nsIDocumentEncoder', 'init');
 
 var DocumentEncoder = function(document, mimeType, flags){
@@ -174,22 +178,22 @@ update(DocumentEncoder, Ci.nsIDocumentEncoder);
 function createMock(sample, proto){
 	var non = function(){};
 	sample = typeof(sample)=='object'? sample : Cc[sample].createInstance();
-	
+
 	var ifcs = getInterfaces(sample);
 	var Mock = function(){};
-	
+
 	for(var key in sample){
 		try{
 			if(sample.__lookupGetter__(key))
 				continue;
-			
+
 			var val = sample[key];
 			switch (typeof(val)){
 			case 'number':
 			case 'string':
 				Mock.prototype[key] = val;
 				continue;
-				
+
 			case 'function':
 				Mock.prototype[key] = non;
 				continue;
@@ -198,13 +202,13 @@ function createMock(sample, proto){
 			// コンポーネント実装により発生するプロパティ取得エラーを無視する
 		}
 	}
-	
+
 	Mock.prototype.QueryInterface = createQueryInterface(ifcs);
-	
+
 	// FIXME: extendに変える(アクセサをコピーできない)
 	update(Mock.prototype, proto);
 	update(Mock, Mock.prototype);
-	
+
 	return Mock;
 }
 
@@ -212,14 +216,14 @@ function createQueryInterface(ifcNames){
 	var ifcs = ['nsISupports'].concat(ifcNames).map(function(ifcName){
 		return Ci[''+ifcName];
 	});
-	
+
 	return function(iid){
 		if(ifcs.some(function(ifc){
 			return iid.equals(ifc);
 		})){
 			return this;
 		}
-		
+
 		throw Components.results.NS_NOINTERFACE;
 	}
 }
@@ -230,7 +234,7 @@ function createQueryInterface(ifcNames){
  *
  * @param {String} clsName クラス名(@mozilla.org以降を指定する)。
  * @param {String || nsIJSID} ifc インターフェイス。
- * @param {String || Function} init 
+ * @param {String || Function} init
  *        初期化関数。
  *        文字列の場合、該当するメソッドが呼び出される。
  *        関数の場合、生成されたインスタンスをthisとして呼び出される。
@@ -238,7 +242,7 @@ function createQueryInterface(ifcNames){
 function createConstructor(clsName, ifc, init){
 	var cls = Components.classes['@mozilla.org' + clsName];
 	ifc = typeof(ifc)=='string'? Components.interfaces[ifc] : ifc;
-	
+
 	var cons = function(){
 		var obj = cls.createInstance(ifc);
 		if(init){
@@ -250,14 +254,14 @@ function createConstructor(clsName, ifc, init){
 		}
 		return obj;
 	};
-	
+
 	cons.instanceOf = function(obj){
 		return (obj instanceof ifc);
 	};
-	
+
 	for(var prop in ifc)
 		cons[prop] = ifc[prop];
-	
+
 	return cons;
 }
 
@@ -275,7 +279,7 @@ function defineLazyServiceGetter(obj, name, cid, ifc){
 	var cls = Cc[cid];
 	if(!cls)
 		return;
-	
+
 	obj.__defineGetter__(name, function(){
 		delete this[name];
 		try{
@@ -292,13 +296,16 @@ function defineLazyServiceGetter(obj, name, cid, ifc){
  */
 function getInterfaces(obj){
 	var result = [];
-	
+
 	for(var i=0,len=INTERFACES.length ; i<len ; i++){
 		var ifc = INTERFACES[i];
-		if(obj instanceof ifc)
-			result.push(ifc);
+		try {
+			if (obj instanceof ifc) {
+				result.push(ifc);
+			}
+		} catch(e) { }
 	}
-	
+
 	return result;
 }
 
@@ -311,8 +318,11 @@ function getInterfaces(obj){
  */
 function broad(obj, ifcs){
 	ifcs = ifcs || INTERFACES;
-	for(var i=0,len=ifcs.length ; i<len ; i++)
-    if(obj instanceof ifcs[i]);
+	for(var i=0,len=ifcs.length ; i<len ; i++) {
+		try {
+			if(obj instanceof ifcs[i]);
+		} catch(e) { }
+	}
 	return obj;
 };
 
@@ -327,7 +337,7 @@ function broad(obj, ifcs){
  */
 function notify(title, msg, icon){
 	AlertsService && AlertsService.showAlertNotification(
-		icon, title, msg, 
+		icon, title, msg,
 		false, '', null);
 }
 notify.ICON_DOWNLOAD = 'chrome://mozapps/skin/downloads/downloadIcon.png';
@@ -354,24 +364,30 @@ function convertFromByteArray(arr, charset){
 function createURI(path){
 	if(!path)
 		return;
-	
-	if(path instanceof IURI)
+
+	if (path instanceof IURI) {
 		return path;
-	
+	}
+
 	try{
 		var path = (path instanceof IFile) ? path : new LocalFile(path);
 		return broad(IOService.newFileURI(path));
 	}catch(e){}
-	
-	var uri = IOService.newURI(path, null, null);
-	uri instanceof Ci.nsIURL;
+
+	try {
+		var uri = IOService.newFileURI(path, null, null);
+		uri instanceof Ci.nsIURL;
+	} catch(e) {
+		uri = IOService.newURI(path, null, null);
+		uri instanceof Ci.nsIURL;
+	}
 	return uri;
 }
 
 /**
  * ファイルを取得する。
  *
- * @param {String || nsIFile || nsIURI} uri 
+ * @param {String || nsIFile || nsIURI} uri
  *        URI。file:またはchrome:から始まるアドレスを指定する。
  *        c:\のようなパスも動作する。
  *        nsIFileの場合、そのまま返す。
@@ -379,14 +395,16 @@ function createURI(path){
 function getLocalFile(uri){
 	if(uri instanceof ILocalFile)
 		return uri;
-	
+
 	uri = createURI(uri);
-	if(uri.scheme=='chrome')
+	if (uri.scheme === 'chrome') {
 		uri = ChromeRegistry.convertChromeURL(uri);
-	
-	if(uri.scheme!='file')
+	}
+
+	if(uri.scheme !== 'file') {
 		return;
-	
+	}
+
 	return IOService.getProtocolHandler('file').
 		QueryInterface(Ci.nsIFileProtocolHandler).
 		getFileFromURLSpec(uri.spec).
@@ -396,13 +414,39 @@ function getLocalFile(uri){
 /**
  * 拡張のインストールされているディレクトリを取得する。
  *
- * @param {String} id 拡張ID。 
+ * @param {String} id 拡張ID。
  */
-function getExtensionDir(id){
-	return ExtensionManager.
-		getInstallLocation(id).
-		getItemLocation(id).QueryInterface(ILocalFile);
+var getExtensionDir;
+ {
+	let ExtensionManager = getService('/extensions/manager;1', Ci.nsIExtensionManager);
+	if (!ExtensionManager) {  // for firefox4
+		Components.utils.import("resource://gre/modules/AddonManager.jsm");
+		let dir = null;
+		AddonManager.getAddonByID(EXTENSION_ID, function (addon) {
+			let root = addon.getResourceURI('/');
+			let url = root.QueryInterface(Ci.nsIFileURL)
+			let target = url.file.QueryInterface(ILocalFile);
+			dir = target;
+		});
+		// using id:piro (http://piro.sakura.ne.jp/) method
+		let thread = Cc['@mozilla.org/thread-manager;1'].getService().mainThread;
+		while (dir === null) {
+			thread.processNextEvent(true);
+		}
+		getExtensionDir = function getExtensionDirInFirefox4() {
+			return dir.clone();
+		}
+	} else {
+		let dir = ExtensionManager
+			.getInstallLocation(EXTENSION_ID)
+			.getItemLocation(EXTENSION_ID).QueryInterface(ILocalFile);
+		getExtensionDir = function getExtensionDirInFirefox3() {
+			return dir.clone();
+		}
+	}
 }
+
+
 
 function getPrefType(key){
 	with(PrefBranch()){
@@ -422,7 +466,7 @@ function getPrefType(key){
 function setPrefValue(){
 	var value = Array.pop(arguments);
 	var key = Array.join(arguments, '');
-	
+
 	var prefType = getPrefType(key);
 	with(PrefBranch()){
 		switch(prefType!='undefined'? prefType : typeof(value)){
@@ -438,7 +482,7 @@ function setPrefValue(){
 
 function getPrefValue(){
 	var key = Array.join(arguments, '');
-	
+
 	with(PrefBranch()){
 		switch(getPrefType(key)){
 			case PREF_STRING:
@@ -461,7 +505,7 @@ function getDownloadDir(){
 		if(dir.exists())
 			return dir
 	} catch(e) {}
-	
+
 	return DownloadManager.userDownloadsDirectory;
 }
 
@@ -493,29 +537,29 @@ function findCacheFile(url){
 		visitEntry : function(deviceID, info){
 			if(info.key != url)
 				return true;
-			
+
 			entry = {
-				clientID    : info.clientID, 
-				key         : info.key, 
+				clientID    : info.clientID,
+				key         : info.key,
 				streamBased : info.isStreamBased(),
 			};
 		},
 	});
-	
+
 	if(!entry)
 		return;
-	
+
 	try{
 		var session = CacheService.createSession(
-			entry.clientID, 
-			ICache.STORE_ANYWHERE, 
+			entry.clientID,
+			ICache.STORE_ANYWHERE,
 			entry.streamBased);
 		session.doomEntriesIfExpired = false;
 		var descriptor = session.openCacheEntry(
-			entry.key, 
-			ICache.ACCESS_READ, 
+			entry.key,
+			ICache.ACCESS_READ,
 			false);
-		
+
 		return descriptor.file;
 	} finally{
 		// [FIXME] copy to temp
@@ -528,8 +572,8 @@ function findCacheFile(url){
  * ストリームを処理する。
  * 実行後に必ずストリームが閉じられる。
  *
- * @param {Object} stream ストリーム。 
- * @param {Function} func ストリームを利用する処理。ストリームが渡される。 
+ * @param {Object} stream ストリーム。
+ * @param {Function} func ストリームを利用する処理。ストリームが渡される。
  */
 function withStream(stream, func){
 	try{
@@ -544,16 +588,16 @@ function withStream(stream, func){
  * また不完全なタグなどを整形し正しいHTMLへ変換する。
  * Firefox 3では、JavaScriptプロトコルの除去が行われない。
  *
- * @param {String} html HTML文字列。 
+ * @param {String} html HTML文字列。
  * @return {String} 整形されたHTML文字列。
  */
 function sanitizeHTML(html){
 	var doc = document.implementation.createDocument('', '', null);
 	var root = doc.appendChild(doc.createElement('root'));
-	
+
 	var fragment = UnescapeHTML.parseFragment(html, false, null, doc.documentElement);
 	doc.documentElement.appendChild(fragment);
-	
+
 	if(!root.childNodes.length)
 		return '';
 	return serializeToString(root).match(/^<root>(.*)<\/root>$/)[1];
@@ -566,17 +610,38 @@ function serializeToString(xml){
 function registerSheet(css){
 	var sss = StyleSheetService;
 	var uri = (css instanceof IURI)? css : createURI(('data:text/css,' + css).replace(/[\n\r\t ]+/g, ' '));
-	
+
 	if(!sss.sheetRegistered(uri, sss.AGENT_SHEET))
 		sss.loadAndRegisterSheet(uri, sss.AGENT_SHEET);
-	
+
 	return partial(unregisterSheet, uri);
 }
 
 function unregisterSheet(uri){
 	var sss = StyleSheetService;
 	var uri = (css instanceof IURI)? css : createURI(('data:text/css,' + css).replace(/[\n\r\t ]+/g, ' '));
-	
+
 	if(sss.sheetRegistered(uri, sss.AGENT_SHEET))
 		sss.unregisterSheet(uri, sss.AGENT_SHEET);
+}
+
+// NavBookmarksService.getChildFolder is obsolete
+// this function is same method
+function getChildFolderInBookmark(aFolder, aSubFolder) {
+	let query = NavHistoryService.getNewQuery();
+	let options = NavHistoryService.getNewQueryOptions();
+	query.setFolders([aFolder], 1);
+	let result = NavHistoryService.executeQuery(query, options);
+	let rootNode = result.root;
+	let childFolder = 0;
+	rootNode.containerOpen = true;
+	for (let i = 0, len = rootNode.childCount; i < len; ++i) {
+		let node = rootNode.getChild(i);
+		if (node.type === node.RESULT_TYPE_FOLDER && node.title === aSubFolder) {
+			childFolder = node.itemId;
+			break;
+		}
+	}
+	rootNode.containerOpen = false;
+	return childFolder;
 }

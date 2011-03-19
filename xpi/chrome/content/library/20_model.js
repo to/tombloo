@@ -1494,7 +1494,7 @@ models.register({
 	createFolder : function(name, parent){
 		parent = parent || NavBookmarksService.bookmarksMenuFolder;
 		
-		return NavBookmarksService.getChildFolder(parent, name) || 
+		return getChildFolderInBookmark(parent, name) ||
 			NavBookmarksService.createFolder(parent, name, NavBookmarksService.DEFAULT_INDEX);
 	},
 });

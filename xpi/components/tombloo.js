@@ -9,10 +9,41 @@ var ILocalFile = Ci.nsILocalFile;
 ConsoleService   = getService('/consoleservice;1', Ci.nsIConsoleService);
 AppShellService  = getService('/appshell/appShellService;1', Ci.nsIAppShellService);
 ScriptLoader     = getService('/moz/jssubscript-loader;1', Ci.mozIJSSubScriptLoader);
-ExtensionManager = getService('/extensions/manager;1', Ci.nsIExtensionManager);
 IOService        = getService('/network/io-service;1', Ci.nsIIOService);
 WindowMediator   = getService('/appshell/window-mediator;1', Ci.nsIWindowMediator);
 CategoryManager  = getService('/categorymanager;1', Ci.nsICategoryManager);
+FileProtocolHandler = getService('/network/protocol;1?name=file', Ci.nsIFileProtocolHandler);
+
+var getContentDir;
+ExtensionManager = getService('/extensions/manager;1', Ci.nsIExtensionManager);
+if (!ExtensionManager) {  // for firefox4
+	Components.utils.import("resource://gre/modules/AddonManager.jsm");
+	let dir = null;
+	AddonManager.getAddonByID(EXTENSION_ID, function (addon) {
+		let root = addon.getResourceURI('/');
+		let url = root.QueryInterface(Ci.nsIFileURL)
+		let target = url.file.QueryInterface(ILocalFile);
+		target.setRelativeDescriptor(target, 'chrome/content');
+		dir = target;
+	});
+	// using id:piro (http://piro.sakura.ne.jp/) method
+	let thread = Cc['@mozilla.org/thread-manager;1'].getService().mainThread;
+	while (dir === null) {
+		thread.processNextEvent(true);
+	}
+	getContentDir = function getContentDirInFirefox4() {
+		return dir.clone();
+	}
+} else {
+	let dir = ExtensionManager
+		.getInstallLocation(EXTENSION_ID)
+		.getItemLocation(EXTENSION_ID).QueryInterface(ILocalFile);
+		dir.setRelativeDescriptor(dir, 'chrome/content');
+	getContentDir = function getContentDirInFirefox3() {
+		return dir.clone();
+	}
+}
+
 
 Module = {
 	CID  : Components.ID('{aec75109-b143-4e49-a708-4904cfe85ea0}'),
@@ -124,15 +155,6 @@ function getLibraries(){
 	});
 }
 
-function getContentDir(){
-	var dir = ExtensionManager
-		.getInstallLocation(EXTENSION_ID)
-		.getItemLocation(EXTENSION_ID).QueryInterface(ILocalFile);
-	dir.setRelativeDescriptor(dir, 'chrome/content');
-
-	return dir;
-}
-
 function setupEnvironment(global){
 	var win = AppShellService.hiddenDOMWindow;
 
@@ -187,7 +209,7 @@ function loadAllSubScripts(){
 }
 
 function loadSubScripts(files, global){
-	var global = global || function(){};
+	global || (global = function() { });
 	files = [].concat(files);
 
 	for(var i=0,len=files.length ; i<len ; i++){
@@ -251,37 +273,48 @@ function copy(t, s, re){
 	return t;
 }
 
+var ModuleImpl = {
+	registerSelf : function(compMgr, fileSpec, location, type) {
+		compMgr.QueryInterface(Ci.nsIComponentRegistrar).registerFactoryLocation(
+			Module.CID, Module.NAME, Module.PID,
+			fileSpec, location, type);
+
+		Module.onRegister && Module.onRegister(compMgr, fileSpec, location, type);
+	},
+	canUnload : function(compMgr) {
+		return true;
+	},
+	getClassObject : function(compMgr, cid, iid){
+		if (!cid.equals(Module.CID)) {
+			throw Cr.NS_ERROR_NO_INTERFACE;
+		}
+
+		if (!iid.equals(Ci.nsIFactory)) {
+			throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+		}
+
+		Module.onInit && Module.onInit(compMgr, cid, iid);
+
+		return this.factory;
+	},
+	factory: {
+		createInstance: function(outer, iid) {
+			if (outer != null) {
+				throw Cr.NS_ERROR_NO_AGGREGATION;
+			}
+
+			var obj = Module.createInstance(outer, iid);
+			obj.Module = Module;
+			obj.wrappedJSObject = obj;
+			return obj;
+		}
+	}
+};
+
 function NSGetModule(compMgr, fileSpec) {
-	return {
-		registerSelf : function(compMgr, fileSpec, location, type) {
-			compMgr.QueryInterface(Ci.nsIComponentRegistrar).registerFactoryLocation(
-				Module.CID, Module.NAME, Module.PID,
-				fileSpec, location, type);
+	return ModuleImpl;
+}
 
-			Module.onRegister && Module.onRegister(compMgr, fileSpec, location, type);
-		},
-		canUnload : function(compMgr) {
-			return true;
-		},
- 		getClassObject : function(compMgr, cid, iid){
-			if (!cid.equals(Module.CID))
-				throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-
-			if (!iid.equals(Ci.nsIFactory))
-				throw Cr.NS_ERROR_NO_INTERFACE;
-
-			Module.onInit && Module.onInit(compMgr, cid, iid);
-
-			return {
-				createInstance: function(outer, iid) {
-					if (outer != null)
-						throw Cr.NS_ERROR_NO_AGGREGATION;
-
-					var obj = Module.createInstance(outer, iid);
-					obj.wrappedJSObject = obj;
-					return obj;
-				}
-			};
-		},
-	};
+function NSGetFactory(cid) {
+	return ModuleImpl.factory;
 }

@@ -488,7 +488,7 @@ function request(url, opts){
 	opts = opts || {};
 
 	var uri = createURI(joinText([url, queryString(opts.queryString)], '?'));
-	var channel = broad(IOService.newChannelFromURI(uri));
+	let channel = IOService.newChannelFromURI(uri);
 
 	if(opts.referrer)
 		channel.referrer = createURI(opts.referrer);
@@ -517,7 +517,8 @@ function request(url, opts){
 
 		if(!multipart){
 			contents = queryString(contents);
-			channel.setUploadStream(
+			channel instanceof Ci.nsIUploadChannel;
+			channel.QueryInterface(Ci.nsIUploadChannel).setUploadStream(
 				new StringInputStream(contents),
 				'application/x-www-form-urlencoded', -1);
 		} else {
@@ -557,7 +558,8 @@ function request(url, opts){
 
 			var mimeStream = new MIMEInputStream(new MultiplexInputStream(streams));
 			mimeStream.addHeader('Content-Type', 'multipart/form-data; boundary=' + boundary);
-			channel.setUploadStream(mimeStream, null, -1);
+			channel instanceof Ci.nsIUploadChannel;
+			channel.QueryInterface(Ci.nsIUploadChannel).setUploadStream(mimeStream, null, -1);
 		}
 	}
 
@@ -598,6 +600,17 @@ function request(url, opts){
 
 		// nsIHttpEventSink
 		onRedirect : function(oldChannel, newChannel){},
+
+		// nsIChannelEventSink
+		// Firefox 4, nsIHttpEventSink#onRedirect is obsolete
+		asyncOnChannelRedirect : function(oldChannel, newChannel, flags, redirectCallback) {
+			// delegate implementation
+			this.onChannelRedirect(oldChannel, newChannel, flags);
+			redirectCallback.onRedirectVerifyCallback(0);
+		},
+
+		onRedirectResult: function() {
+		},
 
 		// nsIChannelEventSink
 		onChannelRedirect : function(oldChannel, newChannel, flags){
@@ -678,6 +691,7 @@ function request(url, opts){
 	channel.requestMethod =
 		(opts.method)? opts.method :
 		(opts.sendContent)? 'POST' : 'GET';
+	broad(channel);  // requestMethod changing
 	channel.notificationCallbacks = listener;
 	channel.asyncOpen(listener, null);
 

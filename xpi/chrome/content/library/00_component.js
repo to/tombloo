@@ -421,7 +421,7 @@ function getLocalFile(uri){
  */
 var getExtensionDir;
 {
-	if(typeof(ExtensionManager) == 'undefined'){
+	if(typeof(ExtensionManager) == 'undefined' || !ExtensionManager){
 		Components.utils.import('resource://gre/modules/AddonManager.jsm');
 		
 		getExtensionDir = function(id){

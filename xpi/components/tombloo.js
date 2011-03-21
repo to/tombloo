@@ -104,7 +104,7 @@ Module = {
 		env.loadAllSubScripts();
 
 		// Greasemonkeyコンテキストの準備
-		var gm = Components.classes['@greasemonkey.mozdev.org/greasemonkey-service;1'];
+		var gm = Cc['@greasemonkey.mozdev.org/greasemonkey-service;1'];
 		if(gm){
 			gm = gm.getService().wrappedJSObject;
 

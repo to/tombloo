@@ -19,11 +19,11 @@
 </form>
 <pre id="test">
 </pre>
-<script type="text/javascript" src="../library/00_MochiKit.js"></script>
-<script type="text/javascript" src="../library/00_prototype.js"></script>
-<script type="text/javascript" src="../library/00_component.js"></script>
-<script type="text/javascript" src="../library/01_utility.js"></script>
-<script type="text/javascript">
+<script type="text/javascript; version=1.8" src="../library/00_MochiKit.js"></script>
+<script type="text/javascript; version=1.8" src="../library/00_prototype.js"></script>
+<script type="text/javascript; version=1.8" src="../library/00_component.js"></script>
+<script type="text/javascript; version=1.8" src="../library/01_utility.js"></script>
+<script type="text/javascript; version=1.8">
 try {
 	// chrome://tombloo/content/test/test_utility.html
 	
@@ -64,28 +64,23 @@ try {
 			return request('http://www.google.com/');
 		});
 		d.addCallback(function(res){
-			log(res);
-			
 			is(res.status, 200);
 			ok(res.responseText);
 		});
 		
 		d.addCallback(function(){
-			return request('http://www.google.co.jp/translate_t', {
+			return request('http://httpstat.us/200', {
 				queryString : {
-					langpair : 'en|ja',
+					query : 'QUERY',
 				},
 				sendContent : {
-					hl : 'ja',
-					ie : 'UTF8',
-					text : 'apple',
-					langpair : 'en|ja',
+					content : 'CONTENT',
 				},
 			});
 		});
+		
 		d.addCallback(function(res){
 			is(res.status, 200);
-			ok(res.responseText.match('アップル'), '翻訳されたか');
 		});
 		
 		// 文字化けテスト(日本Googleへ接続)
@@ -368,11 +363,11 @@ try {
 	}, true);
 	
 	// Cookie
-	ok(getCookies('www.tumblr.com').length > 2, 'Tumblrのログイン情報が取得できるか(未ログインの場合エラー)');
-	ok(getCookieString('delicious.com', '_user'));
+	ok(getCookies('www.tumblr.com').length > 2, 'Tumblrのログイン情報取得(未ログインの場合エラー)');
+	ok(getCookieString('delicious.com', '_user'), 'deliciousのユーザー文字列取得(未ログインの場合エラー)');
 	
 	// Password
-	ok(getPasswords('http://www.tumblr.com').length);
+	ok(getPasswords('http://www.tumblr.com').length, 'Tumblrの保存パスワード(未保存の場合エラー)');
 	
 	
 	// アスペクト

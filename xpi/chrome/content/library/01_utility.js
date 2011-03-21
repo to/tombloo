@@ -488,8 +488,8 @@ function request(url, opts){
 	opts = opts || {};
 
 	var uri = createURI(joinText([url, queryString(opts.queryString)], '?'));
-	let channel = IOService.newChannelFromURI(uri);
-
+	let channel = IOService.newChannelFromURI(uri).QueryInterface(Ci.nsIUploadChannel);
+	
 	if(opts.referrer)
 		channel.referrer = createURI(opts.referrer);
 
@@ -517,8 +517,7 @@ function request(url, opts){
 
 		if(!multipart){
 			contents = queryString(contents);
-			channel instanceof Ci.nsIUploadChannel;
-			channel.QueryInterface(Ci.nsIUploadChannel).setUploadStream(
+			channel.setUploadStream(
 				new StringInputStream(contents),
 				'application/x-www-form-urlencoded', -1);
 		} else {
@@ -558,8 +557,7 @@ function request(url, opts){
 
 			var mimeStream = new MIMEInputStream(new MultiplexInputStream(streams));
 			mimeStream.addHeader('Content-Type', 'multipart/form-data; boundary=' + boundary);
-			channel instanceof Ci.nsIUploadChannel;
-			channel.QueryInterface(Ci.nsIUploadChannel).setUploadStream(mimeStream, null, -1);
+			channel.setUploadStream(mimeStream, null, -1);
 		}
 	}
 
@@ -602,17 +600,14 @@ function request(url, opts){
 		onRedirect : function(oldChannel, newChannel){},
 
 		// nsIChannelEventSink
-		// Firefox 4, nsIHttpEventSink#onRedirect is obsolete
+		onRedirectResult: function(){},
+
 		asyncOnChannelRedirect : function(oldChannel, newChannel, flags, redirectCallback) {
-			// delegate implementation
 			this.onChannelRedirect(oldChannel, newChannel, flags);
 			redirectCallback.onRedirectVerifyCallback(0);
 		},
-
-		onRedirectResult: function() {
-		},
-
-		// nsIChannelEventSink
+		
+		// Firefox 4で廃止(asyncOnChannelRedirectへ移行)
 		onChannelRedirect : function(oldChannel, newChannel, flags){
 			// channel.redirectionLimitを使うとリダイレクト後のアドレスが取得できない
 			redirectionCount++;
@@ -646,9 +641,11 @@ function request(url, opts){
 		onStartRequest: function(req, ctx){
 			this.data = [];
 		},
+		
 		onDataAvailable: function(req, ctx, stream, sourceOffset, length){
 			this.data.push(new InputStream(stream).read(length));
 		},
+		
 		onStopRequest: function (req, ctx, status){
 			// Firefox 3ではcancelするとonStopRequestは呼ばれない
 			if(opts.redirectionLimit!=null && redirectionCount>opts.redirectionLimit)
@@ -688,13 +685,16 @@ function request(url, opts){
 		},
 	};
 
+	// setUploadStream後にPUTになっているのを補正する
 	channel.requestMethod =
 		(opts.method)? opts.method :
 		(opts.sendContent)? 'POST' : 'GET';
-	broad(channel);  // requestMethod changing
 	channel.notificationCallbacks = listener;
 	channel.asyncOpen(listener, null);
 
+	// requestMethod決定後にインターフェースを拡張する
+	broad(channel);
+	
 	// 確実にガベージコレクトされるように解放する
 	listener = null;
 	channel = null;

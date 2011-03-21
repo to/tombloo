@@ -10,10 +10,10 @@
 
 <pre id="test">
 </pre>
-<script type="text/javascript" src="../library/00_MochiKit.js"></script>
-<script type="text/javascript" src="../library/00_prototype.js"></script>
-<script type="text/javascript" src="../library/00_component.js"></script>
-<script type="text/javascript">
+<script type="text/javascript; version=1.8" src="../library/00_MochiKit.js"></script>
+<script type="text/javascript; version=1.8" src="../library/00_prototype.js"></script>
+<script type="text/javascript; version=1.8" src="../library/00_component.js"></script>
+<script type="text/javascript; version=1.8" >
 try {
 	// chrome://tombloo/content/test/test_Components.html
 	
@@ -39,9 +39,6 @@ try {
 	// createConstructor
 	var str = 'ABCD';
 	is(new InputStream(new StringInputStream(str)).read(str.length), 'ABCD');
-	
-	ok(PrefBranch.instanceOf(new PrefBranch()), 'createConstructor: instanceOf');
-	
 	
 	// getInterfaces
 	var uri = createURI('http://google.com');
@@ -111,17 +108,18 @@ try {
 		'誤ったpreタグ');
 	is(sanitizeHTML(
 		'TEXT<title>HELLO BLOG</tile><link rel="stylesheet" type="text/css" href="style.css">'), 
-		'TEXTHELLO BLOG');
+		'TEXT',
+		'title/link要素の除去');
 	is(sanitizeHTML(
-		'<a href="javascript:alert(4)">yahoo</a>'), 
-		'<a xmlns="http://www.w3.org/1999/xhtml" href="javascript:alert(4)">yahoo</a>');
+		'<a href="javascript:alert(4)">ALERT</a>'), 
+		'<a xmlns="http://www.w3.org/1999/xhtml">ALERT</a>');
 	is(sanitizeHTML(
-		'<a href="javascrip&#116;:alert(3)">YAHOO</a>'), 
-		'<a xmlns="http://www.w3.org/1999/xhtml" href="javascript:alert(3)">YAHOO</a>',
+		'<a href="javascrip&#116;:alert(3)">ALERT</a>'), 
+		'<a xmlns="http://www.w3.org/1999/xhtml">ALERT</a>',
 		'数値実体参照を使ったスクリプトの埋め込み');
 	is(sanitizeHTML(
-		'<a href="javascrip&#116:alert(3)">YAHOO</a>'), 
-		'<a xmlns="http://www.w3.org/1999/xhtml" href="javascript:alert(3)">YAHOO</a>',
+		'<a href="javascrip&#116:alert(3)">ALERT</a>'), 
+		'<a xmlns="http://www.w3.org/1999/xhtml">ALERT</a>',
 		'数値実体参照を使ったスクリプトの埋め込み(末尾セミコロンの省略)');
 	is(sanitizeHTML(
 		'<form action="foo.cgi"><input type="submit"></form>'), 
@@ -134,8 +132,23 @@ try {
 	putContents(file, 'あいうえお', 'UTF-16');
 	*/
 	
-	// 
+	// AppInfo
 	ok(parseFloat(AppInfo.version) > 1.5, 'Firefoxのバージョンを確認');
+	
+	// getExtensionDir
+	var file = getExtensionDir('tombloo@brasil.to');
+	file.append('chrome.manifest');
+	ok(file.exists(), '拡張ディレクトリの取得');
+	
+	// till
+	var flag = false;
+	setTimeout(function(){
+		flag = true;
+	}, 1000);
+	till(function(){
+		return flag
+	});
+	ok(flag, 'スレッドを使った待機');
 	
 } catch (err) {
 	var s = [];

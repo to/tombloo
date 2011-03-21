@@ -23,6 +23,7 @@ var IWebProgressListener = Ci.nsIWebProgressListener;
 var IFile                = Ci.nsIFile;
 var ILocalFile           = Ci.nsILocalFile;
 var IURI                 = Ci.nsIURI;
+var IFileURL             = Ci.nsIFileURL;
 var IInputStream         = Ci.nsIInputStream;
 var ICache               = Ci.nsICache;
 var ISelectionListener   = Ci.nsISelectionListener;
@@ -51,18 +52,19 @@ var IHttpChannel         = Ci.nsIHttpChannel;
 	['LoginManager',        'nsILoginManager',           '/login-manager;1'],
 	['StringBundleService', 'nsIStringBundleService',    '/intl/stringbundle;1'],
 	['NavBookmarksService', 'nsINavBookmarksService',    '/browser/nav-bookmarks-service;1'],
+	['NavHistoryService',   'nsINavHistoryService',      '/browser/nav-history-service;1'],
 	['AnnotationService',   'nsIAnnotationService',      '/browser/annotation-service;1'],
 	['ObserverService',     'nsIObserverService',        '/observer-service;1'],
 	['WindowWatcher',       'nsIWindowWatcher',          '/embedcomp/window-watcher;1'],
 	['ClipboardHelper',     'nsIClipboardHelper',        '/widget/clipboardhelper;1'],
-	['NavHistoryService',   'nsINavHistoryService',      '/browser/nav-history-service;1'],
 	['FaviconService',      'nsIFaviconService',         '/browser/favicon-service;1'],
 	['StyleSheetService',   'nsIStyleSheetService',      '/content/style-sheet-service;1'],
 	['FuelApplication',     'fuelIApplication',          '/fuel/application;1'],
 	['MIMEService',         'nsIMIMEService',            '/mime;1'],
 	['CategoryManager',     'nsICategoryManager',        '/categorymanager;1'],
-	['PrefService',         'nsIPrefService',            '/preferences-service;1'],
-	['AppInfo',             'nsIXULAppInfo',             '/xre/app-info;1'],
+	['ThreadManager',       'nsIThreadManager',          '/thread-manager;1'],
+	['PrefService',         null,                        '/preferences-service;1'],
+	['AppInfo',             null,                        '/xre/app-info;1'],
 ].forEach(function([name, ifc, cid]){
 	defineLazyServiceGetter(this, name, '@mozilla.org' + cid, ifc);
 }, this);
@@ -173,6 +175,7 @@ var DocumentEncoder = function(document, mimeType, flags){
 	return encoder;
 }
 update(DocumentEncoder, Ci.nsIDocumentEncoder);
+
 
 // ----[Utility]-------------------------------------------------
 function createMock(sample, proto){
@@ -327,6 +330,17 @@ function broad(obj, ifcs){
 };
 
 /**
+ * スレッドを使って非ブロックで待機する。
+ *
+ * @param {Function} cond 待機終了判定処理。trueが返ると待機を終了する。
+ */
+function till(cond){
+	let thread = ThreadManager.mainThread;
+	while(!cond())
+		thread.processNextEvent(true);
+}
+
+/**
  * 通知バブルを表示する。
  * 処理完了やエラーなどを通知するために用いる。
  * MacのFirefox 3ではGrowlになる。
@@ -344,17 +358,6 @@ notify.ICON_DOWNLOAD = 'chrome://mozapps/skin/downloads/downloadIcon.png';
 notify.ICON_INFO     = 'chrome://global/skin/console/bullet-question.png';
 notify.ICON_ERROR    = 'chrome://global/skin/console/bullet-error.png';
 notify.ICON_WORN     = 'chrome://global/skin/console/bullet-warning.png';
-
-function convertFromUnplaceableHTML(str){
-	var arr = [];
-	for(var i=0,len=str.length ; i<len ;i++)
-		arr.push(str.charCodeAt(i));
-	return convertFromByteArray(arr, str.match('charset=([^"; ]+)'));
-}
-
-function convertFromByteArray(arr, charset){
-	return new UnicodeConverter(charset).convertFromByteArray(text);
-}
 
 /**
  * URIを生成する。
@@ -417,36 +420,35 @@ function getLocalFile(uri){
  * @param {String} id 拡張ID。
  */
 var getExtensionDir;
- {
-	let ExtensionManager = getService('/extensions/manager;1', Ci.nsIExtensionManager);
-	if (!ExtensionManager) {  // for firefox4
-		Components.utils.import("resource://gre/modules/AddonManager.jsm");
-		let dir = null;
-		AddonManager.getAddonByID(EXTENSION_ID, function (addon) {
-			let root = addon.getResourceURI('/');
-			let url = root.QueryInterface(Ci.nsIFileURL)
-			let target = url.file.QueryInterface(ILocalFile);
-			dir = target;
-		});
-		// using id:piro (http://piro.sakura.ne.jp/) method
-		let thread = Cc['@mozilla.org/thread-manager;1'].getService().mainThread;
-		while (dir === null) {
-			thread.processNextEvent(true);
-		}
-		getExtensionDir = function getExtensionDirInFirefox4() {
-			return dir.clone();
+{
+	if(typeof(ExtensionManager) == 'undefined'){
+		Components.utils.import('resource://gre/modules/AddonManager.jsm');
+		
+		getExtensionDir = function(id){
+			// 最終的にXPIProvider.jsmのXPIDatabase.getVisibleAddonForIDにて
+			// statement.executeAsyncを使った問い合わせで取得される
+			let dir;
+			AddonManager.getAddonByID(id, function(addon){
+				let root = addon.getResourceURI('/');
+				root instanceof IFileURL;
+				
+				dir = root.file.QueryInterface(ILocalFile);
+			});
+			
+			till(function(){
+				return dir;
+			});
+			
+			return dir;
 		}
 	} else {
-		let dir = ExtensionManager
-			.getInstallLocation(EXTENSION_ID)
-			.getItemLocation(EXTENSION_ID).QueryInterface(ILocalFile);
-		getExtensionDir = function getExtensionDirInFirefox3() {
-			return dir.clone();
+		getExtensionDir = function(id){
+			return ExtensionManager
+				.getInstallLocation(id)
+				.getItemLocation(id).QueryInterface(ILocalFile);
 		}
 	}
 }
-
-
 
 function getPrefType(key){
 	with(PrefBranch()){
@@ -523,6 +525,9 @@ function getTempDir(){
 	return DirectoryService.get('TmpD', IFile);
 }
 
+/**
+ * 直近にアクティブだったブラウザウィンドウを取得する。
+ */
 function getMostRecentWindow(){
 	return WindowMediator.getMostRecentWindow('navigator:browser');
 }
@@ -586,7 +591,6 @@ function withStream(stream, func){
 /**
  * HTML文字列からobject/script/body/styleなどの要素を取り除く。
  * また不完全なタグなどを整形し正しいHTMLへ変換する。
- * Firefox 3では、JavaScriptプロトコルの除去が行われない。
  *
  * @param {String} html HTML文字列。
  * @return {String} 整形されたHTML文字列。
@@ -607,6 +611,17 @@ function serializeToString(xml){
 	return (new XMLSerializer()).serializeToString(xml);
 }
 
+function convertFromUnplaceableHTML(str){
+	var arr = [];
+	for(var i=0,len=str.length ; i<len ;i++)
+		arr.push(str.charCodeAt(i));
+	return convertFromByteArray(arr, str.match('charset=([^"; ]+)'));
+}
+
+function convertFromByteArray(arr, charset){
+	return new UnicodeConverter(charset).convertFromByteArray(text);
+}
+
 function registerSheet(css){
 	var sss = StyleSheetService;
 	var uri = (css instanceof IURI)? css : createURI(('data:text/css,' + css).replace(/[\n\r\t ]+/g, ' '));
@@ -623,25 +638,4 @@ function unregisterSheet(uri){
 
 	if(sss.sheetRegistered(uri, sss.AGENT_SHEET))
 		sss.unregisterSheet(uri, sss.AGENT_SHEET);
-}
-
-// NavBookmarksService.getChildFolder is obsolete
-// this function is same method
-function getChildFolderInBookmark(aFolder, aSubFolder) {
-	let query = NavHistoryService.getNewQuery();
-	let options = NavHistoryService.getNewQueryOptions();
-	query.setFolders([aFolder], 1);
-	let result = NavHistoryService.executeQuery(query, options);
-	let rootNode = result.root;
-	let childFolder = 0;
-	rootNode.containerOpen = true;
-	for (let i = 0, len = rootNode.childCount; i < len; ++i) {
-		let node = rootNode.getChild(i);
-		if (node.type === node.RESULT_TYPE_FOLDER && node.title === aSubFolder) {
-			childFolder = node.itemId;
-			break;
-		}
-	}
-	rootNode.containerOpen = false;
-	return childFolder;
 }

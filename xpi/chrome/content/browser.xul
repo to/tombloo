@@ -26,7 +26,7 @@
 			<menupopup id="tombloo-menu-main"/>
 		</menu>
 	</menupopup>
-	<script type="text/javascript; version=1.7"><![CDATA[
+	<script type="text/javascript; version=1.8"><![CDATA[
 	(function(){
 		// initialize
 		var env = Cc['@brasil.to/tombloo-service;1'].getService().wrappedJSObject;

@@ -1451,7 +1451,11 @@ models.register({
 	},
 	
 	removeBookmark : function(uri){
-		NavBookmarksService.removeItem(this.getBookmarkId(uri));
+		this.removeItem(this.getBookmarkId(uri));
+	},
+	
+	removeItem : function(itemId){
+		NavBookmarksService.removeItem(itemId);
 	},
 	
 	getBookmarkId : function(uri){
@@ -1491,11 +1495,57 @@ models.register({
 		return this.createFolder(name, NavBookmarksService.tagsFolder);
 	},
 	
-	createFolder : function(name, parent){
-		parent = parent || NavBookmarksService.bookmarksMenuFolder;
+	/*
+	NavBookmarksServiceに予め存在するフォルダID
+		placesRoot
+		bookmarksMenuFolder
+		tagsFolder
+		toolbarFolder
+		unfiledBookmarksFolder
+	*/
+	
+	/**
+	 * フォルダを作成する。
+	 * 既に同名のフォルダが同じ場所に存在する場合は、新たに作成されない。
+	 *
+	 * @param {String} name フォルダ名称。
+	 * @param {Number} parentId 
+	 *        フォルダの追加先のフォルダID。省略された場合ブックマークメニューとなる。
+	 * @return {Number} 作成されたフォルダID。
+	 */
+	createFolder : function(name, parentId){
+		parentId = parentId || NavBookmarksService.bookmarksMenuFolder;
 		
-		return getChildFolderInBookmark(parent, name) ||
-			NavBookmarksService.createFolder(parent, name, NavBookmarksService.DEFAULT_INDEX);
+		return this.getFolder(name, parentId) ||
+			NavBookmarksService.createFolder(parentId, name, NavBookmarksService.DEFAULT_INDEX);
+	},
+	
+	/**
+	 * フォルダIDを取得する。
+	 * 既に同名のフォルダが同じ場所に存在する場合は、新たに作成されない。
+	 *
+	 * @param {String} name フォルダ名称。
+	 * @param {Number} parentId 
+	 *        フォルダの追加先のフォルダID。省略された場合ブックマークメニューとなる。
+	 */
+	getFolder : function(name, parentId) {
+		parentId = parentId || NavBookmarksService.bookmarksMenuFolder;
+		
+		let query = NavHistoryService.getNewQuery();
+		let options = NavHistoryService.getNewQueryOptions();
+		query.setFolders([parentId], 1);
+		
+		let root = NavHistoryService.executeQuery(query, options).root;
+		try{
+			root.containerOpen = true;
+			for(let i=0, len=root.childCount; i<len; ++i){
+				let node = root.getChild(i);
+				if(node.type === node.RESULT_TYPE_FOLDER && node.title === name)
+					return node.itemId;
+			}
+		} finally {
+			root.containerOpen = false;
+		}
 	},
 });
 

@@ -9,13 +9,13 @@
 <body>
 <pre id="test">
 </pre>
-<script type="text/javascript" src="../library/00_MochiKit.js"></script>
-<script type="text/javascript" src="../library/00_prototype.js"></script>
-<script type="text/javascript" src="../library/00_component.js"></script>
-<script type="text/javascript" src="../library/01_utility.js"></script>
-<script type="text/javascript" src="../library/20_model.js"></script>
-<script type="text/javascript" src="../library/20_Wedata.js"></script>
-<script type="text/javascript">
+<script type="text/javascript; version=1.8" src="../library/00_MochiKit.js"></script>
+<script type="text/javascript; version=1.8" src="../library/00_prototype.js"></script>
+<script type="text/javascript; version=1.8" src="../library/00_component.js"></script>
+<script type="text/javascript; version=1.8" src="../library/01_utility.js"></script>
+<script type="text/javascript; version=1.8" src="../library/20_model.js"></script>
+<script type="text/javascript; version=1.8" src="../library/20_Wedata.js"></script>
+<script type="text/javascript; version=1.8">
 try {
 	// chrome://tombloo/content/test/test_model.html
 	
@@ -597,6 +597,7 @@ try {
 	});
 	*/
 	
+	
 	// FirefoxBookmark
 	var uri = 'chrome://tombloo/content/prefs.xul';
 	var title = 'Tombloo 設定画面';
@@ -607,17 +608,25 @@ try {
 		description : description,
 	};
 	
-	models.FirefoxBookmark.addBookmark(uri, title, ['tombloo', 'chrome'], description);
-	sameObject(models.FirefoxBookmark.getBookmark(uri), params, 'FirefoxBookmark: ブックマークの追加');
-	ok(models.FirefoxBookmark.isBookmarked(uri));
+	FirefoxBookmark.addBookmark(uri, title, ['tombloo', 'chrome'], description);
+	sameObject(FirefoxBookmark.getBookmark(uri), params, 'FirefoxBookmark: ブックマークの追加');
+	ok(FirefoxBookmark.isBookmarked(uri));
 	
-	models.FirefoxBookmark.removeBookmark(uri);
-	ok(!models.FirefoxBookmark.getBookmark(uri), 'FirefoxBookmark: ブックマークの削除');
-	ok(!models.FirefoxBookmark.isBookmarked(uri));
+	FirefoxBookmark.removeBookmark(uri);
+	ok(!FirefoxBookmark.getBookmark(uri), 'FirefoxBookmark: ブックマークの削除');
+	ok(!FirefoxBookmark.isBookmarked(uri));
 	
-	models.FirefoxBookmark.addBookmark(params);
-	ok(models.FirefoxBookmark.isBookmarked(uri), 'FirefoxBookmark: ブックマークの追加(ハッシュ形式)');
-	models.FirefoxBookmark.removeBookmark(uri);
+	FirefoxBookmark.addBookmark(params);
+	ok(FirefoxBookmark.isBookmarked(uri), 'FirefoxBookmark: ブックマークの追加(ハッシュ形式)');
+	FirefoxBookmark.removeBookmark(uri);
+	
+	FirefoxBookmark.createFolder('TEST', NavBookmarksService.bookmarksMenuFolder);
+	
+	var folderId = FirefoxBookmark.getFolder('TEST', NavBookmarksService.bookmarksMenuFolder);
+	ok(folderId, 'FirefoxBookmark: フォルダの作成');
+	FirefoxBookmark.removeItem(folderId);
+	folderId = FirefoxBookmark.getFolder('TEST');
+	ok(! folderId, 'FirefoxBookmark: フォルダの削除/フォルダIDの省略');
 	
 	
 	// NDrive

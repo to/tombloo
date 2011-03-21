@@ -524,7 +524,9 @@ Tombloo.Service.extractors = new Repository([
 			return Tombloo.Service.extractors.ReBlog.extractByLink(ctx, this.getLink(ctx));
 		},
 		getLink : function(ctx){
-			var link = $x('./ancestor-or-self::li[starts-with(normalize-space(@class), "post")]//a[@title="Permalink"]', ctx.target);
+			var link = $x(
+				'./ancestor-or-self::li[starts-with(normalize-space(@class), "post")]' + 
+				'//a[starts-with(@id,"permalink_")]', ctx.target);
 			return link && link.href;
 		},
 	},

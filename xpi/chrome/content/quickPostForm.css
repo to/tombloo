@@ -7,6 +7,7 @@ description {
 }
 
 resizer {
+	-moz-appearance: none;
 	background-image: none !important;
 }
 
@@ -101,7 +102,6 @@ resizer[dir="bottom"] {
 }
 
 resizer[dir="bottomright"] {
-	-moz-appearance: none;
 	cursor: se-resize;
 }
 

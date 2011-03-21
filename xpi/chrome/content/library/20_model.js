@@ -1229,7 +1229,7 @@ models.register({
 
 models.register({
 	name : 'Digg',
-	ICON : 'http://digg.com/favicon.ico',
+	ICON : 'http://cdn1.diggstatic.com/img/favicon.ico',
 	
 	check : function(ps){
 		return ps.type=='link';

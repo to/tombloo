@@ -6,13 +6,14 @@ const Cr = Components.results;
 
 var ILocalFile = Ci.nsILocalFile;
 
-ConsoleService   = getService('/consoleservice;1', Ci.nsIConsoleService);
-AppShellService  = getService('/appshell/appShellService;1', Ci.nsIAppShellService);
-ScriptLoader     = getService('/moz/jssubscript-loader;1', Ci.mozIJSSubScriptLoader);
-IOService        = getService('/network/io-service;1', Ci.nsIIOService);
-WindowMediator   = getService('/appshell/window-mediator;1', Ci.nsIWindowMediator);
-CategoryManager  = getService('/categorymanager;1', Ci.nsICategoryManager);
+ConsoleService      = getService('/consoleservice;1', Ci.nsIConsoleService);
+AppShellService     = getService('/appshell/appShellService;1', Ci.nsIAppShellService);
+ScriptLoader        = getService('/moz/jssubscript-loader;1', Ci.mozIJSSubScriptLoader);
+IOService           = getService('/network/io-service;1', Ci.nsIIOService);
+WindowMediator      = getService('/appshell/window-mediator;1', Ci.nsIWindowMediator);
+CategoryManager     = getService('/categorymanager;1', Ci.nsICategoryManager);
 FileProtocolHandler = getService('/network/protocol;1?name=file', Ci.nsIFileProtocolHandler);
+
 
 var getContentDir;
 ExtensionManager = getService('/extensions/manager;1', Ci.nsIExtensionManager);
@@ -35,11 +36,11 @@ if (!ExtensionManager) {  // for firefox4
 		return dir.clone();
 	}
 } else {
-	let dir = ExtensionManager
-		.getInstallLocation(EXTENSION_ID)
-		.getItemLocation(EXTENSION_ID).QueryInterface(ILocalFile);
+	getContentDir = function() {
+		var dir = ExtensionManager
+			.getInstallLocation(EXTENSION_ID)
+			.getItemLocation(EXTENSION_ID).QueryInterface(ILocalFile);
 		dir.setRelativeDescriptor(dir, 'chrome/content');
-	getContentDir = function getContentDirInFirefox3() {
 		return dir.clone();
 	}
 }

@@ -31,6 +31,7 @@
 		// initialize
 		var env = Cc['@brasil.to/tombloo-service;1'].getService().wrappedJSObject;
 		env = env.Module.createInstance(null, Components.ID('{aec75109-b143-4e49-a708-4904cfe85ea0}'));
+		
 		env.signal(env, 'browser-open', window);
 		
 		window.addEventListener('load', function(e){

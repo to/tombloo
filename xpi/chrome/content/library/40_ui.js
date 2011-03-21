@@ -195,10 +195,10 @@ forEach({
 		}, win.location);
 
 		var ext = Tombloo.Service.check(ctx)[0];
-
+		
 		// FIXME: xul:popup要素の使用を検討
 		var tip = doc.createElement('div');
-		tip.setAttribute('style', <>
+		tip.setAttribute('style', ''+<>
 			font-family        : 'Arial Black', Arial, sans-serif;
 			font-size          : 12px;
 
@@ -208,13 +208,15 @@ forEach({
 			z-index            : 999999999;
 			width              : auto;
 			height             : 16px;
+			line-height        : 16px;
+			vertical-align     : middle;
 			overflow           : hidden;
 
 			-moz-border-radius : 4px;
 			border             : 4px solid #EEE;
 			padding-left       : 20px;
 			padding-right      : 2px;
-		</>.toString);
+		</>);
 		tip.textContent = ext.name;
 		convertToDataURL(ext.ICON).addCallback(function(dataUrl){
 			tip.style.backgroundImage = 'url(' + dataUrl + ')';
@@ -223,7 +225,7 @@ forEach({
 		doc.body.appendChild(tip);
 		setTimeout(function(){
 			fade(tip, {
-				duration : 0.8,
+				duration : 1,
 				afterFinish : function(){
 					removeElement(tip);
 				},

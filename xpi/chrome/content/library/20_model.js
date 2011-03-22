@@ -674,7 +674,7 @@ models.register({
 models.register({
 	name : 'Twitter',
 	ICON : 'http://twitter.com/favicon.ico',
-	URL  : 'http://twitter.com',
+	URL  : 'https://twitter.com',
 	SHORTEN_SERVICE : 'bit.ly',
 	
 	check : function(ps){

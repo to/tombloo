@@ -456,7 +456,7 @@ function openInEditor(path){
  */
 function setCookie(channel){
 	// サードパーティのクッキーを送信するか?
-	if(!channel.QueryInterface(Ci.nsIHttpChannel) || getPrefValue('network.cookie.cookieBehavior') != 1)
+	if(!(channel instanceof IHttpChannel) || getPrefValue('network.cookie.cookieBehavior') != 1)
 		return channel;
 	
 	channel.setRequestHeader('Cookie', getCookieString(channel.originalURI.host), true);
@@ -488,7 +488,9 @@ function request(url, opts){
 	opts = opts || {};
 	
 	var uri = createURI(joinText([url, queryString(opts.queryString)], '?'));
-	let channel = IOService.newChannelFromURI(uri).QueryInterface(Ci.nsIUploadChannel);
+	
+	// requestMethodを変更するため要求するインタフェースは必要最小限に留める
+	let channel = broad(IOService.newChannelFromURI(uri), [Ci.nsIUploadChannel, IHttpChannel]);
 	
 	if(opts.referrer)
 		channel.referrer = createURI(opts.referrer);
@@ -528,7 +530,7 @@ function request(url, opts){
 				var value = contents[name];
 				if(value==null)
 					continue;
-
+				
 				if(!value.file){
 					streams.push([
 						'--' + boundary,

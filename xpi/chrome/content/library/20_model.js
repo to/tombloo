@@ -2042,46 +2042,57 @@ models.register(update({
 }, AbstractSessionService));
 
 models.register( {
-	name: 'HatenaDiary',
-	ICON: 'http://d.hatena.ne.jp/favicon.ico',
+	name     : 'HatenaDiary',
+	ICON     : 'http://d.hatena.ne.jp/favicon.ico',
 	POST_URL : 'http://d.hatena.ne.jp',
 	
-    
 	check : function(ps){
 		return (/(regular|photo|quote|link)/).test(ps.type) && !ps.file;
 	},
-    
+	
 	converters: {
-		getTitle: function(ps){
-			return Hatena.reprTags(ps.tags) + (ps.page || '')
+		regular : function(ps, title){
+			return ps.description;
 		},
-		renderingTemplates: {
-			regular: '<p>{ps.description}</p>',
-			photo: '<p><blockquote class="tombloo_photo" cite={ps.pageUrl} title={ps.page}><img src={ps.itemUrl} /></blockquote>{ps.description}</p>',
-			link: '<p><div class="tombloo_link"><a href={ps.pageUrl} title={ps.page}>{ps.page}</a></div>{ps.description}</p>',
-			quote: '<p><blockquote class="tombloo_quote" cite={ps.pageUrl} title={ps.page}>{ps.body}</blockquote>{ps.description}</p>',
+		
+		photo : function(ps, title){
+			return ''+<>
+				<blockquote cite={ps.pageUrl} title={title}>
+					<img src={ps.itemUrl} />
+				</blockquote>
+				{ps.description}
+			</>;
 		},
-		__noSuchMethod__: function(name, args){
-			var ps = args[0];
-			return {
-				title: (name == 'regular') ? '' : this.getTitle(ps),
-				body: eval( this.renderingTemplates[name] ).toString()
-			};
+		
+		link : function(ps, title){
+			return ''+<>
+				<a href={ps.pageUrl} title={title}>{ps.page}</a>
+				{ps.description}
+			</>;
+		},
+		
+		quote : function(ps, title){
+			return ''+<>
+				<blockquote cite={ps.pageUrl} title={title}>{ps.body}</blockquote>
+				{ps.description}
+			</>;
 		},
 	},
-	post : function(params){
-		var content;
+	
+	post : function(ps){
 		var self = this;
-		return Hatena.getUserInfo().addCallback(itemgetter('rkm')).addCallback(function(token){
-			content = self.converters[params.type](params);
-			content.rkm = token;
-			return Hatena.getCurrentUser();
-		}).addCallback(function(user){
-			var endpoint = [self.POST_URL, user, ''].join('/');
-			return request( endpoint, {
+		
+		return Hatena.getUserInfo().addCallback(function(info){
+			var title = ps.item || ps.page || '';
+			var endpoint = [self.POST_URL, info.name, ''].join('/');
+			return request(endpoint, {
 				redirectionLimit : 0,
-				referrer    : endpoint,
-				sendContent : content
+				referrer         : endpoint,
+				sendContent      : {
+					rkm   : info.rkm,
+					title : Hatena.reprTags(ps.tags) + title,
+					body  : self.converters[ps.type](ps, title),
+				},
 			});
 		});
 	}
@@ -2133,8 +2144,8 @@ models.register({
 });
 
 models.register(update({
-	name : 'LivedoorClip',
-	ICON : 'http://clip.livedoor.com/favicon.ico',
+	name     : 'LivedoorClip',
+	ICON     : 'http://clip.livedoor.com/favicon.ico',
 	POST_URL : 'http://clip.livedoor.com/clip/add',
 
 	check : function(ps){

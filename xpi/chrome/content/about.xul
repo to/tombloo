@@ -19,13 +19,13 @@
 	xmlns:html="http://www.w3.org/1999/xhtml" 
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	buttons="accept" onload="init();" onaccept="close();">
-
+	
 	<script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"/>
 	
 	<stringbundleset id="aboutSet">
 		<stringbundle id="extensionsStrings" src="chrome://mozapps/locale/extensions/extensions.properties"/>
 	</stringbundleset>
-
+	
 	<vbox id="clientBox" flex="1">
 		<label value="Tombloo" 
 			id="extensionName" 
@@ -58,7 +58,7 @@
 			</description>
 		</vbox>
 	</vbox>
-		
+	
 	<separator id="groove" class="groove"/>
 	<script><![CDATA[
 	// chrome://tombloo/content/about.xul
@@ -71,5 +71,4 @@
 		window.opener.openURL(url);
 	}
 	]]></script>
-
 </dialog>

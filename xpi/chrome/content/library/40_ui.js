@@ -201,7 +201,7 @@ forEach({
 		tip.setAttribute('style', ''+<>
 			font-family        : 'Arial Black', Arial, sans-serif;
 			font-size          : 12px;
-
+			
 			color              : #666;
 			background         : #EEEEEE no-repeat;
 			position           : fixed;
@@ -211,7 +211,7 @@ forEach({
 			line-height        : 16px;
 			vertical-align     : middle;
 			overflow           : hidden;
-
+			
 			-moz-border-radius : 4px;
 			border             : 4px solid #EEE;
 			padding-left       : 20px;
@@ -303,7 +303,7 @@ connect(grobal, 'browser-load', function(e){
 			
 			return;
 		}
-
+		
 		// command時にはクリック箇所などの情報が失われるためコンテキストを保持しておく
 		context = update({}, cwin.gContextMenu, win.location, {
 			document  : doc,

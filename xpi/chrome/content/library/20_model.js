@@ -817,7 +817,7 @@ models.register({
 models.register(update({
 	name : 'Plurk',
 	ICON : 'http://www.plurk.com/static/favicon.png',
-
+	
 	check : function(ps){
 		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},

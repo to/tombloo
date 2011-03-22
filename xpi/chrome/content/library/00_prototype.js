@@ -128,7 +128,7 @@ update(String.prototype, {
 			c = this.charCodeAt(i);
 			a[i] = (0x30A1 <= c && c <= 0x30F6) ? c - 0x0060 : c;
 		};
-
+		
 		return String.fromCharCode.apply(null, a);
 	},
 	

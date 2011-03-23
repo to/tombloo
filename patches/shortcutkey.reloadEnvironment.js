@@ -3,7 +3,10 @@ shortcutkeys[[KEY_ACCEL, 'SHIFT', 'R'].join(' + ')] = {
 	execute : function(e){
 		cancel(e);
 		
-		reload();
-		log('Tombloo: reloaded');
+		// processNextEventによりpreventDefaultが無視されるのを避ける
+		setTimeout(function(){
+			reload();
+			log('Tombloo: reloaded');
+		}, 0);
 	}
 }

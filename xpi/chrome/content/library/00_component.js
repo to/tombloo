@@ -331,12 +331,14 @@ function broad(obj, ifcs){
 /**
  * スレッドを使って非ブロックで待機する。
  *
- * @param {Function} cond 待機終了判定処理。trueが返ると待機を終了する。
+ * @param {Function} cond 待機終了判定処理。trueを返すと待機が終了する。
  */
 function till(cond){
 	let thread = ThreadManager.mainThread;
-	while(!cond())
+	
+	do{
 		thread.processNextEvent(true);
+	}while(cond && !cond());
 }
 
 /**

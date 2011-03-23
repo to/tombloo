@@ -15,128 +15,6 @@ CategoryManager     = getService('/categorymanager;1', Ci.nsICategoryManager);
 FileProtocolHandler = getService('/network/protocol;1?name=file', Ci.nsIFileProtocolHandler);
 
 
-var getContentDir;
-ExtensionManager = getService('/extensions/manager;1', Ci.nsIExtensionManager);
-if (!ExtensionManager) {  // for firefox4
-	Components.utils.import("resource://gre/modules/AddonManager.jsm");
-	let dir = null;
-	AddonManager.getAddonByID(EXTENSION_ID, function (addon) {
-		let root = addon.getResourceURI('/');
-		let url = root.QueryInterface(Ci.nsIFileURL)
-		let target = url.file.QueryInterface(ILocalFile);
-		target.setRelativeDescriptor(target, 'chrome/content');
-		dir = target;
-	});
-	// using id:piro (http://piro.sakura.ne.jp/) method
-	let thread = Cc['@mozilla.org/thread-manager;1'].getService().mainThread;
-	while (dir === null) {
-		thread.processNextEvent(true);
-	}
-	getContentDir = function getContentDirInFirefox4() {
-		return dir.clone();
-	}
-} else {
-	getContentDir = function() {
-		var dir = ExtensionManager
-			.getInstallLocation(EXTENSION_ID)
-			.getItemLocation(EXTENSION_ID).QueryInterface(ILocalFile);
-		dir.setRelativeDescriptor(dir, 'chrome/content');
-		return dir.clone();
-	}
-}
-
-
-Module = {
-	CID  : Components.ID('{aec75109-b143-4e49-a708-4904cfe85ea0}'),
-	NAME : 'TomblooService',
-	PID  : '@brasil.to/tombloo-service;1',
-	
-	onRegister : function(){
-		CategoryManager.addCategoryEntry('content-policy', this.NAME, this.PID, true, true);
-	},
-	
-	initialized : false,
-	
-	instance : {
-		shouldLoad : function(contentType, contentLocation, requestOrigin, context, mimeTypeGuess, extra){
-			return Ci.nsIContentPolicy.ACCEPT;
-		},
-		
-		shouldProcess : function(aContentType, aContentLocation, aRequestOrigin, aContext, aMimeTypeGuess, aExtra){
-			return Ci.nsIContentPolicy.ACCEPT;
-		},
-		
-		QueryInterface : function(iid){
-			if(iid.equals(Ci.nsIContentPolicy) || iid.equals(Ci.nsISupports) || iid.equals(Ci.nsISupportsWeakReference))
-				return this;
-			
-			throw Cr.NS_NOINTERFACE;
-		},
-	},
-	
-	createInstance : function(outer, iid){
-		// nsIContentPolicyはhiddenDOMWindowの準備ができる前に取得される
-		// 仮に応答できるオブジェクトを返し環境を構築できるまでの代替とする
-		if(iid.equals(Ci.nsIContentPolicy))
-			return this.instance;
-		
-		// ブラウザが開かれるタイミングでインスタンスの要求を受け環境を初期化する
-		// 2個目以降のウィンドウからは生成済みの環境を返す
-		if(this.initialized)
-			return this.instance;
-		
-		// 以降のコードはアプリケーション起動後に一度だけ通過する
-		var env = this.instance;
-		
-		// アプリケーション全体で、同じloadSubScripts関数を使いまわし汚染を防ぐ
-		env.loadSubScripts = loadSubScripts;
-		env.loadAllSubScripts = loadAllSubScripts;
-		env.getContentDir = getContentDir;
-		env.getLibraries = getLibraries;
-		env.PID = this.PID;
-		env.CID = this.CID;
-		env.NAME = this.NAME;
-		
-		// MochiKit内部で使用しているinstanceofで異常が発生するのを避ける
-		env.MochiKit = {};
-		
-		setupEnvironment(env);
-		env.loadAllSubScripts();
-		
-		// Greasemonkeyコンテキストの準備
-		var gm = Cc['@greasemonkey.mozdev.org/greasemonkey-service;1'];
-		if(gm){
-			gm = gm.getService().wrappedJSObject;
-			
-			var GM_Tombloo = copy({
-				Tombloo : {
-					Service : copy({}, env.Tombloo.Service, /(check|share|posters|extractors)/),
-				}
-			}, env, /(Deferred|DeferredHash|copyString|notify)/);
-			
-			for(var name in env.models)
-				if(env.models.hasOwnProperty(name))
-					GM_Tombloo[name] = copy({}, env.models[name], /^(?!.*(password|cookie))/i);
-			
-			env.addBefore(gm, 'evalInSandbox', function(){
-				for(var i=0, len=arguments.length ; i<len ; i++){
-					var arg = arguments[i];
-					if(typeof(arg) == 'object'){
-						arg.GM_Tombloo = GM_Tombloo;
-						return;
-					}
-				}
-			});
-		}
-		
-		env.signal(env, 'environment-load');
-		
-		this.initialized = true;
-		return env;
-	},
-}
-
-
 // ----[Application]--------------------------------------------
 function getScriptFiles(dir){
 	var scripts = [];
@@ -274,6 +152,129 @@ function copy(t, s, re){
 	return t;
 }
 
+
+var getContentDir;
+ExtensionManager = getService('/extensions/manager;1', Ci.nsIExtensionManager);
+if (!ExtensionManager) {  // for firefox4
+	Components.utils.import("resource://gre/modules/AddonManager.jsm");
+	let dir = null;
+	AddonManager.getAddonByID(EXTENSION_ID, function (addon) {
+		let root = addon.getResourceURI('/');
+		let url = root.QueryInterface(Ci.nsIFileURL)
+		let target = url.file.QueryInterface(ILocalFile);
+		target.setRelativeDescriptor(target, 'chrome/content');
+		dir = target;
+	});
+	// using id:piro (http://piro.sakura.ne.jp/) method
+	let thread = Cc['@mozilla.org/thread-manager;1'].getService().mainThread;
+	while (dir === null) {
+		thread.processNextEvent(true);
+	}
+	getContentDir = function getContentDirInFirefox4() {
+		return dir.clone();
+	}
+} else {
+	getContentDir = function() {
+		var dir = ExtensionManager
+			.getInstallLocation(EXTENSION_ID)
+			.getItemLocation(EXTENSION_ID).QueryInterface(ILocalFile);
+		dir.setRelativeDescriptor(dir, 'chrome/content');
+		return dir.clone();
+	}
+}
+
+
+Module = {
+	CID  : Components.ID('{aec75109-b143-4e49-a708-4904cfe85ea0}'),
+	NAME : 'TomblooService',
+	PID  : '@brasil.to/tombloo-service;1',
+	
+	initialized : false,
+	
+	onRegister : function(){
+		CategoryManager.addCategoryEntry('content-policy', this.NAME, this.PID, true, true);
+	},
+	
+	instance : {
+		shouldLoad : function(contentType, contentLocation, requestOrigin, context, mimeTypeGuess, extra){
+			return Ci.nsIContentPolicy.ACCEPT;
+		},
+		
+		shouldProcess : function(aContentType, aContentLocation, aRequestOrigin, aContext, aMimeTypeGuess, aExtra){
+			return Ci.nsIContentPolicy.ACCEPT;
+		},
+		
+		QueryInterface : function(iid){
+			if(iid.equals(Ci.nsIContentPolicy) || iid.equals(Ci.nsISupports) || iid.equals(Ci.nsISupportsWeakReference))
+				return this;
+			
+			throw Cr.NS_NOINTERFACE;
+		},
+	},
+	
+	createInstance : function(outer, iid){
+		// nsIContentPolicyはhiddenDOMWindowの準備ができる前に取得される
+		// 仮に応答できるオブジェクトを返し環境を構築できるまでの代替とする
+		if(iid.equals(Ci.nsIContentPolicy))
+			return this.instance;
+		
+		// ブラウザが開かれるタイミングでインスタンスの要求を受け環境を初期化する
+		// 2個目以降のウィンドウからは生成済みの環境を返す
+		if(this.initialized)
+			return this.instance;
+		
+		// 以降のコードはアプリケーション起動後に一度だけ通過する
+		var env = this.instance;
+		
+		// アプリケーション全体で、同じloadSubScripts関数を使いまわし汚染を防ぐ
+		env.loadSubScripts = loadSubScripts;
+		env.loadAllSubScripts = loadAllSubScripts;
+		env.getContentDir = getContentDir;
+		env.getLibraries = getLibraries;
+		env.PID = this.PID;
+		env.CID = this.CID;
+		env.NAME = this.NAME;
+		
+		// MochiKit内部で使用しているinstanceofで異常が発生するのを避ける
+		env.MochiKit = {};
+		
+		setupEnvironment(env);
+		env.loadAllSubScripts();
+		
+		// Greasemonkeyコンテキストの準備
+		var gm = Cc['@greasemonkey.mozdev.org/greasemonkey-service;1'];
+		if(gm){
+			gm = gm.getService().wrappedJSObject;
+			
+			var GM_Tombloo = copy({
+				Tombloo : {
+					Service : copy({}, env.Tombloo.Service, /(check|share|posters|extractors)/),
+				}
+			}, env, /(Deferred|DeferredHash|copyString|notify)/);
+			
+			for(var name in env.models)
+				if(env.models.hasOwnProperty(name))
+					GM_Tombloo[name] = copy({}, env.models[name], /^(?!.*(password|cookie))/i);
+			
+			env.addBefore(gm, 'evalInSandbox', function(){
+				for(var i=0, len=arguments.length ; i<len ; i++){
+					var arg = arguments[i];
+					if(typeof(arg) == 'object'){
+						arg.GM_Tombloo = GM_Tombloo;
+						return;
+					}
+				}
+			});
+		}
+		
+		env.signal(env, 'environment-load');
+		
+		this.initialized = true;
+		return env;
+	},
+}
+
+
 var ModuleImpl = {
 	registerSelf : function(compMgr, fileSpec, location, type) {
 		compMgr.QueryInterface(Ci.nsIComponentRegistrar).registerFactoryLocation(
@@ -286,13 +287,11 @@ var ModuleImpl = {
 		return true;
 	},
 	getClassObject : function(compMgr, cid, iid){
-		if (!cid.equals(Module.CID)) {
+		if(!cid.equals(Module.CID))
 			throw Cr.NS_ERROR_NO_INTERFACE;
-		}
 		
-		if (!iid.equals(Ci.nsIFactory)) {
+		if(!iid.equals(Ci.nsIFactory))
 			throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-		}
 		
 		Module.onInit && Module.onInit(compMgr, cid, iid);
 		
@@ -300,9 +299,8 @@ var ModuleImpl = {
 	},
 	factory: {
 		createInstance: function(outer, iid) {
-			if (outer != null) {
+			if(outer != null)
 				throw Cr.NS_ERROR_NO_AGGREGATION;
-			}
 			
 			var obj = Module.createInstance(outer, iid);
 			obj.Module = Module;

@@ -1,5 +1,6 @@
 component {aec75109-b143-4e49-a708-4904cfe85ea0} components/tombloo.js
 contract  @brasil.to/tombloo-service;1 {aec75109-b143-4e49-a708-4904cfe85ea0}
+category  content-policy TomblooService @brasil.to/tombloo-service;1
 
 content   tombloo  chrome/content/
 skin      tombloo  classic  chrome/skin/

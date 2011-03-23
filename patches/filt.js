@@ -135,38 +135,64 @@
 	}, '----');
 })();
 
-connect(grobal, 'content-ready', function(win){
-	var non = function(){};
-	var names = 'urchinTracker __utmSetVar pageTracker _gat'.split(' ');
-	names.forEach(function(name){
-		win[name] = non;
-	});
-	
-	var pageTracker = {
-		_setDomainName : non,
-		_initData : non,
-		_trackPageview : non,
-		_trackEvent : non,
-	};
-	win._gat = {
-		_getTracker : function(){
-			return pageTracker;
-		},
-	}
-	win.pageTracker = pageTracker;
-	
-	names.forEach(function(name){
-		fixProp(win, name);
-	});
-	
-	function fixProp(obj, prop){
-		obj.watch(prop, function(key, ov, nv){
-			return ov;
+connect(grobal, 'content-ready', Object.freeze? 
+	function(win){
+		var non = Object.freeze(function(){});
+		var names = 'urchinTracker __utmSetVar pageTracker _gat'.split(' ');
+		names.forEach(function(name){
+			Object.defineProperty(win, name, {value : non});
 		});
 		
-		obj = obj[prop];
-		if(typeof(obj)=='object')
-			for(var prop in obj)
-				fixProp(obj, prop);
+		var pageTracker = Object.freeze({
+			_setDomainName : non,
+			_initData : non,
+			_trackPageview : non,
+			_trackEvent : non,
+		});
+		
+		Object.defineProperty(win, '_gat', {
+			value : Object.freeze({
+				_getTracker : function(){
+					return pageTracker;
+				},
+			})
+		});
+		
+		Object.defineProperty(win, 'pageTracker', {value : pageTracker});
+	} : 
+	function(win){
+		var non = function(){};
+		var names = 'urchinTracker __utmSetVar pageTracker _gat _gaq'.split(' ');
+		names.forEach(function(name){
+			win[name] = non;
+		});
+		
+		var pageTracker = {
+			_setDomainName : non,
+			_initData : non,
+			_trackPageview : non,
+			_trackEvent : non,
+		};
+		win._gat = {
+			_getTracker : function(){
+				return pageTracker;
+			},
+		}
+		win.pageTracker = pageTracker;
+		
+		names.forEach(function(name){
+			fixProp(win, name);
+		});
+		
+		function fixProp(obj, prop){
+			obj.watch(prop, function(key, ov, nv){
+				return ov;
+			});
+			
+			obj = obj[prop];
+			if(typeof(obj)=='object')
+				for(var prop in obj)
+					fixProp(obj, prop);
+		}
 	}
-});
+);

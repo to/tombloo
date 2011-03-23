@@ -28,9 +28,7 @@
 	</menupopup>
 	<script type="text/javascript; version=1.8"><![CDATA[
 	(function(){
-		// initialize
-		var env = Cc['@brasil.to/tombloo-service;1'].getService().wrappedJSObject;
-		env = env.Module.createInstance(null, Components.ID('{aec75109-b143-4e49-a708-4904cfe85ea0}'));
+		var env = Cc['@brasil.to/tombloo-service;1'].createInstance().wrappedJSObject;
 		
 		env.signal(env, 'browser-open', window);
 		

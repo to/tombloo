@@ -401,13 +401,15 @@ function getLocalFile(uri){
 		return uri;
 	
 	uri = createURI(uri);
-	if (uri.scheme === 'chrome') {
-		uri = ChromeRegistry.convertChromeURL(uri);
-	}
 	
-	if(uri.scheme !== 'file') {
+	if(uri.scheme == 'chrome')
+		uri = ChromeRegistry.convertChromeURL(uri);
+	
+	if(uri.scheme == 'jar')
+		uri = createURI(uri.spec.replace(/(^jar:|!\/$)/g, ''));
+	
+	if(uri.scheme != 'file')
 		return;
-	}
 	
 	return IOService.getProtocolHandler('file').
 		QueryInterface(Ci.nsIFileProtocolHandler).
@@ -419,25 +421,27 @@ function getLocalFile(uri){
  * 拡張のインストールされているディレクトリを取得する。
  *
  * @param {String} id 拡張ID。
+ * @return {String} 
+ *         拡張のリソースディレクトリ。
+ *         展開しない拡張はjarファイルが返る。
+ *         拡張が見つからない場合はnullが返る。
  */
 var getExtensionDir;
 {
+	// Firefox 4以降
 	if(typeof(ExtensionManager) == 'undefined' || !ExtensionManager){
 		Components.utils.import('resource://gre/modules/AddonManager.jsm');
 		
 		getExtensionDir = function(id){
 			// 最終的にXPIProvider.jsmのXPIDatabase.getVisibleAddonForIDにて
 			// statement.executeAsyncを使った問い合わせで取得される
-			let dir;
+			let dir = false;
 			AddonManager.getAddonByID(id, function(addon){
-				let root = addon.getResourceURI('/');
-				root instanceof IFileURL;
-				
-				dir = root.file.QueryInterface(ILocalFile);
+				dir = (!addon)? null : getLocalFile(addon.getResourceURI('/'));
 			});
 			
 			till(function(){
-				return dir;
+				return dir !== false;
 			});
 			
 			return dir;

@@ -263,25 +263,15 @@ connect(grobal, 'browser-load', function(e){
 	if(top) {
 		insertSiblingNodesAfter(menuAction.parentNode, separator);
 	}
-
-	var menuEditor = false;
-	if (typeof FuelApplication !== 'undefined' && FuelApplication.extensions) {
-		menuEditor = FuelApplication.extensions.get('{EDA7B1D7-F793-4e03-B074-E6F303317FB0}');
+	
+	var menuEditor;
+	var extensionId = '{EDA7B1D7-F793-4e03-B074-E6F303317FB0}';
+	if(FuelApplication && FuelApplication.extensions){
+		menuEditor = FuelApplication.extensions.get(extensionId);
 		menuEditor = menuEditor && menuEditor.enabled;
 	} else {
-		let { AddonManager } =
-		let (ctx = {}) Components.utils.import("resource://gre/modules/AddonManager.jsm", ctx);
-		let check = null;
-		AddonManager.getAllAddons(function callback(addons) {
-			check = addons.some(function(i) {
-				return i.id.toUpperCase() === '{EDA7B1D7-F793-4e03-B074-E6F303317FB0}';
-			});
-		});
-		let thread = Cc['@mozilla.org/thread-manager;1'].getService().mainThread;
-		while (check === null) {
-			thread.processNextEvent(true);
-		}
-		menuEditor = check;
+		// Firefox 4以降
+		menuEditor = !!getExtensionDir(extensionId);
 	}
 
 	// Menu Editor拡張によって個別メニューのイベントを取得できなくなる現象を回避

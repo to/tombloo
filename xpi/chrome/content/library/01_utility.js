@@ -456,8 +456,10 @@ function openInEditor(path){
  */
 function setCookie(channel){
 	// サードパーティのクッキーを送信するか?
-	if(!(channel instanceof IHttpChannel) || getPrefValue('network.cookie.cookieBehavior') != 1)
+	if(!(channel instanceof IHttpChannel) || getPrefValue('network.cookie.cookieBehavior') != 1){
+		// デフォルトのクッキー付加処理を利用する
 		return channel;
+	}
 	
 	channel.setRequestHeader('Cookie', getCookieString(channel.originalURI.host), true);
 	
@@ -592,10 +594,11 @@ function request(url, opts){
 		
 		// nsIInterfaceRequestor
 		getInterface : function(iid){
-			// Firefox 2でnsIPromptを要求されエラーになるため判定処理を外す
-			// インターフェースにないメソッドを呼ばれる可能性があるが確認範囲で発生しなかった
-			// http://developer.mozilla.org/ja/docs/Creating_Sandboxed_HTTP_Connections
-			return this;
+			try{
+				return this.QueryInterface(iid);
+			}catch(e){
+				throw Cr.NS_NOINTERFACE;
+			}
 		},
 		
 		// nsIHttpEventSink
@@ -2381,10 +2384,25 @@ function flashView(doc){
 }
 
 // ----[Model/Service]-------------------------------------------------
+/**
+ * 同一ログインセッション中に共通の値を共有するサービスのベースクラス。
+ * ポスト前のサーバー接続回数を減らすことを目的としている。
+ * ポスト毎にトークンなどが変わるサービスに対しては利用できない。
+ */
 AbstractSessionService = {
+	/**
+	 * セッションの同一性を確認する。
+	 * セッションが変わっていたら以前のアカウントデータは消去される。
+	 * セッションの同一性は、サブクラスのgetAuthCookieの返り値で判定される。
+	 * 
+	 * @return {String} 
+	 *         セッションが以前と同一ならsame、
+	 *         変わっていたらchanged、
+	 *         存在しない場合はnoneが、それぞれ返る。
+	 */
 	updateSession : function(){
 		var cookie = this.getAuthCookie();
-		if(cookie && this.cookie==cookie)
+		if(cookie && this.cookie == cookie)
 			return 'same';
 		
 		delete this.cookie;
@@ -2400,6 +2418,17 @@ AbstractSessionService = {
 		return 'changed';
 	},
 	
+	/**
+	 * セッションに関連するトークンやユーザー名などの情報を取得する。
+	 *
+	 * @param {String} key 
+	 *        取得対象プロパティ名。
+	 *        user/token/passwordのいずれかを想定。
+	 * @param {Function} func 
+	 *        セッション値取得関数。
+	 *        新規取得時またはセッション変更時に呼び出される。
+	 *        Deferred経由で値を返すこと。
+	 */
 	getSessionValue : function(key, func){
 		var self = this;
 		switch (this.updateSession()){

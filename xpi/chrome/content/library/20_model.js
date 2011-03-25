@@ -946,7 +946,7 @@ models.register({
 			});
 		});
 	},
-
+	
 	getSuggestions : function(url){
 		var self = this;
 		if(this.tags){

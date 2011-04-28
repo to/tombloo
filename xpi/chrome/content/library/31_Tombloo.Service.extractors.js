@@ -1591,7 +1591,10 @@ update(Tombloo.Service.extractors, {
 	normalizeUrl : function(url){
 		return (!url || !this.REDIRECT_URLS.some(function(re){return re.test(url)}))? 
 			succeed(url) : 
-			getFinalUrl(url);
+			getFinalUrl(url).addErrback(function(err){
+				// bit.lyの統計ページなどHEAD取得未対応ページから返されるエラーを回避する
+				return url;
+			});
 	},
 	
 	extract : function(ctx, ext){

@@ -1,6 +1,7 @@
 Tombloo.Service.actions = new Repository([
 	{
 		type : 'context',
+		icon : 'chrome://tombloo/skin/tombloo_16.png',
 		name : getMessage('label.action.installPatch'),
 		check : function(ctx){
 			// GitHubでかつraw以外のリンクの場合は除外する
@@ -50,14 +51,8 @@ Tombloo.Service.actions = new Repository([
 		name : '----',
 	},
 	{
-		type : 'menu',
-		name : getMessage('label.action.reloadTombloo'),
-		execute : function(){
-			reload();
-		},
-	},
-	{
 		type : 'menu,context',
+		icon : 'chrome://tombloo/skin/tombloo_16.png',
 		name : getMessage('label.action.tomblooOptions'),
 		execute : function(){
 			openDialog('chrome://tombloo/content/prefs.xul', 'resizable,centerscreen');

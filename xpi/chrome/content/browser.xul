@@ -10,19 +10,23 @@
 		<menu 
 			position="2" 
 			class="menu-iconic"
-			image="chrome://tombloo/skin/empty.png"
 			label="Share...">
 			<menupopup id="tombloo-menu-select"/>
 		</menu>
 		<menu 
 			position="3" 
-			class="menuitem-iconic"
+			class="menu-iconic"
+			image="chrome://tombloo/skin/tombloo_16.png"
 			label="Tombloo" >
 			<menupopup id="tombloo-menu-action"/>
 		</menu>
 	</popup>
 	<menupopup id="menu_ToolsPopup">
-		<menu label="Tombloo" insertbefore="sanitizeSeparator">
+		<menu 
+			label="Tombloo" 
+			class="menu-iconic"
+			image="chrome://tombloo/skin/tombloo_16.png"
+			insertbefore="sanitizeSeparator">
 			<menupopup id="tombloo-menu-main"/>
 		</menu>
 	</menupopup>

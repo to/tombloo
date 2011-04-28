@@ -15,9 +15,7 @@ Tombloo.Service.actions = new Repository([
 			
 			// ファイルタイプを取得しチェックする
 			var url;
-			return request(ctx.linkURL, {
-				method : 'HEAD',
-			}).addCallback(function(res){
+			return request(ctx.linkURL).addCallback(function(res){
 				if(!/^text\/.*(javascript|plain)/.test(res.channel.contentType)){
 					alert(getMessage('message.install.invalid'));
 					return;

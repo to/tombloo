@@ -2,21 +2,21 @@
 <RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
          xmlns:NC="http://home.netscape.com/NC-rdf#"
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Description RDF:about="rdf:#$+BX8O3"
+  <RDF:Description RDF:about="rdf:#$n5Wvm3"
                    em:version="0.4.22">
-    <em:targetApplication RDF:resource="rdf:#$2CX8O3"/>
+    <em:targetApplication RDF:resource="rdf:#$q5Wvm3"/>
   </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$2CX8O3"
+  <RDF:Seq RDF:about="rdf:#$m5Wvm3">
+    <RDF:li RDF:resource="rdf:#$n5Wvm3"/>
+  </RDF:Seq>
+  <RDF:Description RDF:about="rdf:#$q5Wvm3"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="3.5"
-                   em:maxVersion="4.0.*"
+                   em:maxVersion="100.0.*"
                    em:updateLink="http://github.com/to/tombloo/raw/release/tombloo.xpi"
-                   em:updateHash="sha512:f4a3e164862df384626a7d4f92d1f8615ff8c967e600049b416c2d8b123343838bcf4b975a05f4ae2f15f94280f0d79bf9cfd599c36426662051d0322c0034d4" />
-  <RDF:Seq RDF:about="rdf:#$.BX8O3">
-    <RDF:li RDF:resource="rdf:#$+BX8O3"/>
-  </RDF:Seq>
+                   em:updateHash="sha512:69a39e4ed241ba23b2f6c4edf498d64a3842ebe6ef351073846b712fdc0968d25c853075eb6ac69a60cb68e1e58d84372e2cc709326a376ac107cca95cadaa16" />
   <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
-                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAB+o7lYLZPoXUF1XzZMRoxh9p43oZpbu+mSn2LyhufXY42onT+kCzHfbhoXeuocupzddxYZcrA3jBuAqq0WJegMxeH6fkHcy2PT70dkUXrIqiRZvKP8PGEr5CK4AHJ29PW7rfF3+BG6L4wfBw0iB5k9IfMVJsdU99aXJF2/93vPK">
-    <em:updates RDF:resource="rdf:#$.BX8O3"/>
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAACtVxY7CTXFb1tbX/HetxlrFTHUhQgdp1UZZK+rBkHoGU1H0kSC3yrW8vA0yEotO3hiLKd10g6s+deALSG51tpTd4MMRAmPcc5HEhaU2vXIOwJtlZi08Q99MaPoe868wZEh2BN+E++kBiw/6U/4ypF1Ide1TA2edu33GXt0zBxt">
+    <em:updates RDF:resource="rdf:#$m5Wvm3"/>
   </RDF:Description>
 </RDF:RDF>

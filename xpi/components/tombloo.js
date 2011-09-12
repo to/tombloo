@@ -241,22 +241,22 @@ Module = {
 		setupEnvironment(env);
 		env.loadAllSubScripts();
 		
-		// Greasemonkeyコンテキストの準備
-		var gm = Cc['@greasemonkey.mozdev.org/greasemonkey-service;1'];
-		if(gm){
-			gm = gm.getService().wrappedJSObject;
+		var GM_Tombloo = copy({
+			Tombloo : {
+				Service : copy({}, env.Tombloo.Service, /(check|share|posters|extractors)/),
+			}
+		}, env, /(Deferred|DeferredHash|copyString|notify)/);
+		
+		for(var name in env.models)
+			if(env.models.hasOwnProperty(name))
+				GM_Tombloo[name] = copy({}, env.models[name], /^(?!.*(password|cookie))/i);
+		
+		// Greasemonkeyサンドボックスの拡張
+		var greasemonkey = Cc['@greasemonkey.mozdev.org/greasemonkey-service;1'];
+		if(greasemonkey){
+			greasemonkey = greasemonkey.getService().wrappedJSObject;
 			
-			var GM_Tombloo = copy({
-				Tombloo : {
-					Service : copy({}, env.Tombloo.Service, /(check|share|posters|extractors)/),
-				}
-			}, env, /(Deferred|DeferredHash|copyString|notify)/);
-			
-			for(var name in env.models)
-				if(env.models.hasOwnProperty(name))
-					GM_Tombloo[name] = copy({}, env.models[name], /^(?!.*(password|cookie))/i);
-			
-			env.addBefore(gm, 'evalInSandbox', function(){
+			env.addBefore(greasemonkey, 'evalInSandbox', function(){
 				for(var i=0, len=arguments.length ; i<len ; i++){
 					var arg = arguments[i];
 					if(typeof(arg) == 'object'){
@@ -265,6 +265,13 @@ Module = {
 					}
 				}
 			});
+		}
+		
+		// Scriptishサンドボックスの拡張
+		if(env.getExtensionDir('scriptish@erikvold.com')){
+			var scope = {};
+			Components.utils.import('resource://scriptish/api.js', scope);
+			scope.GM_API.prototype.GM_Tombloo = GM_Tombloo;
 		}
 		
 		env.signal(env, 'environment-load');

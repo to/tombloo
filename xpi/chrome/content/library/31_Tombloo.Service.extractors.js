@@ -1332,22 +1332,21 @@ Tombloo.Service.extractors = new Repository([
 			return ctx.host.match('youtube.com');
 		},
 		extract : function(ctx){
-			var author_anchor = $x('id("watch-channel-stats")/a', ctx.document) || $x('id("watch-username")', ctx.document);
-			if (author_anchor) {
-				var author = author_anchor.textContent;
-			} else {
-				var banner = $x('id("watch-userbanner")/descendant::img');
-				var author = banner.title;
-			}
 			ctx.title = ctx.title.replace(/[\n\r\t]+/gm, ' ').trim();
 			
-			return {
+			var ps = {
 				type      : 'video',
-				item      : ctx.title.extract(/\s- (.*)/),
+				item      : $x('//meta[@property="og:title"]/@content') || ctx.title.extract(/(.*) - /),
 				itemUrl   : ctx.href,
-				author    : author.textContent,
-				authorUrl : author.href
-			};
+			}
+			
+			var elmAuthor = $x('id("watch-username")');
+			if(elmAuthor){
+				ps.authorUrl = elmAuthor.href;
+				ps.author = elmAuthor.textContent;
+			}
+			
+			return ps;
 		},
 	},
 	

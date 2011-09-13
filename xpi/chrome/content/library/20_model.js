@@ -1450,6 +1450,20 @@ models.register({
 		// return NavBookmarksService.isBookmarked(createURI(uri));
 	},
 	
+	isVisited : function(uri) {
+		let query = NavHistoryService.getNewQuery();
+		let options = NavHistoryService.getNewQueryOptions();
+		query.uri = createURI(uri);
+		
+		let root = NavHistoryService.executeQuery(query, options).root;
+		try{
+			root.containerOpen = true;
+			return !!root.childCount;
+		} finally {
+			root.containerOpen = false;
+		}
+	},
+	
 	removeBookmark : function(uri){
 		this.removeItem(this.getBookmarkId(uri));
 	},

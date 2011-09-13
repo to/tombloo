@@ -355,13 +355,25 @@ Tombloo.Service.extractors = new Repository([
 			return ctx.host.match(/amazon\./) && this.getAsin(ctx);
 		},
 		extract : function(ctx){
-			ctx.href = this.normalizeUrl(ctx.host, this.getAsin(ctx));
-			ctx.title = 'Amazon: ' + $x('id("prodImage")/@alt') + ': ' + ctx.document.title.split(/[：:] */).slice(-2).shift();
-			
 			// 日本に特化(comの取得方法不明)
 			var date = new Date(ctx.document.body.innerHTML.extract('発売日：.*?</b>.*?([\\d/]+)'));
 			if(!isNaN(date))
 				ctx.date = date;
+			
+			ctx.href = this.normalizeUrl(ctx.host, this.getAsin(ctx));
+			
+			var elmTitle = $x('id("btAsinTitle")');
+			if(!elmTitle)
+				return
+			
+			var authors = $x([
+				'id("handleBuy")/div[@class="buying"]/span//a/text()',
+				'id("handleBuy")/div[@class="buying"]/a/text()'
+			].join('|'), currentDocument(), true);
+			
+			ctx.title = 'Amazon: ' + 
+				elmTitle.textContent + 
+				(authors.length? ': ' + authors.join(', ') : '');
 		},
 	},
 	

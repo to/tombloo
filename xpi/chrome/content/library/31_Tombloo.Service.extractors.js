@@ -381,10 +381,15 @@ Tombloo.Service.extractors = new Repository([
 		name : 'Photo - Amazon',
 		ICON : 'http://www.amazon.com/favicon.ico',
 		check : function(ctx){
-			return Tombloo.Service.extractors.Amazon.preCheck(ctx) && $x('./ancestor::*[@id="prodImageCell"]', ctx.target);
+			return Tombloo.Service.extractors.Amazon.preCheck(ctx) && 
+				($x('./ancestor::*[@id="prodImageCell" or @id="prodImageOuter"]', ctx.target) || ctx.target.id == 'magnifierLens');
 		},
 		extract : function(ctx){
 			Tombloo.Service.extractors.Amazon.extract(ctx);
+			
+			// 拡大レンズなど画像以外の要素か?
+			if(!ctx.target.src)
+				ctx.target = $x('id("prodImageCell")/img | id("main-image")');
 			
 			var url = ctx.target.src.split('.');
 			url.splice(-2, 1, 'LZZZZZZZ');

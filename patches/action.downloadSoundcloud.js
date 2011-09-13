@@ -76,7 +76,8 @@
 	Tombloo.Service.actions.register(update({}, BASE_ACTION, downloadFromLdr, {
 		name : 'Download Soundcloud(LDR/All)',
 		execute : function(ctx){
-			return downloadAll(ctx.window.get_active_feed().items.map(itemgetter('link')));
+			// Array.prototype.mapが独自に定義されている
+			return downloadAll(map(itemgetter('link'), ctx.window.get_active_feed().items));
 		},
 	}), '----');
 })();

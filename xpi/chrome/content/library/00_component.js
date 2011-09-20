@@ -448,9 +448,8 @@ var getExtensionDir;
 		}
 	} else {
 		getExtensionDir = function(id){
-			return ExtensionManager
-				.getInstallLocation(id)
-				.getItemLocation(id).QueryInterface(ILocalFile);
+			var location = ExtensionManager.getInstallLocation(id);
+			return location? location.getItemLocation(id).QueryInterface(ILocalFile) : null;
 		}
 	}
 }

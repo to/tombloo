@@ -1451,14 +1451,17 @@ models.register({
 	},
 	
 	isVisited : function(uri) {
-		let query = NavHistoryService.getNewQuery();
-		let options = NavHistoryService.getNewQueryOptions();
-		query.uri = createURI(uri);
-		
-		let root = NavHistoryService.executeQuery(query, options).root;
 		try{
+			var query = NavHistoryService.getNewQuery();
+			var options = NavHistoryService.getNewQueryOptions();
+			query.uri = createURI(uri);
+			
+			var root = NavHistoryService.executeQuery(query, options).root;
 			root.containerOpen = true;
+			
 			return !!root.childCount;
+		} catch(e) {
+			return false;
 		} finally {
 			root.containerOpen = false;
 		}

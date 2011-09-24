@@ -281,12 +281,12 @@ var Tumblr = update({}, AbstractSessionService, {
 		var d = succeed();
 		d.addCallback(fn);
 		d.addCallback(function(res){
-			var url = res.channel.URI.asciiSpec.replace(/\?.*/,'');
+			var url = res.channel.URI.asciiSpec;
 			switch(true){
-			case RegExp(Tumblr.TUMBLR_URL+'dashboard').test(url):
+			case /dashboard/.test(url):
 				return;
 			
-			case url == Tumblr.TUMBLR_URL+'login':
+			case /login/.test(url):
 				throw new Error(getMessage('error.notLoggedin'));
 			
 			default:

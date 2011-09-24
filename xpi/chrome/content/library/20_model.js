@@ -707,7 +707,7 @@ models.register({
 			if(res.channel.URI.asciiSpec == POST_URL)
 				throw new Error('Error');
 			
-			var msg = res.responseText.extract(/notification.setMessage\("(.*?)"\)/);
+			var msg = res.responseText.extract(/"flashNotice":"(.*?)"/);
 			if(msg)
 				throw unescapeHTML(msg).trimTag();
 		});

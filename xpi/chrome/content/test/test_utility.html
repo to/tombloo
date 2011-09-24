@@ -443,6 +443,10 @@ try {
 	var dir = createDir('tombloo_test/c1', getDownloadDir());
 	ok(dir.exists(), '複数階層のディレクトリが作成されているか');
 	dir.parent.remove(true);
+	
+	// getAllPropertyNames(Firefox 6でErrorのmessageを列挙できるか?)
+	ok(getAllPropertyNames(new Error(), Object.prototype).indexOf('message') != 0);
+	
 } catch (err) {
 	error(err);
 	

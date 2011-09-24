@@ -128,26 +128,27 @@ Tombloo.Service = {
 	 * @return {String}
 	 */
 	reprError : function(err){
+		// MochiKitの汎用エラーの場合、内部の詳細エラーを使う
 		if(err.name && err.name.match('GenericError'))
 			err = err.message;
 		
 		if(err.status)
 			err = err.message + '(' + err.status + ')';
 		
-		if(typeof(err)!='object')
+		if(typeof(err) != 'object')
 			return '' + err;
 		
 		var msg = [];
-		for(var p in err){
-			var val = err[p];
-			if(val == null || /(stack|name)/.test(p) || typeof(val)=='function')
-				continue;
+		getAllPropertyNames(err, Object.prototype).forEach(function(prop){
+			var val = err[prop];
+			if(val == null || /(stack|name)/.test(prop) || typeof(val) == 'function')
+				return;
 			
-			if(p.toLowerCase() == 'filename' || p == 'location')
+			if(prop.toLowerCase() === 'filename' || prop === 'location')
 				val = ('' + val).replace(/file:[^ ]+\/(.+?)( |$)/g, '$1');
 			
-			msg.push(p + ' : ' + val);
-		}
+			msg.push(prop + ' : ' + val);
+		});
 		
 		return msg.join('\n');
 	},

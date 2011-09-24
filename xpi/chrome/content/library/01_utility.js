@@ -199,7 +199,7 @@ function download(sourceURL, targetFile, useManger){
 		onStatusChange   : (useManger)? bind('onStatusChange', download)   : function(){},
 		onStateChange    : function(progress, req, state, status){
 			useManger && download.onStateChange(progress, req, state, status);
-
+			
 			if(state & IWebProgressListener.STATE_STOP){
 				broad(req);
 				
@@ -1135,6 +1135,29 @@ function firebug(method, args){
 	}
 
 	return false;
+}
+
+/**
+ * オブジェクトの全てのプロパティを取得する。
+ *
+ * @param {Object} obj 取得対象のオブジェクト。
+ * @param {Object} ancestor プロパティ探索の終端オブジェクト。
+ *                 Object.prototypeの列挙を除外する場合などに用いる。
+ * @return {Array} プロパティ名のリスト。
+ */
+function getAllPropertyNames(obj, ancestor){
+	// Firefox 3.6以前か?
+	if(!Object.getOwnPropertyNames)
+		return keys(obj);
+	
+	var props = {};
+	while (obj !== null && obj !== ancestor){
+		Object.getOwnPropertyNames(obj).forEach(function(prop){
+			props[prop] = null;
+		});
+		obj = Object.getPrototypeOf(obj);
+	}
+	return Object.keys(props);
 }
 
 function clearObject(obj){

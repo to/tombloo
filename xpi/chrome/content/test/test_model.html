@@ -325,6 +325,42 @@ try {
 	
 	
 	/*
+	// Pinboard
+	d.addCallback(function(){
+		return Pinboard.post({
+			itemUrl     : 'http://www.goo.ne.jp/',
+			item        : 'goo',
+			description : 'ポータルサイト',
+			tags        : ['search', 'portal', 'test'],
+		});
+	});
+	
+	d.addCallback(function(){
+		return Pinboard.getUserTags();
+	});
+	d.addCallback(function(tags){
+		var tag = tags[0];
+		ok(tag.name.length > 0, 'Pinboard: タグの名前を取得できているか');
+	});
+	
+	d.addCallback(function(){
+		return Pinboard.getRecommendedTags('http://tumblr.com/');
+	});
+	d.addCallback(function(tags){
+		ok(tags, 'Pinboard: お勧めタグが取得できるか');
+	});
+	
+	d.addCallback(function(){
+		return Pinboard.getSuggestions('http://msn.com/');
+	});
+	d.addCallback(function(suggestions){
+		ok(suggestions.form.tags);
+		ok(suggestions.recommended);
+	});
+	*/
+	
+	
+	/*
 	// Delicious
 	d.addCallback(function(){
 		return Delicious.post({

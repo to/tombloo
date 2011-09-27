@@ -1107,6 +1107,116 @@ models.register({
 	},
 });
 
+models.register(update({
+	name : 'Pinboard',
+	ICON : 'http://pinboard.in/favicon.ico',
+	
+	check : function(ps){
+		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
+	},
+	
+	getCurrentUser : function(){
+		var cookie = getCookies('pinboard.in', 'login')[0];
+		if(!cookie)
+			throw new Error(getMessage('error.notLoggedin'));
+		
+		return cookie.value;
+	},
+	
+	post : function(ps){
+		var self = this;
+		return succeed().addCallback(function(){
+			self.getCurrentUser();
+			
+			return request('https://pinboard.in/add', {
+				queryString : {
+					title : ps.item,
+					url   : ps.itemUrl,
+				}
+			})
+		}).addCallback(function(res){
+			return request('https://pinboard.in/add', {
+				sendContent : update(formContents(res.responseText), {
+					title       : ps.item,
+					url         : ps.itemUrl,
+					description : joinText([ps.body, ps.description], ' ', true),
+					tags        : joinText(ps.tags, ' '),
+					private     : ps.private? 'no' : '',
+				}),
+			});
+		});
+	},
+	
+	getUserTags : function(){
+		var self = this;
+		return succeed().addCallback(function(){
+			self.getCurrentUser();
+			
+			return request('https://pinboard.in/user_tag_list/');
+		}).addCallback(function(res){
+			return evalInSandbox(
+				res.responseText, 
+				'https://pinboard.in/'
+			).usertags.map(function(tag){
+				return {
+					name      : tag,
+					frequency : 0,
+				}
+			});
+		});
+	},
+	
+	getRecommendedTags : function(url){
+		return request('https://pinboard.in/ajax_suggest', {
+			queryString : {
+				url : url,
+			}
+		}).addCallback(function(res){
+			return evalInSandbox(res.responseText, 'https://pinboard.in/');
+		});
+	},
+	
+	getSuggestions : function(url){
+		var self = this;
+		var ds = {
+			tags        : this.getUserTags(),
+			recommended : this.getRecommendedTags(),
+			suggestions : succeed().addCallback(function(){
+				self.getCurrentUser();
+				
+				return request('https://pinboard.in/add', {
+					queryString : {
+						url : url,
+					}
+				});
+			}).addCallback(function(res){
+				var form = formContents(res.responseText);
+				return {
+					editPage : 'https://pinboard.in/add?url=' + url,
+					form : {
+						item        : form.title,
+						description : form.description,
+						tags        : form.tags.split(' '),
+						private     : !!form.private,
+					},
+					
+					// 入力の有無で簡易的に保存済みをチェックする
+					// (submitボタンのラベルやalertの有無でも判定できる)
+					duplicated : !!(form.tags || form.description),
+				}
+			})
+		};
+		
+		return new DeferredHash(ds).addCallback(function(ress){
+			var res = ress.suggestions[1];
+			res.recommended = ress.recommended[1]; 
+			res.tags = ress.tags[1];
+			
+			return res;
+		});
+	},
+}));
+
 models.register({
 	name : 'Delicious',
 	ICON : 'http://www.delicious.com/favicon.ico',

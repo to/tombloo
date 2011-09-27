@@ -336,7 +336,7 @@ try {
 		});
 	});
 	
-	d.addCallback(bind('getUserTags', Delicious));;
+	d.addCallback(bind('getUserTags', Delicious));
 	d.addCallback(function(tags){
 		var tag = tags[0];
 		ok(tag.name.length > 0, 'Delicious: タグの名前を取得できているか');
@@ -356,8 +356,9 @@ try {
 	d.addCallback(function(suggestions){
 		is(suggestions.popular.length, 0, 'オススメがないと空の配列が返される');
 	});
+	
+	ok(Delicious.getCurrentUser().length > 1);
 	*/
-	// ok(Delicious.getCurrentUser().length > 1);
 	
 	
 	/*

@@ -1111,6 +1111,46 @@ models.register({
 	name : 'Delicious',
 	ICON : 'http://www.delicious.com/favicon.ico',
 	
+	check : function(ps){
+		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
+	},
+	
+	post : function(ps){
+		var self = this;
+		return succeed().addCallback(function(){
+			// ログインをチェックする
+			self.getCurrentUser();
+			
+			return request('http://www.delicious.com/save', {
+				queryString : {
+					title : ps.item,
+					url   : ps.itemUrl,
+				}
+			})
+		}).addCallback(function(res){
+			var doc = convertToHTMLDocument(res.responseText);
+			var elmForm = doc.getElementsByClassName('saveConfirm')[0];
+			return request('http://www.delicious.com/save', {
+				sendContent : update(formContents(elmForm), {
+					title   : ps.item,
+					url     : ps.itemUrl,
+					note    : joinText([ps.body, ps.description], ' ', true),
+					tags    : joinText(ps.tags, ','),
+					private : ps.private,
+				}),
+			});
+		});
+	},
+	
+	getCurrentUser : function(){
+		// FIXME: _userが無くなることがある(発生条件不明/deluserのみで動作する)
+		var user = decodeURIComponent(getCookieString('delicious.com', '_user')).extract(/user=(.*?) /);
+		if(!user)
+			throw new Error(getMessage('error.notLoggedin'));
+		
+		return user;
+	},
+	
 	/**
 	 * ユーザーの利用しているタグ一覧を取得する。
 	 *
@@ -1135,12 +1175,18 @@ models.register({
 				});
 				return memo;
 			}, tags, []);
+		}).addErrback(function(err){
+			// Delicious移管によりfeedが停止されタグの取得に失敗する
+			// 再開時に動作するように接続を試行し、失敗したら空にしてエラーを回避する
+			error(err);
+			
+			return [];
 		});
 	},
 	
 	/**
 	 * タグ、おすすめタグ、ネットワークなどを取得する。
-	 * ブックマーク済みでも取得することができる。
+	 * ブックマーク済みでも取得できる。
 	 *
 	 * @param {String} url 関連情報を取得する対象のページURL。
 	 * @return {Object}
@@ -1153,13 +1199,20 @@ models.register({
 				// ログインをチェックする
 				self.getCurrentUser();
 				
-				// ブックマークレット用画面の削除リンクを使い既ブックマークを判定する
-				return request('http://www.delicious.com/save', {
-					queryString : {
-						noui : 1,
-						url  : url,
-					},
-				});
+				// フォームを開いた時点でブックマークを追加し過去のデータを修正可能にするか?
+				// (現時点で保存済みか否かを確認する手段がない)
+				return getPref('model.delicious.prematureSave')? 
+					request('http://www.delicious.com/save', {
+						queryString : {
+							url : url,
+						}
+					}) : 
+					request('http://www.delicious.com/save/confirm', {
+						queryString : {
+							url   : url,
+							isNew : true,
+						}
+					});
 			}).addCallback(function(res){
 				var doc = convertToHTMLDocument(res.responseText);
 				return {
@@ -1167,62 +1220,20 @@ models.register({
 					form : {
 						item        : doc.getElementById('saveTitle').value,
 						description : doc.getElementById('saveNotes').value,
-						tags        : doc.getElementById('saveTags').value.split(' '),
+						tags        : doc.getElementById('saveTags').value.split(','),
 						private     : doc.getElementById('savePrivate').checked,
 					},
 					
-					duplicated : !!doc.getElementById('savedon'),
-					recommended : $x('id("recommendedField")//span[contains(@class, "m")]/text()', doc, true), 
+					duplicated : !doc.getElementById('recommendedField'),
+					recommended : $x('id("recommendedField")//a[contains(@class, "m")]/text()', doc, true), 
 				}
 			})
 		};
 		
 		return new DeferredHash(ds).addCallback(function(ress){
-			// エラーチェック
-			for each(var [success, res] in ress)
-				if(!success)
-					throw res;
-			
 			var res = ress.suggestions[1];
 			res.tags = ress.tags[1];
 			return res;
-		});
-	},
-	
-	getCurrentUser : function(){
-		// FIXME: 判定不完全、_userが取得できて、かつ、ログアウトしている状態がありうる
-		if(decodeURIComponent(getCookieString('www.delicious.com', '_user')).match(/user=(.*?) /))
-			return RegExp.$1;
-		
-		throw new Error(getMessage('error.notLoggedin'));
-	},
-	
-	check : function(ps){
-		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
-	},
-	
-	post : function(ps){
-		return request('http://www.delicious.com/post/', {
-			queryString :	{
-				title : ps.item,
-				url   : ps.itemUrl,
-			},
-		}).addCallback(function(res){
-			var doc = convertToHTMLDocument(res.responseText);
-			var elmForm = doc.getElementById('saveForm');
-			if(!elmForm)
-				throw new Error(getMessage('error.notLoggedin'));
-			
-			return request('http://www.delicious.com' + $x('id("saveForm")/@action', doc), {
-				redirectionLimit : 0,
-				sendContent : update(formContents(elmForm), {
-					description : ps.item,
-					jump        : 'no',
-					notes       : joinText([ps.body, ps.description], ' ', true),
-					tags        : joinText(ps.tags, ' '),
-					share       : ps.private? 'no' : '',
-				}),
-			});
 		});
 	},
 });
@@ -1602,9 +1613,11 @@ models.register(update({
 	check : function(ps){
 		return (/(quote|link)/).test(ps.type);
 	},
+	
 	getAuthCookie : function(){
 		return getCookieString('www.instapaper.com', 'pfu');
 	},
+	
 	post : function(ps){
 		var url = this.POST_URL;
 		return this.getSessionValue('token', function(){

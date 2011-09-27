@@ -81,7 +81,7 @@ function getCookies(host, name){
 
 function getCookieString(host, name){
 	return getCookies(host, name).map(function(c){
-		return c.name + '=' + c.value ;
+		return c.name + '=' + c.value;
 	}).join('; ');
 }
 

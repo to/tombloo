@@ -1226,7 +1226,7 @@ models.register(update({
 	},
 }));
 
-models.register({
+models.register(update({}, AbstractSessionService, {
 	name : 'Delicious',
 	ICON : 'http://www.delicious.com/favicon.ico',
 	
@@ -1236,10 +1236,7 @@ models.register({
 	
 	post : function(ps){
 		var self = this;
-		return succeed().addCallback(function(){
-			// ログインをチェックする
-			self.getCurrentUser();
-			
+		return this.getCurrentUser().addCallback(function(){
 			return request('http://www.delicious.com/save', {
 				queryString : {
 					title : ps.item,
@@ -1261,13 +1258,26 @@ models.register({
 		});
 	},
 	
+	getAuthCookie : function(){
+		return getCookieString('www.delicious.com', 'deluser');
+	},
+	
 	getCurrentUser : function(){
-		// FIXME: _userが無くなることがある(発生条件不明/deluserのみで動作する)
-		var user = decodeURIComponent(getCookieString('delicious.com', '_user')).extract(/user=(.*?) /);
-		if(!user)
-			throw new Error(getMessage('error.notLoggedin'));
-		
-		return user;
+		var self = this;
+		return this.getSessionValue('user', function(){
+			return self.getInfo().addCallback(function(info){
+				if(!info.is_logged_in)
+					throw new Error(getMessage('error.notLoggedin'));
+				
+				return info.logged_in_username;
+			});
+		});
+	},
+	
+	getInfo : function(){
+		return request('http://delicious.com/save/quick', {method : 'POST'}).addCallback(function(res){
+			return evalInSandbox('(' + res.responseText + ')', 'http://delicious.com/');
+		});
 	},
 	
 	/**
@@ -1278,8 +1288,9 @@ models.register({
 	 */
 	getUserTags : function(user){
 		// 同期でエラーが起きないようにする
-		return succeed().addCallback(function(){
-			return request('http://feeds.delicious.com/feeds/json/tags/' + (user || Delicious.getCurrentUser()));
+		var d = (user)? succeed(user) : Delicious.getCurrentUser();
+		return d.addCallback(function(user){
+			return request('http://feeds.delicious.com/feeds/json/tags/' + user);
 		}).addCallback(function(res){
 			var tags = evalInSandbox(res.responseText, 'http://feeds.delicious.com/');
 			
@@ -1314,11 +1325,9 @@ models.register({
 		var self = this;
 		var ds = {
 			tags : this.getUserTags(),
-			suggestions : succeed().addCallback(function(){
-				// ログインをチェックする
-				self.getCurrentUser();
-				
+			suggestions : this.getCurrentUser().addCallback(function(){
 				// フォームを開いた時点でブックマークを追加し過去のデータを修正可能にするか?
+				// 過去データが存在すると、お勧めタグは取得できない
 				// (現時点で保存済みか否かを確認する手段がない)
 				return getPref('model.delicious.prematureSave')? 
 					request('http://www.delicious.com/save', {
@@ -1355,7 +1364,7 @@ models.register({
 			return res;
 		});
 	},
-});
+}));
 
 models.register({
 	name : 'Digg',

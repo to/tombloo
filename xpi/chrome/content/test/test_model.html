@@ -374,26 +374,25 @@ try {
 	
 	d.addCallback(bind('getUserTags', Delicious));
 	d.addCallback(function(tags){
+		// 2011/9/28 Delicious移行に伴って動作せず(フィード再開待ち)
 		var tag = tags[0];
 		ok(tag.name.length > 0, 'Delicious: タグの名前を取得できているか');
 		ok(tag.frequency!=null, 'Delicious: タグの利用回数を取得できているか');
 	});
 	
 	d.addCallback(function(){
-		return Delicious.getSuggestions('http://developer.mozilla.org/En');
+		return Delicious.getSuggestions('http://techcrunch.com/');
 	});
 	d.addCallback(function(suggestions){
-		ok(suggestions.popular.length);
+		ok(suggestions.recommended.length, 'Delicious: お勧めタグなどが取得できるか');
 	});
 	
 	d.addCallback(function(){
-		return Delicious.getSuggestions('http://developer.mozilla.org/Ja/XUL_Reference');
+		return Delicious.getCurrentUser();
 	});
-	d.addCallback(function(suggestions){
-		is(suggestions.popular.length, 0, 'オススメがないと空の配列が返される');
+	d.addCallback(function(user){
+		ok(user, 'Delicious: ログイン中のユーザー名を取得できるか(JSON取得)');
 	});
-	
-	ok(Delicious.getCurrentUser().length > 1);
 	*/
 	
 	

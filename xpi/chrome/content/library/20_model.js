@@ -1135,13 +1135,16 @@ models.register(update({
 				}
 			})
 		}).addCallback(function(res){
+			var form = formContents(res.responseText);
 			return request('https://pinboard.in/add', {
-				sendContent : update(formContents(res.responseText), {
+				sendContent : update(form, {
 					title       : ps.item,
 					url         : ps.itemUrl,
 					description : joinText([ps.body, ps.description], ' ', true),
 					tags        : joinText(ps.tags, ' '),
-					private     : ps.private? 'no' : '',
+					private     : 
+						(ps.private == null)? form.private : 
+						(ps.private)? 'on' : '',
 				}),
 			});
 		});

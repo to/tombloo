@@ -958,7 +958,7 @@ models.register({
 		} else {
 			return request('http://www.google.com/bookmarks').addCallback(function(res){
 				var doc = convertToHTMLDocument(res.responseText);
-				self.tags = $x('descendant::a[starts-with(normalize-space(@id), "lbl_m_") and number(substring(normalize-space(@id), 7)) > 0]/text()', doc, true).map(function(tag){
+				self.tags = $x('descendant::a[starts-with(normalize-space(@id), "lbl_m_") and number(substring(normalize-space(@id), 7)) >= 0]/text()', doc, true).map(function(tag){
 					return {
 						name      : tag,
 						frequency : -1

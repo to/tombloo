@@ -39,10 +39,16 @@ function updatePatchChromeManifest(){
 }
 
 function reload(){
-	signal(grobal, 'context-reload');
-	
-	loadAllSubScripts();
-	getWindows().forEach(connectToBrowser);
+	// getExtensionDir > till > processNextEventが非同期となり、
+	// コンテキスト全体の更新動作が不安定になる
+	// これを避けるためリロードを遅延させる
+	// (設定画面を閉じる際にFirefox 4以降がクラッシュするようになったのを避ける)
+	setTimeout(function(){
+		signal(grobal, 'context-reload');
+		
+		loadAllSubScripts();
+		getWindows().forEach(connectToBrowser);
+	}, 0);
 }
 
 

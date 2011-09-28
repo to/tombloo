@@ -2,21 +2,21 @@
 <RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
          xmlns:NC="http://home.netscape.com/NC-rdf#"
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Seq RDF:about="rdf:#$WDYap2">
-    <RDF:li RDF:resource="rdf:#$XDYap2"/>
-  </RDF:Seq>
-  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
-                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBANhzl9LtVWGWXQpX89SMYctBJnpcOm4WTy1DVRL2aEOfQflY7zC+kVCkfpRgq0ZzS6TtTFowvTj11Sg6IPdnMrK1oCOV2LC4DiZtSwTHpLwSDWDYD3d4o9c83u1qECzoArC+61MTZFeHz6+x2vNXyb4oUMaFZqDkeWmyuDG1f+l7">
-    <em:updates RDF:resource="rdf:#$WDYap2"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$XDYap2"
-                   em:version="0.4.23">
-    <em:targetApplication RDF:resource="rdf:#$.DYap2"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$.DYap2"
+  <RDF:Description RDF:about="rdf:#$vfHFn3"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="3.5"
                    em:maxVersion="100.0.*"
                    em:updateLink="http://github.com/to/tombloo/raw/release/tombloo.xpi"
-                   em:updateHash="sha512:865656a7a13cf436da3f67c2d4e6dc23e5cb36a0f765e177cf3969c72a2f3e6f9e7d50c9801784539e780a3a0fa2e384893a9e3bc6e1f39607d210f64acb90c1" />
+                   em:updateHash="sha512:2edebac1f4ec32b04f4ca940389f161661f0ad5ecbbdf9cfd59d6d2e3e3106271d6e66d90adc5cc45ffd1066df9b12814f5af4e8b97a794d40a7f8b55ced0d49" />
+  <RDF:Seq RDF:about="rdf:#$rfHFn3">
+    <RDF:li RDF:resource="rdf:#$sfHFn3"/>
+  </RDF:Seq>
+  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAJOUxxxDV1EU6yW8xAsTaJH9JOvH9HoL0Mie/nBNE9hox1La90OI/VQChQmrgz1XqDDjLlT+/oQftWye8h09JKAOc083SlYtwcacVkR9PzH/i0Z1WrYchfRwfiO78+Ft16tQp1+IQpCD4XPS2B+oiDfze6qrDz147SRsy+Ajqs/7">
+    <em:updates RDF:resource="rdf:#$rfHFn3"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$sfHFn3"
+                   em:version="0.4.24">
+    <em:targetApplication RDF:resource="rdf:#$vfHFn3"/>
+  </RDF:Description>
 </RDF:RDF>

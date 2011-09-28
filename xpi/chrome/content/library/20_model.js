@@ -1176,7 +1176,9 @@ models.register(update({
 				url : url,
 			}
 		}).addCallback(function(res){
-			return evalInSandbox(res.responseText, 'https://pinboard.in/');
+			// 空配列ではなく、空文字列が返ることがある
+			return res.responseText? 
+				evalInSandbox(res.responseText, 'https://pinboard.in/') : [];
 		});
 	},
 	
@@ -1215,6 +1217,8 @@ models.register(update({
 			var res = ress.suggestions[1];
 			res.recommended = ress.recommended[1]; 
 			res.tags = ress.tags[1];
+			
+			log(res);
 			
 			return res;
 		});

@@ -2294,20 +2294,25 @@ models.register(update({
 	},
 	
 	post : function(ps){
-		return LivedoorClip.getToken().addCallback(function(token){
-			var content = {
-				rate    : ps.rate? ps.rate : '',
-				title   : ps.item,
-				postKey : token,
-				link    : ps.itemUrl,
-				tags    : joinText(ps.tags, ' '),
-				notes   : joinText([ps.body, ps.description], ' ', true),
-				public  : ps.private? 'off' : 'on',
-			};
-			return request(LivedoorClip.POST_URL, {
+		var self = this;
+		return self.getToken().addCallback(function(token){
+			return request(self.POST_URL, {
 				redirectionLimit : 0,
-				sendContent : content,
+				sendContent : {
+					rate    : ps.rate? ps.rate : 0,
+					title   : ps.item,
+					postKey : token,
+					link    : ps.itemUrl,
+					tags    : joinText(ps.tags, ' '),
+					notes   : joinText([ps.body, ps.description], ' ', true),
+					public  : ps.private? 'off' : 'on',
+				},
 			});
+		}).addCallback(function(res){
+			if(res.channel.URI.host == 'clip.livedoor.com')
+				throw new Error(getMessage('error.unknown'));
+			
+			return res;
 		});
 	},
 	
@@ -2319,7 +2324,7 @@ models.register(update({
 		if(!this.getAuthCookie())
 			return fail(new Error(getMessage('error.notLoggedin')));
 		
-		// 何かのURLを渡す必要がある
+		// 何らかのURLを渡す必要がある
 		return request(LivedoorClip.POST_URL, {
 			queryString : {
 				link : url || 'http://tombloo/',

@@ -1158,8 +1158,9 @@ models.register(update({
 				res.responseText, 
 				'https://pinboard.in/'
 			).usertags.map(function(tag){
+				// 数字のみのタグが数値型になり並べ替え時の比較で失敗するのを避ける
 				return {
-					name      : tag,
+					name      : ''+tag,
 					frequency : 0,
 				}
 			});

@@ -1633,8 +1633,9 @@ update(Tombloo.Service.extractors, {
 		
 		// canonicalが設定されていれば使う
 		var canonical = $x('//link[@rel="canonical"]/@href', doc);
-		if(canonical)
+		if(canonical && !new RegExp(getPref('ignoreCanonical')).test(ctx.href))
 			ctx.href = resolveRelativePath(canonical, ctx.href);
+		ctx.href = ctx.href.replace(/\/#!\//, '/');
 		
 		return withWindow(ctx.window, function(){
 			return maybeDeferred(ext.extract(ctx)).addCallback(function(ps){

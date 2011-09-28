@@ -12,6 +12,7 @@ pref('extensions.tombloo.thumbnailTemplate', '');
 pref('extensions.tombloo.trimReblogInfo',    false);
 
 pref('extensions.tombloo.ignoreError',       '');
+pref('extensions.tombloo.ignoreCanonical',   'twitter.com');
 
 pref('extensions.tombloo.contextMenu.top',   false);
 

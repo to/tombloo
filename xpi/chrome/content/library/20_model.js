@@ -1184,7 +1184,7 @@ models.register(update({
 		var self = this;
 		var ds = {
 			tags        : this.getUserTags(),
-			recommended : this.getRecommendedTags(),
+			recommended : this.getRecommendedTags(url),
 			suggestions : succeed().addCallback(function(){
 				self.getCurrentUser();
 				

@@ -926,25 +926,22 @@ models.register({
 	post : function(ps){
 		return request(this.POST_URL, {
 			queryString : {
-				op : 'edit',
-				output : 'popup'
+				op     : 'edit',
+				output : 'popup',
 			},
 		}).addCallback(function(res){
 			var doc = convertToHTMLDocument(res.responseText);
 			if(doc.getElementById('gaia_loginform'))
 				throw new Error(getMessage('error.notLoggedin'));
 			
-			var fs = formContents(doc);
-			return request('https://www.google.com'+$x('//form[@name="add_bkmk_form"]/@action', doc), {
+			return request('https://www.google.com' + $x('//form[@name="add_bkmk_form"]/@action', doc), {
 				redirectionLimit : 0,
-				sendContent  : {
+				sendContent : update(formContents(doc), {
 					title      : ps.item,
 					bkmk       : ps.itemUrl,
 					annotation : joinText([ps.body, ps.description], ' ', true),
 					labels     : joinText(ps.tags, ','),
-					btnA       : fs.btnA,
-					sig        : fs.sig,
-				},
+				}),
 			});
 		});
 	},
@@ -960,7 +957,7 @@ models.register({
 			var doc = convertToHTMLDocument(res.responseText);
 			var form = formContents(doc);
 			return {
-				saved       : (/edit/i).test($x('//h1/text()', doc)),
+				saved       : (/(edit|編集)/i).test($x('//h1/text()', doc)),
 				item        : form.title,
 				tags        : form.labels.split(/,/).map(methodcaller('trim')),
 				description : form.annotation,

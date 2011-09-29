@@ -802,11 +802,11 @@ function formContents(elm){
 }
 
 function queryString(params, charset){
-	if(isEmpty(params))
-		return '';
-	
 	if(typeof(params)=='string')
 		return params;
+	
+	if(isEmpty(params))
+		return '';
 	
 	// EUCエンコードなどに対応
 	var e = (charset)? function(str){

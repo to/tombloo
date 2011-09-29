@@ -917,15 +917,17 @@ models.register({
 models.register({
 	name : 'GoogleBookmarks',
 	ICON : models.Google.ICON,
+	POST_URL : 'https://www.google.com/bookmarks/mark',
 	
 	check : function(ps){
 		return (/(photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
 	},
 	
 	post : function(ps){
-		return request('https://www.google.com/bookmarks/mark', {
+		return request(this.POST_URL, {
 			queryString : {
-				op : 'add',
+				op : 'edit',
+				output : 'popup'
 			},
 		}).addCallback(function(res){
 			var doc = convertToHTMLDocument(res.responseText);
@@ -947,31 +949,61 @@ models.register({
 		});
 	},
 	
-	getSuggestions : function(url){
-		var self = this;
-		if(this.tags){
-			return succeed({
-				duplicated: false,
-				recommended: [],
-				tags: this.tags
-			});
-		} else {
-			return request('http://www.google.com/bookmarks').addCallback(function(res){
-				var doc = convertToHTMLDocument(res.responseText);
-				self.tags = $x('descendant::a[starts-with(normalize-space(@id), "lbl_m_") and number(substring(normalize-space(@id), 7)) >= 0]/text()', doc, true).map(function(tag){
-					return {
-						name      : tag,
-						frequency : -1
-					};
-				});
+	getEntry : function(url){
+		return request(this.POST_URL, {
+			queryString : {
+				op     : 'edit',
+				output : 'popup',
+				bkmk   : url,
+			}
+		}).addCallback(function(res){
+			var doc = convertToHTMLDocument(res.responseText);
+			var form = formContents(doc);
+			return {
+				saved       : (/edit/i).test($x('//h1/text()', doc)),
+				item        : form.title,
+				tags        : form.labels.split(/,/).map(methodcaller('trim')),
+				description : form.annotation,
+			};
+		});
+	},
+	
+	getUserTags : function(){
+		return request('https://www.google.com/bookmarks/api/bookmark', {
+			queryString : {
+				op : 'LIST_LABELS',
+			}
+		}).addCallback(function(res){
+			var data = JSON.parse(res.responseText);
+			return zip(data['labels'], data['counts']).map(function(pair){
 				return {
-					duplicated: false,
-					recommended: [],
-					tags: self.tags
+					name      : pair[0],
+					frequency : pair[1],
 				};
 			});
-		}
-	}
+		});
+	},
+	
+	getSuggestions : function(url){
+		var self = this;
+		return new DeferredHash({
+			tags  : self.getUserTags(),
+			entry : self.getEntry(url),
+		}).addCallback(function(ress){
+			var entry = ress.entry[1];
+			var tags = ress.tags[1];
+			return {
+				form        : entry.saved? entry : null,
+				tags        : tags,
+				duplicated  : entry.saved,
+				recommended : [],
+				editPage    : self.POST_URL + '?' + queryString({
+					op   : 'edit',
+					bkmk : url
+				}),
+			};
+		});
+	},
 });
 
 models.register({

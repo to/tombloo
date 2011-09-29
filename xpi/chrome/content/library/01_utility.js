@@ -1856,7 +1856,7 @@ function convertToHTMLString(src, safe){
 	
 	// 選択範囲の適切な外側まで含めてHTML文字列へ変換する(pre内選択なども正常処理される)
 	var doc = src.ownerDocument || src.focusNode.ownerDocument;
-	var encoder = new HTMLCopyEncoder(doc, 'text/unicode',　HTMLCopyEncoder.OutputRaw);
+	var encoder = new HTMLCopyEncoder(doc, 'text/unicode', HTMLCopyEncoder.OutputRaw);
 	encoder[src.nodeType? 'setNode' : 'setSelection'](src);
 	
 	var html = encoder.encodeToString();

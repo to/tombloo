@@ -1290,9 +1290,9 @@ models.register(update({}, AbstractSessionService, {
 		// 同期でエラーが起きないようにする
 		var d = (user)? succeed(user) : Delicious.getCurrentUser();
 		return d.addCallback(function(user){
-			return request('http://feeds.delicious.com/feeds/json/tags/' + user);
+			return request('http://feeds.delicious.com/v2/json/tags/' + user);
 		}).addCallback(function(res){
-			var tags = evalInSandbox(res.responseText, 'http://feeds.delicious.com/');
+			var tags = JSON.parse(res.responseText);
 			
 			// タグが無いか?(取得失敗時も発生)
 			if(!tags || isEmpty(tags))
@@ -1352,7 +1352,7 @@ models.register(update({}, AbstractSessionService, {
 						private     : doc.getElementById('savePrivate').checked,
 					},
 					
-					duplicated : !doc.getElementById('recommendedField'),
+					duplicated : !!doc.querySelector('.saveFlag'),
 					recommended : $x('id("recommendedField")//a[contains(@class, "m")]/text()', doc, true), 
 				}
 			})

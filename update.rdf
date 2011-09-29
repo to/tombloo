@@ -2,21 +2,21 @@
 <RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
          xmlns:NC="http://home.netscape.com/NC-rdf#"
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Description RDF:about="rdf:#$vfHFn3"
+  <RDF:Description RDF:about="rdf:#$59lc03"
+                   em:version="0.4.25">
+    <em:targetApplication RDF:resource="rdf:#$89lc03"/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$89lc03"
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="3.5"
                    em:maxVersion="100.0.*"
                    em:updateLink="http://github.com/to/tombloo/raw/release/tombloo.xpi"
-                   em:updateHash="sha512:2edebac1f4ec32b04f4ca940389f161661f0ad5ecbbdf9cfd59d6d2e3e3106271d6e66d90adc5cc45ffd1066df9b12814f5af4e8b97a794d40a7f8b55ced0d49" />
-  <RDF:Seq RDF:about="rdf:#$rfHFn3">
-    <RDF:li RDF:resource="rdf:#$sfHFn3"/>
+                   em:updateHash="sha512:5ee3e969a4ad8f9f67d5d8c03d62b6a6f31d12c43dad720bfe4ade19899668c31cc158f32462632e6231e51d88bafcb480993e7cef97ebcb0fadcd804e1d24cd" />
+  <RDF:Seq RDF:about="rdf:#$49lc03">
+    <RDF:li RDF:resource="rdf:#$59lc03"/>
   </RDF:Seq>
   <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
-                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAJOUxxxDV1EU6yW8xAsTaJH9JOvH9HoL0Mie/nBNE9hox1La90OI/VQChQmrgz1XqDDjLlT+/oQftWye8h09JKAOc083SlYtwcacVkR9PzH/i0Z1WrYchfRwfiO78+Ft16tQp1+IQpCD4XPS2B+oiDfze6qrDz147SRsy+Ajqs/7">
-    <em:updates RDF:resource="rdf:#$rfHFn3"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$sfHFn3"
-                   em:version="0.4.24">
-    <em:targetApplication RDF:resource="rdf:#$vfHFn3"/>
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAHUE0la2aY7gzZkpylLv5uTseNJuzo7KDO/IJ8SDFT9Jxlbnlk5LZUWKpn99AaMm6SHo6f7YPigAZSiyRhgmaBci+6ojQm0bMHBKVRVCX3lyJquJWWcjO6s04eg+78Az7JgCNUi/zf7D/GOrV//wD1Y6YZFMW3HRh+cXuGJx94Gy">
+    <em:updates RDF:resource="rdf:#$49lc03"/>
   </RDF:Description>
 </RDF:RDF>

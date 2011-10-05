@@ -2,21 +2,21 @@
 <RDF:RDF xmlns:em="http://www.mozilla.org/2004/em-rdf#"
          xmlns:NC="http://home.netscape.com/NC-rdf#"
          xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
-                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBACqWpKqwioMYb8AyG/moCB5fspGjjr74g/xjwEtdc4fujS0T64drmZb2aQyOw3rMKKMP32/MNZZm/48wvyCZvHPigrRVcVXHtBi5ewifYQeaL9UFzyUzhiUPuwz90zHPnqcmS40EEVguEHYc44wFL2u46BkYEp6XMRHbnu/DAL5b">
-    <em:updates RDF:resource="rdf:#$Muo4L"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$Nuo4L"
-                   em:version="0.4.26">
-    <em:targetApplication RDF:resource="rdf:#$Quo4L"/>
-  </RDF:Description>
-  <RDF:Description RDF:about="rdf:#$Quo4L"
+  <RDF:Description RDF:about="rdf:#$mzDI."
                    em:id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}"
                    em:minVersion="3.5"
                    em:maxVersion="100.0.*"
                    em:updateLink="http://github.com/to/tombloo/raw/release/tombloo.xpi"
-                   em:updateHash="sha512:cc03c7cbf3539aa06b4c4ee96506b9711c6b570d2b09190e465794f8699d8875c677463cbd53538d388cdf9a00cfe74711d07b1bf369bd174986e8000d2c24dd" />
-  <RDF:Seq RDF:about="rdf:#$Muo4L">
-    <RDF:li RDF:resource="rdf:#$Nuo4L"/>
+                   em:updateHash="sha512:a76ce220da3b3e07008789f7ddd9adf05a171cb6079961c4e17b72734d931f18b85e2d8e701225678114e32f1b4f5da1203993de98cc39f8884ea02268b73463" />
+  <RDF:Seq RDF:about="rdf:#$izDI.">
+    <RDF:li RDF:resource="rdf:#$jzDI."/>
   </RDF:Seq>
+  <RDF:Description RDF:about="urn:mozilla:extension:tombloo@brasil.to"
+                   em:signature="MIGTMA0GCSqGSIb3DQEBDQUAA4GBAFljYkFP6r5OXeVIrIXyEc0i9vW1O+h1UAkhbgzyP2xh8pD3smFDWQIgAkuzl716kCSzVNIG+Qctc8BE5MSUFt6bzoaaMzjKp8AvoRDEQIWbe7dxyFPXM5/3l3Skep+OTyqwrjHOMXB+rYYPab+aS8MN3TiEmCwYvGMgO6LKEwlO">
+    <em:updates RDF:resource="rdf:#$izDI."/>
+  </RDF:Description>
+  <RDF:Description RDF:about="rdf:#$jzDI."
+                   em:version="0.4.27">
+    <em:targetApplication RDF:resource="rdf:#$mzDI."/>
+  </RDF:Description>
 </RDF:RDF>

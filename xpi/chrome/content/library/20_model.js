@@ -1274,9 +1274,8 @@ models.register(update({}, AbstractSessionService, {
 			})
 		}).addCallback(function(res){
 			var doc = convertToHTMLDocument(res.responseText);
-			var elmForm = doc.getElementsByClassName('saveConfirm')[0];
 			return request('http://www.delicious.com/save', {
-				sendContent : update(formContents(elmForm), {
+				sendContent : update(formContents(doc), {
 					title   : ps.item,
 					url     : ps.itemUrl,
 					note    : joinText([ps.body, ps.description], ' ', true),

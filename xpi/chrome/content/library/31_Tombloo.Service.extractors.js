@@ -697,6 +697,7 @@ Tombloo.Service.extractors = new Repository([
 	
 	{
 		name : 'Photo - Kiva',
+		retryLimit : 1,
 		check : function(ctx){
 			return (ctx.onImage && this.isOriginalUrl(ctx.target.src)) || 
 				(ctx.onLink && this.isOriginalUrl(ctx.link.href));
@@ -714,19 +715,17 @@ Tombloo.Service.extractors = new Repository([
 			return /^http:\/\/www\.kiva\.org\/img\//.test(url);
 		},
 		getFinalUrl : function(url, retryCount){
+			var self = this;
+			
 			retryCount = retryCount || 0;
 			
-			var self = this;
-			if(!this.isOriginalUrl(url))
+			// リダイレクト先が取得できるか、または、リダイレクトがないか?
+			// (S3のアドレスに変わらるものが少なくなった)
+			if(!this.isOriginalUrl(url) || retryCount >= this.retryLimit)
 				return succeed(url);
 			
-			if(retryCount > 5)
-				throw 'Kiva: retry over.';
-				
 			return getFinalUrl(url).addBoth(function(url){
-				return (retryCount? wait(3) : succeed()).addCallback(function(){
-					return self.getFinalUrl(url, ++retryCount);
-				});
+				return wait(3).addCallback(bind('getFinalUrl', self, url, ++retryCount));
 			});
 		},
 	},

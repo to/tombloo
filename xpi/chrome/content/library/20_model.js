@@ -781,39 +781,6 @@ models.register({
 });
 
 
-models.register({
-	name : 'Jaiku',
-	ICON : 'http://jaiku.com/favicon.ico',
-	
-	URL : 'http://jaiku.com/',
-	
-	check : function(ps){
-		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
-	},
-	
-	getCurrentUser : function(){
-		if(getCookieString('jaiku.com').match(/jaikuuser_.+?=(.+?);/))
-			return RegExp.$1;
-		
-		throw new Error(getMessage('error.notLoggedin'));
-	},
-	
-	post : function(ps){
-		this.getCurrentUser();
-		
-		return request(Jaiku.URL).addCallback(function(res){
-			var form = formContents(convertToHTMLDocument(res.responseText));
-			return request(Jaiku.URL, {
-				redirectionLimit : 0,
-				sendContent : {
-					_nonce : form._nonce,
-					message : joinText([ps.item, ps.itemUrl, ps.body, ps.description], ' ', true),
-				},
-			});
-		});
-	},
-});
-
 models.register(update({
 	name : 'Plurk',
 	ICON : 'http://www.plurk.com/static/favicon.png',
@@ -2439,68 +2406,6 @@ models.register({
 				}),
 			});
 		})
-	},
-});
-
-models.register({
-	name : '絶対復習',
-	URL  : 'http://www.takao7.net',
-	ICON : 'chrome://tombloo/skin/item.ico',
-	
-	getAuthCookie : function(){
-		return getCookieString('www.takao7.net', 'brushup_auth_token').split('=').pop();
-	},
-	
-	check: function(ps) {
-		return (/(regular|link|quote)/).test(ps.type) && !ps.file;
-	},
-	
-	post: function(ps) {
-		return this.add(ps.item, joinText([ps.itemUrl, ps.body, ps.description], '\n'), ps.tags);
-	},
-	
-	add : function(title, description, tags){
-		var self = this;
-		return request(this.URL + '/brushup/reminders/new').addCallback(function(res){
-			if(res.channel.URI.asciiSpec.match('login'))
-				throw new Error(getMessage('error.notLoggedin'));
-			
-			var doc = convertToHTMLDocument(res.responseText);
-			var form = formContents(doc);
-			
-			return request(self.URL + $x('id("new_reminder")/@action', doc), {
-				redirectionLimit : 0,
-				sendContent : update(form, {
-					'reminder[title]'    : title,
-					'reminder[body]'     : description,
-					'reminder[tag_list]' : joinText(tags, ' '),
-				}),
-			});
-		});
-	},
-});
-
-models.register({
-	name: 'Femo',
-	ICON: 'http://femo.jp/favicon.ico',
-	POST_URL: 'http://femo.jp/create/post',
-	
-	check: function(ps) {
-		return (/(regular|photo|quote|link|conversation|video)/).test(ps.type) && !ps.file;
-	},
-	
-	post: function(ps) {
-		return this.addMemo(ps);
-	},
-	
-	addMemo : function(ps){
-		return request(this.POST_URL, {
-			sendContent: {
-				title   : ps.item,
-				text    : joinText([ps.itemUrl, ps.body, ps.description], '\n'),
-				tagtext : joinText(ps.tags, ' '),
-			},
-		});
 	},
 });
 

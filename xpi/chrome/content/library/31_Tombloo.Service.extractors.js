@@ -1339,10 +1339,13 @@ Tombloo.Service.extractors = new Repository([
 				itemUrl   : ctx.href,
 			}
 			
-			var elmAuthor = $x('id("watch-username")');
+			var elmAuthor = 
+				$x('id("watch-channel-stats")/a') || 
+				$x('id("watch-username")') || 
+				$x('id("watch-uploader-info")/descendant::a[contains(concat(" ", normalize-space(@rel), " "), " author ")]');
 			if(elmAuthor){
 				ps.authorUrl = elmAuthor.href;
-				ps.author = elmAuthor.textContent;
+				ps.author = elmAuthor.textContent.trim();
 			}
 			
 			return ps;

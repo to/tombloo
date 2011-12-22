@@ -1067,7 +1067,7 @@ models.register({
 					saveQuicknote : 'save',
 					format        : 'microclip',
 					
-					url      : ps.itemUrl || 'no url',
+					url      : ps.itemUrl,
 					title    : ps.item || 'no title',
 					comment  : ps.description,
 					body     : getFlavor(ps.body, 'html'),

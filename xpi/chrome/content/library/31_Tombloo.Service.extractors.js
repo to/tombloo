@@ -608,7 +608,7 @@ Tombloo.Service.extractors = new Repository([
 		name : 'Photo - Flickr',
 		ICON : models.Flickr.ICON,
 		
-		RE : new RegExp('^http://(?:.+?.)?static.flickr.com/\\d+?/(\\d+?)_.*'),
+		RE : new RegExp('^http://(?:.+?.)?static.?flickr.com/\\d+?/(\\d+?)_.*'),
 		getImageId : function(ctx){
 			// 他サイトに貼られているFlickrにも対応する
 			if(/flickr\.com/.test(ctx.host)){

@@ -1241,8 +1241,15 @@ models.register(update({}, AbstractSessionService, {
 			})
 		}).addCallback(function(res){
 			var doc = convertToHTMLDocument(res.responseText);
+			var form = {};
+			items(formContents(doc.documentElement)).forEach(function([key, value]){
+				form[key.replace(/[A-Z]/g, function(c){
+					return '_' + c.toLowerCase()
+				})] = value;
+			});
+			
 			return request('http://www.delicious.com/save', {
-				sendContent : update(formContents(doc), {
+				sendContent : update(form, {
 					title   : ps.item,
 					url     : ps.itemUrl,
 					note    : joinText([ps.body, ps.description], ' ', true),
@@ -1250,6 +1257,11 @@ models.register(update({}, AbstractSessionService, {
 					private : ps.private,
 				}),
 			});
+		}).addCallback(function(res){
+			res = JSON.parse(res.responseText);
+			
+			if(res.error)
+				throw new Error(res.error_msg);
 		});
 	},
 	

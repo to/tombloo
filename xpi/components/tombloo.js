@@ -267,11 +267,13 @@ Module = {
 			});
 		}
 		
-		// Scriptishサンドボックスの拡張
-		if(env.getExtensionDir('scriptish@erikvold.com')){
+		try{
+			// Scriptishサンドボックスの拡張
 			var scope = {};
 			Components.utils.import('resource://scriptish/api.js', scope);
 			scope.GM_API.prototype.GM_Tombloo = GM_Tombloo;
+		}catch(e){
+			// インストールされていない場合や無効になっている場合にエラーになる
 		}
 		
 		env.signal(env, 'environment-load');

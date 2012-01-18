@@ -6,6 +6,6 @@ Tombloo.Service.actions.register({
 		return ctx.host === 'itunes.apple.com';
 	},
 	execute : function(ctx){
-		addTab('http://appshopper.com/search/?search=' + $x('//div[@id="title"]/h1/text()', ctx.document));
+		addTab('http://appshopper.com/search/?search=' + $x('//div[@id="title"]//h1/text()', ctx.document));
 	},
 }, '----');

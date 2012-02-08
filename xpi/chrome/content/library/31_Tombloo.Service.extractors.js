@@ -313,7 +313,9 @@ Tombloo.Service.extractors = new Repository([
 				itemUrl  : ctx.href,
 				body     : createFlavoredString(ctx.selection? 
 					ctx.window.getSelection() : 
-					ctx.document.querySelector('.tweet-text-large') || ctx.document.querySelector('.entry-content')),
+					ctx.document.querySelector('.js-tweet-text') || 
+					ctx.document.querySelector('.tweet-text-large') || 
+					ctx.document.querySelector('.entry-content')),
 				favorite : {
 					name : 'Twitter',
 					id   : ctx.href.match(/(status|statuses)\/(\d+)/)[2],

@@ -933,16 +933,17 @@ models.register({
 	},
 	
 	getUserTags : function(){
-		return request('https://www.google.com/bookmarks/api/bookmark', {
+		return request('https://www.google.com/bookmarks/mark', {
 			queryString : {
-				op : 'LIST_LABELS',
+				op : 'add'
 			}
 		}).addCallback(function(res){
-			var data = JSON.parse(res.responseText);
-			return zip(data['labels'], data['counts']).map(function(pair){
+			var doc = convertToHTMLDocument(res.responseText);
+			return $x("//div[@id='sidenav']//a[contains(@href, 'q=label')]", doc, true).map(function(elmTag){
+				var tokens = elmTag.textContent.match(/(.+)\((\d+)\)/);
 				return {
-					name      : pair[0],
-					frequency : pair[1],
+					name      : tokens[1].trim(),
+					frequency : tokens[2],
 				};
 			});
 		});

@@ -1,6 +1,7 @@
 if(typeof(models)=='undefined')
 	this.models = models = new Repository();
 
+
 models.register({
 	name : 'FriendFeed',
 	ICON : 'http://friendfeed.com/favicon.ico',
@@ -33,6 +34,7 @@ models.register({
 		});
 	},
 });
+
 
 models.register({
 	name : 'Mento',
@@ -159,6 +161,7 @@ models.register({
 		});
 	},
 });
+
 
 // Flickr API Documentation 
 // http://www.flickr.com/services/api/
@@ -317,6 +320,7 @@ models.register(update({
 	},
 }, AbstractSessionService));
 
+
 models.register({
 	name : 'Picasa',
 	ICON : 'http://picasaweb.google.com/favicon.ico',
@@ -409,6 +413,7 @@ models.register({
 	},
 });
 
+
 models.register({
 	name     : 'Twitpic',
 	ICON     : 'http://twitpic.com/images/favicon.ico',
@@ -455,6 +460,7 @@ models.register({
 		});
 	},
 });
+
 
 models.register({
 	name : 'WeHeartIt',
@@ -504,6 +510,7 @@ models.register({
 	},
 });
 
+
 models.register({
 	name : '4u',
 	ICON : 'data:image/x-icon,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%10%00%00%00%10%08%03%00%00%00(-%0FS%00%00%00ZPLTE%FF%FF%FF%F9%F9%F9%C3%C3%C3%AE%AE%AE%E7%E7%E7%24%24%24EEE%60%60%60!!!%DE%DE%DEoooZZZWWW%CC%CC%CC%0C%0C%0CKKK%D2%D2%D2fff%06%06%06uuu%D5%D5%D5%1B%1B%1B%93%93%93ccclll%BA%BA%BA%C0%C0%C0%AB%AB%AB%00%00%00%8D%8D%8D2%BF%0C%CD%00%00%00IIDAT%18%95c%60%20%17021%B3%20%F3YX%D9%D898%91%04%B8%B8%D1t%B0%F3%A0%09%F0%F2%F1%0B%A0%8Ap%0A%0A%093%A2%0A%89%88%8A%A1i%13%97%40%E2H%B20H%89J%23%09%08%F3%C9%88%CA%E2w%3A%1E%00%00%E6%DF%02%18%40u1A%00%00%00%00IEND%AEB%60%82',
@@ -547,6 +554,7 @@ models.register({
 	},
 });
 
+
 models.register({
 	name : 'Gyazo',
 	ICON : 'chrome://tombloo/skin/item.ico',
@@ -579,6 +587,7 @@ models.register({
 		});
 	},
 });
+
 
 models.register({
 	name : 'Local',
@@ -642,81 +651,8 @@ models.register({
 			});
 		},
 	},
-	
 });
 
-models.register({
-	name : 'Dropmark',
-	ICON : 'http://dropmark.com/favicon.ico',
-	URL  : 'http://dropmark.com/',
-	
-	check : function(ps){
-		return (/(regular|photo|quote|link)/).test(ps.type) && !ps.file;
-	},
-	
-	converters: {
-		regular : function(ps){
-			return {
-				content_type : 'text',
-				name         : ps.item,
-				content_text : ps.description,
-			}
-		},
-		
-		quote : function(ps){
-			return {
-				content_type : 'text', 
-				name         : ps.item + ps.pageUrl.wrap(' (', ')'),
-				content_text : joinText([ps.body.wrap('"'), ps.description], '\n', true),
-			}
-		},
-		
-		photo : function(ps){
-			return {
-				type    : 'image', 
-				name    : ps.item + ps.pageUrl.wrap(' (', ')'),
-				content : ps.itemUrl,
-			}
-		},
-		
-		link : function(ps){
-			return {
-				type    : 'link', 
-				name    : ps.page,
-				content : ps.pageUrl,
-			}
-		},
-	},
-	
-	post : function(ps){
-		return Dropmark.getPostPage().addCallback(function(url){
-			return request(url + '/items', {
-				redirectionLimit : 0,
-				sendContent      : update(Dropmark.converters[ps.type](ps), {
-					csrf_token : Dropmark.getToken(createURI(url).host),
-					ajax       : true,
-				}),
-			});
-		});
-	},
-	
-	getToken : function(host){
-		// ホストによりトークンが異なる
-		return getCookieValue(host, 'csrf_token');
-	},
-	
-	getPostPage : function(){
-		return Dropmark.getLastViewedPage();
-	},
-	
-	getLastViewedPage : function(){
-		return getFinalUrl('http://app.dropmark.com/');
-	},
-	
-	getLastViewedId : function(){
-		return getCookieValue('dropmark.com', 'last_viewed');
-	},
-});
 
 models.register({
 	name : 'PingFm',
@@ -742,6 +678,7 @@ models.register({
 		})
 	}
 });
+
 
 models.register({
 	name : 'Twitter',
@@ -905,10 +842,12 @@ models.register(update({
 	},
 }, AbstractSessionService));
 
+
 models.register({
 	name : 'Google',
 	ICON : 'http://www.google.com/favicon.ico',
 });
+
 
 // copied from http://userscripts.org/scripts/show/19741
 models.register({
@@ -952,6 +891,7 @@ models.register({
 		return request('http://www.google.com/search?client=navclient-auto&ch=' + GoogleWebHistory.getCh(url) + '&features=Rank&q=info:' + escape(url));
 	},
 });
+
 
 models.register({
 	name : 'GoogleBookmarks',
@@ -1043,6 +983,7 @@ models.register({
 	},
 });
 
+
 models.register({
 	name : 'GoogleCalendar',
 	ICON : 'http://calendar.google.com/googlecalendar/images/favicon.ico',
@@ -1104,6 +1045,80 @@ models.register({
 					scp     : 'ONE',
 				}
 		});
+	},
+});
+
+
+models.register({
+	name : 'Dropmark',
+	ICON : 'http://dropmark.com/favicon.ico',
+	URL  : 'http://dropmark.com/',
+	
+	check : function(ps){
+		return (/(regular|photo|quote|link)/).test(ps.type) && !ps.file;
+	},
+	
+	converters: {
+		regular : function(ps){
+			return {
+				content_type : 'text',
+				name         : ps.item,
+				content_text : ps.description,
+			}
+		},
+		
+		quote : function(ps){
+			return {
+				content_type : 'text', 
+				name         : ps.item + ps.pageUrl.wrap(' (', ')'),
+				content_text : joinText([ps.body.wrap('"'), ps.description], '\n', true),
+			}
+		},
+		
+		photo : function(ps){
+			return {
+				type    : 'image', 
+				name    : ps.item + ps.pageUrl.wrap(' (', ')'),
+				content : ps.itemUrl,
+			}
+		},
+		
+		link : function(ps){
+			return {
+				type    : 'link', 
+				name    : ps.page,
+				content : ps.pageUrl,
+			}
+		},
+	},
+	
+	post : function(ps){
+		return Dropmark.getPostPage().addCallback(function(url){
+			return request(url + '/items', {
+				redirectionLimit : 0,
+				sendContent      : update(Dropmark.converters[ps.type](ps), {
+					csrf_token : Dropmark.getToken(createURI(url).host),
+					ajax       : true,
+				}),
+			});
+		});
+	},
+	
+	getToken : function(host){
+		// ホストによりトークンが異なる
+		return getCookieValue(host, 'csrf_token');
+	},
+	
+	getPostPage : function(){
+		return Dropmark.getLastViewedPage();
+	},
+	
+	getLastViewedPage : function(){
+		return getFinalUrl('http://app.dropmark.com/');
+	},
+	
+	getLastViewedId : function(){
+		return getCookieValue('dropmark.com', 'last_viewed');
 	},
 });
 
@@ -1175,6 +1190,7 @@ models.register({
 		});
 	},
 });
+
 
 models.register(update({
 	name : 'Pinboard',
@@ -1294,6 +1310,7 @@ models.register(update({
 		});
 	},
 }));
+
 
 models.register(update({}, AbstractSessionService, {
 	name : 'Delicious',
@@ -1446,6 +1463,7 @@ models.register(update({}, AbstractSessionService, {
 	},
 }));
 
+
 models.register({
 	name : 'Digg',
 	ICON : 'http://cdn1.diggstatic.com/img/favicon.ico',
@@ -1490,6 +1508,7 @@ models.register({
 		});
 	},
 });
+
 
 models.register(update({}, AbstractSessionService, {
 	name : 'StumbleUpon',
@@ -1594,6 +1613,7 @@ models.register(update({}, AbstractSessionService, {
 		});
 	},
 }));
+
 
 models.register({
 	name : 'FirefoxBookmark',
@@ -2061,6 +2081,7 @@ models.register({
 	},
 });
 
+
 models.register({
 	name : 'Faves',
 	ICON : 'http://faves.com/assets/favicon.ico',
@@ -2106,6 +2127,7 @@ models.register({
 	},
 });
 
+
 models.register({
 	name : 'Snipshot',
 	// ICON : 'http://snipshot.com/favicon.ico',
@@ -2130,6 +2152,7 @@ models.register({
 		});
 	},
 });
+
 
 models.register(update({
 	name : 'Hatena',
@@ -2222,6 +2245,7 @@ models.register({
 		});
 	},
 });
+
 
 models.register(update({
 	name : 'HatenaBookmark',
@@ -2319,6 +2343,7 @@ models.register(update({
 	},
 }, AbstractSessionService));
 
+
 models.register( {
 	name     : 'HatenaDiary',
 	ICON     : 'http://d.hatena.ne.jp/favicon.ico',
@@ -2376,6 +2401,7 @@ models.register( {
 	}
 });
 
+
 models.register({
 	name : 'HatenaStar',
 	ICON : 'http://s.hatena.ne.jp/favicon.ico',
@@ -2421,6 +2447,7 @@ models.register({
 	},
 });
 
+
 models.register({
 	name : '絶対復習',
 	URL  : 'http://brushup.narihiro.info',
@@ -2458,6 +2485,7 @@ models.register({
 		});
 	},
 });
+
 
 models.register(update({
 	name     : 'LivedoorClip',
@@ -2545,6 +2573,7 @@ models.register(update({
 	},
 }, AbstractSessionService));
 
+
 models.register({
 	name : 'Wassr',
 	ICON : 'http://wassr.jp/favicon.ico',
@@ -2571,6 +2600,7 @@ models.register({
 		})
 	},
 });
+
 
 models.register({
 	name : 'MediaMarker',
@@ -2609,6 +2639,7 @@ models.register({
 		});
 	}
 });
+
 
 models.register({
 	name : 'LibraryThing',
@@ -2651,6 +2682,7 @@ models.register({
 		});
 	}
 });
+
 
 models.register({
 	name : '8tracks',
@@ -2712,6 +2744,7 @@ models.register({
 	}
 });
 
+
 models.register({
 	name : 'is.gd',
 	ICON : 'http://is.gd/favicon.ico',
@@ -2739,6 +2772,7 @@ models.register({
 		});
 	},
 });
+
 
 models.register({
 	name    : 'bit.ly',
@@ -2790,11 +2824,13 @@ models.register({
 	},
 });
 
+
 models.register(update({}, models['bit.ly'], {
 	name : 'j.mp',
 	ICON : 'http://j.mp/static/images/favicon.png',
 	URL  : 'http://api.j.mp',
 }));
+
 
 models.register({
 	name : 'TextConversionServices',
@@ -2870,6 +2906,7 @@ models.register({
 	},
 });
 
+
 models.register({
 	name : 'Sharebee.com',
 	URL  : 'http://sharebee.com/',
@@ -2884,6 +2921,7 @@ models.register({
 		});
 	},
 });
+
 
 models.register({
 	name : 'Nicovideo',
@@ -2915,6 +2953,7 @@ models.register({
 		});
 	},
 });
+
 
 models.register({
 	name : 'Soundcloud',
@@ -2978,6 +3017,7 @@ models.register({
 		});
 	},
 });
+
 
 models.register(update({}, AbstractSessionService, {
 	name : 'NDrive',
@@ -3157,6 +3197,7 @@ models.register(update({}, AbstractSessionService, {
 		});
 	}
 }));
+
 
 models.register({
 	name : 'GazoPa',

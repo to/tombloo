@@ -1000,7 +1000,6 @@ function DescriptionBox(elmBox, attrs, dialogPanel){
 	content.addEventListener('copy', onContentCopy, true);
 	content.addEventListener('unload', function(){
 		content.removeEventListener('copy', onContentCopy, true);
-		alert('removed!!');
 	}, true);
 }
 

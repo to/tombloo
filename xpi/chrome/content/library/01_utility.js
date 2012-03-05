@@ -103,6 +103,12 @@ function getCookieString(host, name){
 	}).join('; ');
 }
 
+function getCookieValue(host, name){
+	var cookies = getCookies(host, name);
+	if(cookies.length )
+		return cookies[0].value;
+}
+
 function getPasswords(host, user){
 	return map(function(p){
 		return {

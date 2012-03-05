@@ -54,8 +54,9 @@ update(String.prototype, {
 		return this.replace(/^\s+|\s+$/g, '');
 	},
 	
-	wrap : function(c){
-		return c+this+c;
+	wrap : function(prefix, suffix){
+		suffix = suffix || prefix;
+		return prefix + this + suffix;
 	},
 	
 	repeat : function(n){

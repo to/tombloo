@@ -34,7 +34,6 @@ models.register({
 	},
 });
 
-
 models.register({
 	name : 'Mento',
 	ICON : 'http://www.mento.info/favicon.ico',
@@ -644,6 +643,79 @@ models.register({
 		},
 	},
 	
+});
+
+models.register({
+	name : 'Dropmark',
+	ICON : 'http://dropmark.com/favicon.ico',
+	URL  : 'http://dropmark.com/',
+	
+	check : function(ps){
+		return (/(regular|photo|quote|link)/).test(ps.type) && !ps.file;
+	},
+	
+	converters: {
+		regular : function(ps){
+			return {
+				content_type : 'text',
+				name         : ps.item,
+				content_text : ps.description,
+			}
+		},
+		
+		quote : function(ps){
+			return {
+				content_type : 'text', 
+				name         : ps.item + ps.pageUrl.wrap(' (', ')'),
+				content_text : joinText([ps.body.wrap('"'), ps.description], '\n', true),
+			}
+		},
+		
+		photo : function(ps){
+			return {
+				type    : 'image', 
+				name    : ps.item + ps.pageUrl.wrap(' (', ')'),
+				content : ps.itemUrl,
+			}
+		},
+		
+		link : function(ps){
+			return {
+				type    : 'link', 
+				name    : ps.page,
+				content : ps.pageUrl,
+			}
+		},
+	},
+	
+	post : function(ps){
+		return Dropmark.getPostPage().addCallback(function(url){
+			return request(url + '/items', {
+				redirectionLimit : 0,
+				sendContent      : update(Dropmark.converters[ps.type](ps), {
+					csrf_token : Dropmark.getToken(createURI(url).host),
+					ajax       : true,
+				}),
+			});
+		});
+	},
+	
+	getToken : function(host){
+		// ホストによりトークンが異なる
+		return getCookieValue(host, 'csrf_token');
+	},
+	
+	getPostPage : function(){
+		return Dropmark.getLastViewedPage();
+	},
+	
+	getLastViewedPage : function(){
+		return getFinalUrl('http://app.dropmark.com/');
+	},
+	
+	getLastViewedId : function(){
+		return getCookieValue('dropmark.com', 'last_viewed');
+	},
 });
 
 models.register({

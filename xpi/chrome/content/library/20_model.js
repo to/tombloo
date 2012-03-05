@@ -412,7 +412,7 @@ models.register({
 
 models.register({
 	name     : 'Twitpic',
-	ICON     : 'http://twitpic.com/favicon.ico',
+	ICON     : 'http://twitpic.com/images/favicon.ico',
 	POST_URL : 'http://twitpic.com/upload',
 	
 	check : function(ps){
@@ -1777,6 +1777,46 @@ models.register(update({
 
 
 models.register({
+	name : 'Readability',
+	ICON : 'http://www.readability.com/favicon.ico',
+	URL  : 'http://www.readability.com/',
+	
+	check : function(ps){
+		return ps.type == 'link';
+	},
+	
+	post : function(ps){
+		return Readability.queue(ps.itemUrl);
+	},
+	
+	getToken : function(){
+		return request(Readability.URL + 'extension/ajax/sync').addCallback(function(res){
+			res = JSON.parse(res.responseText);
+			
+			if(!res.success)
+				throw new Error(getMessage('error.notLoggedin'));
+			
+			return res.readabilityToken;
+		});
+	},
+	
+	queue : function(url, read){
+		return Readability.getToken().addCallback(function(token){
+			return request(Readability.URL + 'articles/queue', {
+				redirectionLimit : 0,
+				sendContent : {
+					token : token,
+					url   : url,
+					
+					read  : read? 1 : 0,
+				}
+			});
+		});
+	},
+});
+
+
+models.register({
 	name : 'Remember The Milk',
 	ICON : 'http://www.rememberthemilk.com/favicon.ico',
 	POST_URL: 'http://www.rememberthemilk.com/services/ext/addtask.rtm',
@@ -1951,7 +1991,7 @@ models.register({
 
 models.register({
 	name : 'Faves',
-	ICON : 'http://faves.com/favicon.ico',
+	ICON : 'http://faves.com/assets/favicon.ico',
 	
 	/**
 	 * タグを取得する。
@@ -2869,7 +2909,7 @@ models.register({
 
 models.register(update({}, AbstractSessionService, {
 	name : 'NDrive',
-	ICON : 'http://ndrive1.naver.jp/favicon.ico',
+	ICON : 'http://ndrive.naver.jp/favicon.ico',
 	
 	check : function(ps){
 		return (/(photo|link)/).test(ps.type);

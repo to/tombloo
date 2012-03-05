@@ -990,12 +990,14 @@ function DescriptionBox(elmBox, attrs, dialogPanel){
 		
 		window.addEventListener('DOMContentLoaded', bind('onLoad', self), false);
 		
+		/*
 		var selection = broad(window.opener.content.getSelection());
 		selection.addSelectionListener(self);
 		window.addEventListener('unload', function(){
 			// FIXME: 対象ウィンドウが先に閉じたときにチェック
 			selection.removeSelectionListener(self);
 		}, true);
+		*/
 	});
 }
 

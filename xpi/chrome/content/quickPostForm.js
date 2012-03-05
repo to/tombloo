@@ -989,16 +989,19 @@ function DescriptionBox(elmBox, attrs, dialogPanel){
 		connect(self.dialogPanel, 'resize', self, 'onResize');
 		
 		window.addEventListener('DOMContentLoaded', bind('onLoad', self), false);
-		
-		/*
-		var selection = broad(window.opener.content.getSelection());
-		selection.addSelectionListener(self);
-		window.addEventListener('unload', function(){
-			// FIXME: 対象ウィンドウが先に閉じたときにチェック
-			selection.removeSelectionListener(self);
-		}, true);
-		*/
 	});
+	
+	// コンテントウィンドウでコピーが発生した際にフォーカスを戻す
+	var onContentCopy = function(){
+		window.focus();
+		self.elmDescription.focus();
+	}
+	var content = window.opener.content;
+	content.addEventListener('copy', onContentCopy, true);
+	content.addEventListener('unload', function(){
+		content.removeEventListener('copy', onContentCopy, true);
+		alert('removed!!');
+	}, true);
 }
 
 DescriptionBox.prototype = {
@@ -1139,22 +1142,6 @@ DescriptionBox.prototype = {
 			maxHeight = '10000px';
 		}
 		this.locked = false;
-	},
-	
-	// FIXME: 非表示時の挙動を検討する
-	// nsISelectionListener
-	notifySelectionChanged : function(doc, sel, reason){
-		if(sel.isCollapsed || reason != ISelectionListener.MOUSEUP_REASON)
-			return;
-		
-		this.replaceSelection(sel.toString().trim());
-		
-		// 別ウィンドウのため一度ウィンドウのフォーカスも戻す
-		window.focus();
-		this.elmDescription.focus();
-		
-		// valueを変えると先頭に戻ってしまうため最後に移動し直す
-		this.elmInput.scrollTop = this.elmInput.scrollHeight;
 	},
 }
 

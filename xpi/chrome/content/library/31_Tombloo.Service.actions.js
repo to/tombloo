@@ -60,6 +60,41 @@ Tombloo.Service.actions = new Repository([
 	},
 ]);
 
+var openInActionBase = {
+	check : function(ctx){
+		return true;
+	},
+	execute : function(ctx){
+		var app = this.getFile(getPrefValue(this.prefKey));
+		if(!app){
+			while(true){
+				var path = prompt(this.prompt);
+				if(path === null)
+					return;
+				
+				app = this.getFile(path);
+				if(app){
+					setPrefValue(this.prefKey, path);
+					break;
+				}
+			}
+		}
+		
+		try{
+			new Process(app).run(false, [ctx.href], 1);
+		}catch(e){
+			alert(e);
+			setPrefValue(this.prefKey, '');
+		}
+	},
+	getFile : function(path){
+		try{
+			var file = getLocalFile(path);
+			return file.exists() && file.isFile() && file;
+		}catch(e){}
+	},
+}
+
 if(AppShellService.hiddenDOMWindow.PicLensContext){
 	Tombloo.Service.actions.register({
 		name : 'Piclens + Local Tumblr',

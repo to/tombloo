@@ -994,7 +994,6 @@ function DescriptionBox(elmBox, attrs, dialogPanel){
 	// コンテントウィンドウでコピーが発生した際にフォーカスを戻す
 	var onContentCopy = function(){
 		window.focus();
-		self.elmDescription.focus();
 	}
 	var content = window.opener.content;
 	content.addEventListener('copy', onContentCopy, true);

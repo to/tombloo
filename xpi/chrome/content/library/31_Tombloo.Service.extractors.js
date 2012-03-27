@@ -389,27 +389,53 @@ Tombloo.Service.extractors = new Repository([
 		extract : function(ctx){
 			Tombloo.Service.extractors.Amazon.extract(ctx);
 			
+			var d = new Deferred();
+			
 			// 拡大レンズなど画像以外の要素か?
 			if(!ctx.target.src)
 				ctx.target = $x('id("prodImageCell")/img | id("main-image")');
 			
-			var url = ctx.target.src.split('.');
-			url.splice(-2, 1, 'LZZZZZZZ');
-			url = url.join('.').replace('.L.LZZZZZZZ.', '.L.'); // カスタマーイメージ用
-			
-			with(ctx.target){
-				src = url
-				height = '';
-				width = '';
-				style.height = 'auto';
-				style.width = 'auto';
+			// tools4hack
+			// http://tools4hack.santalab.me/new-ipad-get-largeartwork-amazon-img.html
+			var elmImage = IMG({
+				src : 'http://z-ecx.images-amazon.com/images/P/' + 
+					Tombloo.Service.extractors.Amazon.getAsin(ctx) + 
+					'.09.MAIN._FMpng_SCRMZZZZZZ_.png'
+			});
+			elmImage.onload = function(){
+				// 画像が存在しない場合1ピクセル四方の画像が返される
+				if(elmImage.width < 50 && elmImage.height < 50)
+					return elmImage.onerror();
+				
+				d.callback(elmImage.src);
 			}
 			
-			return {
-				type    : 'photo',
-				item    : ctx.title,
-				itemUrl : url,
-			};
+			// 画像が存在していてもエラーになることがある
+			elmImage.onerror = function(){
+				var url = ctx.target.src.split('.');
+				url.splice(-2, 1, 'LZZZZZZZ');
+				url = url.join('.').replace('.L.LZZZZZZZ.', '.L.'); // カスタマーイメージ用
+				
+				d.callback(url);
+			}
+			
+			d.addCallback(function(url){
+				with(ctx.target){
+					src = url
+					height = '';
+					width = '';
+					style.height = 'auto';
+					style.width = 'auto';
+				}
+				
+				return {
+					type    : 'photo',
+					item    : ctx.title,
+					itemUrl : url,
+				};
+			});
+			
+			return d;
 		},
 	},
 	

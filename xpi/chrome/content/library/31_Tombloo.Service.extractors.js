@@ -1111,10 +1111,10 @@ Tombloo.Service.extractors = new Repository([
 	},
 	
 	{
-		name : 'Photo - There, I Fixed It',
+		name : 'Photo - Cheezburger',
 		ICON : 'chrome://tombloo/skin/photo.png',
 		check : function(ctx){
-			return ctx.onImage && ctx.target.src.match(/thereifixedit\.files\.wordpress.com/);
+			return ctx.onImage && /(thereifixedit\.files\.wordpress\.com|chzbgr\.com)/.test(ctx.target.src);
 		},
 		extract : function(ctx){
 			var img = ctx.target;

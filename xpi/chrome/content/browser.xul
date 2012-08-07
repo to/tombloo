@@ -37,7 +37,11 @@
 		env.signal(env, 'browser-open', window);
 		
 		window.addEventListener('load', function(e){
-			env.signal(env, 'browser-load', e);
+			// Element Hiding Helper for Adblock Plusとの衝突を避ける
+			// (詳細不明/ロード時の処理を遅延し起動表示を高速化する)
+			setTimeout(function(){
+				env.signal(env, 'browser-load', e);
+			}, 0);
 		}, false);
 	})();
 	]]></script>

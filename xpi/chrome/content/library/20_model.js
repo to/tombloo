@@ -1807,23 +1807,23 @@ models.register({
 
 
 models.register({
-	name : 'ReadItLater',
-	ICON : 'http://readitlaterlist.com/favicon.ico',
+	name : 'Pocket',
+	ICON : 'http://getpocket.com/favicon.ico',
 	check : function(ps){
 		return /quote|link/.test(ps.type);
 	},
 	post : function(ps){
-		return request('http://readitlaterlist.com/edit').addCallback(function(res) {
+		return request('http://getpocket.com/edit.php').addCallback(function(res) {
 			var doc = convertToHTMLDocument(res.responseText);
 			var form = $x('id("content")/form', doc);
 			if(/login/.test(form.action))
 				throw new Error(getMessage('error.notLoggedin'));
 			
-			return request('http://readitlaterlist.com/edit_process.php', {
-				queryString: {
+			return request('http://getpocket.com/edit_process.php', {
+				queryString : {
 					BL : 1
 				},
-				sendContent: update(formContents(form), {
+				sendContent : update(formContents(form), {
 					tags  : ps.tags? ps.tags.join(',') : '',
 					title : ps.item,
 					url   : ps.itemUrl

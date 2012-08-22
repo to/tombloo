@@ -8,14 +8,18 @@
 	var checked = {};
 	var disabled = false;
 	if(!filt){
-		var file = getPatchDir();
-		file.append('filt.txt');
+		var dir = getPatchDir();
 		
 		filt = grobal.filt = {
-			blackList : [],
+			conds : {},
 			debug : false,
-			file : file,
+			files : {
+				host : dir.clone(),
+				regexp : dir.clone(),
+			},
 		};
+		filt.files.host.append('filt.host.txt');
+		filt.files.regexp.append('filt.regexp.txt');
 		ObserverService.addObserver(filt, 'http-on-modify-request', false);
 		
 		setInterval(function(){
@@ -30,10 +34,10 @@
 	filt.observe = function(subject, topic, data){
 		try{
 			var channel = subject.QueryInterface(IHttpChannel);
-			var url = channel.URI.spec;
 			
 			// リダイレクトしている場合はメインページとして開いているか元コンテンツなので通す
-			if(channel.referrer && (REDIRECTION_LIMIT == channel.redirectionLimit) && isBlock(url))
+			// (カウンタなどリダイレクトする画像はブロックできない)
+			if(channel.referrer && (REDIRECTION_LIMIT == channel.redirectionLimit) && isBlock(channel.URI))
 				subject.cancel(Cr.NS_BINDING_ABORTED);
 		}catch(e){
 			error(e);
@@ -45,31 +49,43 @@
 		try{
 			// メインページとして開かれた場合は無条件に通す
 			var url = contentLocation.spec;
-			
 			if(contentType == TYPE_DOCUMENT)
 				return checked[url] = false;
 			
-			return isBlock(url);
+			return isBlock(contentLocation);
 		}catch(e){
 			error(e);
 			return false;
 		}
 	});
 	
-	function isBlock(url){
+	function isBlock(uri){
 		if(disabled)
 			return;
+		
+		var url = uri.spec;
 		
 		// observeかpolicyで処理済みか(または最近アクセスされ判定済みか)?
 		var res = checked[url];
 		if(res != null)
 			return res;
 		
-		var list = filt.blackList;
-		for(var i=0, len=list.length ; i<len ; i++){
-			if(list[i].test(url)){
+		var host = uri.host;
+		var hosts = filt.conds.hosts;
+		for(var i=0, len=hosts.length ; i<len ; i++){
+			if(host.lastIndexOf(hosts[i]) != -1){
 				if(filt.debug)
-					log([url, list[i]]);
+					log([host, hosts[i]]);
+				
+				return checked[url] = true;;
+			}
+		}
+		
+		var regexps = filt.conds.regexps;
+		for(var i=0, len=regexps.length ; i<len ; i++){
+			if(regexps[i].test(url)){
+				if(filt.debug)
+					log([url, ''+regexps[i]]);
 				
 				return checked[url] = true;;
 			}
@@ -79,19 +95,24 @@
 	}
 	
 	function reloadList(){
-		// 重複定義を省く(複数のリストをマージするため)
-		var list = keys(getContents(filt.file).split(/[\n\r]+/).reduce(function(memo, r){
+		filt.conds.hosts = loadList('host');
+		filt.conds.regexps = loadList('regexp').map(function(r){
+			return new RegExp(r);
+		});
+		checked = {};
+	}
+	
+	function loadList(type){
+		// 重複定義を省く
+		var lines = keys(getContents(filt.files[type]).split(/[\n\r]+/).reduce(function(memo, r){
 			if(r)
 				memo[r] = r;
 			return memo;
 		}, {})).sort();
 		
-		putContents(filt.file, list.join('\n') + '\n');
+		putContents(filt.files[type], lines.join('\n') + '\n');
 		
-		checked = {};
-		filt.blackList = list.map(function(r){
-			return new RegExp(r);
-		});
+		return lines;
 	}
 	
 	Tombloo.Service.actions.register({
@@ -114,8 +135,12 @@
 				execute : reloadList,
 			},
 			{
-				name : 'Open List',
-				execute : partial(openInEditor, filt.file), 
+				name : 'Open Host List',
+				execute : partial(openInEditor, filt.files.host), 
+			},
+			{
+				name : 'Open RegExp List',
+				execute : partial(openInEditor, filt.files.regexp), 
 			},
 			{
 				name : 'Debug - On',

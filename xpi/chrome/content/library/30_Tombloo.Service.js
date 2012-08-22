@@ -12,7 +12,7 @@ Tombloo.Service = {
 			// html要素などのルート要素も除外する
 			if(!ctx.menu && ctx.target && 
 				(ctx.target.parentNode != ctx.target.ownerDocument && ctx.target != ctx.target.ownerDocument)){
-				ctx.link = $x('./ancestor::a', ctx.target);
+				ctx.link = $x('./ancestor-or-self::a', ctx.target);
 				ctx.onLink = !!ctx.link;
 				ctx.onImage = ctx.target instanceof Ci.nsIDOMHTMLImageElement;
 			}

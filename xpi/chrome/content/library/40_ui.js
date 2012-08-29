@@ -69,38 +69,6 @@ function SlidePanel(elmPanel){
 	return panel;
 }
 
-// current / entries / per / max
-function Pagebar(opt){
-	var total = Math.ceil(opt.entries/opt.per);
-	opt.max = opt.max || opt.entries;
-	var step = total <= opt.max ? 1 : total/opt.max;
-	
-	var tds = <></>;
-	var pages = {};
-	for(var i=1 ; i<total ; i+=step)
-		pages[Math.ceil(i)]=true;
-	pages[opt.current] = pages[total] = true;
-	
-	if(opt.current!=1)
-		tds+=<td class="pagination" value={opt.current-1}></td>
-	
-	keys(pages).sort(function(a,b){return a-b}).forEach(function(page){
-		tds+=<td class={(page==opt.current)? 'current' : ''} value={page}>{page}</td>
-	})
-	
-	if(opt.current!=total)
-		tds+=<td class="pagination" value={opt.current+1}></td>
-	
-	var elmPagebar = convertToDOM(<table id="pagebar"><tr>{tds}</tr></table>);
-	connect(elmPagebar, 'onclick', function(e){
-		var target = e.target();
-		if(hasElementClass(target, 'current')) return;
-		
-		signal(elmPagebar, 'onChange', target.getAttribute('value'));
-	})
-	return elmPagebar;
-}
-
 
 var QuickPostForm = {
 	show : function(ps, position, message){

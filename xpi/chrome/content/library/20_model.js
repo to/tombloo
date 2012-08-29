@@ -1996,7 +1996,7 @@ models.register({
 			charset     : 'utf-8',
 			sendContent : ps
 		}).addCallback(function(res){
-			return convertToXML(res.responseText);
+			return convertToDOM(res.responseText);
 		});
 	},
 	
@@ -2004,14 +2004,14 @@ models.register({
 		return this.parse({
 			sentence : str,
 			response : 'reading',
-		}).addCallback(function(res){
-			return list(res.ma_result.word_list.word.reading);
+		}).addCallback(function(dom){
+			return $x('//reading/text()', dom, true);
 		});
 	},
 	
 	getRomaReadings : function(str){
-		return this.getKanaReadings(str).addCallback(function(rs){
-			return rs.join('\u0000').toRoma().split('\u0000');
+		return this.getKanaReadings(str).addCallback(function(readings){
+			return readings.join('\u0000').toRoma().split('\u0000');
 		});
 	},
 });

@@ -1788,10 +1788,8 @@ function $x(exp, context, multi) {
 	return null;
 }
 
-function convertToDOM(xml){
-	var elm = currentDocument().createElementNS(HTML_NS, 'span');
-	elm.innerHTML = xml.toXMLString();
-	return elm.childNodes[0];
+function convertToDOM(text){
+	return new DOMParser().parseFromString(text.replace(/xmlns=["'].*?["']/g,''), 'text/xml');
 }
 
 function convertToHTMLDocument(html, doc) {

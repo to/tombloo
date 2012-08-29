@@ -93,11 +93,11 @@
 		}
 		
 		var selection = getSelectionContents(ctx.window);
-		if(selection){
+		if(selection && selection.querySelector('a')){
 			copyLink(format, map(function(link){
 				return {
-					url   : getTextContent(link),
-					title : link,
+					url   : link.href,
+					title : link.textContent,
 				};
 			}, selection.querySelectorAll('a')));
 			

@@ -21,7 +21,6 @@
 [\./]ad(s[\./]|/)
 \.(value(click|commerce)|custom-click)\.
 \.fc2\.com/pv\.gif
-\.google\.com/uds/
 \.infoseek\.co\.jp/isweb/
 \.seesaa\..*\.js(\?|$)
 \.stumbleupon\.com/hostedbadge
@@ -52,7 +51,6 @@ amazon.*/widgets/
 analytics.*\.js$
 analyzer
 banners?[./]
-beacon
 blogger\.com/.*\.js$
 blogparts
 cinra.*\.net/.*(swf|js)
@@ -68,6 +66,7 @@ last\.fm/widgets/
 lifehacker\.jp/.*\.js/
 msn\.(com|co\.jp)/.*\.js
 mycom.co.jp/.*[\./]js
+mynv\.jp/kouimg/
 ranking
 sourceforge\.jp/.*\.js
 typepad\.com/t/stats

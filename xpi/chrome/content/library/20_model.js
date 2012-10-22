@@ -696,7 +696,7 @@ models.register({
 	
 	update : function(status){
 		var self = this;
-		var POST_URL = self.URL + '/status/update';
+		var POST_URL = self.URL + '/i/tweet/create';
 		
 		return maybeDeferred((status.length < 140)? 
 			status : 
@@ -711,14 +711,10 @@ models.register({
 			return request(POST_URL, {
 				sendContent : token,
 			});
+		}).addErrback(function(res){
+			throw new Error(JSON.parse(res.responseText).message);
 		}).addCallback(function(res){
-			// ホームにリダイレクトされなかった場合はエラー発生とみなす
-			if(res.channel.URI.asciiSpec == POST_URL)
-				throw new Error('Error');
-			
-			var msg = res.responseText.extract(/"flashNotice":"(.*?)"/);
-			if(msg)
-				throw unescapeHTML(msg).trimTag();
+			return JSON.parse(res.responseText);
 		});
 	},
 	

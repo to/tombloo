@@ -1220,7 +1220,9 @@ models.register(update({
 				}
 			})
 		}).addCallback(function(res){
-			var form = formContents(res.responseText);
+			var doc = convertToHTMLDocument(res.responseText);
+			var form = formContents($x('//form[contains(@action, "add")]', doc));
+			
 			return request('https://pinboard.in/add', {
 				sendContent : update(form, {
 					title       : ps.item,

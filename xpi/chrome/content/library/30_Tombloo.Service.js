@@ -145,9 +145,13 @@ Tombloo.Service = {
 				return;
 			
 			if(prop.toLowerCase() === 'filename' || prop === 'location')
-				val = ('' + val).replace(/file:[^ ]+\/(.+?)( |$)/g, '$1');
+				val = ('' + val).extract(/^.*\/(.*?)(\?|$)/);
 			
-			msg.push(prop + ' : ' + val);
+			prop = 
+				(prop === 'fileName')? 'file' :
+				(prop === 'lineNumber')? 'line' : prop;
+			
+			msg.push((prop === 'message')? val : prop + ' : ' + val);
 		});
 		
 		return msg.join('\n');

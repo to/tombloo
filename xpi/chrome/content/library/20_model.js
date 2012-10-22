@@ -712,7 +712,7 @@ models.register({
 				sendContent : token,
 			});
 		}).addErrback(function(res){
-			throw new Error(JSON.parse(res.responseText).message);
+			throw new Error(JSON.parse(res.message.responseText).message);
 		}).addCallback(function(res){
 			return JSON.parse(res.responseText);
 		});

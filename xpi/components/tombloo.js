@@ -151,6 +151,25 @@ function copy(t, s, re){
 	return t;
 }
 
+function exposeProperties(o, recursive){
+	if(o == null)
+		return;
+	
+	Object.defineProperty(o, '__exposedProps__', {
+		value : {},
+		writable : true,
+		enumerable : false,
+		configurable : true
+	});
+	
+	for(var p in o){
+		o.__exposedProps__[p] = 'r';
+		
+		if(recursive && typeof(o[p]) === 'object')
+			exposeProperties(o[p], true);
+	}
+}
+
 
 var getContentDir;
 ExtensionManager = getService('/extensions/manager;1', Ci.nsIExtensionManager);
@@ -243,12 +262,15 @@ Module = {
 		var GM_Tombloo = copy({
 			Tombloo : {
 				Service : copy({}, env.Tombloo.Service, /(check|share|posters|extractors)/),
-			}
+			},
 		}, env, /(Deferred|DeferredHash|copyString|notify)/);
 		
 		for(var name in env.models)
 			if(env.models.hasOwnProperty(name))
 				GM_Tombloo[name] = copy({}, env.models[name], /^(?!.*(password|cookie))/i);
+		
+		// 他拡張からの読み取りを許可する(Firefox 17用)
+		exposeProperties(GM_Tombloo, true);
 		
 		// Greasemonkeyサンドボックスの拡張
 		var greasemonkey = Cc['@greasemonkey.mozdev.org/greasemonkey-service;1'];

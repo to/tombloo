@@ -1,26 +1,30 @@
 // ==UserScript==
-// @name         LDR - Dedupe Entries
-// @namespace    http://userscripts.org/scripts/show/12248
-// @include      http://reader.livedoor.com/reader/*
+// @name       LDR - Dedupe Entries
+// @namespace  https://github.com/to/tombloo
+// @updateURL  https://raw.github.com/to/tombloo/master/greasemonkey/ldr_-_dedupe_entries.js
+// @version    1.0
+// @include    http://reader.livedoor.com/reader/*
 // ==/UserScript==
 
-// 2011/09/14
 
-GM_addStyle(<><![CDATA[
-	.LDE_displayed,
-	.LDE_displayed a{
-		color : silver !important;
-	}
-	.LDE_displayed .item_body a{
-		color : dimgray !important;
-	}
-	.LDE_displayed img{
-		opacity: 0.3;
-	}
-]]></>);
+GM_addStyle("\
+	.LDE_displayed,\
+	.LDE_displayed a{\
+		color : silver !important;\
+	}\
+	.LDE_displayed .item_body a{\
+		color : dimgray !important;\
+	}\
+	.LDE_displayed img{\
+		opacity: 0.3;\
+	}\
+");
 
-// If you want to hide duplicate entry, add url pattern to here.
-var filter_feeds = [];
+// If you want to hide duplicate entry, add url regex pattern to here.
+var filter_feeds = [
+	/b.hatena.ne.jp\/hotentry/,
+];
+
 
 // -- [Application] ----------------------------------------------------------------------
 init();
@@ -82,7 +86,7 @@ function getLinks(item){
 		res;
 }
 
-function isDisplayed(item){
+function isDisplayed(item){	
 	if(!item.link)
 		return false;
 	
@@ -187,7 +191,7 @@ function init(){
 }
 
 function storage(key, value){
-	var map = globalStorage[document.domain];
+	var map = localStorage;
 	return (storage = function(key, value){
 		if(arguments.length == 1)
 			return eval('('+map[key]+')');

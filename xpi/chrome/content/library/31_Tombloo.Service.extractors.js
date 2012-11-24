@@ -384,7 +384,7 @@ Tombloo.Service.extractors = new Repository([
 		ICON : 'http://www.amazon.com/favicon.ico',
 		check : function(ctx){
 			return Tombloo.Service.extractors.Amazon.preCheck(ctx) && 
-				($x('./ancestor::*[@id="prodImageCell" or @id="prodImageOuter"]', ctx.target) || ctx.target.id == 'magnifierLens');
+				($x('./ancestor::*[@id="prodImageCell" or @id="prodImageOuter" or @id="image-block-widget"]', ctx.target) || ctx.target.id == 'magnifierLens');
 		},
 		extract : function(ctx){
 			Tombloo.Service.extractors.Amazon.extract(ctx);
@@ -393,7 +393,7 @@ Tombloo.Service.extractors = new Repository([
 			
 			// 拡大レンズなど画像以外の要素か?
 			if(!ctx.target.src)
-				ctx.target = $x('id("prodImageCell")/img | id("main-image")');
+				ctx.target = $x('id("prodImageCell")/img | id("main-image") | id("original-main-image")');
 			
 			// tools4hack
 			// http://tools4hack.santalab.me/new-ipad-get-largeartwork-amazon-img.html

@@ -250,7 +250,7 @@ function download(sourceURL, targetFile, useManger){
 		p.PERSIST_FLAGS_FROM_CACHE |
 		p.PERSIST_FLAGS_REPLACE_EXISTING_FILES |
 		p.PERSIST_FLAGS_AUTODETECT_APPLY_CONVERSION;
-	p.saveURI(sourceURI, null, null, null, null, targetURI);
+	p.saveURI(sourceURI, null, null, null, null, targetURI, null);
 	
 	return d;
 }

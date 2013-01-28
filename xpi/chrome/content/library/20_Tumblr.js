@@ -589,3 +589,24 @@ Tumblr.Quote = {
 }
 
 models.register(Tumblr);
+
+
+/*
+ * Tumblrフォーム変更対応パッチ(2012/1/25周辺)
+ * UAを古いAndroidにして旧フォームを取得。
+ *
+ * polygonplanetのコードを簡略化(パフォーマンス悪化の懸念あり)
+ * https://gist.github.com/4643063
+*/
+var request_ = request;
+request = function(url, opts){
+	if(/^https?:\/\/(?:\w+\.)*tumblr\..*\/(?:reblog\/|new\/\w+)/.test(url)){
+		opts = updatetree(opts, {
+			headers : {
+				'User-Agent' : 'Mozilla/5.0 (Linux; U; Android 2.3.4; ja-jp; Build) Version/4.0 Mobile Safari/532'
+			}
+		});
+	}
+	
+	return request_(url, opts);
+};

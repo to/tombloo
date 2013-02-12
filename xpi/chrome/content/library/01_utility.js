@@ -2117,17 +2117,17 @@ function loadImage(src){
 		img.src = src;
 	}
 	
-	img.onload = function(){
+	img.addEventListener('load', function(){
 		try{
 			d.callback(img);
 		}catch(e){
 			// ロードが複数回呼び出されて発生するエラーを抑止する
 		}
-	};
+	}, false);
 	
-	img.onerror = function(){
+	img.addEventListener('error', function(){
 		d.errback(img);
-	};
+	}, false);
 	
 	return d;
 }

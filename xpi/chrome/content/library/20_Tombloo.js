@@ -54,7 +54,7 @@ var Tombloo = {
 			
 			Tag.initialize();
 			
-			db.execute(<>
+			db.execute(commentToText(function(){/*
 				CREATE TABLE temp (
 					id        INTEGER PRIMARY KEY, 
 					user      TEXT, 
@@ -77,7 +77,7 @@ var Tombloo = {
 					photos;
 				DROP TABLE photos;
 				ALTER TABLE temp RENAME TO photos;
-			</>);
+			*/}));
 			
 			db.version = SCHEMA_VERSION;
 			db.vacuum();
@@ -300,7 +300,7 @@ extend(Tombloo.Post, {
 	
 	initialize : function(){
 		try{
-			return this.db.execute(<>
+			return this.db.execute(commentToText(function(){/*
 				CREATE VIEW posts AS 
 				SELECT "regular" AS type, id, user, date, 
 					title, 
@@ -349,13 +349,11 @@ extend(Tombloo.Post, {
 					"" AS player, 
 					"" AS imageId 
 				FROM quotes 
-			</>);
+			*/}));
 		} catch(e if e instanceof Database.AlreadyExistsException){}
 	},
 	
 	deinitialize : function(){
-		return this.db.execute(<>
-			DROP VIEW posts 
-		</>);
+		return this.db.execute('DROP VIEW posts');
 	},
 });

@@ -1815,12 +1815,7 @@ function convertToHTMLDocument(html, doc) {
 	return doc
 }
 
-function convertToXML(text){
-	return new XML(text.replace(/<\?.*\?>/gm,'').replace(/<!.*?>/gm, '').replace(/xmlns=["'].*?["']/g,''));
-}
-
 function convertToXULElement(str){
-	str = str.toXMLString? str.toXMLString() : str;
 	var xul = (
 		'<box xmlns="'+XUL_NS+'" >'+
 			str +
@@ -2276,12 +2271,12 @@ function selectRegion(doc){
 	doc.documentElement.style.cursor = 'crosshair';
 	
 	var style = doc.createElement('style');
-	style.innerHTML = <><![CDATA[
+	style.innerHTML = commentToText(function(){/*
 		* {
 			cursor: crosshair !important;
 			-moz-user-select: none;
 		}
-	]]></>.toString();
+	*/});
 	doc.body.appendChild(style);
 	
 	var region, p, d, moving, square;
@@ -2319,14 +2314,14 @@ function selectRegion(doc){
 		
 		p = mouse(e);
 		region = doc.createElement('div');
-		region.setAttribute('style', <>
-			background : #888;
-			opacity    : 0.5;
-			position   : fixed;
-			z-index    : 999999999;
-			top        : {p.y}px;
-			left       : {p.x}px;
-		</>.toString());
+		region.setAttribute('style', [
+			'background : #888;',
+			'opacity    : 0.5;',
+			'position   : fixed;',
+			'z-index    : 999999999;',
+			'top        : ' + p.y + 'px;',
+			'left       : ' + p.x + 'px;'
+		].join('\n'));
 		doc.body.appendChild(region);
 		
 		doc.addEventListener('mousemove', onMouseMove, true);
@@ -2407,13 +2402,13 @@ function flashView(doc){
 	var d = new Deferred();
 	var doc = doc || currentDocument();
 	var flash = doc.createElement('div');
-	flash.setAttribute('style', <>
+	flash.setAttribute('style', commentToText(function(){/*
 		background : #EEE;
 		position   : fixed;
 		z-index    : 999999999;
 		top        : 0;
 		left       : 0;
-	</>.toString());
+	*/}));
 	setElementDimensions(flash, getViewDimensions());
 	doc.body.appendChild(flash);
 	fade(flash, {
@@ -2489,4 +2484,12 @@ AbstractSessionService = {
 			});
 		}
 	},
+}
+
+function commentToText(commentFunc) {
+	return (commentFunc).toString().replace(/^.*?\r?\n/,'').replace(/\r?\n.*?$/,'');
+}
+
+function getTextContent(node) {
+	return node ? node.textContent : '';
 }

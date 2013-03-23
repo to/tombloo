@@ -2487,7 +2487,7 @@ AbstractSessionService = {
 }
 
 function commentToText(commentFunc) {
-	return (commentFunc).toString().replace(/^.*?\r?\n/,'').replace(/\r?\n.*?$/,'');
+	return commentFunc.toString().replace(/^.*?\r?\n/, '').replace(/\r?\n.*?$/, '');
 }
 
 function getTextContent(node) {

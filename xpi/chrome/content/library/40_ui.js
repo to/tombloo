@@ -166,7 +166,7 @@ forEach({
 		
 		// FIXME: xul:popup要素の使用を検討
 		var tip = doc.createElement('div');
-		tip.setAttribute('style', ''+<>
+		tip.setAttribute('style', commentToText(function(){/*
 			font-family        : 'Arial Black', Arial, sans-serif;
 			font-size          : 12px;
 			
@@ -184,7 +184,7 @@ forEach({
 			border             : 4px solid #EEE;
 			padding-left       : 20px;
 			padding-right      : 2px;
-		</>);
+		*/}));
 		tip.textContent = ext.name;
 		convertToDataURL(ext.ICON).addCallback(function(dataUrl){
 			tip.style.backgroundImage = 'url(' + dataUrl + ')';

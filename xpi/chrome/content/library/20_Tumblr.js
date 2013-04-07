@@ -12,7 +12,6 @@ var Tumblr = update({}, AbstractSessionService, {
 	 * 各Tumblrの基本情報(総件数/タイトル/タイムゾーン/名前)を取得する。
 	 *
 	 * @param {String} user ユーザー名。
-	 * @param {XML} post ポストノード。
 	 * @return {Object} ポスト共通情報。ポストID、タイプ、タグなどを含む。
 	 */
 	getInfo : function(user, type){
@@ -23,14 +22,16 @@ var Tumblr = update({}, AbstractSessionService, {
 				num   : 0,
 			}
 		}).addCallback(function(res){
-			var xml = convertToXML(res.responseText);
+			var doc = convertToDOM(res.responseText);
+			var posts = doc.querySelector('posts');
+			var tumblelog = doc.querySelector('tumblelog');
 			return {
-				type     : ''+xml.posts.@type,
-				start    :  1*xml.posts.@start,
-				total    :  1*xml.posts.@total,
-				name     : ''+xml.tumblelog.@name,
-				title    : ''+xml.tumblelog.@title,
-				timezone : ''+xml.tumblelog.@timezone,
+				type     : posts ? posts.getAttribute('type') : '',
+				start    :  1 * posts ? posts.getAttribute('start') : '',
+				total    :  1 * posts ? posts.getAttribute('total') : '',
+				name     : tumblelog ? tumblelog.getAttribute('name') : '',
+				title    : tumblelog ? tumblelog.getAttribute('title') : '',
+				timezone : tumblelog ? tumblelog.getAttribute('timezone') : '',
 			};
 		});
 	},
@@ -63,21 +64,21 @@ var Tumblr = update({}, AbstractSessionService, {
 						num   : page[1],
 					},
 				}).addCallback(function(res){
-					var xml = convertToXML(res.responseText);
+					var doc = convertToDOM(res.responseText);
 					
 					// 全ポストを繰り返す
 					var posts = map(function(post){
 						var info = {
 							user : user,
-							id   : ''+ post.@id, 
-							url  : ''+ post.@url, 
-							date : ''+ post.@date, 
-							type : ''+ post.@type, 
-							tags : map(function(tag){return ''+tag}, post.tag), 
+							id   : post.getAttribute('id'),
+							url  : post.getAttribute('url'),
+							date : post.getAttribute('date'),
+							type : post.getAttribute('type'),
+							tags : map(function(tag){return tag.textContent}, post.querySelectorAll('tag')),
 						};
 						
 						return Tumblr[info.type.capitalize()].convertToModel(post, info);
-					}, xml.posts.post);
+					}, doc.querySelectorAll('posts > post'));
 					
 					result = result.concat(posts);
 					
@@ -455,8 +456,8 @@ var Tumblr = update({}, AbstractSessionService, {
 Tumblr.Regular = {
 	convertToModel : function(post, info){
 		return update(info, {
-			body  : ''+ post['regular-body'],
-			title : ''+ post['regular-title'],
+			body  : getTextContent(post.querySelector('regular-body')),
+			title : getTextContent(post.querySelector('regular-title')),
 		});
 	},
 	
@@ -471,18 +472,17 @@ Tumblr.Regular = {
 
 Tumblr.Photo = {
 	convertToModel : function(post, info){
-		var photoUrl = post['photo-url'];
-		var photoUrl500 = ''+photoUrl.(@['max-width'] == 500);
+		var photoUrl500 = getTextContent(post.querySelector('photo-url[max-width="500"]'));
 		var image = Tombloo.Photo.getImageInfo(photoUrl500);
 		
 		return update(info, {
 			photoUrl500   : photoUrl500,
-			photoUrl400   : ''+ photoUrl.(@['max-width'] == 400),
-			photoUrl250   : ''+ photoUrl.(@['max-width'] == 250),
-			photoUrl100   : ''+ photoUrl.(@['max-width'] == 100),
-			photoUrl75    : ''+ photoUrl.(@['max-width'] == 75),
+			photoUrl400   : getTextContent(post.querySelector('photo-url[max-width="400"]')),
+			photoUrl250   : getTextContent(post.querySelector('photo-url[max-width="250"]')),
+			photoUrl100   : getTextContent(post.querySelector('photo-url[max-width="100"]')),
+			photoUrl75    : getTextContent(post.querySelector('photo-url[max-width="75"]')),
 			
-			body          : ''+ post['photo-caption'],
+			body          : getTextContent(post.querySelector('photo-caption')),
 			imageId       : image.id,
 			extension     : image.extension,
 		});
@@ -517,9 +517,9 @@ Tumblr.Photo = {
 Tumblr.Video = {
 	convertToModel : function(post, info){
 		return update(info, {
-			body    : ''+ post['video-caption'],
-			source  : ''+ post['video-source'],
-			player  : ''+ post['video-player'],
+			body    : getTextContent(post.querySelector('video-caption')),
+			source  : getTextContent(post.querySelector('video-source')),
+			player  : getTextContent(post.querySelector('video-player')),
 		});
 	},
 	
@@ -537,9 +537,9 @@ Tumblr.Video = {
 Tumblr.Link = {
 	convertToModel : function(post, info){
 		return update(info, {
-			title  : ''+ post['link-text'],
-			source : ''+ post['link-url'],
-			body   : ''+ post['link-description'],
+			title  : getTextContent(post.querySelector('link-text')),
+			source : getTextContent(post.querySelector('link-url')),
+			body   : getTextContent(post.querySelector('link-description')),
 		});
 	},
 	
@@ -557,8 +557,8 @@ Tumblr.Link = {
 Tumblr.Conversation = {
 	convertToModel : function(post, info){
 		return update(info, {
-			title : ''+ post['conversation-title'],
-			body  : ''+ post['conversation-text'],
+			title : getTextContent(post.querySelector('conversation-title')),
+			body  : getTextContent(post.querySelector('conversation-text')),
 		});
 	},
 	
@@ -574,8 +574,8 @@ Tumblr.Conversation = {
 Tumblr.Quote = {
 	convertToModel : function(post, info){
 		return update(info, {
-			body   : ''+ post['quote-text'],
-			source : ''+ post['quote-source'],
+			body   : getTextContent(post.querySelector('quote-text')),
+			source : getTextContent(post.querySelector('quote-source')),
 		});
 	},
 	

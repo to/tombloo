@@ -223,10 +223,11 @@ models.register(update({
 				sendContent : ps,
 			});
 		}).addCallback(function(res){
-			res = convertToXML(res.responseText);
-			if(res.@stat!='ok'){
-				var err = new Error(''+res.err.@msg)
-				err.code = res.err.@code;
+			res = convertToDOM(res.responseText);
+			if(res.querySelector('[stat]').getAttribute('stat')!='ok'){
+				var errElem = res.querySelector('err');
+				var err = new Error(errElem.getAttribute('msg'))
+				err.code = errElem.getAttribute('code');
 				
 				throw err;
 			}
@@ -311,7 +312,7 @@ models.register(update({
 		return this.callAuthMethod(update({
 			method   : 'flickr.photos.upload',
 		}, ps)).addCallback(function(res){
-			return ''+res.photoid;
+			return getTextContent(res.querySelector('photoid'));
 		});
 	},
 	
@@ -1976,8 +1977,8 @@ models.register({
 			},
 		}).addCallback(function(res){
 			return map(function(s){
-				return ''+s.@title || ''+s;
-			}, convertToXML(res.responseText).li.span);
+				return s.getAttribute('title') || s.textContent;
+			}, convertToDOM(res.responseText).querySelectorAll('li > span'));
 		});
 	},
 });
@@ -2099,11 +2100,11 @@ models.register({
 				duplicated : false,
 				tags : reduce(function(memo, tag){
 					memo.push({
-						name      : tag.@tag,
-						frequency : tag.@count,
+						name      : tag.getAttribute('tag'),
+						frequency : tag.getAttribute('count'),
 					});
 					return memo;
-				}, convertToXML(res.responseText).tag, []),
+				}, convertToDOM(res.responseText).querySelectorAll('tag'), []),
 			};
 		});
 	},
@@ -2357,26 +2358,26 @@ models.register( {
 		},
 		
 		photo : function(ps, title){
-			return ''+<>
-				<blockquote cite={ps.pageUrl} title={title}>
-					<img src={ps.itemUrl} />
-				</blockquote>
-				{ps.description}
-			</>;
+			return [
+				'<blockquote cite=' + ps.pageUrl + ' title=' + title + '>',
+				'	<img src=' + ps.itemUrl + ' />',
+				'</blockquote>',
+				ps.description
+			].join('\n');
 		},
 		
 		link : function(ps, title){
-			return ''+<>
-				<a href={ps.pageUrl} title={title}>{ps.page}</a>
-				{ps.description}
-			</>;
+			return [
+				'<a href=' + ps.pageUrl + ' title=' + title + '>' + ps.page + '</a>',
+				ps.description
+			].join('\n');
 		},
 		
 		quote : function(ps, title){
-			return ''+<>
-				<blockquote cite={ps.pageUrl} title={title}>{ps.body}</blockquote>
-				{ps.description}
-			</>;
+			return [
+				'<blockquote cite=' + ps.pageUrl + ' title=' + title + '>' + ps.body + '</blockquote>',
+				ps.description
+			].join('\n');
 		},
 	},
 	

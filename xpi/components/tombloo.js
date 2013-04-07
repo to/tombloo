@@ -40,7 +40,7 @@ function setupEnvironment(global){
 	// 変数/定数はhiddenDOMWindowのものを直接使う
 	[
 		'navigator document window screen',
-		'XMLHttpRequest XPathResult Node Element KeyEvent Event DOMParser XSLTProcessor XML XMLSerializer NodeFilter',
+		'XMLHttpRequest XPathResult Node Element KeyEvent Event DOMParser XSLTProcessor XMLSerializer NodeFilter',
 	].join(' ').split(' ').forEach(function(p){
 		global[p] = win[p];
 	});

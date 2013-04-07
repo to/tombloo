@@ -529,14 +529,6 @@
 					} else {
 						this.style.backgroundColor = '#ffffff';
 					}
-					
-					// スクロールバーが表示されると切れるため手動で幅を計算する
-					if(this.rowCount > this.maxRows && this.rowHeight){
-						this.width = null;
-						this.width = this.boxObject.width + 20;
-					} else {
-						this.width = null;
-					}
 				]]></body>
 			</method>
 			

@@ -247,8 +247,8 @@ connect(grobal, 'browser-load', function(e){
 		if(e.eventPhase != Event.AT_TARGET || (context && context.target == cwin.gContextMenu.target))
 			return;
 		
-		var doc = wrappedObject(cwin.gContextMenu.target.ownerDocument);
-		var win = wrappedObject(doc.defaultView);
+		var doc = cwin.gContextMenu.target.ownerDocument;
+		var win = doc.defaultView;
 		try{
 			win.location.host;
 			
@@ -268,7 +268,7 @@ connect(grobal, 'browser-load', function(e){
 			window    : win,
 			title     : doc.title,
 			selection : ''+win.getSelection(),
-			target    : wrappedObject(cwin.gContextMenu.target),
+			target    : cwin.gContextMenu.target,
 			mouse     : {
 				page   : {x : e.pageX, y : e.pageY},
 				screen : {x : e.screenX, y : e.screenY},

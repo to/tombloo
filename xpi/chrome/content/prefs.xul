@@ -448,8 +448,13 @@
 			
 			getCellProperties : function(row, {index : col}, props){
 				var val = this.rows[row][col];
-				if(col!=0 && val)
-					props.AppendElement(AtomService.getAtom(val));
+				if (col!=0 && val) {
+					if (props) {
+						props.AppendElement(AtomService.getAtom(val));
+					} else {
+						return AtomService.getAtom(val);
+					}
+				}
 			},
 			
 			getCellText : function(row, {index : col}){

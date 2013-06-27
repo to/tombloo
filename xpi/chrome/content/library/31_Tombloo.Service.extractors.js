@@ -502,7 +502,10 @@ Tombloo.Service.extractors = new Repository([
 		},
 		
 		getFrameUrl : function(doc){
-			return $x('//iframe[starts-with(@src, "http://assets.tumblr.com/iframe") and contains(@src, "pid=")]/@src', doc);
+			var re = /(?:<|\\x3c)iframe\b[\s\S]*?src\s*=\s*(["']|\\x22)(http:\/\/assets\.tumblr\.com\/.*?iframe.*?)\1/i;
+			var url = $x('//iframe[starts-with(@src, "http://assets.tumblr.com/iframe") and contains(@src, "pid=")]/@src', doc) ||
+					doc.documentElement.innerHTML.extract(re, 2);
+			return (url || '').replace(/\\x26/g, '&');
 		},
 		
 		convertToParams	: function(form){

@@ -1,0 +1,32 @@
+body {
+  padding: 4em;
+  font: 14px/1.5 Lato, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #777;
+}
+
+h1, h2, h3, h4, h5, h6, strong {
+  color: #222;
+}
+
+a {
+  color: #39c;
+  text-decoration: none;
+}
+
+pre {
+  color: #555;
+  padding: 1em;
+  background: #eee;  
+  border-radius: 2px;
+}
+
+hr {
+  border: 0;
+  background: #eee;
+  height: 1px;
+}
+
+ul {
+  list-style: none;
+  padding-left: 2em;
+}

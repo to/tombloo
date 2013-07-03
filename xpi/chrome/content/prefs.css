@@ -38,6 +38,8 @@ textbox[readonly=true] {
 
 #posters treechildren::-moz-tree-image {
 	margin-left : 0.5em;
+	height : 16px;
+	width : 16px;
 }
 
 #posters treechildren::-moz-tree-cell-text {

@@ -44,6 +44,8 @@
 			<label value="zorio"         class="text-link" onclick="openURL('http://d.hatena.ne.jp/zorio/')" />
 			<label value="simonetta"     class="text-link" onclick="openURL('http://blog.livedoor.jp/s_i_m_o_n_e_t_t_a/')" />
 			<label value="whym"          class="text-link" onclick="openURL('http://github.com/whym')" />
+			<label value="polygonplanet" class="text-link" onclick="openURL('http://github.com/polygonplanet')" />
+			<label value="syoichi"       class="text-link" onclick="openURL('http://github.com/syoichi')" />
 		</vbox>
 			
 		<label class="sectionTitle"></label>

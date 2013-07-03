@@ -760,31 +760,6 @@ Tombloo.Service.extractors = new Repository([
 	},
 	
 	{
-		name : 'Photo - 4u',
-		ICON : models['4u'].ICON,
-		check : function(ctx){
-			return ctx.onImage && 
-				ctx.href.match('^http://4u.straightline.jp/image/') && 
-				ctx.target.src.match('/static/upload/l/l_');
-		},
-		extract : function(ctx){
-			var author = $x('(//div[@class="entry-information"]//a)[1]');
-			var iLoveHer = $x('//div[@class="entry-item fitem"]//a/@href');
-			return {
-				type      : 'photo',
-				item      : ctx.title.extract(/(.*) - 4U/i),
-				itemUrl   : ctx.target.src,
-				author    : author.textContent.trim(),
-				authorUrl : author.href,
-				favorite  : {
-					name : '4u',
-					id   : iLoveHer && decodeURIComponent(iLoveHer.extract('src=([^&]*)')),
-				}
-			};
-		},
-	},
-	
-	{
 		name : 'Photo - We Heart It',
 		ICON : models.WeHeartIt.ICON,
 		check : function(ctx){

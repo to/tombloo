@@ -214,15 +214,21 @@ var Tumblr = update({}, AbstractSessionService, {
 		return request(url).addCallback(function(res){
 			var doc = convertToHTMLDocument(res.responseText);
 			var form = formContents(doc);
+			if(!form['post[type]']){
+				form['post[type]'] = 
+					$x('//*[@id="header"]//select/option[@selected]/text()', doc).trim().toLowerCase();
+			}
 			delete form.preview_post;
-			form.redirect_to = Tumblr.TUMBLR_URL+'dashboard';
+			form.redirect_to = Tumblr.TUMBLR_URL + 'dashboard';
 			
-			if(form.reblog_post_id){
+			if(form.reblog_post_id)
 				self.trimReblogInfo(form);
-				
-				// Tumblrから他サービスへポストするため画像URLを取得しておく
-				if(form['post[type]']=='photo')
-					form.image = $x('id("edit_post")//img[contains(@src, "media.tumblr.com/") or contains(@src, "data.tumblr.com/")]/@src', doc);
+			
+			// Tumblrから他サービスへポストするため画像URLを取得しておく
+			if(form['post[type]'] == 'photo'){
+				form.image = $x(
+					'//*[contains(@class, "media_post_external_url")]' +
+					'//img[contains(@src, "media.tumblr.com/") or contains(@src, "data.tumblr.com/")]/@src', doc);
 			}
 			
 			return form;
